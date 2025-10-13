@@ -1,0 +1,29 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Producto extends Model
+{
+    protected $primaryKey = 'producto_id';
+    protected $fillable = ['nombre', 'descripcion', 'categoria_id', 'precio', 'inhabilitado'];
+
+    // Relación directa con la categoría principal
+    public function categoria()
+    {
+        return $this->belongsTo(Categoria::class, 'categoria_id');
+    }
+
+    // Relación con categorías secundarias a través de la tabla pivot
+    public function categoriasSecundarias()
+    {
+        return $this->belongsToMany(Categoria::class, 'producto_categorias', 'producto_id', 'categoria_id');
+    }
+
+    // Relación con los detalles de venta
+    public function detallesVenta()
+    {
+        return $this->hasMany(DetVenta::class, 'producto_id');
+    }
+}

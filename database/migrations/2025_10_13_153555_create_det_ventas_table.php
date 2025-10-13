@@ -1,0 +1,32 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('det_ventas', function (Blueprint $table) {
+            $table->id('det_venta_id');
+            $table->foreignId('venta_id')->constrained('ventas', 'venta_id');
+            $table->foreignId('producto_id')->constrained('productos', 'producto_id');
+            $table->integer('cantidad');
+            $table->decimal('descuento', 10, 2)->default(0);
+            $table->decimal('subtotal', 10, 2);
+            $table->timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('det_ventas');
+    }
+};

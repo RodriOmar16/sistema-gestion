@@ -23,8 +23,8 @@ export default function Appearance() {
             <SettingsLayout>
                 <div className="space-y-6">
                     <HeadingSmall
-                        title="Appearance settings"
-                        description="Update your account's appearance settings"
+                        title="Ajustes de apariencia"
+                        description="Modifica las configuraciones de apariencia de tu cuenta."
                     />
                     <AppearanceTabs />
                 </div>

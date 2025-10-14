@@ -6,16 +6,18 @@ use Illuminate\Database\Eloquent\Model;
 
 class MenuWeb extends Model
 {
+    protected $table = 'menu_web';
     protected $primaryKey = 'menu_id';
-    protected $fillable = ['nombre', 'padre', 'orden', 'inhabilitado', 'icono'];
+    protected $fillable = ['nombre', 'padre', 'orden', 'inhabilitado', 'icono', 'ruta_id'];
 
     public function roles()
     {
         return $this->belongsToMany(Rol::class, 'menu_roles', 'menu_id', 'rol_id');
     }
 
-    public function rutas()
+    public function ruta()
     {
-        return $this->belongsToMany(Ruta::class, 'menu_rutas', 'menu_id', 'ruta_id');
+        return $this->belongsTo(Ruta::class, 'ruta_id', 'ruta_id');
     }
+
 }

@@ -4,12 +4,33 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\MenuWeb;
+use App\Models\Ruta;
 
 class MenuWebController extends Controller
 {
+     public function menuPorUsuario(Request $request)
+    {
+        $usuario = $request->user();
+
+        $menu = MenuWeb::with(['roles', 'ruta']) // si definís la relación
+            ->where('inhabilitado', false)
+            ->whereHas('roles', function ($q) use ($usuario) {
+                $q->whereIn('roles.rol_id', $usuario->roles->pluck('rol_id'));
+            })
+            ->orderBy('orden')
+            ->get();
+
+
+       return response()->json($menu->map(function ($item) {
+            $item->ruta_url = $item->ruta?->url ?? null;
+            return $item;
+        }));
+
+    }
+
     public function index()
     {
-        return MenuWeb::with(['roles', 'rutas'])->where('inhabilitado', false)->get();
+        return MenuWeb::with(['roles', 'ruta'])->where('inhabilitado', false)->get();
     }
 
     public function store(Request $request)

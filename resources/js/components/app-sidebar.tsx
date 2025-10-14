@@ -13,10 +13,27 @@ import {
 import { dashboard } from '@/routes';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { BookOpen, Folder, LayoutGrid, List, Image } from 'lucide-react';
+import {
+  LayoutGrid,
+  List,
+  Image,
+  ShoppingBasket,
+  Settings,
+	FolderKanban,
+	ShoppingCart,
+	Contact,
+	CircleDollarSign,
+	Logs,
+	SquareChartGantt,
+	FolderTree,
+	Network,
+	User
+} from 'lucide-react';
 import AppLogo from './app-logo';
+import { useEffect, useState } from 'react';
+import axios from 'axios';
 
-const mainNavItems: NavItem[] = [
+/*const mainNavItems: NavItem[] = [
     {
         title: 'Dashboard',
         href: dashboard(),
@@ -46,30 +63,77 @@ const footerNavItems: NavItem[] = [
         icon: BookOpen,
     },
 ];
+*/
+const iconMap: Record<string, any> = {
+  LayoutGrid,  List,  Image,  ShoppingBasket,  Settings,	FolderKanban,	ShoppingCart,
+	Contact,	CircleDollarSign,	Logs,	SquareChartGantt,	FolderTree,	Network,	User
+};
 
 export function AppSidebar() {
-    return (
-        <Sidebar collapsible="icon" variant="inset">
-            <SidebarHeader>
-                <SidebarMenu>
-                    <SidebarMenuItem>
-                        <SidebarMenuButton size="lg" asChild>
-                            <Link href={dashboard()} prefetch>
-                                <AppLogo />
-                            </Link>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
-                </SidebarMenu>
-            </SidebarHeader>
+	//data
+	const [mainNavItems, setMainNavItems] = useState<NavItem[]>([]);
 
-            <SidebarContent>
-                <NavMain items={mainNavItems} />
-            </SidebarContent>
+	//funcitons
+	function construirMenuJerarquico(items: any[]): NavItem[] {
+		const mapa: Record<number, NavItem> = {};
+		const raiz: NavItem[] = [];
 
-            <SidebarFooter>
-                {/*<NavFooter items={footerNavItems} className="mt-auto" />*/}
-                <NavUser />
-            </SidebarFooter>
-        </Sidebar>
-    );
+		items.forEach(item => {
+			const nodo: NavItem = {
+				title: item.nombre,
+				href: item.ruta_url || '#',
+				icon: iconMap[item.icono] || LayoutGrid,
+				children: [],
+			};
+			mapa[item.menu_id] = nodo;
+		});
+
+		items.forEach(item => {
+			const nodo = mapa[item.menu_id];
+			if (item.padre && mapa[item.padre]) {
+				mapa[item.padre].children?.push(nodo);
+			} else {
+				raiz.push(nodo);
+			}
+		});
+
+		return raiz;
+	}
+
+	useEffect(() => {
+		axios.get('/menu-usuario').then(res => {
+			console.log("res.data: ", res.data)
+			const jerarquico = construirMenuJerarquico(res.data);
+			setMainNavItems(jerarquico);
+		});
+	}, []);
+
+	return (
+			<Sidebar collapsible="icon" variant="inset">
+					<SidebarHeader>
+							<SidebarMenu>
+									<SidebarMenuItem>
+											<SidebarMenuButton size="lg" asChild>
+													<Link href={dashboard()} prefetch>
+															<AppLogo />
+													</Link>
+											</SidebarMenuButton>
+									</SidebarMenuItem>
+							</SidebarMenu>
+					</SidebarHeader>
+
+					<SidebarContent>
+							{mainNavItems.length === 0 ? 
+									( <div className="p-4 text-sm text-muted">No hay opciones disponibles</div> ) 
+									: ( <NavMain items={mainNavItems} />)
+							}
+
+					</SidebarContent>
+
+					<SidebarFooter>
+							{/*<NavFooter items={footerNavItems} className="mt-auto" />*/}
+							<NavUser />
+					</SidebarFooter>
+			</Sidebar>
+	);
 }

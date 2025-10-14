@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Rol extends Model
 {
+    protected $table = 'roles';
     protected $primaryKey = 'rol_id';
     protected $fillable = ['nombre', 'inhabilitado'];
 
@@ -18,4 +19,10 @@ class Rol extends Model
     {
         return $this->belongsToMany(User::class, 'usuarios_roles', 'rol_id', 'user_id');
     }
+    
+    public function rutas()
+    {
+        return $this->belongsToMany(Ruta::class, 'ruta_roles', 'rol_id', 'ruta_id');
+    }
+
 }

@@ -12,7 +12,6 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
   const page = usePage<{ url: string }>();
 
   function renderItem(item: NavItem) {
-    console.log("item: ", item)
     const isActive = page.url.startsWith(
         typeof item.href === 'string'
             ? item.href
@@ -28,7 +27,7 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
           isActive={isActive}
           tooltip={{ children: item.title }}
         >
-          <Link href={item.href} prefetch>
+          <Link href={item.href} prefetch preserveState preserveScroll>
             {item.icon && <item.icon />}
             <span>{item.title}</span>
           </Link>

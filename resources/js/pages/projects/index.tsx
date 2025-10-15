@@ -9,6 +9,7 @@ import { Project } from '@/types/project';
 import NewEditDialog from './newEdit';
 import ModalConfirmar from '@/components/modalConfirmar';
 import PdfButton from '@/components/utils/pdfButton';
+import ShowMessage from '@/components/utils/showMessage';
 
 import {
   Select,  SelectContent,  SelectItem,  SelectTrigger,  SelectValue,
@@ -298,6 +299,13 @@ export default function Projects() {
 	//para dar la apariencia de loading
 	const [loading, setLoading] = useState(false);
 
+	//ShowMessage
+	const [activo, setActivo] = useState(false);
+	const [text, setText]     = useState('');
+	const [title, setTitle]   = useState('');
+	const [color, setColor]   = useState('');
+
+	//Functions
 	const openCreate = () => {
 		setModalMode('create');
 		setSelectedProject(undefined);
@@ -333,6 +341,10 @@ export default function Projects() {
 		if (modalMode === 'create') {
 			router.post('/projects', payload, {
 				onFinish: () => {
+					setTitle('Proyecto nuevo');
+					setText('Proyecto creado éxitosamente.');
+					setColor("success");
+					setActivo(true);
 					setLoading(false);
 					setModalOpen(false);
 					setPendingData(undefined);
@@ -342,6 +354,10 @@ export default function Projects() {
 			router.put(`/projects/${pendingData.id}`, payload, {
 				onFinish: () => {
 					setLoading(false);
+					setTitle('Proyecto Modificado');
+					setText('Se actualizó correctamente el proyecto '+pendingData.id);
+					setColor("success");
+					setActivo(true);
 					setModalOpen(false);
 					setPendingData(undefined);
 				}
@@ -380,6 +396,13 @@ export default function Projects() {
 				text={textConfir}
 				onSubmit={accionar}
 				onCancel={cancelarConfirmacion}
+			/>
+			<ShowMessage 
+				open={activo}
+				title={title}
+				text={text}
+				color={color}
+				onClose={() => setActivo(false)}
 			/>
     </AppLayout>
   );

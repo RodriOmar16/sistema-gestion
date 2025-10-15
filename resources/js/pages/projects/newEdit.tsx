@@ -6,9 +6,11 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import React from "react"
+import React, { use, useState } from "react"
 import { Project } from '@/types/project';
 import { Loader2 } from 'lucide-react';
+import Swal from 'sweetalert2';
+import ShowMessage from "@/components/utils/showMessage"
 
 interface Props{
   open: boolean;
@@ -20,6 +22,10 @@ interface Props{
 }
 
 export default function NewEditDialog({ open, onOpenChange, mode, project, onSubmit, loading }: Props){
+  const [activo, setActivo] = useState(false);
+  const [text, setText]     = useState('');
+  const [title, setTitle]   = useState('');
+
   const [ form, setForm ] = React.useState<Project>({
     id: project?.id || '',
     name: project?.name || '',
@@ -41,9 +47,19 @@ export default function NewEditDialog({ open, onOpenChange, mode, project, onSub
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    //setForm({ id: '', name: '', descripcion: '' })
+    if(!form.name){
+      setTitle('¡Campo faltante!');
+      setText('Se requiere que ingreses un nombre al proyecto');
+      setActivo(true);
+      return 
+    }
+    if(!form.descripcion){
+      setTitle('¡Campo faltante!');
+      setText('Se requiere que ingreses una descripción al proyecto');
+      setActivo(true);
+      return;
+    }
     onSubmit(form);
-    //onOpenChange(false);
   }
 
   return (
@@ -96,6 +112,13 @@ export default function NewEditDialog({ open, onOpenChange, mode, project, onSub
           </Button>
         </DialogFooter>
       </DialogContent>
+      <ShowMessage 
+        open={activo}
+        title={title}
+        text={text}
+        color="warning"
+        onClose={() => setActivo(false)}
+      />
     </Dialog>
   );
 }

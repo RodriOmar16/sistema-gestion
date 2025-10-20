@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Categoria;
 use App\Models\DetVenta;
+use App\Models\ProductoLista;
 
 class Producto extends Model
 {
@@ -29,4 +30,10 @@ class Producto extends Model
     {
         return $this->hasMany(DetVenta::class, 'producto_id');
     }
+
+    public function productosLista()
+    {
+        return $this->hasMany(ProductoLista::class, 'producto_id');
+    }
+
 }

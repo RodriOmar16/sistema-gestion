@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+use App\Models\Caja;
+
 class Turno extends Model
 {
     /** @use HasFactory<\Database\Factories\TurnoFactory> */
@@ -15,6 +17,6 @@ class Turno extends Model
     protected $fillable   = ['nombre', 'inhabilitado'];
 
     public function cajas() {
-        return $this->hasMany(Caja::class, 'turno_id');
+        return $this->hasOne(Caja::class, 'turno_id');
     }
 }

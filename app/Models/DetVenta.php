@@ -4,6 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+use App\Models\Producto;
+use App\Models\Venta;
+
 class DetVenta extends Model
 {
     protected $primaryKey = 'det_venta_id';

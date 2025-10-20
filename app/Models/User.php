@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
+use App\Models\Rol;
+use App\Models\UsuarioRol;
 
 class User extends Authenticatable
 {
@@ -47,10 +49,11 @@ class User extends Authenticatable
         ];
     }
 
+    public function usuariosRoles(){
+        return $this->belongsToMany(UsuarioRol::class, 'id');
+    }
     public function roles()
     {
         return $this->belongsToMany(Rol::class, 'usuarios_roles', 'user_id', 'rol_id');
     }
-
-
 }

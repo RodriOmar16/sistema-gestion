@@ -4,13 +4,16 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+use App\Models\Producto;
+use App\Models\ProductoCategoria;
+
 class Categoria extends Model
 {
     protected $primaryKey = 'categoria_id';
 
-    public function productos()
+    public function productosCategoria()
     {
-        return $this->hasMany(Producto::class, 'categoria_id');
+        return $this->hasMany(ProductoCategoria::class, 'categoria_id');
     }
 
     public function productosSecundarios()

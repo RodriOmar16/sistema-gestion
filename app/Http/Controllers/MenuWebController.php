@@ -8,7 +8,7 @@ use App\Models\Ruta;
 
 class MenuWebController extends Controller
 {
-     public function menuPorUsuario(Request $request)
+    public function menuPorUsuario(Request $request)
     {
         $usuario = $request->user();
 

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 use App\Models\Proveedor;
 use App\Models\ProductoLista;
+use App\Models\Producto;
 
 class ListaPrecio extends Model
 {
@@ -21,7 +22,12 @@ class ListaPrecio extends Model
     public function proveedor(){
         return $this->belongsTo(Proveedor::class, 'proveedor_id');
     }
+
+    //productos
     public function productosLista(){
         return $this->hasMany(ProductoLista::class, 'lista_precio_id');
+    }
+    public function productos(){
+        return $this->belongsToMany(Producto::class, 'productos_listas','lista_precio_id', 'producto_id');
     }
 }

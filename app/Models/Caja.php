@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 use App\Models\Turno;
 use App\Models\Gasto;
+use App\Models\Proveedor;
 
 class Caja extends Model
 {
@@ -21,7 +22,11 @@ class Caja extends Model
         return $this->belongsTo(Turno::class, 'turno_id');
     }
 
+    //gasto / proveedor
     public function gastos() {
         return $this->hasMany(Gasto::class, 'caja_id');
+    }
+    public function proveedores(){
+        return $this->belongsToMany(Proveedor::class,'gastos', 'caja_id', 'proveedor_id');
     }
 }

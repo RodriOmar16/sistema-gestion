@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+use App\Models\Venta;
+
 class VentaAnulada extends Model
 {
     protected $primaryKey = 'venta_anulada_id';

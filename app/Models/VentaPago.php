@@ -4,6 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+use App\Models\Venta;
+use App\Models\FormaPago;
+
 class VentaPago extends Model
 {
     protected $primaryKey = 'venta_pago_id';

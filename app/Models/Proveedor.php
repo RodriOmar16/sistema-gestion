@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\ListaPrecio;
+use App\Models\Gasto;
+use App\Models\MovimientoStock;
 
 class Proveedor extends Model
 {
@@ -18,5 +20,13 @@ class Proveedor extends Model
 
     public function listaPrecios(){
         return $this->hasMany(ListaPrecio::class, 'proveedor_id');
+    }
+
+    public function gastos(){
+        return $this->hasMany(Gasto::class, 'proveedor_id');
+    }
+
+    public function movimientosStock(){
+        return $this->hasMany(MovimientoStock::class, 'proveedor_id');
     }
 }

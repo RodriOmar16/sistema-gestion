@@ -12,7 +12,7 @@ class MenuWebController extends Controller
     {
         $usuario = $request->user();
 
-        $menu = MenuWeb::with(['roles', 'ruta']) // si definís la relación
+        $menu = MenuWeb::with(['roles', 'ruta'])
             ->where('inhabilitado', false)
             ->whereHas('roles', function ($q) use ($usuario) {
                 $q->whereIn('roles.rol_id', $usuario->roles->pluck('rol_id'));

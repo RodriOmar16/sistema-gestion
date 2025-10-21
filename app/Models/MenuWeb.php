@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 use App\Models\Rol;
 use App\Models\MenuRol;
+use App\Models\Ruta;
 
 class MenuWeb extends Model
 {
@@ -20,9 +21,10 @@ class MenuWeb extends Model
     public function menuRoles(){
         return $this->hasMany(MenuRol::class, 'menu_id');
     }
-    /*public function ruta()
-    {
+
+    //No borrar esta es para el menu
+    public function ruta(){
         return $this->belongsTo(Ruta::class, 'ruta_id', 'ruta_id');
-    }*/
+    }
 
 }

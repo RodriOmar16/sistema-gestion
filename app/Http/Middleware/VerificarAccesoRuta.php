@@ -16,13 +16,27 @@ class VerificarAccesoRuta
      */
     public function handle($request, Closure $next)
     {
-        $rutaActual = $request->path(); // o Route::currentRouteName()
+        $rutaActual = '/'.$request->path(); // o Route::currentRouteName()
         $usuario = auth()->user();
 
-        $tieneAcceso = Ruta::where('url', '/' . $rutaActual)
+        $ruta = Ruta::where('url', $rutaActual)->first();
+        if (!$ruta) {
+            // Si no está registrada, no se valida (acción interna)
+            return $next($request);
+        }
+
+        /*$tieneAcceso = Ruta::where('url', '/' . $rutaActual)
             ->whereHas('roles', function ($q) use ($usuario) {
                 $q->whereIn('rol_id', $usuario->roles->pluck('rol_id'));
             })->exists();
+
+        if (!$tieneAcceso) {
+            abort(403, 'Acceso no autorizado');
+        }
+
+        return $next($request);*/
+
+        $tieneAcceso = $ruta->roles()->whereIn('rol_id', $usuario->roles->pluck('rol_id'))->exists();
 
         if (!$tieneAcceso) {
             abort(403, 'Acceso no autorizado');

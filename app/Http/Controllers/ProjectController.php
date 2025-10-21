@@ -71,7 +71,11 @@ class ProjectController extends Controller
 
 			$project = Project::create($validated);
 
-			return redirect()->route('projects.index')->with('success', 'Proyecto creado correctamente.');
+			//return redirect()->route('projects.index')->with('success', 'Proyecto creado correctamente.');
+			return redirect()->route('projects.index', [
+					'id' => $project->id
+			])->with('success', 'Proyecto creado correctamente.');
+
     }
 
     /**
@@ -102,7 +106,7 @@ class ProjectController extends Controller
 
 			$project->update($validated);
 
-			return redirect()->route('projects.index')->with('success', 'Proyecto actualizado correctamente.');
+			return redirect()->route('projects.index',['id' => $project->id])->with('success', 'Proyecto actualizado correctamente.');
     }
 
     /**
@@ -119,7 +123,7 @@ class ProjectController extends Controller
 				'inhabilitado' => !$project->inhabilitado,
 			]);
 
-			return redirect()->route('projects.index')->with('success', 'Estado actualizado correctamente.');
+			return redirect()->route('projects.index',['id' => $project->id])->with('success', 'Estado actualizado correctamente.');
 		}
 
 }

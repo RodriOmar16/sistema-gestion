@@ -40,7 +40,6 @@ export function AppSidebar() {
 									( <div className="p-4 text-sm text-muted">No hay opciones disponibles</div> ) 
 									: ( <NavMain items={mainNavItems} />)
 							}
-
 					</SidebarContent>
 
 					<SidebarFooter>

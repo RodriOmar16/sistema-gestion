@@ -2,7 +2,7 @@ import AppLayout from "@/layouts/app-layout";
 import { type BreadcrumbItem } from "@/types";
 import { Head, usePage, useForm, router } from '@inertiajs/react';
 import ModalConfirmar from "@/components/modalConfirmar";
-import NewEditBanner from "./newEdit";
+import NewEditBanner from "../../components/banners/newEdit";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useState } from 'react';
@@ -15,16 +15,17 @@ import {
   Table, TableBody, TableCell, TableFooter, TableHead, TableHeader,  TableRow,
 } from "@/components/ui/table";
 
-const breadcrumbs: BreadcrumbItem[] = [
-  /*{
+/*const breadcrumbs: BreadcrumbItem[] = [
+  {
     title: 'Dashboard',
     href: '/dashboard',
-  },*/
+  },
   {
-    title: 'Banners',
+    title: 'Banassaasdasners',
     href: '/banners',
   },
-];
+];*/
+const breadcrumbs: BreadcrumbItem[] | undefined = undefined;
 
 export const FormBanners = ({ openCreate }: { openCreate: () => void }) => {
 	const [loading, setLoading] = useState(false);
@@ -370,30 +371,30 @@ export default function Banners(){
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
-          <Head title="Banners" />
-          <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
-            <div className="relative min-h-[100vh] flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
-              <FormBanners openCreate={openCreate}/>
-            </div>
-            <div className="p-4 relative min-h-[100vh] flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
-              <h2 className='text-center pb-4'>Resultado de Banners</h2>
-              <TablaBanners openEdit={openEdit} />
-            </div>
-          </div>
-          {/*<NewEditBanner
-            open={modalOpen}
-            onOpenChange={setModalOpen}
-            mode={modalMode}
-            project={selectedProject}
-            onSubmit={handleSave}
-            loading={loading}
-          />*/}
-          <ModalConfirmar
-            open={confirmOpen}
-            text={textConfir}
-            onSubmit={accionar}
-            onCancel={cancelarConfirmacion}
-          />
-        </AppLayout>
+			<Head title="Banners" />
+			<div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
+				<div className="relative flex-none flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
+					<FormBanners openCreate={openCreate}/>
+				</div>
+				<div className="p-4 relative flex-1 overflow-auto rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
+					<h2 className='text-center pb-4'>Resultado de Banners</h2>
+					<TablaBanners openEdit={openEdit} />
+				</div>
+			</div>
+			{/*<NewEditBanner
+				open={modalOpen}
+				onOpenChange={setModalOpen}
+				mode={modalMode}
+				project={selectedProject}
+				onSubmit={handleSave}
+				loading={loading}
+			/>*/}
+			<ModalConfirmar
+				open={confirmOpen}
+				text={textConfir}
+				onSubmit={accionar}
+				onCancel={cancelarConfirmacion}
+			/>
+		</AppLayout>
   );
 }

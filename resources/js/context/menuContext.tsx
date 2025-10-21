@@ -4,15 +4,17 @@ import { type NavItem } from '@/types';
 import {
   LayoutGrid,  List,  Image,  ShoppingBasket,  Settings,  FolderKanban,  ShoppingCart,
   Contact,  CircleDollarSign,  Logs,  SquareChartGantt,  FolderTree,  Network,
-  User
+  User, Route, SquareMenu
 } from 'lucide-react';
+import { edit } from '@/routes/profile';
 
 const MenuContext = createContext<NavItem[]>([]);
 
 function construirMenuJerarquico(items: any[]): NavItem[] {
   const iconMap: Record<string, any> = {
     LayoutGrid, List, Image, ShoppingBasket, Settings, FolderKanban, ShoppingCart,
-    Contact, CircleDollarSign, Logs, SquareChartGantt, FolderTree, Network, User
+    Contact, CircleDollarSign, Logs, SquareChartGantt, FolderTree, Network, User, Route,
+    SquareMenu//para opcion menu
   };
 
   const mapa: Record<number, NavItem> = {};
@@ -21,7 +23,7 @@ function construirMenuJerarquico(items: any[]): NavItem[] {
   items.forEach(item => {
     const nodo: NavItem = {
       title: item.nombre,
-      href: item.ruta_url || '#',
+      href: item.nombre === 'Configuraciones' ? edit() : item.ruta_url || '#',
       icon: iconMap[item.icono] || LayoutGrid,
       children: [],
     };

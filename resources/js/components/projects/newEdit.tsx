@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button"
 import {
   Dialog,  DialogClose,  DialogContent,  DialogDescription,  DialogFooter,  DialogHeader,
-  DialogTitle,  DialogTrigger,
+  DialogTitle,  DialogTrigger
 } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
@@ -71,6 +71,7 @@ export default function NewEditDialog({ open, onOpenChange, mode, project, onSub
             { mode === 'create' ? 'Completa los campos para crear un nuevo proyecto' : 
                                   `Editando proyecto: ${project?.id}` }
           </DialogDescription>
+          <hr />
         </DialogHeader>
         <form className="space-y-4">
           { mode !== 'create' ? 

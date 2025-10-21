@@ -6,10 +6,11 @@ import { Input } from '@/components/ui/input';
 import { Pen, Ban, Search, Brush, Loader2, CirclePlus, Filter, Check } from 'lucide-react';
 import { useState } from 'react';
 import { Project } from '@/types/project';
-import NewEditDialog from './newEdit';
+import NewEditDialog from '../../components/projects/newEdit';
 import ModalConfirmar from '@/components/modalConfirmar';
 import PdfButton from '@/components/utils/pdfButton';
 import ShowMessage from '@/components/utils/showMessage';
+import { DataTableProjects } from '@/components/projects/dataTableProjects';
 
 import {
   Select,  SelectContent,  SelectItem,  SelectTrigger,  SelectValue,
@@ -18,16 +19,17 @@ import {
   Table, TableBody, TableCell, TableFooter, TableHead, TableHeader,  TableRow,
 } from "@/components/ui/table";
 
-const breadcrumbs: BreadcrumbItem[] = [
+/*const breadcrumbs: BreadcrumbItem[] = [
   /*{
     title: 'Dashboard',
     href: '/dashboard',
-  },*/
+  },
   {
     title: 'Proyectos',
     href: '/projects',
   },
-];
+];*/
+const breadcrumbs: BreadcrumbItem[] | undefined = undefined;
 
 export const FormProyectos = ({ openCreate }: { openCreate: () => void }) => {
 	const [loading, setLoading] = useState(false);
@@ -150,7 +152,7 @@ export const FormProyectos = ({ openCreate }: { openCreate: () => void }) => {
 	);
 };
 
-export function TableDemo({ openEdit }: { openEdit: (project: Project) => void }) {
+/*export function TablaProjects({ openEdit }: { openEdit: (project: Project) => void }) {
 	const projectVacio = {
 		id: '',
 		name: '',
@@ -269,7 +271,7 @@ export function TableDemo({ openEdit }: { openEdit: (project: Project) => void }
 				</TableBody>
 				<TableFooter>
 					<TableRow>
-						{/* Podés agregar resumen o totales si lo necesitás */}
+						{/* Podés agregar resumen o totales si lo necesitás }
 					</TableRow>
 				</TableFooter>
 			</Table>
@@ -281,7 +283,7 @@ export function TableDemo({ openEdit }: { openEdit: (project: Project) => void }
 			/>
 		</div>
   );
-}
+}*/
 
 export default function Projects() {
 	//para guardar la data del modal mientras se abre el modal de confirmar
@@ -299,11 +301,60 @@ export default function Projects() {
 	//para dar la apariencia de loading
 	const [loading, setLoading] = useState(false);
 
+	//necesito los projects de inertia
+	const { projects } = usePage().props as { projects?: { data: Project[] } };
+
+	//para editar
+	const projectVacio = {
+		id: '',
+		name: '',
+		descripcion: '',
+		inhabilitado: false,
+		created_at: '',
+		updated_at: ''
+	}
+	const [openConfirmar, setConfirmar]     = useState(false);
+	const [textConfirmar, setTextConfirmar] = useState(''); 
+	const [projectCopia, setProjectCopia]   = useState<Project>(projectVacio);
+
 	//ShowMessage
 	const [activo, setActivo] = useState(false);
 	const [text, setText]     = useState('');
 	const [title, setTitle]   = useState('');
 	const [color, setColor]   = useState('');
+
+	const confirmar = (project: Project) => {
+		if(project){
+			setProjectCopia( JSON.parse(JSON.stringify(project)) );
+			const texto : string = project.inhabilitado === 0 ? 'inhabilitar': 'habilitar';
+			setTextConfirmar('Estás seguro de querer '+texto+' este proyecto?');
+			setConfirmar(true);
+		}
+	};
+	const inhabilitarHabilitar = () => {
+		if (!projectCopia || !projectCopia.id) return;
+		setLoading(true);
+
+		router.put(`/projects/${projectCopia.id}/estado`, {}, {
+			preserveScroll: true,
+			onFinish: () => {
+				setProjectCopia(projectVacio);
+				setTextConfirmar('');
+				setConfirmar(false);
+
+				setTitle('Proyecto Modificado');
+				setText('Proyecto ' + (projectCopia.inhabilitado===0? 'inhabilitado' : 'habilitado')+ ' éxitosamente.');
+				setColor("success");
+				setActivo(true);
+				setLoading(false);
+
+			}
+		});
+	};
+
+	const cancelarInhabilitarHabilitar = () => { 
+		setConfirmar(false);
+	};
 
 	//Functions
 	const openCreate = () => {
@@ -327,7 +378,6 @@ export default function Projects() {
 		}
 		setConfirOpen(true);
 	};
-
 
 	const accionar = () => {
 		if (!pendingData) return;
@@ -375,12 +425,19 @@ export default function Projects() {
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Proyectos" />
       <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
-        <div className="relative min-h-[100vh] flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
+        <div className="relative flex-none flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
           <FormProyectos openCreate={openCreate}/>
         </div>
-        <div className="p-4 relative min-h-[100vh] flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
+        {/*<div className="p-4 relative flex-1 overflow-auto rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
 					<h2 className='text-center pb-4'>Resultado de Proyectos</h2>
-          <TableDemo openEdit={openEdit} />
+          <TablaProjects openEdit={openEdit} />
+        </div>*/}
+				<div className="p-4 relative flex-1 overflow-auto rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
+          {/*<DataTableProject openEdit={openEdit} />*/}
+					<DataTableProjects 
+						datos={projects?.data ?? []} openEdit={openEdit} 
+						abrirConfirmar={confirmar}
+						/>
         </div>
       </div>
 			<NewEditDialog
@@ -396,6 +453,12 @@ export default function Projects() {
 				text={textConfir}
 				onSubmit={accionar}
 				onCancel={cancelarConfirmacion}
+			/>
+			<ModalConfirmar
+				open={openConfirmar}
+				text={textConfirmar}
+				onSubmit={inhabilitarHabilitar}
+				onCancel={cancelarInhabilitarHabilitar}
 			/>
 			<ShowMessage 
 				open={activo}

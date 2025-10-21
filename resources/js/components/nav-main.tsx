@@ -46,7 +46,7 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
               </SidebarMenuAction>
               {isOpen && (
                 <SidebarMenuSub>
-                  {item.children.map((child) => (
+                  {item.children?.map((child) => (
                     <SidebarMenuSubItem key={child.title}>
                       <SidebarMenuSubButton
                         href={typeof child.href === 'string' ? child.href : '#'}

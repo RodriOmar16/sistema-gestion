@@ -3,9 +3,9 @@ use Inertia\Inertia;
 
 use App\Models\Carousel;
 
+use App\Http\Controllers\MenuWebController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\CarouselController;
-use App\Http\Controllers\MenuWebController;
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
@@ -38,6 +38,9 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
             'carouselImages' => $images,
         ]);
     })->name('dashboard');
+
+    //Menu
+    Route::get('/menu',[MenuWebController::class, 'index'])->name('menu.index');
 
     //proyectos
     Route::get('/projects', [ProjectController::class, 'index'])->name('projects.index');

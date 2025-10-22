@@ -8,16 +8,15 @@ import { useState } from 'react';
 import { Project } from '@/types/project';
 import NewEditDialog from '../../components/projects/newEdit';
 import ModalConfirmar from '@/components/modalConfirmar';
-import PdfButton from '@/components/utils/pdfButton';
+//import PdfButton from '@/components/utils/pdfButton';
 import ShowMessage from '@/components/utils/showMessage';
 import { DataTableProjects } from '@/components/projects/dataTableProjects';
-
 import {
   Select,  SelectContent,  SelectItem,  SelectTrigger,  SelectValue,
 } from "@/components/ui/select"
-import {
+/*import {
   Table, TableBody, TableCell, TableFooter, TableHead, TableHeader,  TableRow,
-} from "@/components/ui/table";
+} from "@/components/ui/table";*/
 
 /*const breadcrumbs: BreadcrumbItem[] = [
   /*{
@@ -341,13 +340,21 @@ export default function Projects() {
 				setProjectCopia(projectVacio);
 				setTextConfirmar('');
 				setConfirmar(false);
-
+				setLoading(false);
+			},
+			onSuccess: () => {
+    		// solo si fue exitosa
 				setTitle('Proyecto Modificado');
 				setText('Proyecto ' + (projectCopia.inhabilitado===0? 'inhabilitado' : 'habilitado')+ ' éxitosamente.');
 				setColor("success");
 				setActivo(true);
-				setLoading(false);
-
+			},
+			onError: (e) => {
+				// solo si hubo error
+				setTitle('Error con el proyecto');
+				setText(e.name ?? 'Error al modificar el estado.');
+				setColor("error");
+				setActivo(true);
 			}
 		});
 	};
@@ -391,25 +398,45 @@ export default function Projects() {
 		if (modalMode === 'create') {
 			router.post('/projects', payload, {
 				onFinish: () => {
+					setLoading(false);
+					setModalOpen(false);
+					setPendingData(undefined);
+				},
+				onSuccess: () => {
+					// solo si fue exitosa
 					setTitle('Proyecto nuevo');
 					setText('Proyecto creado éxitosamente.');
 					setColor("success");
 					setActivo(true);
-					setLoading(false);
-					setModalOpen(false);
-					setPendingData(undefined);
+				},
+				onError: (e) => {
+					// solo si hubo error
+					setTitle('Error en nuevo Proyecto');
+					setText('Ocurrió un problema al crear un proyecto nuevo: '+e.name);
+					setColor("error");
+					setActivo(true);
 				}
 			});
 		} else {
 			router.put(`/projects/${pendingData.id}`, payload, {
 				onFinish: () => {
 					setLoading(false);
+					setModalOpen(false);
+					setPendingData(undefined);
+				},
+				onSuccess: () => {
+					// solo si fue exitosa
 					setTitle('Proyecto Modificado');
 					setText('Se actualizó correctamente el proyecto '+pendingData.id);
 					setColor("success");
 					setActivo(true);
-					setModalOpen(false);
-					setPendingData(undefined);
+				},
+				onError: (e) => {
+					// solo si hubo error
+					setTitle('Error en proyecto');
+					setText('Ocurrió un problema y no se modificó el poryecto: '+e.name);
+					setColor("error");
+					setActivo(true);
 				}
 			});
 		}

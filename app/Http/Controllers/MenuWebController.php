@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+
 use App\Models\MenuWeb;
 use App\Models\Ruta;
 
@@ -28,9 +29,49 @@ class MenuWebController extends Controller
 
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        return MenuWeb::with(['roles', 'ruta'])->where('inhabilitado', false)->get();
+        if(!$request->hasAny(['id','nombre', 'padre', 'orden', 'inhabilitado', 'icono'])){
+            return inertia('menu/index',[
+                'menus'   => ['data' => []],
+                'filters' => []
+            ]);
+        }
+        $query = MenuWeb::query();
+
+        if($request->filled('id')){
+            $query->where('id',$request->id);
+        }
+        if($request->filled('nombre')){
+            $query->where('nombre','like','%'.$request->nombre.'%');
+        }
+        if($request->filled('padre')){
+            $query->where('padre',$request->padre);
+        }
+        if($request->filled('orden')){
+            $query->where('orden',$request->orden);
+        }
+        if($request->filled('icono')){
+            $query->where('icono','like','%'.$request->icono.'%');
+        }
+        if($request->filled('inhabilitado')){
+            $estado = filter_var($request->inhabilitado, FILTER_VALIDATE_BOOLEAN);
+            $query->where('inhabilitado',$estado);
+        }
+
+        if(!$request->filled('id') && !$request->filled('nombre') && !$request->filled('padre') &&
+           !$request->filled('orden') && !$request->filled('icono') && !$request->filled('inhabilitado')){
+            $query = MenuWeb::query();
+        }
+
+        $menus = $query->latest()->paginate(10)->winthQueryString();
+
+        return inertia('menu/index',[
+            'menus' => $menus, 
+            'filters' => $request->only(['id','nombre', 'padre', 'orden', 'inhabilitado', 'icono'])
+        ]);
+        //return MenuWeb::with(['roles', 'ruta'])->where('inhabilitado', false)->get();
+
     }
 
     public function store(Request $request)

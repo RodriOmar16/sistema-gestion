@@ -401,7 +401,6 @@ export function DataTableProjects({datos, openEdit, abrirConfirmar}:Props) {
   
   //functions
   const confirmar = (project: Project) => {
-    console.log("entro, project: ", project)
 		abrirConfirmar(project);
 	};
   const columns = getColumns(confirmar, openEdit); 

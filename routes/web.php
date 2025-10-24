@@ -4,6 +4,8 @@ use Inertia\Inertia;
 use App\Models\Carousel;
 
 use App\Http\Controllers\MenuWebController;
+use App\Http\Controllers\RutaController;
+
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\CarouselController;
 
@@ -46,7 +48,17 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
             'filters' => []
         ]);
     })->name('menu.blank');
+    Route::get('/init_menu_padres', [MenuWebController::class, 'padresHabilitados'])->name('menu.padres');
     Route::get('/get_menu',[MenuWebController::class, 'index'])->name('menu.index');
+
+    //Rutas
+    Route::get('/rutas', function () {
+        return Inertia::render('rutas/index', [
+            'rutas' => [],
+            'filters' => []
+        ]);
+    })->name('rutas.blank');
+    Route::get('/get_rutas', [RutaController::class, 'index'])->name('rutas.index');
 
     //proyectos
     Route::get('/projects', [ProjectController::class, 'index'])->name('projects.index');

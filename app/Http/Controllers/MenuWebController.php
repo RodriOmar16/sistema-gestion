@@ -29,47 +29,51 @@ class MenuWebController extends Controller
 
     }
 
+    public function padresHabilitados()
+    {
+        $padres = MenuWeb::whereNull('padre')
+            ->where(function ($q) {
+                $q->where('inhabilitado', false)->orWhereNull('inhabilitado');
+            })
+            ->orderBy('orden')
+            ->get();
+
+        $padres->push((object)[
+            'menu_id' => 0,
+            'nombre' => 'Sin padres',
+            'padre'  => null,
+            'orden' => 10000,
+        ]);
+        return response()->json($padres);
+    }
+
     public function index(Request $request)
     {   
         \Log::info('Filtros recibidos:', $request->all());
 
         $query = MenuWeb::query();
 
-        if($request->has('menu_id') && !$request->filled('menu_id')){
+        if($request->menu_id !== null && $request->ruta_id !== ''){
             $query->where('menu_id', $request->menu_id);
         }
-
-        if($request->has('nombre') && $request->filled('nombre')){
-            $query->where('nombre', $request->nombre);
-        }
-
-        /*if(){
-
-        }*/
-        /*if ($request->has('menu_id') && $request->filled('menu_id')) {
-            $query->where('menu_id', $request->menu_id);
-        }*/
-        /*if ($request->has('nombre') && $request->nombre !== '') {
+        if($request->nombre !== '' && $request->nombre !== ''){
             $query->where('nombre', 'like', '%' . $request->nombre . '%');
         }
-        if ($request->has('padre')) {
-            if ((int)$request->padre === 0) {
-                $query->whereNull('padre');
-            } else {
-                $query->where('padre', $request->padre);
-            }
+        if ($request->padre !== '' && $request->padre !== null && (int)$request->padre !== 0) {
+            $query->where('padre', $request->padre);
         }
         if ($request->has('icono') && $request->icono !== '') {
             $query->where('icono', 'like', '%' . $request->icono . '%');
         }
-        if ($request->has('inhabilitado')) {
-            $estado = filter_var($request->inhabilitado, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
-            if ($estado !== null) {
-                $query->where('inhabilitado', $estado);
+        if ($request->inhabilitada !== null && $request->inhabilitada !== '') {
+            $estado = filter_var($request->inhabilitada, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+            if ($estado === false) {
+                $query->where('inhabilitada', false);
+            } elseif ($estado === true) {
+                $query->where('inhabilitada', true);
             }
-        }*/
-
-        //$menus = $query->latest()->paginate(10)->withQueryString();
+        }
+        
         $menus = $query->latest()->get();
 
         return inertia('menu/index', [

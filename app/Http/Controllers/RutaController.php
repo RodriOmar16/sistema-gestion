@@ -7,10 +7,37 @@ use App\Models\Ruta;
 
 class RutaController extends Controller
 {
-    public function index()
+   public function index(Request $request)
     {
-        return Ruta::where('inhabilitada', false)->get();
+        \Log::info('Filtros recibidos:', $request->all());
+
+        $query = Ruta::query();
+
+        if ($request->ruta_id !== null && $request->ruta_id !== '') {
+            $query->where('ruta_id', $request->ruta_id);
+        }
+
+        if ($request->url !== null && $request->url !== '') {
+            $query->where('url', 'like', '%' . $request->url . '%');
+        }
+
+        if ($request->inhabilitada !== null && $request->inhabilitada !== '') {
+            $estado = filter_var($request->inhabilitada, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+            if ($estado === false) {
+                $query->where('inhabilitada', false);
+            } elseif ($estado === true) {
+                $query->where('inhabilitada', true);
+            }
+        }
+
+        $rutas = $query->orderByDesc('created_at')->get();
+
+        return inertia('rutas/index', [
+            'rutas' => $rutas,
+            'filters' => $request->only(['ruta_id', 'url', 'inhabilitada']),
+        ]);
     }
+
 
     public function store(Request $request)
     {

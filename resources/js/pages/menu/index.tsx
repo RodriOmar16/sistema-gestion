@@ -23,23 +23,9 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export const FiltrosMenu = ({ openCreate} : { openCreate: () => void }) => {
-  const menuData = JSON.parse(localStorage.getItem('menu-data')??'');
-  const menu = JSON.parse(localStorage.getItem('menu')??''); 
-  const menuCero = menu.map((e:any,index:number) => ({
-    title: e.title, url: e.href, id:index+1
-  }));
-  menuCero.push({id:0 ,title: 'Todos', url:''});
-
+  const [padresMenu, setPadresMenu] = useState([]);
   const [loading, setLoading] = useState(false);
-  //'id','nombre', 'padre', 'orden', 'inhabilitado', 'icono'
-  //const { filters } = usePage().props as { filters?: { menu_id: string|number; nombre: string; padre:number, orden:number, icono: string, inhabilitado: boolean } };
-
-  const { data, setData, get, processing, errors } = useForm<Menu/*{
-    id: string;
-    name: string;
-    descripcion: string;
-    inhabilitado: string | boolean;
-  }*/>({
+  const { data, setData, get, processing, errors } = useForm<Menu>({
     menu_id: /*filters?.menu_id ||*/ null,
     nombre: /*filters?.nombre ||*/ '',
     padre: /*filters?.padre ||*/ 0,
@@ -48,12 +34,18 @@ export const FiltrosMenu = ({ openCreate} : { openCreate: () => void }) => {
     inhabilitado: false,
   });
 
+  //funciones
+  useEffect(() => {
+    //optengo los datos del formulario
+    fetch('/init_menu_padres')
+    .then(res => res.json())
+    .then(data => {
+      setPadresMenu(data); // o como lo manejes
+    });
+  }, []);
+
   const handleSubmit = (e: React.FormEvent) => {
-    console.log("data: ", data)
     e.preventDefault();
-    //setLoading(true);
-    //return;
-    console.log("data.menu_id: ", data.menu_id, "typeof: ", typeof data.menu_id)
     router.get('/get_menu', {
       menu_id:      data.menu_id ? Number(data.menu_id) : null,
       nombre:       data.nombre,
@@ -132,9 +124,9 @@ export const FiltrosMenu = ({ openCreate} : { openCreate: () => void }) => {
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>
-                {menuCero.map((e: any) => (
-                  <SelectItem key={e.id} value={String(e.id)}>
-                    {e.title}
+                {padresMenu.map((e: any) => (
+                  <SelectItem key={e.menu_id} value={String(e.menu_id)}>
+                    {e.nombre}
                   </SelectItem>
                 ))}
               </SelectGroup>
@@ -199,9 +191,6 @@ export default function MenuForm() {
   //necesito los projects de inertia
   //const { menus } = usePage().props as { menus?: { data: Menu[] } };
   const { menus } = usePage().props as { menus?: Menu[] };
-  useEffect(() => {
-    console.log("MENUS ACTUALIZADOS:", menus);
-  }, [menus]);
   /*//para editar
   const projectVacio = {
     id: '',

@@ -1,5 +1,5 @@
 import * as React from "react"
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -30,160 +30,6 @@ interface Props {
   /*accion: (project:Project) => void;
   cancel: () => void;*/
 }
-
-let data: Project[] = [
-  /*
-  {
-    id: "m5gr84i9",
-    amount: 316,
-    status: "success",
-    email: "ken99@example.com",
-  },
-  {
-    id: "3u1reuv4",
-    amount: 242,
-    status: "success",
-    email: "Abe45@example.com",
-  },
-  {
-    id: "derv1ws0",
-    amount: 837,
-    status: "processing",
-    email: "Monserrat44@example.com",
-  },
-  {
-    id: "5kma53ae",
-    amount: 874,
-    status: "success",
-    email: "Silas22@example.com",
-  },
-  {
-    id: "bhqecj4p",
-    amount: 721,
-    status: "failed",
-    email: "carmella@example.com",
-  },
-  {
-    id: "m5gr84i9",
-    amount: 316,
-    status: "success",
-    email: "ken99@example.com",
-  },
-  {
-    id: "3u1reuv4",
-    amount: 242,
-    status: "success",
-    email: "Abe45@example.com",
-  },
-  {
-    id: "derv1ws0",
-    amount: 837,
-    status: "processing",
-    email: "Monserrat44@example.com",
-  },
-  {
-    id: "5kma53ae",
-    amount: 874,
-    status: "success",
-    email: "Silas22@example.com",
-  },
-  {
-    id: "bhqecj4p",
-    amount: 721,
-    status: "failed",
-    email: "carmella@example.com",
-  },
-  {
-    id: "m5gr84i9",
-    amount: 316,
-    status: "success",
-    email: "ken99@example.com",
-  },
-  {
-    id: "3u1reuv4",
-    amount: 242,
-    status: "success",
-    email: "Abe45@example.com",
-  },
-  {
-    id: "derv1ws0",
-    amount: 837,
-    status: "processing",
-    email: "Monserrat44@example.com",
-  },
-  {
-    id: "5kma53ae",
-    amount: 874,
-    status: "success",
-    email: "Silas22@example.com",
-  },
-  {
-    id: "bhqecj4p",
-    amount: 721,
-    status: "failed",
-    email: "carmella@example.com",
-  },
-  {
-    id: "m5gr84i9",
-    amount: 316,
-    status: "success",
-    email: "ken99@example.com",
-  },
-  {
-    id: "3u1reuv4",
-    amount: 242,
-    status: "success",
-    email: "Abe45@example.com",
-  },
-  {
-    id: "derv1ws0",
-    amount: 837,
-    status: "processing",
-    email: "Monserrat44@example.com",
-  },
-  {
-    id: "5kma53ae",
-    amount: 874,
-    status: "success",
-    email: "Silas22@example.com",
-  },
-  {
-    id: "bhqecj4p",
-    amount: 721,
-    status: "failed",
-    email: "carmella@example.com",
-  },
-  {
-    id: "m5gr84i9",
-    amount: 316,
-    status: "success",
-    email: "ken99@example.com",
-  },
-  {
-    id: "3u1reuv4",
-    amount: 242,
-    status: "success",
-    email: "Abe45@example.com",
-  },
-  {
-    id: "derv1ws0",
-    amount: 837,
-    status: "processing",
-    email: "Monserrat44@example.com",
-  },
-  {
-    id: "5kma53ae",
-    amount: 874,
-    status: "success",
-    email: "Silas22@example.com",
-  },
-  {
-    id: "bhqecj4p",
-    amount: 721,
-    status: "failed",
-    email: "carmella@example.com",
-  },*/
-]
 
 export type Payment = {
   id: string
@@ -386,7 +232,7 @@ export function getColumns(confirmar: (project: Project) => void, openEdit: (pro
 }
 export function DataTableProjects({datos, openEdit, abrirConfirmar}:Props) {
 
-  data = datos;
+  //data = datos;
   /*const projectVacio = {
 		id: '',		name: '',		descripcion: '',		inhabilitado: false,		created_at: '',		updated_at: ''
 	}
@@ -397,8 +243,21 @@ export function DataTableProjects({datos, openEdit, abrirConfirmar}:Props) {
   const [sorting, setSorting]                   = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters]       = React.useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
-  const [rowSelection, setRowSelection]         = React.useState({})
+  const [rowSelection, setRowSelection]         = React.useState({});
+  const [busqueda, setBusqueda]                 = useState('');
   
+  const data = useMemo(() => {
+    const texto = busqueda.toLowerCase();
+    return busqueda
+      ? datos.filter((projects) =>
+          projects.id?.toString().includes(texto) ||
+          projects.name?.toLowerCase().includes(texto) ||
+          //(menu.padre ?? '').toLowerCase().includes(texto) ||
+          projects.descripcion?.toLowerCase().includes(texto)
+        )
+      : datos;
+  }, [busqueda, datos]);
+
   //functions
   const confirmar = (project: Project) => {
 		abrirConfirmar(project);
@@ -433,10 +292,8 @@ export function DataTableProjects({datos, openEdit, abrirConfirmar}:Props) {
         <div className="col-span-6 sm:col-span-8 md:col-span-8 lg:col-span-10 flex justify-end  items-center">
           <Input
             placeholder="Filtrar"
-            value={(table.getColumn("descripcion")?.getFilterValue() as string) ?? ""}
-            onChange={(event) =>
-              table.getColumn("descripcion")?.setFilterValue(event.target.value)
-            }
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
             className="max-w-sm"
           />
         </div>
@@ -517,11 +374,11 @@ export function DataTableProjects({datos, openEdit, abrirConfirmar}:Props) {
           </TableBody>
         </Table>
       </div>
-      {/*<div className="flex items-center justify-end space-x-2 py-4">
-        <div className="text-muted-foreground flex-1 text-sm">
-          {table.getFilteredSelectedRowModel().rows.length} of{" "}
+      <div className="flex items-center justify-end space-x-2 py-4">
+        {/*<div className="text-muted-foreground flex-1 text-sm">
+          {table.getFilteredSelectedRowModel().rows.length} de{" "}
           {table.getFilteredRowModel().rows.length} fila(s) selecc.
-        </div>
+        </div>*/}
         <div className="space-x-2">
           <Button
             variant="outline"
@@ -540,7 +397,7 @@ export function DataTableProjects({datos, openEdit, abrirConfirmar}:Props) {
             Siguiente
           </Button>
         </div>
-      </div>*/}
+      </div>
     </div>
   )
 }

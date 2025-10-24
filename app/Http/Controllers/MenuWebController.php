@@ -30,48 +30,52 @@ class MenuWebController extends Controller
     }
 
     public function index(Request $request)
-    {
-        if(!$request->hasAny(['id','nombre', 'padre', 'orden', 'inhabilitado', 'icono'])){
-            return inertia('menu/index',[
-                'menus'   => ['data' => []],
-                'filters' => []
-            ]);
-        }
+    {   
+        \Log::info('Filtros recibidos:', $request->all());
+
         $query = MenuWeb::query();
 
-        if($request->filled('id')){
-            $query->where('id',$request->id);
-        }
-        if($request->filled('nombre')){
-            $query->where('nombre','like','%'.$request->nombre.'%');
-        }
-        if($request->filled('padre')){
-            $query->where('padre',$request->padre);
-        }
-        if($request->filled('orden')){
-            $query->where('orden',$request->orden);
-        }
-        if($request->filled('icono')){
-            $query->where('icono','like','%'.$request->icono.'%');
-        }
-        if($request->filled('inhabilitado')){
-            $estado = filter_var($request->inhabilitado, FILTER_VALIDATE_BOOLEAN);
-            $query->where('inhabilitado',$estado);
+        if($request->has('menu_id') && !$request->filled('menu_id')){
+            $query->where('menu_id', $request->menu_id);
         }
 
-        if(!$request->filled('id') && !$request->filled('nombre') && !$request->filled('padre') &&
-           !$request->filled('orden') && !$request->filled('icono') && !$request->filled('inhabilitado')){
-            $query = MenuWeb::query();
+        if($request->has('nombre') && $request->filled('nombre')){
+            $query->where('nombre', $request->nombre);
         }
 
-        $menus = $query->latest()->paginate(10)->winthQueryString();
+        /*if(){
 
-        return inertia('menu/index',[
-            'menus' => $menus, 
-            'filters' => $request->only(['id','nombre', 'padre', 'orden', 'inhabilitado', 'icono'])
+        }*/
+        /*if ($request->has('menu_id') && $request->filled('menu_id')) {
+            $query->where('menu_id', $request->menu_id);
+        }*/
+        /*if ($request->has('nombre') && $request->nombre !== '') {
+            $query->where('nombre', 'like', '%' . $request->nombre . '%');
+        }
+        if ($request->has('padre')) {
+            if ((int)$request->padre === 0) {
+                $query->whereNull('padre');
+            } else {
+                $query->where('padre', $request->padre);
+            }
+        }
+        if ($request->has('icono') && $request->icono !== '') {
+            $query->where('icono', 'like', '%' . $request->icono . '%');
+        }
+        if ($request->has('inhabilitado')) {
+            $estado = filter_var($request->inhabilitado, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+            if ($estado !== null) {
+                $query->where('inhabilitado', $estado);
+            }
+        }*/
+
+        //$menus = $query->latest()->paginate(10)->withQueryString();
+        $menus = $query->latest()->get();
+
+        return inertia('menu/index', [
+            'menus' => $menus,
+            //'filters' => $request->only(['menu_id','nombre','padre','orden','inhabilitado','icono']),
         ]);
-        //return MenuWeb::with(['roles', 'ruta'])->where('inhabilitado', false)->get();
-
     }
 
     public function store(Request $request)

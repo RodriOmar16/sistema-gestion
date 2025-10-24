@@ -40,7 +40,13 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
     })->name('dashboard');
 
     //Menu
-    Route::get('/menu',[MenuWebController::class, 'index'])->name('menu.index');
+    Route::get('/menu', function () {
+        return Inertia::render('menu/index', [
+            'menus' => [/*'data' => []*/],
+            'filters' => []
+        ]);
+    })->name('menu.blank');
+    Route::get('/get_menu',[MenuWebController::class, 'index'])->name('menu.index');
 
     //proyectos
     Route::get('/projects', [ProjectController::class, 'index'])->name('projects.index');

@@ -15,17 +15,12 @@ import {
   Table, TableBody, TableCell, TableFooter, TableHead, TableHeader,  TableRow,
 } from "@/components/ui/table";
 
-/*const breadcrumbs: BreadcrumbItem[] = [
+const breadcrumbs: BreadcrumbItem[] = [
   {
-    title: 'Dashboard',
-    href: '/dashboard',
-  },
-  {
-    title: 'Banassaasdasners',
+    title: 'Banners',
     href: '/banners',
   },
-];*/
-const breadcrumbs: BreadcrumbItem[] | undefined = undefined;
+];
 
 export const FormBanners = ({ openCreate }: { openCreate: () => void }) => {
 	const [loading, setLoading] = useState(false);
@@ -78,7 +73,7 @@ export const FormBanners = ({ openCreate }: { openCreate: () => void }) => {
 
 	return (
 		<div>
-			<div className='flex justify-between pl-4 pr-6 pt-2'>
+			<div className='flex items-center justify-between px-3 pt-3'>
 				<div className='flex'> <Filter size={20} />  Filtros</div>
 				<Button 
 					className="p-0 hover:bg-transparent cursor-pointer"
@@ -91,52 +86,50 @@ export const FormBanners = ({ openCreate }: { openCreate: () => void }) => {
 					<CirclePlus size={30} className="text-green-600 scale-200" />
 				</Button>
 			</div>
-			<form onSubmit={handleSubmit} className='flex items-center gap-4 p-4 justify-between"	'>
-				<div className='flex gap-4 flex-1'>
-					<div>
-						<label htmlFor="id">Id</label>
-						<Input value={data.id} onChange={(e)=>setData('id',e.target.value)}/>	
-						{ errors.id && <p className='text-red-500	'>{ errors.id }</p> }
-					</div>
-					<div >
-						<label htmlFor="nombre">Url</label>
-						<Input value={data.url} onChange={(e)=>setData('url',e.target.value)}/>	
-						{ errors.url && <p className='text-red-500	'>{ errors.url }</p> }
-					</div>
-					<div>
-						<label htmlFor="descripcion">Título</label>
-						<Input value={data.title} onChange={(e)=>setData('title',e.target.value)}/>	
-						{ errors.title && <p className='text-red-500	'>{ errors.title }</p> }
-					</div>
-          <div>
-						<label htmlFor="descripcion">Descripción</label>
-						<Input value={data.description} onChange={(e)=>setData('description',e.target.value)}/>	
-						{ errors.description && <p className='text-red-500	'>{ errors.description }</p> }
-					</div>
-					<div>
-						<label htmlFor="estado">Estado</label>
-						<Select
-							value={data.inhabilitado === '' ? 'all' : String(!data.inhabilitado)}
-							onValueChange={(value) => {
-								if (value === 'all') {
-									setData('inhabilitado', '');
-								} else {
-									setData('inhabilitado', value === 'true' ? false : true);
-								}
-							}}
-						>
-							<SelectTrigger className="w-[180px]">
-								<SelectValue placeholder="Seleccionar estado" />
-							</SelectTrigger>
-							<SelectContent>
-								<SelectItem value="true">Habilitado</SelectItem>
-								<SelectItem value="false">Inhabilitado</SelectItem>
-								<SelectItem value="all">Todos</SelectItem>
-							</SelectContent>
-						</Select>
-					</div>
+			<form className='grid grid-cols-12 gap-4 px-4 pt-1 pb-4' onSubmit={handleSubmit}>
+				<div className="col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-2">
+					<label htmlFor="id">Id</label>
+					<Input value={data.id} onChange={(e)=>setData('id',e.target.value)}/>	
+					{ errors.id && <p className='text-red-500	'>{ errors.id }</p> }
 				</div>
-				<div className='flex justify-end'>
+				<div className="col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-2">
+					<label htmlFor="nombre">Url</label>
+					<Input value={data.url} onChange={(e)=>setData('url',e.target.value)}/>	
+					{ errors.url && <p className='text-red-500	'>{ errors.url }</p> }
+				</div>
+				<div className="col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-2">
+					<label htmlFor="descripcion">Título</label>
+					<Input value={data.title} onChange={(e)=>setData('title',e.target.value)}/>	
+					{ errors.title && <p className='text-red-500	'>{ errors.title }</p> }
+				</div>
+				<div className="col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-2">
+					<label htmlFor="descripcion">Descripción</label>
+					<Input value={data.description} onChange={(e)=>setData('description',e.target.value)}/>	
+					{ errors.description && <p className='text-red-500	'>{ errors.description }</p> }
+				</div>
+				<div className="col-span-6 sm:col-span-4 md:col-span-4 lg:col-span-2">
+					<label htmlFor="estado">Estado</label>
+					<Select
+						value={data.inhabilitado === '' ? 'all' : String(!data.inhabilitado)}
+						onValueChange={(value) => {
+							if (value === 'all') {
+								setData('inhabilitado', '');
+							} else {
+								setData('inhabilitado', value === 'true' ? false : true);
+							}
+						}}
+					>
+						<SelectTrigger className="w-[180px]">
+							<SelectValue placeholder="Seleccionar estado" />
+						</SelectTrigger>
+						<SelectContent>
+							<SelectItem value="true">Habilitado</SelectItem>
+							<SelectItem value="false">Inhabilitado</SelectItem>
+							<SelectItem value="all">Todos</SelectItem>
+						</SelectContent>
+					</Select>
+				</div>
+				<div className='col-span-6 sm:col-span-4 md:col-span-4 lg:col-span-2 flex justify-end items-center'>
 					<Button 
 						className="p-0 hover:bg-transparent cursor-pointer"
 						type="button"

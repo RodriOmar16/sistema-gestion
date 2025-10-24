@@ -427,16 +427,20 @@ export function DataTableProjects({datos, openEdit, abrirConfirmar}:Props) {
 
   return (
     <div className="w-full">
-      <div className="flex justify-between  items-center py-2">
-        <PdfButton deshabilitado={datos.length == 0}/>
-        <Input
-          placeholder="Filtrar"
-          value={(table.getColumn("descripcion")?.getFilterValue() as string) ?? ""}
-          onChange={(event) =>
-            table.getColumn("descripcion")?.setFilterValue(event.target.value)
-          }
-          className="max-w-sm"
-        />
+      <div className=" grid grid-cols-12 gap-4  py-2">
+        <div className="col-span-6 sm:col-span-4 md:col-span-4 lg:col-span-2">
+          <PdfButton deshabilitado={datos.length == 0}/>
+        </div>
+        <div className="col-span-6 sm:col-span-8 md:col-span-8 lg:col-span-10 flex justify-end  items-center">
+          <Input
+            placeholder="Filtrar"
+            value={(table.getColumn("descripcion")?.getFilterValue() as string) ?? ""}
+            onChange={(event) =>
+              table.getColumn("descripcion")?.setFilterValue(event.target.value)
+            }
+            className="max-w-sm"
+          />
+        </div>
         {/*<DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="ml-auto">

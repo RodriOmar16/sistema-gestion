@@ -3,24 +3,36 @@ import { type BreadcrumbItem } from '@/types';
 import { Head, usePage, useForm, router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select,  SelectContent,  SelectGroup,  SelectItem,  SelectLabel,  SelectTrigger,  SelectValue } from "@/components/ui/select"
+import { Switch } from '@/components/ui/switch';
 import { Pen, Ban, Search, Brush, Loader2, CirclePlus, Filter, Check } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Menu } from '@/types/menus';
 import NewEditDialog from '../../components/projects/newEdit';
 import ModalConfirmar from '@/components/modalConfirmar';
 import PdfButton from '@/components/utils/pdfButton';
 import ShowMessage from '@/components/utils/showMessage';
 //import { DataTableProjects } from '@/components/projects/dataTableProjects';
-import {
-  Select,  SelectContent,  SelectItem,  SelectTrigger,  SelectValue,
-} from "@/components/ui/select"
 
-const breadcrumbs: BreadcrumbItem[] | undefined = undefined;
+const breadcrumbs: BreadcrumbItem[] = [
+  {
+    title: 'Menus',
+    href: '',
+  },
+];
 
-export const FiltrosMenu = ({ openCreate }: { openCreate: () => void }) => {
+export const FiltrosMenu = ({ openCreate} : { openCreate: () => void }) => {
+  const menuData = JSON.parse(localStorage.getItem('menu-data')??'');
+  const menu = JSON.parse(localStorage.getItem('menu')??''); 
+  const menuCero = menu.map((e:any,index:number) => ({
+    title: e.title, url: e.href, id:index+1
+  }));
+  menuCero.push({id:0 ,title: 'Todos', url:''});
+
   const [loading, setLoading] = useState(false);
   //'id','nombre', 'padre', 'orden', 'inhabilitado', 'icono'
-  const { filters } = usePage().props as { filters?: { menu_id: string|number; nombre: string; padre:number, orden:number, icono: string, inhabilitado: boolean | number | 'true' | 'false' } };
+  //const { filters } = usePage().props as { filters?: { menu_id: string|number; nombre: string; padre:number, orden:number, icono: string, inhabilitado: boolean } };
 
   const { data, setData, get, processing, errors } = useForm<Menu/*{
     id: string;
@@ -28,49 +40,58 @@ export const FiltrosMenu = ({ openCreate }: { openCreate: () => void }) => {
     descripcion: string;
     inhabilitado: string | boolean;
   }*/>({
-    menu_id: filters?.menu_id || '',
-    nombre: filters?.nombre || '',
-    padre: filters?.padre || 0,
-    orden: filters?.orden || 0,
-    icono: filters?.icono || '',
-    inhabilitado: filters?.inhabilitado ?? false,
+    menu_id: /*filters?.menu_id ||*/ null,
+    nombre: /*filters?.nombre ||*/ '',
+    padre: /*filters?.padre ||*/ 0,
+    orden: /*filters?.orden ||*/ 0,
+    icono:/* filters?.icono ||*/ '',
+    inhabilitado: false,
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     console.log("data: ", data)
     e.preventDefault();
-    setLoading(true);
-    return;
-    router.get('/menu', {
-      menu_id: data.menu_id,
-      nombre: data.nombre,
-      padre: data.padre,
-      orden: data.orden,
-      icono: data.icono,
-      inhabilitado: data.inhabilitado,
+    //setLoading(true);
+    //return;
+    console.log("data.menu_id: ", data.menu_id, "typeof: ", typeof data.menu_id)
+    router.get('/get_menu', {
+      menu_id:      data.menu_id ? Number(data.menu_id) : null,
+      nombre:       data.nombre,
+      padre:        data.padre,
+      //orden: data.orden,
+      icono:        data.icono,
+      inhabilitado: Boolean(data.inhabilitado),
     }, {
       preserveState: true,
       preserveScroll: true,
-      onFinish: () => setLoading(false),
-      onSuccess: () => setLoading(false),
-      onError: (e) => setLoading(false),
+      onFinish: () => {
+        console.log("termino")
+        setLoading(false)
+      },
+      onSuccess: () => {
+        setLoading(false)
+      },
+      onError: (e) =>{
+        console.log("error: ",e)
+        setLoading(false)
+      },
     });
   };
 
   const handleReset = () => {
     setData({
-    menu_id: filters?.menu_id || '',
-    nombre: filters?.nombre || '',
-    padre: filters?.padre || 0,
-    orden: filters?.orden || 0,
-    icono: filters?.icono || '',
-    inhabilitado: filters?.inhabilitado ?? false,
-  });
+      menu_id: null,
+      nombre: '',
+      padre: 0,
+      //orden: filters?.orden || 0,
+      icono: '',
+      inhabilitado: false,
+    });
   };
 
   return (
-    <div>
-      <div className='flex justify-between pl-4 pr-6 pt-2'>
+    <div className='flex flex-col'>
+      <div className='flex items-center justify-between px-3 pt-3'>
         <div className='flex'> <Filter size={20} />  Filtros</div>
         <Button 
           className="p-0 hover:bg-transparent cursor-pointer"
@@ -83,47 +104,57 @@ export const FiltrosMenu = ({ openCreate }: { openCreate: () => void }) => {
           <CirclePlus size={30} className="text-green-600 scale-200" />
         </Button>
       </div>
-      <form onSubmit={handleSubmit} className='flex items-center gap-4 p-4 justify-between"	'>
-        <div className='flex gap-4 flex-1'>
-          <div>
-            <label htmlFor="id">Id</label>
-            <Input value={data.id} onChange={(e)=>setData('id',e.target.value)}/>	
-            { errors.id && <p className='text-red-500	'>{ errors.id }</p> }
-          </div>
-          <div >
-            <label htmlFor="nombre">Nombre</label>
-            <Input value={data.name} onChange={(e)=>setData('name',e.target.value)}/>	
-            { errors.name && <p className='text-red-500	'>{ errors.name }</p> }
-          </div>
-          <div>
-            <label htmlFor="descripcion">Descripción</label>
-            <Input value={data.descripcion} onChange={(e)=>setData('descripcion',e.target.value)}/>	
-            { errors.descripcion && <p className='text-red-500	'>{ errors.descripcion }</p> }
-          </div>
-          <div>
-            <label htmlFor="estado">Estado</label>
-            <Select
-              value={data.inhabilitado === '' ? 'all' : String(!data.inhabilitado)}
-              onValueChange={(value) => {
-                if (value === 'all') {
-                  setData('inhabilitado', '');
-                } else {
-                  setData('inhabilitado', value === 'true' ? false : true);
-                }
-              }}
-            >
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Seleccionar estado" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="true">Habilitado</SelectItem>
-                <SelectItem value="false">Inhabilitado</SelectItem>
-                <SelectItem value="all">Todos</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+      <form className="grid grid-cols-12 gap-4 px-4 pt-1 pb-4" onSubmit={handleSubmit}>
+        <div className="col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-2">
+          <label htmlFor="id">Id</label>
+          <Input 
+            type="number"
+            min={0}
+            value={String(data.menu_id)} 
+            onChange={(e) => setData('menu_id', Number(e.target.value))} />
+          {errors.menu_id && <p className="text-red-500">{errors.menu_id}</p>}
         </div>
-        <div className='flex justify-end'>
+
+        <div className="col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3">
+          <label htmlFor="nombre">Nombre</label>
+          <Input value={data.nombre} onChange={(e) => setData('nombre', e.target.value)} />
+          {errors.nombre && <p className="text-red-500">{errors.nombre}</p>}
+        </div>
+
+        <div className="col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-2 lg:col-span-2">
+          <label htmlFor="padre">Selec. Padre</label>
+          <Select
+            value={String(data.padre)}
+            onValueChange={(value) => setData('padre', Number(value))}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                {menuCero.map((e: any) => (
+                  <SelectItem key={e.id} value={String(e.id)}>
+                    {e.title}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-2">
+          <label htmlFor="icono">Icono</label>
+          <Input value={data.icono} onChange={(e) => setData('icono', e.target.value)} />
+          {errors.icono && <p className="text-red-500">{errors.icono}</p>}
+        </div>
+        <div className="flex flex-col col-span-6 sm:col-span-4 md:col-span-4 lg:col-span-1">
+          <label htmlFor="estado" className='mb-2'>Inhabilitado</label>
+          <Switch id="inhabilitado" 
+            checked={Boolean(data.inhabilitado)} 
+            onCheckedChange={(checked) => setData('inhabilitado', Boolean(checked))}
+          />
+          {errors.inhabilitado && <p className="text-red-500">{errors.inhabilitado}</p>}
+        </div>
+        <div className="col-span-6 sm:col-span-4 md:col-span-4 lg:col-span-2 flex justify-end items-center align-center">
           <Button 
             className="p-0 hover:bg-transparent cursor-pointer"
             type="button"
@@ -135,7 +166,7 @@ export const FiltrosMenu = ({ openCreate }: { openCreate: () => void }) => {
             <Brush size={30} className="text-orange-500" />
           </Button>
           <Button type="submit" title="Buscar" disabled={processing}>
-            {loading ? (
+            {processing ? (
               <Loader2 size={20} className="animate-spin mr-2" />
             ) : (
               <Search size={20} className="mr-2" />
@@ -144,12 +175,13 @@ export const FiltrosMenu = ({ openCreate }: { openCreate: () => void }) => {
           </Button>
         </div>
       </form>
+
     </div>
   );
 };
 
 export default function MenuForm() {
-  //para guardar la data del modal mientras se abre el modal de confirmar
+  /*//para guardar la data del modal mientras se abre el modal de confirmar
   const [pendingData, setPendingData] = useState<Menu | undefined>(undefined);
 
   //controla cuando se abre el modal de confirmar y el texto que se quiera mostrar
@@ -163,11 +195,14 @@ export default function MenuForm() {
 
   //para dar la apariencia de loading
   const [loading, setLoading] = useState(false);
-
+*/
   //necesito los projects de inertia
-  const { menus } = usePage().props as { menus?: { data: Menu[] } };
-
-  //para editar
+  //const { menus } = usePage().props as { menus?: { data: Menu[] } };
+  const { menus } = usePage().props as { menus?: Menu[] };
+  useEffect(() => {
+    console.log("MENUS ACTUALIZADOS:", menus);
+  }, [menus]);
+  /*//para editar
   const projectVacio = {
     id: '',
     name: '',
@@ -226,15 +261,15 @@ export default function MenuForm() {
   const cancelarInhabilitarHabilitar = () => { 
     setConfirmar(false);
   };
-
+*/
   //Functions
   const openCreate = () => {
-    setModalMode('create');
+    /*setModalMode('create');
     setSelectedProject(undefined);
-    setModalOpen(true);
+    setModalOpen(true);*/
   };
 
-  const openEdit = (project: Project) => {
+  /*const openEdit = (project: Project) => {
     setModalMode('edit');
     setSelectedProject(project);
     setModalOpen(true);
@@ -310,23 +345,51 @@ export default function MenuForm() {
 
   const cancelarConfirmacion = () => {
     setConfirOpen(false);
-  };
+  };*/
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
-      <Head title="Proyectos" />
+      <Head title="Menu" />
       <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
         <div className="relative flex-none flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
           <FiltrosMenu openCreate={openCreate}/>
         </div>
         <div className="p-4 relative flex-1 overflow-auto rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
-          <DataTableProjects 
+          {/*<DataTableProjects 
             datos={projects?.data ?? []} openEdit={openEdit} 
             abrirConfirmar={confirmar}
-            />
+            />*/}
+            <div>
+    {menus?.length === 0 ? (
+      <p className="text-gray-500 text-center">No se encontraron menús.</p>
+    ) : (
+      <table className="w-full border">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Icono</th>
+            <th>Padre</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          {menus?.map((menu) => (
+            <tr key={menu.menu_id}>
+              <td>{menu.menu_id}</td>
+              <td>{menu.nombre}</td>
+              <td>{menu.icono}</td>
+              <td>{menu.padre}</td>
+              <td>{menu.inhabilitado ? 'Inhabilitado' : 'Activo'}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    )}
+  </div>
         </div>
       </div>
-      <NewEditDialog
+      {/*<NewEditDialog
         open={modalOpen}
         onOpenChange={setModalOpen}
         mode={modalMode}
@@ -352,7 +415,7 @@ export default function MenuForm() {
         text={text}
         color={color}
         onClose={() => setActivo(false)}
-      />
+      />*/}
     </AppLayout>
   );
 }

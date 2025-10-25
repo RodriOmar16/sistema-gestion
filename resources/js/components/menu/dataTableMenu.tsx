@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Table,  TableBody,  TableCell,  TableHead,  TableHeader,  TableRow } from "@/components/ui/table"
 import { Menu } from "@/types/menus"
 import PdfButton from "../utils/pdfButton"
-
+import { formatDateTime } from "@/utils"
 
 interface Props {
   datos: Menu[];
@@ -23,7 +23,7 @@ export type Payment = {
   email: string
 }
 
-function formatDateTime(dateString: string): string {
+/*function formatDateTime(dateString: string): string {
     const date = new Date(dateString)
     const day = date.getDate().toString().padStart(2, '0');
     const month = (date.getMonth() + 1).toString().padStart(2, '0'); // Month is 0-indexed
@@ -31,7 +31,7 @@ function formatDateTime(dateString: string): string {
     const hours = date.getHours().toString().padStart(2, '0');
     const minutes = date.getMinutes().toString().padStart(2, '0');
     return `${day}/${month}/${year} ${hours}:${minutes}`;
-}
+}*/
 
 //export const columns: ColumnDef<Project>[] = [
 export function getColumns(confirmar: (menu: Menu) => void, openEdit: (menu: Menu) => void): ColumnDef<Menu>[] {
@@ -128,7 +128,6 @@ export function getColumns(confirmar: (menu: Menu) => void, openEdit: (menu: Men
       cell: ({ row }) => {
         
         const menu = row.original;
-  
         return (
           <div className='flex'>
             {

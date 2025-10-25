@@ -42,14 +42,11 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
     })->name('dashboard');
 
     //Menu
-    Route::get('/menu', function () {
-        return Inertia::render('menu/index', [
-            'menus' => [/*'data' => []*/],
-            'filters' => []
-        ]);
-    })->name('menu.blank');
-    Route::get('/init_menu_padres', [MenuWebController::class, 'padresHabilitados'])->name('menu.padres');
-    Route::get('/get_menu',[MenuWebController::class, 'index'])->name('menu.index');
+    Route::get('/init_menu', [MenuWebController::class, 'padresHabilitados'])->name('menu.padres');
+    Route::get('/menu',[MenuWebController::class, 'index'])->name('menu.index');
+    Route::post('/menu', [MenuWebController::class, 'store'])->name('menu.store');
+    Route::put('/menu/{menu}', [MenuWebController::class, 'update'])->name('menu.update');
+    Route::put('/menu/{menu}/estado', [MenuWebController::class, 'toggleEstado'])->name('menu.toggleEstado');
 
     //Rutas
     Route::get('/rutas', [RutaController::class, 'index'])->name('rutas.index');

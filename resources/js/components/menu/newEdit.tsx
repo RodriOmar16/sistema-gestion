@@ -3,6 +3,8 @@ import {
   Dialog,  DialogClose,  DialogContent,  DialogDescription,  DialogFooter,  DialogHeader,
   DialogTitle,  DialogTrigger
 } from "@/components/ui/dialog"
+import { Select,  SelectContent,  SelectGroup,  SelectItem,  SelectLabel,  SelectTrigger,  SelectValue } from "@/components/ui/select"
+import { Switch } from '@/components/ui/switch';
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -20,13 +22,16 @@ interface Props {
   menu?: Menu;
   onSubmit: (data:Menu) => void;
   loading: boolean;
+  padres: any[];
 }
 
-export default function NewEditDialog({ open, onOpenChange, mode, menu, onSubmit, loading }: Props){
+export default function NewEditDialog({ open, onOpenChange, mode, menu, onSubmit, loading, padres }: Props){
+  //data
   const menuVacio = {
     menu_id:      null,
     nombre:       '',
-    padre:        0,
+    padre_id:     0,
+    padre_nombre: '',
     orden:        0,
     icono:        '',
     inhabilitado: false,
@@ -36,7 +41,26 @@ export default function NewEditDialog({ open, onOpenChange, mode, menu, onSubmit
   const [ title, setTitle ]   = useState('');
   const { data, setData, post, put, processing, errors } = useForm<Menu>(menuVacio);
 
-  useEffect(() => {
+  //funciones
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if(!data.nombre){
+      setTitle('¡Campo faltante!');
+      setText('Se requiere que ingreses un nombre del menú');
+      setActivo(true);
+      return 
+    }
+    if(!data.icono){
+      setTitle('¡Campo faltante!');
+      setText('Se requiere que ingreses el icono');
+      setActivo(true);
+      return;
+    }
+    onSubmit(data);
+  }
+  
+  //useEffect
+    useEffect(() => {
     //reinicia el dialog
     if (!open && mode === 'create') {
       setData(menuVacio);
@@ -49,40 +73,23 @@ export default function NewEditDialog({ open, onOpenChange, mode, menu, onSubmit
       setData({
         menu_id:      menu.menu_id,
         nombre:       menu.nombre,
-        padre_id:        menu.padre_id,
+        padre_id:     menu.padre_id??0,
         padre_nombre: menu.padre_nombre,
         orden:        0,
-        icono:        '',
-        inhabilitado: false,
+        icono:        menu.icono,
+        inhabilitado: menu.inhabilitado,
       });
     }else setData(menuVacio)
   }, [menu]);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if(!form.name){
-      setTitle('¡Campo faltante!');
-      setText('Se requiere que ingreses un nombre al proyecto');
-      setActivo(true);
-      return 
-    }
-    if(!form.descripcion){
-      setTitle('¡Campo faltante!');
-      setText('Se requiere que ingreses una descripción al proyecto');
-      setActivo(true);
-      return;
-    }
-    onSubmit(form);
-  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{mode === 'create' ? 'Nuevo Proyecto' : 'Editar Proyecto'}</DialogTitle>
+          <DialogTitle>{mode === 'create' ? 'Nuevo Menú' : 'Editar Menú'}</DialogTitle>
           <DialogDescription>
-            { mode === 'create' ? 'Completa los campos para crear un nuevo proyecto' : 
-                                  `Editando proyecto: ${project?.id}` }
+            { mode === 'create' ? 'Completa los campos para crear un nuevo menú' : 
+                                  `Editando menú: ${menu?.menu_id}` }
           </DialogDescription>
           <hr />
         </DialogHeader>
@@ -93,8 +100,8 @@ export default function NewEditDialog({ open, onOpenChange, mode, menu, onSubmit
                 <label htmlFor="id">Id</label>
                 <Input
                   disabled
-                  value={form.id}
-                  onChange={(e) => setForm({ ...form, id: e.target.value })}
+                  value={data.menu_id??''}
+                  onChange={(e) => setData({ ...data, menu_id: Number(e.target.value) })}
                   placeholder="Id"
                 />
               </>
@@ -102,15 +109,36 @@ export default function NewEditDialog({ open, onOpenChange, mode, menu, onSubmit
           }
           <label htmlFor="nombre">Nombre</label>
           <Input
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            value={data.nombre}
+            onChange={(e) => setData({ ...data, nombre: e.target.value })}
             placeholder="Nombre"
           />
-          <label htmlFor="">Descripción</label>
-          <Textarea 
-            value={form.descripcion} 
-            onChange={(e) => setForm({ ...form, descripcion: e.target.value })}
-            placeholder="Describa el proyecto aquí..." />
+          <label htmlFor="padre">Selec. Padre</label>
+          <Select
+            value={String(data.padre_id)}
+            onValueChange={(value) => setData('padre_id', Number(value))}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                {padres.map((e: any) => (
+                  <SelectItem key={e.menu_id} value={String(e.menu_id)}>
+                    {e.nombre}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+          <label htmlFor="icono">Icono</label>
+          <Input
+            value={data.icono}
+            onChange={(e) => setData({ ...data, icono: e.target.value })}
+            placeholder="ícono"
+          />
+          <label className='mr-2'>Inhabilitado</label>
+          <Switch checked={data.inhabilitado?true:false} onCheckedChange={(val:any) => setData('inhabilitado', val)} />
         </form>
         <DialogFooter>
           <DialogClose asChild>

@@ -1,6 +1,5 @@
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Head, usePage, useForm, router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,12 +7,14 @@ import { Select,  SelectContent,  SelectGroup,  SelectItem,  SelectLabel,  Selec
 import { Switch } from '@/components/ui/switch';
 import { Pen, Ban, Search, Brush, Loader2, CirclePlus, Filter, Check } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { Head, usePage, useForm, router } from '@inertiajs/react';
 import { Menu } from '@/types/menus';
-import NewEditDialog from '../../components/projects/newEdit';
+import NewEditDialog from '../../components/menu/newEdit';
 import ModalConfirmar from '@/components/modalConfirmar';
 import PdfButton from '@/components/utils/pdfButton';
 import ShowMessage from '@/components/utils/showMessage';
 import { DataTableMenu } from '@/components/menu/dataTableMenu';
+import { route } from 'ziggy-js';
 
 const breadcrumbs: BreadcrumbItem[] = [
   {
@@ -21,65 +22,40 @@ const breadcrumbs: BreadcrumbItem[] = [
     href: '',
   },
 ];
+const menuVacio = {
+  menu_id:      null,
+  nombre:       '',
+  padre_id:     0,
+  padre_nombre: '',
+  orden:        0,
+  icono:        '',
+  inhabilitado: false,
+};
+type propsForm = {
+  openCreate: () => void;
+  resetearMenus: (menu:Menu[]) => void;
+  padres: any[]
+}
 
-export const FiltrosMenu = ({ openCreate} : { openCreate: () => void }) => {
-  const [padresMenu, setPadresMenu] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const { data, setData, get, processing, errors } = useForm<Menu>({
-    menu_id: /*filters?.menu_id ||*/ null,
-    nombre: /*filters?.nombre ||*/ '',
-    padre_id: /*filters?.padre ||*/ 0,
-    padre_nombre: /*filters?.padre ||*/ '',
-    orden: /*filters?.orden ||*/ 0,
-    icono:/* filters?.icono ||*/ '',
-    inhabilitado: false,
-  });
+export const FiltrosForm = ({ openCreate,resetearMenus, padres }: propsForm) => {
+  //const [loading, setLoading] = useState(false);
+  const { data, setData, get, processing, errors } = useForm<Menu>(menuVacio);
 
   //funciones
-  useEffect(() => {
-    //optengo los datos del formulario
-    fetch('/init_menu_padres')
-    .then(res => res.json())
-    .then(data => {
-      setPadresMenu(data); // o como lo manejes
-    });
-  }, []);
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    router.get('/get_menu', {
-      menu_id:      data.menu_id ? Number(data.menu_id) : null,
-      nombre:       data.nombre,
-      padre:        data.padre_id,
-      //orden: data.orden,
-      icono:        data.icono,
-      inhabilitado: Boolean(data.inhabilitado),
-    }, {
+    resetearMenus([]);
+    const payload = {      ...data, buscar: true    }
+    router.get(route('menu.index'), payload, 
+    {
       preserveState: true,
       preserveScroll: true,
-      onFinish: () => {
-        setLoading(false)
-      },
-      onSuccess: () => {
-        setLoading(false)
-      },
-      onError: (e) =>{
-        console.log("error: ",e)
-        setLoading(false)
-      },
+      //onFinish: () => setEsperandoRespuesta(false),
     });
   };
 
   const handleReset = () => {
-    setData({
-      menu_id: null,
-      nombre: '',
-      padre_id: 0,
-      padre_nombre: '',
-      //orden: filters?.orden || 0,
-      icono: '',
-      inhabilitado: false,
-    });
+    setData(menuVacio);
   };
 
   return (
@@ -125,7 +101,7 @@ export const FiltrosMenu = ({ openCreate} : { openCreate: () => void }) => {
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>
-                {padresMenu.map((e: any) => (
+                {padres.map((e: any) => (
                   <SelectItem key={e.menu_id} value={String(e.menu_id)}>
                     {e.nombre}
                   </SelectItem>
@@ -174,104 +150,89 @@ export const FiltrosMenu = ({ openCreate} : { openCreate: () => void }) => {
 };
 
 export default function MenuForm() {
-  /*//para guardar la data del modal mientras se abre el modal de confirmar
-  const [pendingData, setPendingData] = useState<Menu | undefined>(undefined);
-
-  //controla cuando se abre el modal de confirmar y el texto que se quiera mostrar
-  const [confirmOpen, setConfirOpen] = useState(false);
+  //data
+  const [confirmOpen, setConfirOpen] = useState(false); //modal para confirmar acciones para cuado se crea o edita
   const [textConfir, setTextConfirm] = useState('');
-
-  //controla el modal newEdit y los datos que recibe para mostrarlos
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
-  const [selectedProject, setSelectedProject] = useState<Menu | undefined>(undefined);
-
-  //para dar la apariencia de loading
-  const [loading, setLoading] = useState(false);
-*/
-  //necesito los projects de inertia
-  //const { menus } = usePage().props as { menus?: { data: Menu[] } };
-  const { menus } = usePage().props as { menus?: Menu[] };
-  console.log("menus: ", menus)
-  /*//para editar
-  const projectVacio = {
-    id: '',
-    name: '',
-    descripcion: '',
-    inhabilitado: false,
-    created_at: '',
-    updated_at: ''
-  }
-  const [openConfirmar, setConfirmar]     = useState(false);
+  
+  const [modalOpen, setModalOpen]       = useState(false); //modal editar/crear
+  const [modalMode, setModalMode]       = useState<'create' | 'edit'>('create');
+  const [selectedMenu, setSelectedMenu] = useState<Menu | undefined>(undefined);
+  const [pendingData, setPendingData]   = useState<Menu | undefined>(undefined);
+  const [loading, setLoading]           = useState(false);
+  
+  const [openConfirmar, setConfirmar]     = useState(false); //para editar el estado
   const [textConfirmar, setTextConfirmar] = useState(''); 
-  const [projectCopia, setProjectCopia]   = useState<Menu>(projectVacio);
+  const [menuCopia, setMenuCopia]   = useState<Menu>(menuVacio);
 
-  //ShowMessage
-  const [activo, setActivo] = useState(false);
+  const [activo, setActivo] = useState(false);//ShowMessage
   const [text, setText]     = useState('');
   const [title, setTitle]   = useState('');
-  const [color, setColor]   = useState('');*/
+  const [color, setColor]   = useState('');
 
-  const confirmar = (opcion: Menu) => {
-    /*if(project){
-      setProjectCopia( JSON.parse(JSON.stringify(project)) );
-      const texto : string = project.inhabilitado === 0 ? 'inhabilitar': 'habilitar';
-      setTextConfirmar('Estás seguro de querer '+texto+' este proyecto?');
-      setConfirmar(true);
-    }*/
+  const [padresMenu, setPadresMenu] = useState([]);
+
+  const { menus } = usePage().props as { menus?: Menu[] }; //necesito los props de inertia
+  const { resultado, mensaje, menu_id } = usePage().props as {
+    resultado?: number;
+    mensaje?: string;
+    menu_id?: number;
   };
-  /*const inhabilitarHabilitar = () => {
-    if (!projectCopia || !projectCopia.id) return;
-    setLoading(true);
+  const [propsActuales, setPropsActuales] = useState<{
+    resultado: number | undefined | null;
+    mensaje: string | undefined | null | '';
+    menu_id: number | undefined | null;
+  }>({ resultado: undefined, mensaje: undefined, menu_id: undefined });
+  const [menusCacheados, setMenusCacheados] = useState<Menu[]>([]);
 
-    router.put(`/projects/${projectCopia.id}/estado`, {}, {
-      preserveScroll: true,
-      onFinish: () => {
-        setProjectCopia(projectVacio);
-        setTextConfirmar('');
-        setConfirmar(false);
-        setLoading(false);
-      },
-      onSuccess: () => {
-        // solo si fue exitosa
-        setTitle('Proyecto Modificado');
-        setText('Proyecto ' + (projectCopia.inhabilitado===0? 'inhabilitado' : 'habilitado')+ ' éxitosamente.');
-        setColor("success");
-        setActivo(true);
-      },
-      onError: (e) => {
-        // solo si hubo error
-        setTitle('Error con el proyecto');
-        setText(e.name ?? 'Error al modificar el estado.');
-        setColor("error");
-        setActivo(true);
+  //funciones
+  const confirmar = (menu: Menu) => {
+    if(menu){
+      setMenuCopia( JSON.parse(JSON.stringify(menu)) );
+      const texto : string = menu.inhabilitado === false ? 'inhabilitar': 'habilitar';
+      setTextConfirmar('Estás seguro de querer '+texto+' este menú?');
+      setConfirmar(true);
+    }
+  };
+  const inhabilitarHabilitar = () => {
+    if (!menuCopia || !menuCopia.menu_id) return;
+    setLoading(true);
+    router.put(
+      route('menu.toggleEstado', { menu: menuCopia.menu_id }),{},
+      {
+        preserveScroll: true,
+        preserveState: true,
+        onFinish: () => {
+          setLoading(false);
+          setTextConfirmar('');
+          setConfirmar(false);
+          setMenuCopia(menuVacio);
+        }
       }
-    });
+    );
   };
 
   const cancelarInhabilitarHabilitar = () => { 
     setConfirmar(false);
   };
-*/
-  //Functions
+
   const openCreate = () => {
-    /*setModalMode('create');
-    setSelectedProject(undefined);
-    setModalOpen(true);*/
+    setModalMode('create');
+    setSelectedMenu(undefined);
+    setModalOpen(true);
   };
 
-  const openEdit = (opcion: Menu) => {
-    /*setModalMode('edit');
-    setSelectedProject(opcion);
-    setModalOpen(true);*/
+  const openEdit = (data: Menu) => {
+    setModalMode('edit');
+    setSelectedMenu(data);
+    setModalOpen(true);
   };
 
-  /*const handleSave = (data: Project) => {
+  const handleSave = (data: Menu) => {
     setPendingData(data);
     if (modalMode === 'create') {
-      setTextConfirm('¿Estás seguro de grabar este proyecto?');
+      setTextConfirm('¿Estás seguro de grabar este menú?');
     } else {
-      setTextConfirm('¿Estás seguro de guardar cambios a este proyecto?');
+      setTextConfirm('¿Estás seguro de guardar cambios a este menú?');
     }
     setConfirOpen(true);
   };
@@ -281,82 +242,126 @@ export default function MenuForm() {
     setLoading(true);
 
     const payload = {
-      name: pendingData.name,
-      descripcion: pendingData.descripcion,
+      nombre: pendingData.nombre.trim(),
+      padre: pendingData.padre_id,
+      orden: pendingData.orden,
+      icono: pendingData.icono.trim(),
+      inhabilitado: pendingData.inhabilitado,
     };
-
     if (modalMode === 'create') {
-      router.post('/projects', payload, {
-        onFinish: () => {
-          setLoading(false);
-          setModalOpen(false);
-          setPendingData(undefined);
-        },
-        onSuccess: () => {
-          // solo si fue exitosa
-          setTitle('Proyecto nuevo');
-          setText('Proyecto creado éxitosamente.');
-          setColor("success");
-          setActivo(true);
-        },
-        onError: (e) => {
-          // solo si hubo error
-          setTitle('Error en nuevo Proyecto');
-          setText('Ocurrió un problema al crear un proyecto nuevo: '+e.name);
-          setColor("error");
-          setActivo(true);
+      router.post(
+        route('menu.store'),payload,
+        {
+          preserveScroll: true,
+          preserveState: true,
+          onFinish: () => {
+            setLoading(false);
+            setTextConfirmar('');
+            setConfirmar(false);
+            setMenuCopia(menuVacio);
+          }
         }
-      });
+      );
     } else {
-      router.put(`/projects/${pendingData.id}`, payload, {
-        onFinish: () => {
-          setLoading(false);
-          setModalOpen(false);
-          setPendingData(undefined);
-        },
-        onSuccess: () => {
-          // solo si fue exitosa
-          setTitle('Proyecto Modificado');
-          setText('Se actualizó correctamente el proyecto '+pendingData.id);
-          setColor("success");
-          setActivo(true);
-        },
-        onError: (e) => {
-          // solo si hubo error
-          setTitle('Error en proyecto');
-          setText('Ocurrió un problema y no se modificó el poryecto: '+e.name);
-          setColor("error");
-          setActivo(true);
+      router.put(
+        route('menu.update',{menu: pendingData.menu_id}),
+        payload,
+        {
+          preserveScroll: true,
+          preserveState: true,
+          onFinish: () => {
+            setLoading(false);
+            setPendingData(undefined);
+          }
         }
-      });
+      );
     }
-
     setConfirOpen(false);
   };
 
   const cancelarConfirmacion = () => {
     setConfirOpen(false);
-  };*/
+  };
+
+  //effect
+  useEffect(() => {
+    if (!activo && propsActuales.resultado !== undefined) {
+      setPropsActuales({
+        resultado: undefined,
+        mensaje: undefined,
+        menu_id: undefined
+      });
+    }
+  }, [activo]);
+
+  useEffect(() => {
+    if (
+      menus &&
+      menus.length > 0 &&
+      JSON.stringify(menus) !== JSON.stringify(menusCacheados)
+    ) {
+      setMenusCacheados(menus);
+    }
+  }, [menus]);
+
+
+  useEffect(() => {
+    const cambioDetectado =
+      (resultado && resultado  !== propsActuales.resultado)  ||
+      (mensaje && mensaje    !== propsActuales.mensaje)  
+
+    if (cambioDetectado) {
+      setPropsActuales({ resultado, mensaje, menu_id });
+
+      const esError = resultado === 0;
+      setTitle(esError ? 'Error' : modalMode === 'create' ? 'Menú nuevo' : 'Menú modificado');
+      setText(esError ? mensaje ?? 'Error inesperado' : `${mensaje} (ID: ${menu_id})`);
+      setColor(esError ? 'error' : 'success');
+      setActivo(true);
+
+      if (resultado === 1 && menu_id) {
+        setModalOpen(false);
+        router.get(route('menu.index'),
+          { menu_id, buscar: true },
+          { preserveScroll: true,	preserveState: true	}
+        )
+      }
+    }
+  }, [resultado, mensaje, menu_id]);
+
+  useEffect(() => {
+    //optengo los datos del formulario
+    fetch('/init_menu')
+    .then(res => res.json())
+    .then(data => {
+      setPadresMenu(data);
+    });
+  }, []);
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
-      <Head title="Menu" />
+      <Head title="Menús" />
       <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
         <div className="relative flex-none flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
-          <FiltrosMenu openCreate={openCreate}/>
+          <FiltrosForm 
+            openCreate={openCreate} 
+            resetearMenus={setMenusCacheados}
+            padres={padresMenu}/>
         </div>
         <div className="p-4 relative flex-1 overflow-auto rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
           <DataTableMenu 
-            datos={menus ?? []} openEdit={openEdit} 
+            datos={menusCacheados?? []} 
+            openEdit={openEdit} 
             abrirConfirmar={confirmar}
-          />
+            />
         </div>
       </div>
-      {/*<NewEditDialog
+      <NewEditDialog
         open={modalOpen}
         onOpenChange={setModalOpen}
         mode={modalMode}
-        project={selectedProject}
+        padres={padresMenu}
+        menu={selectedMenu}
         onSubmit={handleSave}
         loading={loading}
       />
@@ -378,7 +383,7 @@ export default function MenuForm() {
         text={text}
         color={color}
         onClose={() => setActivo(false)}
-      />*/}
+      />
     </AppLayout>
   );
 }

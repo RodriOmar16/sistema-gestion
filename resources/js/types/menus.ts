@@ -1,7 +1,8 @@
 export interface Menu{
   menu_id: number | null;
   nombre: string;
-  padre: number | null;
+  padre_id: number | null;
+  padre_nombre: string;
   orden: number;
   icono: string;
   inhabilitado: boolean | undefined;

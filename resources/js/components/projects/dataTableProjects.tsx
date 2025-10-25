@@ -22,6 +22,7 @@ import { Input } from "@/components/ui/input"
 import {  Table,  TableBody,  TableCell,  TableHead,  TableHeader,  TableRow } from "@/components/ui/table"
 import { Project } from '@/types/project';
 import PdfButton from "../utils/pdfButton"
+import projects from "@/routes/projects"
 
 interface Props {
   datos: Project[];
@@ -80,7 +81,7 @@ export function getColumns(confirmar: (project: Project) => void, openEdit: (pro
         )
       },
       cell: ({ row }) => (
-        <div className="capitalize">{row.getValue("id")}</div>
+        <div className="">{row.getValue("id")}</div>
       ),
     },
     {
@@ -94,7 +95,7 @@ export function getColumns(confirmar: (project: Project) => void, openEdit: (pro
         )
       }
       ,
-      cell: ({ row }) => ( <div className="capitalize">{row.getValue("name")}</div> ),
+      cell: ({ row }) => ( <div className="">{row.getValue("name")}</div> ),
     },
     {
       accessorKey: "descripcion",
@@ -111,7 +112,7 @@ export function getColumns(confirmar: (project: Project) => void, openEdit: (pro
           //</Button>
         )
       },
-      cell: ({ row }) => <div className="lowercase">{row.getValue("descripcion")}</div>,
+      cell: ({ row }) => <div className="">{row.getValue("descripcion")}</div>,
     },
     {
       accessorKey: "created_at",
@@ -375,10 +376,11 @@ export function DataTableProjects({datos, openEdit, abrirConfirmar}:Props) {
         </Table>
       </div>
       <div className="flex items-center justify-end space-x-2 py-4">
-        {/*<div className="text-muted-foreground flex-1 text-sm">
-          {table.getFilteredSelectedRowModel().rows.length} de{" "}
-          {table.getFilteredRowModel().rows.length} fila(s) selecc.
-        </div>*/}
+        <div className="text-muted-foreground flex-1 text-sm">
+          {/*{table.getFilteredSelectedRowModel().rows.length} de{" "}
+          {table.getFilteredRowModel().rows.length} fila(s) selecc.*/}
+          Total de filas: {datos.length}
+        </div>
         <div className="space-x-2">
           <Button
             variant="outline"

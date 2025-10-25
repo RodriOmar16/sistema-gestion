@@ -4,7 +4,7 @@ import { Head, usePage, useForm, router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Pen, Ban, Search, Brush, Loader2, CirclePlus, Filter, Check } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Project } from '@/types/project';
 import NewEditDialog from '../../components/projects/newEdit';
 import ModalConfirmar from '@/components/modalConfirmar';
@@ -12,6 +12,8 @@ import ModalConfirmar from '@/components/modalConfirmar';
 import ShowMessage from '@/components/utils/showMessage';
 import { DataTableProjects } from '@/components/projects/dataTableProjects';
 import { Select,  SelectContent,  SelectItem,  SelectTrigger,  SelectValue } from "@/components/ui/select"
+import { route } from 'ziggy-js';
+
 /*import {
   Table, TableBody, TableCell, TableFooter, TableHead, TableHeader,  TableRow,
 } from "@/components/ui/table";*/
@@ -24,7 +26,12 @@ const breadcrumbs: BreadcrumbItem[] = [
   },
 ];
 
-export const FormProyectos = ({ openCreate }: { openCreate: () => void }) => {
+type propsForm = {
+	openCreate: () => void;
+	resetearProject: (projects:Project[]) => void;
+}
+
+export const FormProyectos = ({ openCreate,resetearProject }: propsForm) => {
 	const [loading, setLoading] = useState(false);
 
 	const { filters } = usePage().props as { filters?: { id: string; name: string; descripcion: string, inhabilitado: boolean|string } };
@@ -44,16 +51,30 @@ export const FormProyectos = ({ openCreate }: { openCreate: () => void }) => {
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
 		setLoading(true);
-		router.get('/projects', {
+		resetearProject([]); //
+		router.get(route('projects.index'), {
 			id: data.id,
 			name: data.name,
 			descripcion: data.descripcion,
 			inhabilitado: data.inhabilitado,
+			buscar: true
 		}, {
 			preserveState: true,
 			preserveScroll: true,
 			onFinish: () => setLoading(false),
 		});
+
+		/*router.get('/projects', {
+			id: data.id,
+			name: data.name,
+			descripcion: data.descripcion,
+			inhabilitado: data.inhabilitado,
+			buscar: true
+		}, {
+			preserveState: true,
+			preserveScroll: true,
+			onFinish: () => setLoading(false),
+		});*/
 	};
 
 	const handleReset = () => {
@@ -293,7 +314,19 @@ export default function Projects() {
 	const [loading, setLoading] = useState(false);
 
 	//necesito los projects de inertia
-	const { projects } = usePage().props as { projects?: { data: Project[] } };
+	const { projects } = usePage().props as { projects?: Project[] };
+	const { resultado, mensaje, project_id } = usePage().props as {
+		resultado?: number;
+		mensaje?: string;
+		project_id?: number;
+	};
+	const [propsActuales, setPropsActuales] = useState<{
+		resultado: number | undefined | null;
+		mensaje: string | undefined | null | '';
+		project_id: number | undefined | null;
+	}>({ resultado: undefined, mensaje: undefined, project_id: undefined });
+	
+	const [proyectosCacheados, setProyectosCacheados] = useState<Project[]>([]);
 
 	//para editar
 	const projectVacio = {
@@ -314,6 +347,7 @@ export default function Projects() {
 	const [title, setTitle]   = useState('');
 	const [color, setColor]   = useState('');
 
+	//Functions
 	const confirmar = (project: Project) => {
 		if(project){
 			setProjectCopia( JSON.parse(JSON.stringify(project)) );
@@ -326,27 +360,14 @@ export default function Projects() {
 		if (!projectCopia || !projectCopia.id) return;
 		setLoading(true);
 
-		router.put(`/projects/${projectCopia.id}/estado`, {}, {
+		router.put(`/projects/${projectCopia.id}/estado`, {inhabilitado: projectCopia.inhabilitado}, {
 			preserveScroll: true,
+			preserveState: true,
 			onFinish: () => {
-				setProjectCopia(projectVacio);
+				setLoading(false);
 				setTextConfirmar('');
 				setConfirmar(false);
-				setLoading(false);
-			},
-			onSuccess: () => {
-    		// solo si fue exitosa
-				setTitle('Proyecto Modificado');
-				setText('Proyecto ' + (projectCopia.inhabilitado===0? 'inhabilitado' : 'habilitado')+ ' éxitosamente.');
-				setColor("success");
-				setActivo(true);
-			},
-			onError: (e) => {
-				// solo si hubo error
-				setTitle('Error con el proyecto');
-				setText(e.name ?? 'Error al modificar el estado.');
-				setColor("error");
-				setActivo(true);
+				setProjectCopia(projectVacio);
 			}
 		});
 	};
@@ -355,7 +376,6 @@ export default function Projects() {
 		setConfirmar(false);
 	};
 
-	//Functions
 	const openCreate = () => {
 		setModalMode('create');
 		setSelectedProject(undefined);
@@ -383,52 +403,26 @@ export default function Projects() {
 		setLoading(true);
 
 		const payload = {
-			name: pendingData.name,
-			descripcion: pendingData.descripcion,
+			name: pendingData.name.trim(),
+			descripcion: pendingData.descripcion.trim(),
 		};
 
 		if (modalMode === 'create') {
 			router.post('/projects', payload, {
+				preserveScroll: true,
+				preserveState: true,
 				onFinish: () => {
 					setLoading(false);
-					setModalOpen(false);
 					setPendingData(undefined);
-				},
-				onSuccess: () => {
-					// solo si fue exitosa
-					setTitle('Proyecto nuevo');
-					setText('Proyecto creado éxitosamente.');
-					setColor("success");
-					setActivo(true);
-				},
-				onError: (e) => {
-					// solo si hubo error
-					setTitle('Error en nuevo Proyecto');
-					setText('Ocurrió un problema al crear un proyecto nuevo: '+e.name);
-					setColor("error");
-					setActivo(true);
 				}
 			});
 		} else {
 			router.put(`/projects/${pendingData.id}`, payload, {
+				preserveScroll: true,
+				preserveState: true,
 				onFinish: () => {
 					setLoading(false);
-					setModalOpen(false);
 					setPendingData(undefined);
-				},
-				onSuccess: () => {
-					// solo si fue exitosa
-					setTitle('Proyecto Modificado');
-					setText('Se actualizó correctamente el proyecto '+pendingData.id);
-					setColor("success");
-					setActivo(true);
-				},
-				onError: (e) => {
-					// solo si hubo error
-					setTitle('Error en proyecto');
-					setText('Ocurrió un problema y no se modificó el poryecto: '+e.name);
-					setColor("error");
-					setActivo(true);
 				}
 			});
 		}
@@ -440,12 +434,59 @@ export default function Projects() {
 		setConfirOpen(false);
 	};
 
+	//useEffect
+	useEffect(() => {
+		if (!activo && propsActuales.resultado !== undefined) {
+			setPropsActuales({
+				resultado: undefined,
+				mensaje: undefined,
+				project_id: undefined
+			});
+		}
+	}, [activo]);
+
+	useEffect(() => {
+		if (
+			projects &&
+			projects.length > 0 &&
+			JSON.stringify(projects) !== JSON.stringify(proyectosCacheados)
+		) {
+			setProyectosCacheados(projects);
+		}
+	}, [projects]);
+
+	useEffect(() => {
+		const cambioDetectado =
+			(resultado && resultado  !== propsActuales.resultado)  ||
+			(mensaje && mensaje    !== propsActuales.mensaje)    /*||
+			project_id !== propsActuales.project_id;*/
+
+		if (cambioDetectado) {
+			setPropsActuales({ resultado, mensaje, project_id });
+
+			const esError = resultado === 0;
+			setTitle(esError ? 'Error' : modalMode === 'create' ? 'Proyecto nuevo' : 'Proyecto modificado');
+			setText(esError ? mensaje ?? 'Error inesperado' : `${mensaje} (ID: ${project_id})`);
+			setColor(esError ? 'error' : 'success');
+			setActivo(true);
+
+			if (resultado === 1 && project_id) {
+				setModalOpen(false);
+				router.get('/projects', { id: project_id, buscar: true }, {
+					preserveScroll: true,
+					preserveState: true,
+				});
+			}
+		}
+	}, [resultado, mensaje, project_id]);
+
+
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Proyectos" />
       <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
         <div className="relative flex-none flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
-          <FormProyectos openCreate={openCreate}/>
+          <FormProyectos openCreate={openCreate} resetearProject={setProyectosCacheados}/>
         </div>
         {/*<div className="p-4 relative flex-1 overflow-auto rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
 					<h2 className='text-center pb-4'>Resultado de Proyectos</h2>
@@ -454,7 +495,8 @@ export default function Projects() {
 				<div className="p-4 relative flex-1 overflow-auto rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
           {/*<DataTableProject openEdit={openEdit} />*/}
 					<DataTableProjects 
-						datos={projects?.data ?? []} openEdit={openEdit} 
+						datos={proyectosCacheados?? []} 
+						openEdit={openEdit} 
 						abrirConfirmar={confirmar}
 						/>
         </div>

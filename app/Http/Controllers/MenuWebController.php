@@ -49,11 +49,11 @@ class MenuWebController extends Controller
 
     public function index(Request $request)
     {   
-        \Log::info('Filtros recibidos:', $request->all());
+        //\Log::info('Filtros recibidos:', $request->all());
 
         $query = MenuWeb::query();
 
-        if($request->menu_id !== null && $request->ruta_id !== ''){
+        if($request->menu_id !== null && $request->menu_id !== ''){
             $query->where('menu_id', $request->menu_id);
         }
         if($request->nombre !== '' && $request->nombre !== ''){
@@ -65,16 +65,29 @@ class MenuWebController extends Controller
         if ($request->has('icono') && $request->icono !== '') {
             $query->where('icono', 'like', '%' . $request->icono . '%');
         }
-        if ($request->inhabilitada !== null && $request->inhabilitada !== '') {
-            $estado = filter_var($request->inhabilitada, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+        if ($request->inhabilitado !== null && $request->inhabilitado !== '') {
+            $estado = filter_var($request->inhabilitado, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
             if ($estado === false) {
-                $query->where('inhabilitada', false);
+                $query->where('inhabilitado', false);
             } elseif ($estado === true) {
-                $query->where('inhabilitada', true);
+                $query->where('inhabilitado', true);
             }
         }
         
-        $menus = $query->latest()->get();
+        $menus = $query->with('padreMenu')->latest()->get()->map(function ($menu) {
+            return [
+                'menu_id' => $menu->menu_id,
+                'nombre' => $menu->nombre,
+                'padre_id' => $menu->padre,
+                'padre' => $menu->padreMenu ? $menu->padreMenu->nombre : null,
+                'orden' => $menu->orden,
+                'icono' => $menu->icono,
+                'inhabilitado' => $menu->inhabilitado,
+                'created_at' => $menu->created_at,
+                'updated_at' => $menu->updated_at,
+                'ruta_id' => $menu->ruta_id,
+            ];
+        });
 
         return inertia('menu/index', [
             'menus' => $menus,

@@ -27,4 +27,10 @@ class MenuWeb extends Model
         return $this->belongsTo(Ruta::class, 'ruta_id', 'ruta_id');
     }
 
+    //conecto a si misma por el padre
+    public function padreMenu()
+    {
+        return $this->belongsTo(MenuWeb::class, 'padre', 'menu_id');
+    }
+
 }

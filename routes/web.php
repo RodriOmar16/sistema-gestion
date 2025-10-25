@@ -61,6 +61,7 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
     Route::get('/get_rutas', [RutaController::class, 'index'])->name('rutas.index');
 
     //proyectos
+    //Route::get('/projects', [ProjectController::class, 'index'])->name('projects.index');
     Route::get('/projects', [ProjectController::class, 'index'])->name('projects.index');
     Route::post('/projects', [ProjectController::class, 'store'])->name('projects.store');
     Route::put('/projects/{project}', [ProjectController::class, 'update'])->name('projects.update');

@@ -13,7 +13,7 @@ import NewEditDialog from '../../components/projects/newEdit';
 import ModalConfirmar from '@/components/modalConfirmar';
 import PdfButton from '@/components/utils/pdfButton';
 import ShowMessage from '@/components/utils/showMessage';
-//import { DataTableProjects } from '@/components/projects/dataTableProjects';
+import { DataTableMenu } from '@/components/menu/dataTableMenu';
 
 const breadcrumbs: BreadcrumbItem[] = [
   {
@@ -28,7 +28,8 @@ export const FiltrosMenu = ({ openCreate} : { openCreate: () => void }) => {
   const { data, setData, get, processing, errors } = useForm<Menu>({
     menu_id: /*filters?.menu_id ||*/ null,
     nombre: /*filters?.nombre ||*/ '',
-    padre: /*filters?.padre ||*/ 0,
+    padre_id: /*filters?.padre ||*/ 0,
+    padre_nombre: /*filters?.padre ||*/ '',
     orden: /*filters?.orden ||*/ 0,
     icono:/* filters?.icono ||*/ '',
     inhabilitado: false,
@@ -49,7 +50,7 @@ export const FiltrosMenu = ({ openCreate} : { openCreate: () => void }) => {
     router.get('/get_menu', {
       menu_id:      data.menu_id ? Number(data.menu_id) : null,
       nombre:       data.nombre,
-      padre:        data.padre,
+      padre:        data.padre_id,
       //orden: data.orden,
       icono:        data.icono,
       inhabilitado: Boolean(data.inhabilitado),
@@ -57,7 +58,6 @@ export const FiltrosMenu = ({ openCreate} : { openCreate: () => void }) => {
       preserveState: true,
       preserveScroll: true,
       onFinish: () => {
-        console.log("termino")
         setLoading(false)
       },
       onSuccess: () => {
@@ -74,7 +74,8 @@ export const FiltrosMenu = ({ openCreate} : { openCreate: () => void }) => {
     setData({
       menu_id: null,
       nombre: '',
-      padre: 0,
+      padre_id: 0,
+      padre_nombre: '',
       //orden: filters?.orden || 0,
       icono: '',
       inhabilitado: false,
@@ -116,8 +117,8 @@ export const FiltrosMenu = ({ openCreate} : { openCreate: () => void }) => {
         <div className="col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-2 lg:col-span-2">
           <label htmlFor="padre">Selec. Padre</label>
           <Select
-            value={String(data.padre)}
-            onValueChange={(value) => setData('padre', Number(value))}
+            value={String(data.padre_id)}
+            onValueChange={(value) => setData('padre_id', Number(value))}
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="" />
@@ -191,6 +192,7 @@ export default function MenuForm() {
   //necesito los projects de inertia
   //const { menus } = usePage().props as { menus?: { data: Menu[] } };
   const { menus } = usePage().props as { menus?: Menu[] };
+  console.log("menus: ", menus)
   /*//para editar
   const projectVacio = {
     id: '',
@@ -208,17 +210,17 @@ export default function MenuForm() {
   const [activo, setActivo] = useState(false);
   const [text, setText]     = useState('');
   const [title, setTitle]   = useState('');
-  const [color, setColor]   = useState('');
+  const [color, setColor]   = useState('');*/
 
-  const confirmar = (project: Menu) => {
-    if(project){
+  const confirmar = (opcion: Menu) => {
+    /*if(project){
       setProjectCopia( JSON.parse(JSON.stringify(project)) );
       const texto : string = project.inhabilitado === 0 ? 'inhabilitar': 'habilitar';
       setTextConfirmar('Estás seguro de querer '+texto+' este proyecto?');
       setConfirmar(true);
-    }
+    }*/
   };
-  const inhabilitarHabilitar = () => {
+  /*const inhabilitarHabilitar = () => {
     if (!projectCopia || !projectCopia.id) return;
     setLoading(true);
 
@@ -258,13 +260,13 @@ export default function MenuForm() {
     setModalOpen(true);*/
   };
 
-  /*const openEdit = (project: Project) => {
-    setModalMode('edit');
-    setSelectedProject(project);
-    setModalOpen(true);
+  const openEdit = (opcion: Menu) => {
+    /*setModalMode('edit');
+    setSelectedProject(opcion);
+    setModalOpen(true);*/
   };
 
-  const handleSave = (data: Project) => {
+  /*const handleSave = (data: Project) => {
     setPendingData(data);
     if (modalMode === 'create') {
       setTextConfirm('¿Estás seguro de grabar este proyecto?');
@@ -344,38 +346,10 @@ export default function MenuForm() {
           <FiltrosMenu openCreate={openCreate}/>
         </div>
         <div className="p-4 relative flex-1 overflow-auto rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
-          {/*<DataTableProjects 
-            datos={projects?.data ?? []} openEdit={openEdit} 
+          <DataTableMenu 
+            datos={menus ?? []} openEdit={openEdit} 
             abrirConfirmar={confirmar}
-            />*/}
-            <div>
-    {menus?.length === 0 ? (
-      <p className="text-gray-500 text-center">No se encontraron menús.</p>
-    ) : (
-      <table className="w-full border">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Nombre</th>
-            <th>Icono</th>
-            <th>Padre</th>
-            <th>Estado</th>
-          </tr>
-        </thead>
-        <tbody>
-          {menus?.map((menu) => (
-            <tr key={menu.menu_id}>
-              <td>{menu.menu_id}</td>
-              <td>{menu.nombre}</td>
-              <td>{menu.icono}</td>
-              <td>{menu.padre}</td>
-              <td>{menu.inhabilitado ? 'Inhabilitado' : 'Activo'}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    )}
-  </div>
+          />
         </div>
       </div>
       {/*<NewEditDialog

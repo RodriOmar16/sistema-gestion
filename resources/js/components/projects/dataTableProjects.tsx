@@ -22,7 +22,6 @@ import { Input } from "@/components/ui/input"
 import {  Table,  TableBody,  TableCell,  TableHead,  TableHeader,  TableRow } from "@/components/ui/table"
 import { Project } from '@/types/project';
 import PdfButton from "../utils/pdfButton"
-import projects from "@/routes/projects"
 
 interface Props {
   datos: Project[];

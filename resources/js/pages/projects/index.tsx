@@ -360,7 +360,7 @@ export default function Projects() {
 		if (!projectCopia || !projectCopia.id) return;
 		setLoading(true);
 
-		router.put(`/projects/${projectCopia.id}/estado`, {inhabilitado: projectCopia.inhabilitado}, {
+		/*router.put(`/projects/${projectCopia.id}/estado`, {}, {
 			preserveScroll: true,
 			preserveState: true,
 			onFinish: () => {
@@ -369,7 +369,21 @@ export default function Projects() {
 				setConfirmar(false);
 				setProjectCopia(projectVacio);
 			}
-		});
+		});*/
+		router.put(
+			route('projects.toggleEstado', { project: projectCopia.id }),
+			{ /*nhabilitado: projectCopia.inhabilitado*/ },
+			{
+				preserveScroll: true,
+				preserveState: true,
+				onFinish: () => {
+					setLoading(false);
+					setTextConfirmar('');
+					setConfirmar(false);
+					setProjectCopia(projectVacio);
+				}
+			}
+		);
 	};
 
 	const cancelarInhabilitarHabilitar = () => { 
@@ -408,23 +422,49 @@ export default function Projects() {
 		};
 
 		if (modalMode === 'create') {
-			router.post('/projects', payload, {
+			router.post(
+				route('projects.store'),payload,
+				{
+					preserveScroll: true,
+					preserveState: true,
+					onFinish: () => {
+						setLoading(false);
+						setTextConfirmar('');
+						setConfirmar(false);
+						setProjectCopia(projectVacio);
+					}
+				}
+			);
+
+			/*router.post('/projects', payload, {
 				preserveScroll: true,
 				preserveState: true,
 				onFinish: () => {
 					setLoading(false);
 					setPendingData(undefined);
 				}
-			});
+			});*/
 		} else {
-			router.put(`/projects/${pendingData.id}`, payload, {
+			router.put(
+				route('projects.update',{project: pendingData.id}),
+				payload,
+				{
+					preserveScroll: true,
+					preserveState: true,
+					onFinish: () => {
+						setLoading(false);
+						setPendingData(undefined);
+					}
+				}
+			);
+			/*router.put(`/projects/${pendingData.id}`, payload, {
 				preserveScroll: true,
 				preserveState: true,
 				onFinish: () => {
 					setLoading(false);
 					setPendingData(undefined);
 				}
-			});
+			});*/
 		}
 
 		setConfirOpen(false);
@@ -472,10 +512,14 @@ export default function Projects() {
 
 			if (resultado === 1 && project_id) {
 				setModalOpen(false);
-				router.get('/projects', { id: project_id, buscar: true }, {
+				router.get(route('projects.index'),
+					{ id: project_id, buscar: true },
+					{ preserveScroll: true,	preserveState: true	}
+				)
+				/*router.get('/projects', { id: project_id, buscar: true }, {
 					preserveScroll: true,
 					preserveState: true,
-				});
+				});*/
 			}
 		}
 	}, [resultado, mensaje, project_id]);

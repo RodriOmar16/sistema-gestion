@@ -52,16 +52,12 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
     Route::get('/get_menu',[MenuWebController::class, 'index'])->name('menu.index');
 
     //Rutas
-    Route::get('/rutas', function () {
-        return Inertia::render('rutas/index', [
-            'rutas' => [],
-            'filters' => []
-        ]);
-    })->name('rutas.blank');
-    Route::get('/get_rutas', [RutaController::class, 'index'])->name('rutas.index');
+    Route::get('/rutas', [RutaController::class, 'index'])->name('rutas.index');
+    Route::post('/rutas', [RutaController::class, 'store'])->name('rutas.store');
+    Route::put('/rutas/{ruta}', [RutaController::class, 'update'])->name('rutas.update');
+    Route::put('/rutas/{ruta}/estado', [RutaController::class, 'toggleEstado'])->name('rutas.toggleEstado');
 
     //proyectos
-    //Route::get('/projects', [ProjectController::class, 'index'])->name('projects.index');
     Route::get('/projects', [ProjectController::class, 'index'])->name('projects.index');
     Route::post('/projects', [ProjectController::class, 'store'])->name('projects.store');
     Route::put('/projects/{project}', [ProjectController::class, 'update'])->name('projects.update');

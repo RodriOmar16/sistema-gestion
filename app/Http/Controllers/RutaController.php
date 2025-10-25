@@ -3,63 +3,156 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
 use App\Models\Ruta;
 
 class RutaController extends Controller
 {
-   public function index(Request $request)
-    {
-        \Log::info('Filtros recibidos:', $request->all());
+  public function index(Request $request)
+  {
+    if(!$request->has('buscar')){
+      return inertia('rutas/index',[
+        'rutas'   => [],
+        'filters' => []
+      ]);
+    }
+    $query = Ruta::query();
 
-        $query = Ruta::query();
-
-        if ($request->ruta_id !== null && $request->ruta_id !== '') {
-            $query->where('ruta_id', $request->ruta_id);
-        }
-
-        if ($request->url !== null && $request->url !== '') {
-            $query->where('url', 'like', '%' . $request->url . '%');
-        }
-
-        if ($request->inhabilitada !== null && $request->inhabilitada !== '') {
-            $estado = filter_var($request->inhabilitada, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
-            if ($estado === false) {
-                $query->where('inhabilitada', false);
-            } elseif ($estado === true) {
-                $query->where('inhabilitada', true);
-            }
-        }
-
-        $rutas = $query->orderByDesc('created_at')->get();
-
-        return inertia('rutas/index', [
-            'rutas' => $rutas,
-            'filters' => $request->only(['ruta_id', 'url', 'inhabilitada']),
-        ]);
+    if($request->filled('ruta_id')){
+      $query->where('ruta_id',$request->ruta_id);
+    }
+    if($request->filled('url')){
+      $query->where('url','like', '%'.$request->url.'%');
+    }
+    if ($request->filled('inhabilitada')) {
+      $estado = filter_var($request->inhabilitada, FILTER_VALIDATE_BOOLEAN);
+      $query->where('inhabilitada', $estado);
     }
 
+    //si no se agregaron filtros, trae todos
+    if(!$request->filled('ruta_id') && !$request->filled('url') && !$request->filled('inhabilitada')){
+      $query = Ruta::query();
+    }
 
-    public function store(Request $request)
+    $rutas = $query->latest()->get();
+
+    return inertia('rutas/index', [
+      'rutas'   => $rutas,
+      'filters' => $request->only(['ruta_id', 'url', 'inhabilitada']),
+      'resultado' => session('resultado'),
+      'mensaje' => session('mensaje'),
+      'error' => session('error'),
+    ]);
+  }
+
+
+  public function store(Request $request)
     {
-        $validated = $request->validate([
-            'url' => 'required|string|max:255|unique:rutas,url',
+      DB::beginTransaction();
+			try {
+				// operaciones
+				$validated = $request->validate([
+          'url' => 'required|string|max:255|unique:rutas,url',
+          'inhabilitada' => 'nullable|boolean',
         ]);
 
-        return Ruta::create($validated);
+
+				$url = strtolower(trim($validated['url']));
+
+				// Buscar ruta con esa url
+				$rutaConUrl = Ruta::whereRaw('LOWER(TRIM(url)) = ?', [$url])->get();
+
+				if ($rutaConUrl->count()) {
+          // Si solo coincide el nombre → error simple
+          return inertia('rutas/index', [
+            'resultado' => 0,
+            'mensaje' => 'Ya existe una ruta con esa url',
+          ]);
+				}
+
+				$ruta = Ruta::create($validated);
+
+				DB::commit();
+				return inertia('rutas/index', [
+					'resultado'  => 1,
+					'mensaje' 	 => 'Ruta creada correctamente',
+					'ruta_id' => $ruta->ruta_id
+				]);
+
+			} catch (\Throwable $e) {
+				DB::rollBack();
+
+				return inertia('rutas/index', [
+					'resultado' => 0,
+					'mensaje' => 'Error inesperado: ' . $e->getMessage(),
+				]);
+			}
     }
 
     public function update(Request $request, Ruta $ruta)
     {
-        $validated = $request->validate([
-            'url' => 'required|string|max:255|unique:rutas,url,' . $ruta->ruta_id . ',ruta_id',
-        ]);
+      DB::beginTransaction();
+			try {
+				// operaciones
+				$validated = $request->validate([
+          'url' => 'required|string|max:255|unique:rutas,url,' . $ruta->ruta_id . ',ruta_id',
+          'inhabilitada' => 'nullable|boolean',
+				]);
 
-        $ruta->update($validated);
-        return $ruta;
+				$url = strtolower(trim($validated['url']));
+
+				// Buscar rutas con misma url
+				$existeDuplicado = Ruta::whereRaw('LOWER(TRIM(url)) = ?', [$url])
+          ->where('ruta_id', '!=', $ruta->ruta_id)
+          ->exists();
+				if ($existeDuplicado) {
+          return inertia('rutas/index', [
+            'resultado' => 0,
+            'mensaje'   => 'Ya existe otra ruta con esa url.',
+          ]);
+        }
+
+				$ruta->update($validated);
+
+				DB::commit();
+				return inertia('rutas/index',[
+					'ruta_id' => $ruta->ruta_id,
+					'resultado'  => 1,
+					'mensaje'		 => 'Ruta actualizada correctamente'
+				]);
+
+			} catch (\Throwable $e) {
+				DB::rollBack();
+
+				return inertia('rutas/index', [
+					'resultado' => 0,
+					'mensaje' 	=> 'Error inesperado: ' . $e->getMessage(),
+				]);
+			}
+      //---
+      /*$validated = $request->validate([
+        'url' => 'required|string|max:255|unique:rutas,url,' . $ruta->ruta_id . ',ruta_id',
+      ]);
+
+      $ruta->update($validated);
+      return $ruta;*/
     }
+
+    public function toggleEstado(Ruta $ruta)
+		{
+			$ruta->update([
+				'inhabilitada' => !$ruta->inhabilitada,
+			]);
+			return inertia('rutas/index',[
+					'ruta_id' => $ruta->ruta_id,
+					'resultado'  => 1,
+					'mensaje'		 => 'Estado actualizado correctamente.'
+				]);
+		}
 
     public function destroy(Ruta $ruta)
     {
-        $ruta->update(['inhabilitada' => true]);
+        
     }
 }

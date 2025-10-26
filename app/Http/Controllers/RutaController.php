@@ -9,6 +9,16 @@ use App\Models\Ruta;
 
 class RutaController extends Controller
 {
+  public function rutasHabilitadas(){
+    $rutas = Ruta::where('inhabilitada', false)->get()->map(function($ruta){
+      return [
+        'id'     => $ruta->ruta_id,
+        'nombre' => $ruta->url
+      ];
+    });
+    return response()->json($rutas);
+  }
+
   public function index(Request $request)
   {
     if(!$request->has('buscar')){

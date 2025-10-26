@@ -7,3 +7,11 @@ export function formatDateTime(dateString: string): string {
     const minutes = date.getMinutes().toString().padStart(2, '0');
     return `${day}/${month}/${year} ${hours}:${minutes}`;
 }
+
+export function ordenarPorTexto<T>(array: T[], campo: keyof T): T[] {
+  return [...array].sort((a, b) => {
+    const textoA = String(a[campo]).toLowerCase().trim();
+    const textoB = String(b[campo]).toLowerCase().trim();
+    return textoA.localeCompare(textoB);
+  });
+}

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Pen, Ban, Search, Brush, Loader2, CirclePlus, Filter, Check } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { Project } from '@/types/project';
+import { Project } from '@/types/typeCrud';
 import NewEditDialog from '../../components/projects/newEdit';
 import ModalConfirmar from '@/components/modalConfirmar';
 //import PdfButton from '@/components/utils/pdfButton';

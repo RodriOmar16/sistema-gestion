@@ -5,6 +5,7 @@ use App\Models\Carousel;
 
 use App\Http\Controllers\MenuWebController;
 use App\Http\Controllers\RutaController;
+use App\Http\Controllers\RolController;
 
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\CarouselController;
@@ -43,16 +44,25 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
 
     //Menu
     Route::get('/init_menu', [MenuWebController::class, 'padresHabilitados'])->name('menu.padres');
+    Route::get('/menu_habilitados', [MenuWebController::class, 'menusHabilitados'])->name('menu.habilitados');
     Route::get('/menu',[MenuWebController::class, 'index'])->name('menu.index');
     Route::post('/menu', [MenuWebController::class, 'store'])->name('menu.store');
     Route::put('/menu/{menu}', [MenuWebController::class, 'update'])->name('menu.update');
     Route::put('/menu/{menu}/estado', [MenuWebController::class, 'toggleEstado'])->name('menu.toggleEstado');
 
     //Rutas
+    Route::get('/rutas_habilitadas', [RutaController::class, 'rutasHabilitadas'])->name('rutas.habilitadas');
     Route::get('/rutas', [RutaController::class, 'index'])->name('rutas.index');
     Route::post('/rutas', [RutaController::class, 'store'])->name('rutas.store');
     Route::put('/rutas/{ruta}', [RutaController::class, 'update'])->name('rutas.update');
     Route::put('/rutas/{ruta}/estado', [RutaController::class, 'toggleEstado'])->name('rutas.toggleEstado');
+
+    //Roles
+    Route::get('/rol/{rol}/menus_rutas', [RolController::class, 'menusYRutas']);
+    Route::get('/roles', [RolController::class, 'index'])->name('roles.index');
+    Route::post('/roles', [RolController::class, 'store'])->name('roles.store');
+    Route::put('/roles/{rol}', [RolController::class, 'update'])->name('roles.update');
+    Route::put('/roles/{rol}/estado', [RolController::class, 'toggleEstado'])->name('roles.toggleEstado');
 
     //proyectos
     Route::get('/projects', [ProjectController::class, 'index'])->name('projects.index');

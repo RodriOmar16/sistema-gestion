@@ -46,6 +46,16 @@ class MenuWebController extends Controller
       return response()->json($padres);
     }
 
+    public function menusHabilitados(){
+      $menus = MenuWeb::where('inhabilitado', false)->get()->map(function($menu){
+        return [
+          'id'     => $menu->menu_id,
+          'nombre' => $menu->nombre
+        ];
+      });
+      return response()->json($menus);
+    }
+
     public function index(Request $request)
     {   
       if(!$request->has('buscar')){

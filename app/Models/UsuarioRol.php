@@ -18,6 +18,6 @@ class UsuarioRol extends Model
         return $this->belongsTo(Rol::class, 'rol_id');
     }
     public function users(){
-        return $this->belognsTo(User::class, 'user_id');
+        return $this->belongsTo(User::class, 'user_id');
     }
 }

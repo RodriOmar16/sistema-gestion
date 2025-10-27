@@ -34,6 +34,16 @@ class RolController extends Controller
       'rutas_asignadas' => $rutas,
     ]);
   }
+  public function rolesHabilitados(){
+    $roles = Rol::where('inhabilitado', false)->get()->map(function($rol){
+      return [
+        'id'     => $rol->rol_id,
+        'nombre' => $rol->nombre
+      ];
+    });
+    return response()->json($roles);
+  }
+
   public function index(Request $request)
   {
     if(!$request->has('buscar')){

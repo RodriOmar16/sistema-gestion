@@ -208,7 +208,6 @@ export default function Roles(){
     const payload = JSON.parse(JSON.stringify(pendingData));
     
     if (modalMode === 'create') {
-      console.log("payload: ", payload);
       router.post(
         route('roles.store'),payload,
         {
@@ -223,7 +222,6 @@ export default function Roles(){
         }
       );
     } else {
-      console.log("payload: ", payload);
       router.put(
         route('roles.update',{rol: pendingData.rol_id}),
         payload,

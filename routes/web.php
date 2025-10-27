@@ -60,6 +60,7 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
 
     //Roles
     Route::get('/rol/{rol}/menus_rutas', [RolController::class, 'menusYRutas'])->name('roles.menusYRutas');
+    Route::get('/roles_habilitados', [RolController::class, 'rolesHabilitados'])->name('roles.habilitados');
     Route::get('/roles', [RolController::class, 'index'])->name('roles.index');
     Route::post('/roles', [RolController::class, 'store'])->name('roles.store');
     Route::put('/roles/{rol}', [RolController::class, 'update'])->name('roles.update');

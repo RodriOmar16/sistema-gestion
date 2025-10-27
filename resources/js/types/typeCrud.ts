@@ -44,8 +44,16 @@ export interface Rol {
   inhabilitado: boolean | 1 | 0 | 'true' | 'false';
   created_at?: string;
   updated_at?: string;
+} 
+export interface User {
+  id: number | string;
+  name: string;
+  email: string;
+  inhabilitado: boolean | 1 | 0 | 'true' | 'false';
+  created_at?: string;
+  updated_at?: string;
 }
-
+//para componente selec multiple
 export type Multiple = { 
   id: number; 
   nombre: string;

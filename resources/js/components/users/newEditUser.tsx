@@ -9,7 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from "@/components/ui/label"
 import { useForm } from "@inertiajs/react"
 import React, { use, useState, useEffect } from "react"
-import { Rol } from "@/types/typeCrud";
+import { User } from "@/types/typeCrud";
 import { Loader2 } from 'lucide-react';
 import Swal from 'sweetalert2';
 import ShowMessage from "@/components/utils/showMessage"
@@ -21,119 +21,91 @@ interface Props{
   open: boolean;
   onOpenChange: (open:boolean) => void;
   mode: 'create' | 'edit';
-  rol?: Rol;
+  user?: User;
   onSubmit: (data:any) => void;
   loading: boolean;
 }
 
-const rolVacio = {
-  rol_id: '',
-  nombre: '',
+const userVacio = {
+  id: '',
+  name: '',
+  email: '',
   inhabilitado: false,
 }
 
-export default function NewEditRol({ open, onOpenChange, mode, rol, onSubmit, loading }: Props){
+export default function NewEditUser({ open, onOpenChange, mode, user, onSubmit, loading }: Props){
   //data
   const [activo, setActivo] = useState(false);
   const [text, setText]     = useState('');
   const [title, setTitle]   = useState('');
 
-  const { data, setData, get, processing, errors } = useForm<{
-    rol_id: string | number;
-    nombre: string;
-    inhabilitado: 1 | 0 | boolean;
-  }>(rolVacio);
+  const { data, setData, get, processing, errors } = useForm<User>(userVacio);
 
-  const [menus, setMenu] = useState<Multiple[]>([]);
-  const [selectedMenus, setSelectedMenus] = useState<Multiple[]>([]);
-  const [rutas, setRutas] = useState<Multiple[]>([]);
-  const [selectedRutas, setSelectedRutas] = useState<Multiple[]>([]);
+  const [roles, setRoles] = useState<Multiple[]>([]);
+  const [selectedRoles, setSelectedRoles] = useState<Multiple[]>([]);
 
   //useEffect
   useEffect(() => {
     //optengo los datos del formulario
-    fetch('/menu_habilitados')
+    fetch('/roles_habilitados')
     .then(res => res.json())
     .then(data => {
-      //const opcionesOrdenadas = ;
-      setMenu(ordenarPorTexto(data, 'nombre'));
-    });
-  }, []);
-  useEffect(() => {
-    //optengo los datos del formulario
-    fetch('/rutas_habilitadas')
-    .then(res => res.json())
-    .then(data => {
-      //const opcionesOrdenadas = ;
-      setRutas(ordenarPorTexto(data, 'nombre'));
+      setRoles(ordenarPorTexto(data, 'nombre'));
     });
   }, []);
   useEffect(() => {
     if (!open && mode === 'create') {
-      setData(rolVacio);
-      setSelectedMenus([{id: 1, nombre: 'Dashboard'}]);
-      setSelectedRutas([{id: 1, nombre: '/dashboard'}]);
+      setData(userVacio);
+      setSelectedRoles([]);
     }
   }, [open, mode]);
 
   useEffect(() => {
-    if (rol && mode === 'edit') {
+    if (user && mode === 'edit') {
       setData({
-        rol_id: rol.rol_id,
-        nombre: rol.nombre,
-        inhabilitado: Boolean(rol.inhabilitado),
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        inhabilitado: user.inhabilitado,
       });
 
       // Consulta de menús y rutas asignados al rol
-      fetch(`/rol/${rol.rol_id}/menus_rutas`)
+      fetch(`/user/${user.id}/roles_user`)
         .then(res => res.json())
-        .then(({ menus_asignados, rutas_asignadas }) => {
-
-          if(menus_asignados && menus_asignados.length == 0){
+        .then(({ roles_asignados }) => {
+          console.log("roles_asignados: ", roles_asignados)
+          if(roles_asignados && roles_asignados.length == 0){
             // Asegurarse que vengan en formato Multiple[]
-            setSelectedMenus([{id: 1, nombre: 'Dashboard'}]);
+            setSelectedRoles([]);
           }else{
-            setSelectedMenus(ordenarPorTexto(menus_asignados, 'nombre'));
-          }
-          if(rutas_asignadas && rutas_asignadas.length == 0){
-            setSelectedRutas([{id: 1, nombre: '/dashboard'}]);
-          }else{
-            setSelectedRutas(ordenarPorTexto(rutas_asignadas, 'nombre'));
+            setSelectedRoles(ordenarPorTexto(roles_asignados, 'nombre'));
           }
         });
     } else {
-      setData(rolVacio);
-      setSelectedMenus([{id: 1, nombre: 'Dashboard'}]);
-      setSelectedRutas([{id: 1, nombre: '/dashboard'}]);
+      setData(userVacio);
+      setSelectedRoles([]);
     }
-  }, [rol, mode]);
+  }, [user, mode]);
 
 
   //funciones
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if(!data.nombre){
+    if(!data.name){
       setTitle('¡Campo faltante!');
       setText('Se requiere que ingreses un nombre válido');
       setActivo(true);
       return 
     }
-    if(selectedMenus.length == 0){
+    if(selectedRoles.length == 0){
       setTitle('Falta Seleccionar');
-      setText('Se requiere que seleccione al menos una opción de menu');
-      setActivo(true);
-      return 
-    }
-    if(selectedRutas.length == 0){
-      setTitle('Falta Seleccionar');
-      setText('Se requiere que seleccione al menos una ruta');
+      setText('Se requiere que seleccione al menos un rol');
       setActivo(true);
       return 
     }
     onSubmit({
       ...data,
-      menus: selectedMenus,
-      rutas: selectedRutas
+      roles: selectedRoles,
     });
   }
 
@@ -141,10 +113,10 @@ export default function NewEditRol({ open, onOpenChange, mode, rol, onSubmit, lo
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[95vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{mode === 'create' ? 'Nuevo Rol' : 'Editar Rol'}</DialogTitle>
+          <DialogTitle>{mode === 'create' ? 'Nuevo Usuario' : 'Editar Usuario'}</DialogTitle>
           <DialogDescription>
-            { mode === 'create' ? 'Completa los campos para crear un rol' : 
-                                  `Editando rol: ${rol?.rol_id}` }
+            { mode === 'create' ? 'Completa los campos para crear un usuario' : 
+                                  `Editando usuario: ${user?.id}` }
           </DialogDescription>
           <hr />
         </DialogHeader>
@@ -155,19 +127,27 @@ export default function NewEditRol({ open, onOpenChange, mode, rol, onSubmit, lo
                 <label htmlFor="id">Id</label>
                 <Input
                   disabled
-                  value={data.rol_id}
-                  onChange={(e) => setData({ ...data, rol_id: e.target.value })}
+                  value={data.id}
+                  onChange={(e) => setData({ ...data, id: e.target.value })}
                   placeholder="Id"
                 />
               </div>
             ) : <></>
           }
-          <div className="col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-6">
+          <div className="col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12">
             <label htmlFor="nombre">Nombre</label>
             <Input
-              value={data.nombre}
-              onChange={(e) => setData({ ...data, nombre: e.target.value })}
-              placeholder="Nombre"
+              value={data.name}
+              onChange={(e) => setData({ ...data, name: e.target.value })}
+              placeholder="Ingresar nombre"
+            />
+          </div>
+          <div className="col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12">
+            <label htmlFor="email">Email</label>
+            <Input
+              value={data.email}
+              onChange={(e) => setData({ ...data, email: e.target.value })}
+              placeholder="Ingresar email"
             />
           </div>
           <div className="col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-6 flex flex-col">
@@ -175,12 +155,12 @@ export default function NewEditRol({ open, onOpenChange, mode, rol, onSubmit, lo
             <Switch checked={data.inhabilitado?true:false} onCheckedChange={(val) => setData('inhabilitado', val)} />
           </div>
           <div className="col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12">
-            <label htmlFor="menus">Menús</label>
-            <SelectMultiple opciones={menus} seleccionados={selectedMenus} setSeleccionados={setSelectedMenus}/>
-          </div>
-          <div className="col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12">
-            <label htmlFor="menus">Rutas</label>
-            <SelectMultiple opciones={rutas} seleccionados={selectedRutas} setSeleccionados={setSelectedRutas}/>
+            <label htmlFor="roles">Roles</label>
+            <SelectMultiple 
+              opciones={roles} 
+              seleccionados={selectedRoles} 
+              setSeleccionados={setSelectedRoles}
+            />
           </div>
         </form>
         <DialogFooter>

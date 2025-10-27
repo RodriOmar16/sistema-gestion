@@ -5,7 +5,7 @@ import { ArrowUpDown, ChevronDown, MoreHorizontal, Pen , Check, Ban,Search } fro
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {  Table,  TableBody,  TableCell,  TableHead,  TableHeader,  TableRow } from "@/components/ui/table"
-import { Ruta } from "@/types/rutas"
+import { Ruta } from "@/types/typeCrud"
 import PdfButton from "../utils/pdfButton"
 import { formatDateTime } from "@/utils"
 interface Props {

@@ -9,7 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from "@/components/ui/label"
 import { useForm } from "@inertiajs/react"
 import React, { use, useState, useEffect } from "react"
-import { Ruta } from "@/types/rutas"
+import { Ruta } from "@/types/typeCrud"
 import { Loader2 } from 'lucide-react';
 import Swal from 'sweetalert2';
 import ShowMessage from "@/components/utils/showMessage"

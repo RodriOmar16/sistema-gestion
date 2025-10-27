@@ -5,7 +5,7 @@ import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem } from '@/types';
-import { Ruta } from '@/types/rutas';
+import { Ruta } from '@/types/typeCrud';
 import { Pen, Ban, Search, Brush, Loader2, CirclePlus, Filter, Check } from 'lucide-react';
 import { DataTableRutas } from '@/components/rutas/dataTableRutas';
 import NewEditDialog from '../../components/rutas/newEdit';

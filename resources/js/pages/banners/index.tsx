@@ -6,7 +6,7 @@ import NewEditBanner from "../../components/banners/newEdit";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useState } from 'react';
-import { Banner } from "@/types/banners";
+import { Banner } from "@/types/typeCrud";
 import { Pen, Ban, Search, Brush, Loader2, CirclePlus, Filter, Check } from 'lucide-react';
 import {
   Select,  SelectContent,  SelectItem,  SelectTrigger,  SelectValue,

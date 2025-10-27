@@ -8,7 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { Pen, Ban, Search, Brush, Loader2, CirclePlus, Filter, Check } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Head, usePage, useForm, router } from '@inertiajs/react';
-import { Menu } from '@/types/menus';
+import { Menu } from '@/types/typeCrud';
 import NewEditDialog from '../../components/menu/newEdit';
 import ModalConfirmar from '@/components/modalConfirmar';
 import PdfButton from '@/components/utils/pdfButton';

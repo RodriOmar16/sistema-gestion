@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import React, { use, useState, useEffect } from "react"
 import { usePage, useForm, router } from '@inertiajs/react';
-import { Menu } from "@/types/menus"
+import { Menu } from "@/types/typeCrud"
 import { Loader2 } from 'lucide-react';
 import Swal from 'sweetalert2';
 import ShowMessage from "@/components/utils/showMessage"

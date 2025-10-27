@@ -6,6 +6,7 @@ use App\Models\Carousel;
 use App\Http\Controllers\MenuWebController;
 use App\Http\Controllers\RutaController;
 use App\Http\Controllers\RolController;
+use App\Http\Controllers\UserController;
 
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\CarouselController;
@@ -64,7 +65,14 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
     Route::put('/roles/{rol}', [RolController::class, 'update'])->name('roles.update');
     Route::put('/roles/{rol}/estado', [RolController::class, 'toggleEstado'])->name('roles.toggleEstado');
 
-    //proyectos
+    //Usuarios
+    Route::get('/user/{user}/roles_user', [UserController::class, 'rolesUser'])->name('users.rolesUser');
+    Route::get('/users', [UserController::class, 'index'])->name('users.index');
+    Route::post('/users', [UserController::class, 'store'])->name('users.store');
+    Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
+    Route::put('/users/{user}/estado', [UserController::class, 'toggleEstado'])->name('users.toggleEstado');
+
+    //Proyectos
     Route::get('/projects', [ProjectController::class, 'index'])->name('projects.index');
     Route::post('/projects', [ProjectController::class, 'store'])->name('projects.store');
     Route::put('/projects/{project}', [ProjectController::class, 'update'])->name('projects.update');

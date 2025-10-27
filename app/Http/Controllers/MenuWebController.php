@@ -20,7 +20,8 @@ class MenuWebController extends Controller
             $q->whereIn('roles.rol_id', $usuario->roles->pluck('rol_id'));
         })
         ->orderBy('orden')
-        ->get();
+        ->get()
+        ->unique('menu_id');
 
       return response()->json($menu->map(function ($item) {
         $item->ruta_url = $item->ruta?->url ?? null;

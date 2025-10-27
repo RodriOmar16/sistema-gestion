@@ -58,7 +58,7 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
     Route::put('/rutas/{ruta}/estado', [RutaController::class, 'toggleEstado'])->name('rutas.toggleEstado');
 
     //Roles
-    Route::get('/rol/{rol}/menus_rutas', [RolController::class, 'menusYRutas']);
+    Route::get('/rol/{rol}/menus_rutas', [RolController::class, 'menusYRutas'])->name('roles.menusYRutas');
     Route::get('/roles', [RolController::class, 'index'])->name('roles.index');
     Route::post('/roles', [RolController::class, 'store'])->name('roles.store');
     Route::put('/roles/{rol}', [RolController::class, 'update'])->name('roles.update');

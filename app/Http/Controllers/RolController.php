@@ -3,19 +3,27 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
 use App\Models\Rol;
+use App\Models\MenuRol;
+use App\Models\RutaRol;
 
 class RolController extends Controller
 {
   public function menusYRutas($rol_id){
     $rol = Rol::with(['menus', 'rutas'])->findOrFail($rol_id);
-    $menus = $rol->menus->map(function($menu){
+    $menus = $rol->menus
+      ->where('inhabilitado', false)
+      ->map(function($menu){
       return [
         'id'     => $menu->menu_id,
         'nombre' => $menu->nombre
       ];
     });
-    $rutas = $rol->rutas->map(function($ruta){
+    $rutas = $rol->rutas
+      ->where('inhabilitada', false)
+      ->map(function($ruta){
       return [
         'id'     => $ruta->ruta_id,
         'nombre' => $ruta->url
@@ -65,17 +73,113 @@ class RolController extends Controller
     //return Rol::where('inhabilitado', false)->get();
   }
 
-    public function store(Request $request)
-    {
-        $validated = $request->validate(['nombre' => 'required|string|max:255']);
-        return Rol::create($validated);
+  public function store(Request $request)
+  {    
+    DB::beginTransaction();
+    try {
+      // Validación básica
+      $validated = $request->validate([
+        'nombre' => 'required|string|max:255',
+        'inhabilitado' => 'boolean',
+        'menus' => 'required|array|min:1',
+        'rutas' => 'required|array|min:1',
+      ]);
+      //verifico que el rol no exista ya 
+      $name = strtolower(trim($validated['nombre']));
+      $existe = Rol::whereRaw('LOWER(TRIM(nombre)) = ?', [$name])->exists();
+      if($existe){
+        return inertia('roles/index', [
+          'resultado' => 0,
+          'mensaje' => 'Ya existe un rol con ese nombre.',
+        ]);
+      }
+      // Crear el rol
+      $rol = Rol::create([
+        'nombre' => $validated['nombre'],
+        'inhabilitado' => $validated['inhabilitado'] ? 1 : 0,
+      ]);
+
+      $rol_id = $rol->rol_id;
+      // Extraer IDs de menús y rutas
+      $menuIds = collect($request->input('menus'))->pluck('id')->unique()->toArray();
+      $rutaIds = collect($request->input('rutas'))->pluck('id')->unique()->toArray();
+
+      foreach($menuIds as $menu_id){
+        MenuRol::firstOrCreate([
+          'rol_id'  => $rol_id, 
+          'menu_id' => $menu_id
+        ]);
+      }
+      foreach($rutaIds as $ruta_id){
+        RutaRol::firstOrCreate([
+          'rol_id'  => $rol_id, 
+          'ruta_id' => $ruta_id
+        ]);
+      }
+
+      DB::commit();
+      return inertia('roles/index', [
+					'resultado' => 1,
+					'mensaje'   => 'Rol creada correctamente',
+					'rol_id'    => $rol->rol_id
+				]);
+    } catch (\Throwable $e) {
+      DB::rollBack();
+      return inertia('roles/index', [
+        'resultado' => 0,
+        'mensaje' => 'Error inesperado: ' . $e->getMessage(),
+      ]);
     }
+  }
 
     public function update(Request $request, Rol $rol)
     {
-        $validated = $request->validate(['nombre' => 'required|string|max:255']);
-        $rol->update($validated);
-        return $rol;
+      //inicio la transaccion con posibles commit o rollback
+      DB::beginTransaction();
+      try {
+        //valido que no haya repetidos
+        $validated = $request->validate([
+          'nombre' => 'required|string|max:255',
+          'inhabilitado' => 'boolean',
+          'menus' => 'required|array|min:1',
+          'rutas' => 'required|array|min:1'
+        ]);
+
+        $nombreRol = strtolower(trim($validated['nombre']));
+        $existe = Rol::whereRaw('LOWER(TRIM(nombre)) = ?',[$nombreRol])
+                    ->where('rol_id', '!=', $rol->rol_id)
+                    ->exists();
+        if($existe){
+          return inertia('roles/index',[
+            'resultado' => 0,
+            'mensaje'   => 'Ya existe un rol con ese nombre.',
+          ]);
+        }
+        //actualizo los valores del rol
+        $rol->update([
+          'nombre'       => $validated['nombre'],
+          'inhabilitado' => $validated['inhabilitado'] ? 1 : 0
+        ]);
+        //procedo a actualizar los datos de tablas intermedias
+        $menuIds = collect($request->menus)->pluck('id')->unique()->toArray();
+        $rutaIds = collect($request->rutas)->pluck('id')->unique()->toArray();
+        $rol->menus()->sync($menuIds);
+        $rol->rutas()->sync($rutaIds);
+
+        //exito
+        DB::commit();
+        return inertia('roles/index',[
+          'resultado' => 1,
+          'mensaje'   => 'El rol fue editado existosamente ',
+          'rol_id'    => $rol->rol_id
+        ]);
+      } catch (\Throwable $e) {
+        DB::rollback();
+        return inertia('roles/index',[
+          'resultado' => 0,
+          'mensaje'   => 'Error inerperado: '.e->getMessage()
+        ]);
+      }
     }
 
     public function toggleEstado(Rol $rol)

@@ -184,7 +184,14 @@ export default function Roles(){
   };
 
   const handleSave = (data: any) => {
-    return console.log("data: ",data)
+    let pos = data.menus.map((e:any) => e.id).indexOf(1);
+    if(pos==-1){ //si no está Dashboard lo agrego
+      data.menus.push({id:1 , nombre: 'Dashboard'});
+    }
+    pos = data.rutas.map((e:any) => e.id).indexOf(1);
+    if(pos==-1){ //si no está /dashboard lo agrego
+      data.rutas.push({id:1 , nombre: 'Dashboard'});
+    }
     setPendingData(data);
     if (modalMode === 'create') {
       setTextConfirm('¿Estás seguro de grabar este rol?');
@@ -199,8 +206,9 @@ export default function Roles(){
     setLoading(true);
 
     const payload = JSON.parse(JSON.stringify(pendingData));
-
+    
     if (modalMode === 'create') {
+      console.log("payload: ", payload);
       router.post(
         route('roles.store'),payload,
         {
@@ -215,8 +223,9 @@ export default function Roles(){
         }
       );
     } else {
+      console.log("payload: ", payload);
       router.put(
-        route('roles.update',{ruta: pendingData.rol_id}),
+        route('roles.update',{rol: pendingData.rol_id}),
         payload,
         {
           preserveScroll: true,

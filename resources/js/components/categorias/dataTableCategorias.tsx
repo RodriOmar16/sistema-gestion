@@ -1,23 +1,29 @@
+import * as React from "react"
 import { useState, useMemo } from "react"
-import {  ColumnDef,  ColumnFiltersState,  flexRender,  getCoreRowModel,  getFilteredRowModel,  getPaginationRowModel,
-  getSortedRowModel,  SortingState,  useReactTable,  VisibilityState } from "@tanstack/react-table"
+import {
+  ColumnDef,  ColumnFiltersState,  flexRender,  getCoreRowModel,  getFilteredRowModel,
+  getPaginationRowModel,  getSortedRowModel,  SortingState,  useReactTable,  VisibilityState,
+} from "@tanstack/react-table"
 import { ArrowUpDown, ChevronDown, MoreHorizontal, Pen , Check, Ban,Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {  Table,  TableBody,  TableCell,  TableHead,  TableHeader,  TableRow } from "@/components/ui/table"
-import { Ruta } from "@/types/typeCrud"
+import { Categoria } from "@/types/typeCrud"
 import PdfButton from "../utils/pdfButton"
 import { formatDateTime } from "@/utils"
+import { Badge } from "../ui/badge"
+
 interface Props {
-  datos: Ruta[];
-  openEdit: (ruta:Ruta) => void;
-  abrirConfirmar: (ruta:Ruta) => void;
+  datos: Categoria[];
+  openEdit: (data:Categoria) => void;
+  abrirConfirmar: (data:Categoria) => void;
 }
 
-export function getColumns(confirmar: (ruta: Ruta) => void, openEdit: (ruta: Ruta) => void): ColumnDef<Ruta>[] {
+//export const columns: ColumnDef<Project>[] = [
+export function getColumns(confirmar: (data: Categoria) => void, openEdit: (data: Categoria) => void): ColumnDef<Categoria>[] {
   return [
     {
-      accessorKey: "ruta_id",
+      accessorKey: "categoria_id",
       header: ({column}) => {
         return (
           <div className="flex">
@@ -27,21 +33,45 @@ export function getColumns(confirmar: (ruta: Ruta) => void, openEdit: (ruta: Rut
         )
       },
       cell: ({ row }) => (
-        <div className="">{row.getValue("ruta_id")}</div>
+        <div className="text-right">{row.getValue("categoria_id")}</div>
       ),
     },
     {
-      accessorKey: "url",
+      accessorKey: "nombre",
       header: ({column}) => {
         return (
           <div className="flex">
-            Url
+            Nombre
             <ArrowUpDown className="ml-1" size={17} onClick={() => column.toggleSorting(column.getIsSorted() === "asc")} />
           </div>
         )
       }
       ,
-      cell: ({ row }) => ( <div className="">{row.getValue("url")}</div> ),
+      cell: ({ row }) => ( <div className="">{row.getValue("nombre")}</div> ),
+    },
+    {
+      accessorKey: "inhabilitada",
+      header: ({column}) => {
+        return (
+          <div className="flex">
+            Estado
+            <ArrowUpDown className="ml-1" size={20} onClick={() => column.toggleSorting(column.getIsSorted() === "asc")} />
+          </div>
+        )
+      },
+      cell: ({ row }) => {
+        const user = row.original;
+        const colorClasses = user.inhabilitada === 0
+          ? 'bg-green-500 text-white dark:bg-green-600'
+          : 'bg-red-500 text-white dark:bg-red-600';
+
+        return (
+          <Badge variant="secondary" className={`flex items-center gap-1 ${colorClasses}`}>
+            {user.inhabilitada === 0 ? 'Habilitado' : 'Inhabilitado'}
+          </Badge>
+        );
+
+      },
     },
     {
       accessorKey: "created_at",
@@ -78,19 +108,19 @@ export function getColumns(confirmar: (ruta: Ruta) => void, openEdit: (ruta: Rut
       enableHiding: false,
       header: "Acciones",
       cell: ({ row }) => {
-        const ruta = row.original;
+        const rol = row.original;
   
         return (
           <div className='flex'>
             {
-              ruta?.inhabilitada === 0 ? (
+              rol?.inhabilitada === 0 ? (
                 <>
                   <Button 
                     className="p-0 hover:bg-transparent cursor-pointer"
                     title="Editar" 
                     variant="ghost" 
                     size="icon" 
-                    onClick={() => openEdit(ruta)}>
+                    onClick={() => openEdit(rol)}>
                     <Pen size={20} className="text-orange-500" />
                   </Button>
                   <Button 
@@ -98,7 +128,7 @@ export function getColumns(confirmar: (ruta: Ruta) => void, openEdit: (ruta: Rut
                     title="Inhabilitar" 
                     variant="ghost" 
                     size="icon"
-                    onClick={ () => confirmar(ruta) }>
+                    onClick={ () => confirmar(rol) }>
                     <Ban size={20} className="text-red-500" />
                   </Button>
                 </>
@@ -109,7 +139,7 @@ export function getColumns(confirmar: (ruta: Ruta) => void, openEdit: (ruta: Rut
                     title="Habilitar" 
                     variant="ghost" 
                     size="icon"
-                    onClick={ () => confirmar(ruta) }
+                    onClick={ () => confirmar(rol) }
                   >
                     <Check size={20} className='text-green-600'/>
                   </Button>
@@ -123,7 +153,7 @@ export function getColumns(confirmar: (ruta: Ruta) => void, openEdit: (ruta: Rut
   ]
 //]
 }
-export function DataTableRutas({datos, openEdit, abrirConfirmar}:Props) {
+export default function DataTableCategorias({datos, openEdit, abrirConfirmar}:Props) {
   const [sorting, setSorting]                   = useState<SortingState>([])
   const [columnFilters, setColumnFilters]       = useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
@@ -133,17 +163,17 @@ export function DataTableRutas({datos, openEdit, abrirConfirmar}:Props) {
   const data = useMemo(() => {
     const texto = busqueda.toLowerCase();
     return busqueda
-      ? datos.filter((ruta) =>
-          ruta.ruta_id?.toString().includes(texto) ||
-          ruta.url?.toLowerCase().includes(texto)
+      ? datos.filter((campo) =>
+          campo.categoria_id?.toString().includes(texto) ||
+          campo.nombre?.toLowerCase().includes(texto)
         )
       : datos;
   }, [busqueda, datos]);
 
   //functions
-  const confirmar = (ruta: Ruta) => {
-		abrirConfirmar(ruta);
-	};
+  const confirmar = (data: Categoria) => {
+    abrirConfirmar(data);
+  };
   const columns = getColumns(confirmar, openEdit); 
 
   const table = useReactTable({
@@ -223,7 +253,7 @@ export function DataTableRutas({datos, openEdit, abrirConfirmar}:Props) {
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  No hay resultados para mostrar. Utiliza los filtros para obtener rutas.
+                  No hay resultados para mostrar. Utiliza los filtros para obtener categorías.
                 </TableCell>
               </TableRow>
             )}

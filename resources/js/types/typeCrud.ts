@@ -53,6 +53,15 @@ export interface User {
   created_at?: string;
   updated_at?: string;
 }
+
+export interface Categoria {
+  categoria_id: number | string;
+  nombre: string;
+  inhabilitada: boolean | 1 | 0 | 'true' | 'false';
+  created_at?: string;
+  updated_at?: string;
+}
+
 //para componente selec multiple
 export type Multiple = { 
   id: number; 

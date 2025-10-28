@@ -268,7 +268,7 @@ export default function DataTableUsers({datos, openEdit, abrirConfirmar}:Props) 
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  No hay resultados para mostrar. Utiliza los filtros para obtener roles.
+                  No hay resultados para mostrar. Utiliza los filtros para obtener usuarios.
                 </TableCell>
               </TableRow>
             )}

@@ -7,7 +7,7 @@ use App\Http\Controllers\MenuWebController;
 use App\Http\Controllers\RutaController;
 use App\Http\Controllers\RolController;
 use App\Http\Controllers\UserController;
-
+use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\CarouselController;
 
@@ -72,18 +72,26 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
     Route::post('/users', [UserController::class, 'store'])->name('users.store');
     Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
     Route::put('/users/{user}/estado', [UserController::class, 'toggleEstado'])->name('users.toggleEstado');
-
+    
+    //Categorías
+    Route::get('/categorias_habilitadas', [CategoriaController::class, 'categoriasHabilitadas'])->name('categorias.habilitadas');
+    Route::get('/categorias', [CategoriaController::class, 'index'])->name('categorias.index');
+    Route::post('/categorias', [CategoriaController::class, 'store'])->name('categorias.store');
+    Route::put('/categorias/{categoria}', [CategoriaController::class, 'update'])->name('categorias.update');
+    Route::put('/categorias/{categoria}/estado', [CategoriaController::class, 'toggleEstado'])->name('categorias.toggleEstado');
+    
+    //banners
+    Route::resource('carousel', CarouselController::class);
+    Route::get('/banners', [CarouselController::class, 'index'])->name('carousel.index');
+    Route::put('/carousel/{carousel}', [CarouselController::class, 'update'])->name('carousel.update');
+    Route::put('/carousel/{carousel}/estado', [CarouselController::class, 'toggleEstado'])->name('carousel.toggleEstado');
+    
     //Proyectos
     Route::get('/projects', [ProjectController::class, 'index'])->name('projects.index');
     Route::post('/projects', [ProjectController::class, 'store'])->name('projects.store');
     Route::put('/projects/{project}', [ProjectController::class, 'update'])->name('projects.update');
     Route::put('/projects/{project}/estado', [ProjectController::class, 'toggleEstado'])->name('projects.toggleEstado');
 
-    //banners
-    Route::resource('carousel', CarouselController::class);
-    Route::get('/banners', [CarouselController::class, 'index'])->name('carousel.index');
-    Route::put('/carousel/{carousel}', [CarouselController::class, 'update'])->name('carousel.update');
-    Route::put('/carousel/{carousel}/estado', [CarouselController::class, 'toggleEstado'])->name('carousel.toggleEstado');
 
     //Route::get('/productos', [ProductoController::class, 'index'])->middleware('verificarRuta');
 });

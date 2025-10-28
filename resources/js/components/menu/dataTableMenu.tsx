@@ -218,10 +218,10 @@ export function DataTableMenu({datos, openEdit, abrirConfirmar}:Props) {
   return (
     <div className="w-full">
       <div className=" grid grid-cols-12 gap-4  py-2">
-        <div className="col-span-6 sm:col-span-4 md:col-span-4 lg:col-span-2">
+        {/*<div className="col-span-6 sm:col-span-4 md:col-span-4 lg:col-span-2">
           <PdfButton deshabilitado={datos.length == 0}/>
-        </div>
-        <div className="col-span-6 sm:col-span-8 md:col-span-8 lg:col-span-10 flex justify-end  items-center">
+        </div>*/}
+        <div className="col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12 flex justify-end  items-center">
           <Input
             placeholder="Filtrar columnas"
             value={busqueda}

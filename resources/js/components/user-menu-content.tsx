@@ -10,8 +10,8 @@ import { logout } from '@/routes';
 import { edit } from '@/routes/profile';
 import { type User } from '@/types';
 import { Link, router } from '@inertiajs/react';
-import { LogOut, Settings } from 'lucide-react';
-
+import { LogOut, Settings, RefreshCcw } from 'lucide-react';
+import { resetLocalStorage } from '@/utils';
 interface UserMenuContentProps {
     user: User;
 }
@@ -21,7 +21,25 @@ export function UserMenuContent({ user }: UserMenuContentProps) {
 
     const handleLogout = () => {
         cleanup();
+        resetLocalStorage();
         router.flushAll();
+    };
+
+    const handleSyncMenu = async () => {
+        localStorage.removeItem('menu');
+        localStorage.removeItem('menu-data');
+
+        try {
+            const res = await fetch('/menu-usuario');
+            const data = await res.json();
+
+            localStorage.setItem('menu-data', JSON.stringify(data));
+            localStorage.setItem('menu', JSON.stringify(data)); // opcional si querés guardar jerárquico
+
+            location.reload(); // recarga forzada
+        } catch (error) {
+            console.error('Error al sincronizar menú:', error);
+        }
     };
 
     return (
@@ -48,6 +66,14 @@ export function UserMenuContent({ user }: UserMenuContentProps) {
             </DropdownMenuGroup>
             <DropdownMenuSeparator />*/}
             <DropdownMenuItem asChild>
+                <button
+                    className="block w-full text-left px-2 py-1"
+                    onClick={handleSyncMenu}
+                >
+                    <RefreshCcw className='mr-2'/>Sincronizar
+                </button>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
                 <Link
                     className="block w-full"
                     href={logout()}
@@ -59,6 +85,8 @@ export function UserMenuContent({ user }: UserMenuContentProps) {
                     Salir
                 </Link>
             </DropdownMenuItem>
+            
+
         </>
     );
 }

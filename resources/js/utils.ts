@@ -15,3 +15,8 @@ export function ordenarPorTexto<T>(array: T[], campo: keyof T): T[] {
     return textoA.localeCompare(textoB);
   });
 }
+
+export function resetLocalStorage(){
+  localStorage.removeItem('menu');
+  localStorage.removeItem('menu-data');
+}

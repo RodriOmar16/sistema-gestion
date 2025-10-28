@@ -33,7 +33,7 @@ export function NavFooter({
                                     href={
                                         typeof item.href === 'string'
                                             ? item.href
-                                            : item.href.url
+                                            : item.href?.url
                                     }
                                     target="_blank"
                                     rel="noopener noreferrer"

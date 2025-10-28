@@ -131,7 +131,7 @@ class MenuWebController extends Controller
 				]);
         //convierto valores
         $nombre = strtolower(trim($validated['nombre']));
-        $validated['nombre'] = $nombre;
+        //$validated['nombre'] = $nombre;
         $validated['padre'] = ($validated['padre'] ?? null) == 0 ? null : $validated['padre'];
         $padre = $validated['padre'];
 

@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 
 use Illuminate\Http\Request;
+
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 
@@ -87,11 +89,23 @@ class UserController extends Controller
         'inhabilitado' => 'boolean',
         'roles' => 'required|array|min:1'
       ]);
+      //verifico que no se repita
+      $nombreUser = strtolower(trim($validated['name']));
+      $existe = User::whereRaw('LOWER(TRIM(name)) = ?',[$nombreUser])
+                  ->exists();
+      if($existe){
+        return inertia('users/index',[
+          'resultado' => 0,
+          'mensaje'   => 'Ya existe un usuario con ese nombre.',
+        ]);
+      }
+
+      //Creo el usuario
       $user = User::create([
         'name'         => $validated['name'],
         'email'        => $validated['email'],
         'inhabilitado' => $validated['inhabilitado'] ? 1 : 0,
-        'password'     => Hash::make('123' . $request->name)
+        'password'     => Hash::make('123user')
       ]);
 
       $id = $user->id;
@@ -107,14 +121,14 @@ class UserController extends Controller
       Mail::to($user->email)->send(new UsuarioCreadoMail(
         $user->name,
         $user->email,
-        '123' . $user->name
+        '123user'
       ));
 
       DB::commit();
       return inertia('users/index',[
         'resultado' => 1,
         'mensaje'   => 'Usuario creado exitosamente',
-        'user_id'   => $id
+        'id'   => $id
       ]);
 
       //envio de mail al email recibido para avisar que se creo el user
@@ -123,7 +137,7 @@ class UserController extends Controller
       DB::rollback();
       return inertia('users/index',[
         'resultado' => 0,
-        'mensaje'   => 'Ocurrió un error: '.e->getMessage()
+        'mensaje'   => 'Ocurrió un error: '.$e->getMessage()
       ]);
     }
   }

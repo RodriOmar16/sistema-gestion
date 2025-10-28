@@ -7,7 +7,9 @@ use App\Http\Controllers\MenuWebController;
 use App\Http\Controllers\RutaController;
 use App\Http\Controllers\RolController;
 use App\Http\Controllers\UserController;
+
 use App\Http\Controllers\CategoriaController;
+use App\Http\Controllers\ProveedorController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\CarouselController;
 
@@ -79,7 +81,14 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
     Route::post('/categorias', [CategoriaController::class, 'store'])->name('categorias.store');
     Route::put('/categorias/{categoria}', [CategoriaController::class, 'update'])->name('categorias.update');
     Route::put('/categorias/{categoria}/estado', [CategoriaController::class, 'toggleEstado'])->name('categorias.toggleEstado');
-    
+
+    //Proveedores
+    Route::get('/proveedores_habilitados', [ProveedorController::class, 'proveedoresHabilitados'])->name('proveedores.proveedoresHabilitados');
+    Route::get('/proveedores', [ProveedorController::class, 'index'])->name('proveedores.index');
+    Route::post('/proveedores', [ProveedorController::class, 'store'])->name('proveedores.store');
+    Route::put('/proveedores/{proveedor}', [ProveedorController::class, 'update'])->name('proveedores.update');
+    Route::put('/proveedores/{proveedor}/estado', [ProveedorController::class, 'toggleEstado'])->name('proveedores.toggleEstado');
+
     //banners
     Route::resource('carousel', CarouselController::class);
     Route::get('/banners', [CarouselController::class, 'index'])->name('carousel.index');

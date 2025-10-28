@@ -20,3 +20,16 @@ export function resetLocalStorage(){
   localStorage.removeItem('menu');
   localStorage.removeItem('menu-data');
 }
+
+export function formatearCuilCompleto(cuil: number): string {
+  const limpio = cuil.toString().padStart(11, '0'); // asegura 11 dígitos
+
+  if (limpio.length !== 11) return limpio;
+
+  const parte1 = limpio.slice(0, 2);
+  const parte2 = limpio.slice(2, 10);
+  const parte3 = limpio.slice(10);
+
+  return `${parte1}-${parte2}-${parte3}`;
+}
+

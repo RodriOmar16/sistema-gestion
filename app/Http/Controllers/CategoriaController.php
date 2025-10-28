@@ -100,7 +100,7 @@ class CategoriaController extends Controller
         ]);
         //controlo los repetidos
         $nombre = strtolower(trim($validated['nombre']));
-        $existe = Categoria::whereRam('LOWER(TRIM(nombre)) = ?', [$nombre])
+        $existe = Categoria::whereRaw('LOWER(TRIM(nombre)) = ?', [$nombre])
                              ->where('categoria_id','!=',$request->categoria_id)
                              ->exists();
         if($existe){
@@ -123,6 +123,7 @@ class CategoriaController extends Controller
         ]);
         
       } catch (\Throwable $e) {
+        DB::rollback();
         return inertia('categorias/index',[
           'resultado' => 0, 
           'mensaje' => 'Ocurrió un error al actualizar: '.$e->getMessage(),

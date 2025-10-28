@@ -5,46 +5,57 @@ import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem } from '@/types';
-import { Categoria } from '@/types/typeCrud';
+import { Proveedor } from '@/types/typeCrud';
 import { Pen, Ban, Search, Brush, Loader2, CirclePlus, Filter, Check } from 'lucide-react';
-import DataTableCategorias from '@/components/categorias/dataTableCategorias';
-import NewEditCategoria from '@/components/categorias/newEditCategorias';
+import NewEditProveedor from '@/components/proveedores/newEditProveedores';
+import DataTableProveedores from '@/components/proveedores/dataTableProveedores';
 import ModalConfirmar from '@/components/modalConfirmar';
 import PdfButton from '@/components/utils/pdfButton';
 import ShowMessage from '@/components/utils/showMessage';
 import { Select,  SelectContent,  SelectItem,  SelectTrigger,  SelectValue } from "@/components/ui/select"
 import { route } from 'ziggy-js';
+import InputCuil from '@/components/utils/input-cuil';
 
-const breadcrumbs: BreadcrumbItem[] = [ { title: 'Categorias', href: '', } ];
+const breadcrumbs: BreadcrumbItem[] = [ { title: 'Proveedores', href: '', } ];
 
 type propsForm = {
   openCreate: () => void;
-  resetearCategoria: (categoria:Categoria[]) => void;
+  resetearProveedor: (data:Proveedor[]) => void;
 }
 
-const categoriaVacia = {
-  categoria_id: '',
-  nombre: '',
-  inhabilitada: false,
+const proveedorVacio = {
+  proveedor_id: '',
+  nombre:       '',
+  descripcion:  '',
+  razon_social: '',
+  cuit:         '',
+  nro_telefono: '',
+  inhabilitado: false,
 }
 
-export function FiltrosForm({ openCreate, resetearCategoria }: propsForm){
+export function FiltrosForm({ openCreate, resetearProveedor }: propsForm){
   const [esperandoRespuesta, setEsperandoRespuesta] = useState(false);
-  const { data, setData, errors, processing } = useForm(categoriaVacia);
+  const { data, setData, errors, processing } = useForm<Proveedor>(proveedorVacio);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    resetearCategoria([]);
+    resetearProveedor([]);
     const payload = {      ...data, buscar: true    }
-    router.get(route('categorias.index'), payload, {
+    router.get(route('proveedores.index'), payload, {
       preserveState: true,
       preserveScroll: true,
       onFinish: () => setEsperandoRespuesta(false),
     });
   };
   const handleReset = () => {
-    setData(categoriaVacia);
+    setData(proveedorVacio);
   };
+
+  const controlarCuit = (nro:number|string) => {
+    console.log("nro: ", nro)
+    setData('cuit', Number(nro));
+    console.log("data: ", data)
+  }
 
   return (
     <div>
@@ -64,17 +75,41 @@ export function FiltrosForm({ openCreate, resetearCategoria }: propsForm){
       <form className='grid grid-cols-12 gap-4 px-4 pt-1 pb-4' onSubmit={handleSubmit}>
         <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-2'>
           <label htmlFor="id">Id</label>
-          <Input value={data.categoria_id} onChange={(e)=>setData('categoria_id',e.target.value)}/>	
-          { errors.categoria_id && <p className='text-red-500	'>{ errors.categoria_id }</p> }
+          <Input value={data.proveedor_id} onChange={(e)=>setData('proveedor_id',e.target.value)}/>	
+          { errors.proveedor_id && <p className='text-red-500	'>{ errors.proveedor_id }</p> }
         </div>
-        <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-4'>
+        <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
           <label htmlFor="nombre">Nombre</label>
           <Input value={data.nombre} onChange={(e)=>setData('nombre',e.target.value)}/>	
           { errors.nombre && <p className='text-red-500	'>{ errors.nombre }</p> }
         </div>
+        <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-4'>
+          <label htmlFor="descripcion">Descripcion</label>
+          <Input value={data.descripcion} onChange={(e)=>setData('descripcion',e.target.value)}/>	
+          { errors.descripcion && <p className='text-red-500	'>{ errors.descripcion }</p> }
+        </div>
+        <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
+          <label htmlFor="razonSocial">Razón social</label>
+          <Input value={data.razon_social} onChange={(e)=>setData('razon_social',e.target.value)}/>	
+          { errors.razon_social && <p className='text-red-500	'>{ errors.razon_social }</p> }
+        </div>
+        <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
+          <label htmlFor="cuit">Cuit</label>
+          <InputCuil
+            data={String(data.cuit)}
+            setData={controlarCuit}
+            placeholder=''
+          />
+          { errors.cuit && <p className='text-red-500	'>{ errors.cuit }</p> }
+        </div>
+        <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
+          <label htmlFor="nroTel">Nro. Teléfono</label>
+          <Input value={data.nro_telefono} onChange={(e)=>setData('nro_telefono',e.target.value)}/>	
+          { errors.nro_telefono && <p className='text-red-500	'>{ errors.nro_telefono }</p> }
+        </div>
         <div className='col-span-6 sm:col-span-4 md:col-span-4 lg:col-span-2 flex flex-col'>
-          <label className='mr-2'>Inhabilitada</label>
-          <Switch checked={data.inhabilitada} onCheckedChange={(val) => setData('inhabilitada', val)} />
+          <label className='mr-2'>Inhabilitado</label>
+          <Switch checked={data.inhabilitado==0 ? false: true} onCheckedChange={(val) => setData('inhabilitado', val)} />
         </div>
         <div className='col-span-6 sm:col-span-8 md:col-span-8 lg:col-span-4 flex justify-end items-center'>
           <Button 
@@ -101,53 +136,53 @@ export function FiltrosForm({ openCreate, resetearCategoria }: propsForm){
   );
 };
 
-export default function Categorias(){
+export default function Proveedores(){
   //data
   const [confirmOpen, setConfirOpen] = useState(false); //modal para confirmar acciones para cuado se crea o edita
   const [textConfir, setTextConfirm] = useState('');
   
   const [modalOpen, setModalOpen]                 = useState(false); //modal editar/crear
   const [modalMode, setModalMode]                 = useState<'create' | 'edit'>('create');
-  const [selectedCategoria, setSelectedCategoria] = useState<Categoria | undefined>(undefined);
-  const [pendingData, setPendingData]             = useState<Categoria | undefined>(undefined);
+  const [selectedProveedor, setSelectedProveedor] = useState<Proveedor | undefined>(undefined);
+  const [pendingData, setPendingData]             = useState<Proveedor | undefined>(undefined);
   const [loading, setLoading]                     = useState(false);
   
   const [openConfirmar, setConfirmar]       = useState(false); //para editar el estado
   const [textConfirmar, setTextConfirmar]   = useState(''); 
-  const [categoriaCopia, setCategoriaCopia] = useState<Categoria>(categoriaVacia);
+  const [proveedorCopia, setProveedorCopia] = useState<Proveedor>(proveedorVacio);
 
   const [activo, setActivo] = useState(false);//ShowMessage
   const [text, setText]     = useState('');
   const [title, setTitle]   = useState('');
   const [color, setColor]   = useState('');
 
-  const { categorias } = usePage().props as { categorias?: Categoria[] }; //necesito los props de inertia
-  const { resultado, mensaje, categoria_id } = usePage().props as {
+  const { proveedores } = usePage().props as { proveedores?: Proveedor[] }; //necesito los props de inertia
+  const { resultado, mensaje, proveedor_id } = usePage().props as {
     resultado?: number;
     mensaje?: string;
-    categoria_id?: number;
+    proveedor_id?: number;
   };
   const [propsActuales, setPropsActuales] = useState<{
     resultado: number | undefined | null;
     mensaje: string | undefined | null | '';
-    categoria_id: number | undefined | null;
-  }>({ resultado: undefined, mensaje: undefined, categoria_id: undefined });
-  const [categoriasCacheadas, setCategoriasCacheadas] = useState<Categoria[]>([]);
+    proveedor_id: number | undefined | null;
+  }>({ resultado: undefined, mensaje: undefined, proveedor_id: undefined });
+  const [proveedoresCacheados, setProveedoresCacheados] = useState<Proveedor[]>([]);
 
   //funciones
-  const confirmar = (data: Categoria) => {
+  const confirmar = (data: Proveedor) => {
     if(data){
-      setCategoriaCopia( JSON.parse(JSON.stringify(data)) );
-      const texto : string = data.inhabilitada === 0 ? 'inhabilitar': 'habilitar';
-      setTextConfirmar('Estás seguro de querer '+texto+' esta categoría?');
+      setProveedorCopia( JSON.parse(JSON.stringify(data)) );
+      const texto : string = data.inhabilitado === 0 ? 'inhabilitar': 'habilitar';
+      setTextConfirmar('Estás seguro de querer '+texto+' este proveedor?');
       setConfirmar(true);
     }
   };
   const inhabilitarHabilitar = () => {
-    if (!categoriaCopia || !categoriaCopia.categoria_id) return;
+    if (!proveedorCopia || !proveedorCopia.proveedor_id) return;
     setLoading(true);
     router.put(
-      route('categorias.toggleEstado', { categoria: categoriaCopia.categoria_id }),{},
+      route('proveedores.toggleEstado', { proveedor: proveedorCopia.proveedor_id }),{},
       {
         preserveScroll: true,
         preserveState: true,
@@ -155,7 +190,7 @@ export default function Categorias(){
           setLoading(false);
           setTextConfirmar('');
           setConfirmar(false);
-          setCategoriaCopia(categoriaVacia);
+          setProveedorCopia(proveedorVacio);
         }
       }
     );
@@ -167,23 +202,20 @@ export default function Categorias(){
 
   const openCreate = () => {
     setModalMode('create');
-    setSelectedCategoria(undefined);
+    setSelectedProveedor(undefined);
     setModalOpen(true);
   };
 
-  const openEdit = (data: Categoria) => {
+  const openEdit = (data: Proveedor) => {
     setModalMode('edit');
-    setSelectedCategoria(data);
+    setSelectedProveedor(data);
     setModalOpen(true);
   };
 
-  const handleSave = (data: Categoria) => {
+  const handleSave = (data: Proveedor) => {
     setPendingData(data);
-    if (modalMode === 'create') {
-      setTextConfirm('¿Estás seguro de grabar esta categoría?');
-    } else {
-      setTextConfirm('¿Estás seguro de guardar cambios a esta categoría?');
-    }
+    let texto = (modalMode === 'create')? 'grabar' : 'guardar cambios a';
+    setTextConfirm('¿Estás seguro de '+texto+' este proveedor?');
     setConfirOpen(true);
   };
 
@@ -195,7 +227,7 @@ export default function Categorias(){
 
     if (modalMode === 'create') {
       router.post(
-        route('categorias.store'), payload,
+        route('proveedores.store'), payload,
         {
           preserveScroll: true,
           preserveState: true,
@@ -203,13 +235,13 @@ export default function Categorias(){
             setLoading(false);
             setTextConfirmar('');
             setConfirmar(false);
-            setCategoriaCopia(categoriaVacia);
+            setProveedorCopia(proveedorVacio);
           }
         }
       );
     } else {
       router.put(
-        route('categorias.update',{categoria: pendingData.categoria_id}), payload,
+        route('proveedores.update',{proveedor: pendingData.proveedor_id}), payload,
         {
           preserveScroll: true,
           preserveState: true,
@@ -233,20 +265,20 @@ export default function Categorias(){
       setPropsActuales({
         resultado: undefined,
         mensaje: undefined,
-        categoria_id: undefined
+        proveedor_id: undefined
       });
     }
   }, [activo]);
 
   useEffect(() => {
     if (
-      categorias &&
-      categorias.length > 0 &&
-      JSON.stringify(categorias) !== JSON.stringify(categoriasCacheadas)
+      proveedores &&
+      proveedores.length > 0 &&
+      JSON.stringify(proveedores) !== JSON.stringify(proveedoresCacheados)
     ) {
-      setCategoriasCacheadas(categorias);
+      setProveedoresCacheados(proveedores);
     }
-  }, [categorias]);
+  }, [proveedores]);
 
 
   useEffect(() => {
@@ -255,44 +287,44 @@ export default function Categorias(){
       (mensaje && mensaje    !== propsActuales.mensaje)
 
     if (cambioDetectado) {
-      setPropsActuales({ resultado, mensaje, categoria_id });
+      setPropsActuales({ resultado, mensaje, proveedor_id });
 
       const esError = resultado === 0;
-      setTitle(esError ? 'Error' : modalMode === 'create' ? 'Categoría nueva' : 'Categoría modificada');
-      setText(esError ? mensaje ?? 'Error inesperado' : `${mensaje} (ID: ${categoria_id})`);
+      setTitle(esError ? 'Error' : modalMode === 'create' ? 'Proveedor nuevo' : 'Proveedor modificado');
+      setText(esError ? mensaje ?? 'Error inesperado' : `${mensaje} (ID: ${proveedor_id})`);
       setColor(esError ? 'error' : 'success');
       setActivo(true);
 
-      if (resultado === 1 && categoria_id) {
+      if (resultado === 1 && proveedor_id) {
         setModalOpen(false);
-        router.get(route('categorias.index'),
-          { categoria_id, buscar: true },
+        router.get(route('proveedores.index'),
+          { proveedor_id, buscar: true },
           { preserveScroll: true,	preserveState: true	}
         )
       }
     }
-  }, [resultado, mensaje, categoria_id]);
+  }, [resultado, mensaje, proveedor_id]);
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
-      <Head title="Categorías" />
+      <Head title="Proveedores" />
       <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
         <div className="relative flex-none flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
-          <FiltrosForm openCreate={openCreate} resetearCategoria={setCategoriasCacheadas}/>
+          <FiltrosForm openCreate={openCreate} resetearProveedor={setProveedoresCacheados}/>
         </div>
         <div className="p-4 relative flex-1 overflow-auto rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
-          <DataTableCategorias
-            datos={categoriasCacheadas?? []} 
+          <DataTableProveedores
+            datos={proveedoresCacheados?? []} 
             openEdit={openEdit} 
             abrirConfirmar={confirmar}
             />
         </div>
       </div>
-      <NewEditCategoria
+      <NewEditProveedor
         open={modalOpen}
         onOpenChange={setModalOpen}
         mode={modalMode}
-        categoria={selectedCategoria}
+        proveedor={selectedProveedor}
         onSubmit={handleSave}
         loading={loading}
       />

@@ -62,6 +62,18 @@ export interface Categoria {
   updated_at?: string;
 }
 
+export interface Proveedor {
+  proveedor_id: number | string;
+  nombre: string;
+  descripcion: string;
+  razon_social: string;
+  cuit: number | string;
+  nro_telefono: string;
+  inhabilitado: boolean | 1 | 0 | 'true' | 'false';
+  created_at?: string;
+  updated_at?: string;
+}
+
 //para componente selec multiple
 export type Multiple = { 
   id: number; 

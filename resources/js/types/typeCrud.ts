@@ -86,6 +86,20 @@ export interface ListaPrecio{
   updated_at?: string;
 }
 
+export interface Producto{
+  producto_id: number | string;
+  producto_nombre: string;
+  descripcion: string;
+  categoria_id: number | string;
+  categoria_nombre: string;
+  lista_precio_id: number | string;
+  lista_precio_nombre: string;
+  precio: number;
+  inhabilitado: boolean | 1 | 0 | 'true' | 'false';
+  created_at?: string;
+  updated_at?: string;
+}
+
 //para componente selec multiple
 export type Multiple = { 
   id: number; 

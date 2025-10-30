@@ -12,6 +12,15 @@ use App\Http\Requests\UpdateListaPrecioRequest;
 
 class ListaPrecioController extends Controller
 {
+  public function listasPreciosHabilitadas(){
+    $listas = ListaPrecio::where('inhabilitada',false)->get()->map(function($list){
+      return [
+        'id' => $list->lista_precio_id,
+        'nombre' => $list->nombre
+      ];
+    });
+    return response()->json($listas);
+  }
   /**
    * Display a listing of the resource.
    */
@@ -191,7 +200,6 @@ class ListaPrecioController extends Controller
   
   public function toggleEstado(ListaPrecio $lista)
   {
-    Log::info('ID recibido:', ['id' => $lista->lista_precio_id]);
     $lista->update(['inhabilitada' => !$lista->inhabilitada]);
     return inertia('listasPrecios/index',[
       'resultado'       => 1,

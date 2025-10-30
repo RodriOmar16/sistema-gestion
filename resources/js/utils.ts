@@ -39,3 +39,14 @@ export function convertirFechaBarrasGuiones(fecha:string ){
 export function convertirFechaGuionesBarras(fecha:string ){
   return fecha.split('-').reverse().join('/');
 }
+
+export function convertirNumberPlata(monto:string){
+  const amount = parseFloat(monto)
+  // Format the amount as a dollar amount
+  const formatted = new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(amount)
+
+  return formatted;
+}

@@ -74,6 +74,18 @@ export interface Proveedor {
   updated_at?: string;
 }
 
+export interface ListaPrecio{
+  lista_precio_id: number | string;
+  lista_precio_nombre: string;
+  proveedor_id: number | string;
+  proveedor_nombre: string;
+  fecha_inicio: string;
+  fecha_fin: string;
+  inhabilitada: boolean | 1 | 0 | 'true' | 'false';
+  created_at?: string;
+  updated_at?: string;
+}
+
 //para componente selec multiple
 export type Multiple = { 
   id: number; 

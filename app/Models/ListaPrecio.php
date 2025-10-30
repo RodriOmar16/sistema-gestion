@@ -17,7 +17,7 @@ class ListaPrecio extends Model
     protected $primaryKey = 'lista_precio_id';
     protected $table      = 'listas_precios';
 
-    protected $fillable = ['proveedor_id', 'fecha_inicio', 'fecha_fin', 'inhabilitada'];
+    protected $fillable = ['proveedor_id', 'nombre', 'fecha_inicio', 'fecha_fin', 'inhabilitada'];
 
     public function proveedor(){
         return $this->belongsTo(Proveedor::class, 'proveedor_id');

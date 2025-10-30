@@ -11,7 +11,7 @@ import { Head, usePage, useForm, router } from '@inertiajs/react';
 import { Menu } from '@/types/typeCrud';
 import NewEditDialog from '../../components/menu/newEdit';
 import ModalConfirmar from '@/components/modalConfirmar';
-import PdfButton from '@/components/utils/pdfButton';
+import PdfButton from '@/components/utils/pdf-button';
 import ShowMessage from '@/components/utils/showMessage';
 import { DataTableMenu } from '@/components/menu/dataTableMenu';
 import { route } from 'ziggy-js';

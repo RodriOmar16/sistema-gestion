@@ -10,6 +10,7 @@ use App\Http\Controllers\UserController;
 
 use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\ProveedorController;
+use App\Http\Controllers\ListaPrecioController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\CarouselController;
 
@@ -88,6 +89,13 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
     Route::post('/proveedores', [ProveedorController::class, 'store'])->name('proveedores.store');
     Route::put('/proveedores/{proveedor}', [ProveedorController::class, 'update'])->name('proveedores.update');
     Route::put('/proveedores/{proveedor}/estado', [ProveedorController::class, 'toggleEstado'])->name('proveedores.toggleEstado');
+
+    //Listas de Precios
+    Route::get('/listas-precios-habilitadas', [ListaPrecioController::class, 'listasPreciosHabilitadas'])->name('listasPrecios.listasPreciosHabilitadas');
+    Route::get('/listas-precios', [ListaPrecioController::class, 'index'])->name('listasPrecios.index');
+    Route::post('/listas-precios', [ListaPrecioController::class, 'store'])->name('listasPrecios.store');
+    Route::put('/listas-precios/{lista}', [ListaPrecioController::class, 'update'])->name('listasPrecios.update');
+    Route::put('/listas-precios/{lista}/estado', [ListaPrecioController::class, 'toggleEstado'])->name('listasPrecios.toggleEstado');
 
     //banners
     Route::resource('carousel', CarouselController::class);

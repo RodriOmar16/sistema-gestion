@@ -10,7 +10,7 @@ import { Pen, Ban, Search, Brush, Loader2, CirclePlus, Filter, Check } from 'luc
 import { DataTableRutas } from '@/components/rutas/dataTableRutas';
 import NewEditDialog from '../../components/rutas/newEdit';
 import ModalConfirmar from '@/components/modalConfirmar';
-import PdfButton from '@/components/utils/pdfButton';
+import PdfButton from '@/components/utils/pdf-button';
 import ShowMessage from '@/components/utils/showMessage';
 //import { DataTableProjects } from '@/components/projects/dataTableProjects';
 import { Select,  SelectContent,  SelectItem,  SelectTrigger,  SelectValue } from "@/components/ui/select"

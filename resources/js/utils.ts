@@ -33,3 +33,9 @@ export function formatearCuilCompleto(cuil: number): string {
   return `${parte1}-${parte2}-${parte3}`;
 }
 
+export function convertirFechaBarrasGuiones(fecha:string ){
+  return fecha.split('/').reverse().join('-');
+}
+export function convertirFechaGuionesBarras(fecha:string ){
+  return fecha.split('-').reverse().join('/');
+}

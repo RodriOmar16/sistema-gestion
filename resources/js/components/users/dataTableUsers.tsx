@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {  Table,  TableBody,  TableCell,  TableHead,  TableHeader,  TableRow } from "@/components/ui/table"
 import { User } from "@/types/typeCrud"
-import PdfButton from "../utils/pdfButton"
+import PdfButton from "../utils/pdf-button"
 import { formatDateTime } from "@/utils"
 import { Badge } from "../ui/badge"
 

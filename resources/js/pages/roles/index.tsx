@@ -11,7 +11,7 @@ import { DataTableRoles } from '@/components/roles/dataTableRoles';
 //import NewEditDialog from '../../components/roles/newEditRoles';
 import NewEditRol from '@/components/roles/newEditarRoles';
 import ModalConfirmar from '@/components/modalConfirmar';
-import PdfButton from '@/components/utils/pdfButton';
+import PdfButton from '@/components/utils/pdf-button';
 import ShowMessage from '@/components/utils/showMessage';
 //import { DataTableProjects } from '@/components/projects/dataTableProjects';
 import { route } from 'ziggy-js';

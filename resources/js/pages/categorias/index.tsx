@@ -10,7 +10,7 @@ import { Pen, Ban, Search, Brush, Loader2, CirclePlus, Filter, Check } from 'luc
 import DataTableCategorias from '@/components/categorias/dataTableCategorias';
 import NewEditCategoria from '@/components/categorias/newEditCategorias';
 import ModalConfirmar from '@/components/modalConfirmar';
-import PdfButton from '@/components/utils/pdfButton';
+import PdfButton from '@/components/utils/pdf-button';
 import ShowMessage from '@/components/utils/showMessage';
 import { Select,  SelectContent,  SelectItem,  SelectTrigger,  SelectValue } from "@/components/ui/select"
 import { route } from 'ziggy-js';

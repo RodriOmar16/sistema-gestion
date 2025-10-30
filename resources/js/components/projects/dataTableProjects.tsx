@@ -21,7 +21,7 @@ import {  DropdownMenu,  DropdownMenuCheckboxItem,  DropdownMenuContent,  Dropdo
 import { Input } from "@/components/ui/input"
 import {  Table,  TableBody,  TableCell,  TableHead,  TableHeader,  TableRow } from "@/components/ui/table"
 import { Project } from '@/types/typeCrud';
-import PdfButton from "../utils/pdfButton"
+import PdfButton from "../utils/pdf-button"
 
 interface Props {
   datos: Project[];

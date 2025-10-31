@@ -99,9 +99,21 @@ class ProductoController extends Controller
   }
 
   public function edit(Producto $producto){
+    $producto->load(['categorias:id,nombrer','listasPrecios: id, nombre']);
+    $categorias = $producto->categorias->map(fn($c)=>[
+      'id'     => $c->categoria_id?? $c->id,
+      'nombre' => $c->nombre
+    ]);
+    $listasPrecio = $producto->listasPrecio->map(fn($l) => [
+      'lista_precio_id' => $l->lista_precio_id ?? $l->id,
+      'nombre'          => $l->nombre,
+      'precio'          => $l->pivot->precio,
+    ]);
     return inertia('productos/createEdit',[
-      'mode' => 'edit',
-      'producto' => $producto
+      'mode'          => 'edit',
+      'producto'      => $producto,
+      'categorias'    => $categorias,
+      'listasPrecios' => $listasPrecio
     ]);
   }
 

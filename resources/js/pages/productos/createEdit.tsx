@@ -122,13 +122,18 @@ export function TablaListas({listado, setListado}:PropsTabla){
 
 export default function NewEditProductos(){
   //data
-  const { mode, producto } = usePage().props as { mode?:string ,producto?:Producto };
+  const { mode, producto, categorias } = usePage().props as { 
+    mode?: string | 'create' | 'edit';
+    producto?:Producto;
+    categorias: {id: number, nombre:string }[];
+    listas: { lista_precio_id: number; nombre: string; precio: number }[];
+  };
   breadcrumbs[0].title = (mode=='create'? 'Nuevo' : 'Editar')+' producto';
 
   const { data, setData, errors, processing } = useForm<Producto>(productoVacio);
-  const [categorias, setCategorias] = useState<Multiple[]>([]); //opciones
-  const [catSelected, setCatSelected] = useState<Multiple[]>([]);
-  const [listasPrecios, setListasPrecios] = useState<Multiple[]>([]); //opciones
+  const [catOpciones, setCatOpciones] = useState<Multiple[]>([]);
+  const [catSelected, setCatSelected] = useState<Multiple[]>(categorias);
+  const [listasHab, setListasHab] = useState<Multiple[]>([]); //opciones
   const [listas , setListas] = useState<{
     id: number|string;
     nombre: string;
@@ -148,7 +153,7 @@ export default function NewEditProductos(){
     .then(res => res.json())
     .then(data => {
       const ordenadas:Multiple[] = ordenarPorTexto(data, 'nombre');
-      setListasPrecios(ordenadas);
+      setListasHab(ordenadas);
       setListas(ordenadas.map(e => ({
         id: e.id,
         nombre: e.nombre,
@@ -161,7 +166,7 @@ export default function NewEditProductos(){
     fetch('/categorias_habilitadas')
     .then(res => res.json())
     .then(data => {
-      setCategorias(ordenarPorTexto(data, 'nombre'));
+      setCatOpciones(ordenarPorTexto(data, 'nombre'));
     });
   }, []);
 
@@ -189,7 +194,7 @@ export default function NewEditProductos(){
                 <hr />
               </div>
               <SelectMultiple
-                opciones={categorias}
+                opciones={catOpciones}
                 seleccionados={catSelected}
                 setSeleccionados={setCatSelected}
               />

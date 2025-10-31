@@ -44,7 +44,8 @@ class Producto extends Model
         return $this->hasMany(ProductoLista::class, 'producto_id');
     }
     public function listasPrecios(){
-        return $this->belongsToMany(ListaPrecio::class, 'productos_listas','producto_id', 'lista_precio_id');
+        return $this->belongsToMany(ListaPrecio::class, 'productos_listas','producto_id', 'lista_precio_id')
+                    ->withPrecio('precio');
     }
 
     //Stock

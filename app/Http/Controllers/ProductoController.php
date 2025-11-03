@@ -6,6 +6,8 @@ use Illuminate\Support\Facades\DB;
 
 use Illuminate\Http\Request;
 use App\Models\Producto;
+use App\Models\ProductoCategoria;
+use App\Models\ProductoLista;
 
 class ProductoController extends Controller
 {
@@ -26,41 +28,42 @@ class ProductoController extends Controller
       ]);
     }
     
-    $productos = DB::table('productos')
-      ->join('producto_categorias', 'productos.producto_id', '=', 'producto_categorias.producto_id')
-      ->join('categorias', 'producto_categorias.categoria_id', '=', 'categorias.categoria_id')
-      ->join('productos_listas', 'productos.producto_id', '=', 'productos_listas.producto_id')
-      ->join('listas_precios', 'productos_listas.lista_precio_id', '=', 'listas_precios.lista_precio_id')
-      ->select(
-        'productos.producto_id',
-        'productos.nombre as producto_nombre',
-        'productos.descripcion',
-        'productos.precio',
-        'productos.inhabilitado',
-        'categorias.categoria_id',
-        'categorias.nombre as categoria_nombre',
-        'listas_precios.lista_precio_id',
-        'listas_precios.nombre as lista_precio_nombre'
-      )
-      ->when($request->filled('categoria_id'), fn($q) =>
-        $q->where('categorias.categoria_id', $request->categoria_id)
-      )
-      ->when($request->filled('lista_precio_id'), fn($q) =>
-        $q->where('listas_precios.lista_precio_id', $request->lista_precio_id)
-      )
-      ->when($request->filled('producto_id'), fn($q) =>
-        $q->where('productos.producto_id', $request->producto_id)
-      )
-      ->when($request->filled('nombre'), fn($q) =>
-        $q->where('productos.nombre', 'like', '%'.$request->nombre.'%')
-      )
-      ->when($request->filled('inhabilitado'), fn($q) =>
-        $q->where('productos.inhabilitado', filter_var($request->inhabilitado, FILTER_VALIDATE_BOOLEAN))
-      )
-      ->when($request->filled('precio'), fn($q) =>
-        $q->where('productos.precio', $request->precio)
-      )
-      ->get();
+    $query = Producto::query();
+
+    if($request->filled('producto_id')){
+      $query->where('producto_id', $request->producto_id);
+    }
+    if($request->filled('producto_nombre')){
+      $query->where('nombre','like', '%'.$request->producto_nombre.'%');
+    }
+    if($request->filled('descripcion')){
+      $query->where('descripcion','like', '%'.$request->descripcion.'%');
+    }
+    if($request->filled('precio') && $request->precio > 0){
+      $query->where('precio', $request->precio);
+    }
+    if ($request->filled('inhabilitado')) {
+      $estado = filter_var($request->inhabilitado, FILTER_VALIDATE_BOOLEAN);
+      $query->where('inhabilitado', $estado);
+    }
+    /*if ($request->filled('categoria_id')) {
+      $query->whereHas('categorias',fn($c) => 
+                        $c->where('categorias.categoria_id', $request->categoria_id)
+                      );
+    }
+    if ($request->filled('lista_precio_id')) {
+      $query->whereHas('productosLista',fn($l) => 
+                        $l->where('lista_precio_id', $request->lista_precio_id)
+                          ->where('precio_lista', '>',0)
+                      );
+    }*/
+
+    if(!$request->filled('producto_id') && !$request->filled('producto_nombre') && !$request->filled('descripcion') &&
+       !$request->filled('inhabilitado') && !$request->filled('precio')/* && !$request->filled('categoria_id') && !$request->filled('lista_precio_id')*/){
+      $query = Producto::query();
+    }
+
+    $productos = $query->latest()->get();
 
     return inertia('productos/index',[
       'productos' => $productos
@@ -76,42 +79,192 @@ class ProductoController extends Controller
 
   public function store(Request $request)
   {
+    DB::beginTransaction();
+    try {
+      //validar los datos
       $validated = $request->validate([
-          'nombre' => 'required|string|max:255',
-          'descripcion' => 'nullable|string',
-          'precio' => 'required|numeric|min:0',
+        'producto_nombre' => 'required|string|max:255',
+        'descripcion'     => 'required|string|max:255',
+        'inhabilitado'    => 'boolean',
+        'precio'          => 'required|numeric',
+        'categorias'      => 'required|array|min:1',
+        'listas'          => 'required|array|min:1',
       ]);
+      //controlar que no se repita
+      $nombre = strtolower(trim($validated['producto_nombre']));
+      $existe = Producto::whereRaw('LOWER(TRIM(nombre)) = ?', [$nombre])
+                        ->where('precio', $validated['precio'])
+                        ->exists();
+      if($existe){
+        return inertia('productos/createEdit',[
+          'resultado' => 0,
+          'mensaje'   => 'El producto que intentas registrar ya existe',
+        ]);
+      }
+      //crear el producto y sus tablas intermedias
+      $producto = Producto::create([
+        'nombre'          => $validated['producto_nombre'],
+        'descripcion'     => $validated['descripcion'],
+        'inhabilitado'    => $validated['inhabilitado'] ? 1 : 0,
+        'precio'          => $validated['precio']
+      ]);
+      $producto_id = $producto->producto_id;
+      
+      $listasProd = collect($request->input('listas'))
+      ->filter(fn($l) => $l['precio'] != 0)
+      ->map(fn($l) => (object)[
+        'id'     => $l['id'],
+        'nombre' => $l['nombre'],
+        'precio' => $l['precio']
+      ])
+      ->values();
 
-      return Producto::create($validated);
+      foreach($listasProd as $lp){
+        ProductoLista::firstOrCreate([
+          'producto_id'     => $producto_id, 
+          'lista_precio_id' => $lp->id,
+          'precio_lista'    => $lp->precio
+        ]);
+      }
+
+      $categorias = collect($request->input('categorias'))->pluck('id')->unique()->toArray();
+      foreach($categorias as $cate_id){
+        ProductoCategoria::firstOrCreate([
+          'producto_id'  => $producto_id, 
+          'categoria_id' => $cate_id
+        ]);
+      }
+      //commit
+      DB::commit();
+      return inertia('productos/createEdit',[
+        'resultado'   => 1,
+        'mensaje'     => 'Producto create correctamente',
+        'producto_id' => $producto_id
+      ]);
+    } catch (\Throwable $e) {
+      DB::rollback();
+      return inertia('productos/createEdit',[
+        'resultado' => 0,
+        'mensaje'   => 'Ocurrió un error al intentar crear el producto: '.$e->getMessage()
+      ]);
+    }
   }
 
   public function update(Request $request, Producto $producto)
   {
+    DB::beginTransaction();
+    try {
+      //valido los datos
       $validated = $request->validate([
-          'nombre' => 'required|string|max:255',
-          'descripcion' => 'nullable|string',
-          'categoria_id' => 'required|exists:categorias,categoria_id',
-          'precio' => 'required|numeric|min:0',
+        'producto_nombre' => 'required|string|max:255',
+        'descripcion'     => 'required|string|max:255',
+        'inhabilitado'    => 'boolean',
+        'precio'          => 'required|numeric',
+        'categorias'      => 'required|array|min:1',
+        'listas'          => 'required|array|min:1',
       ]);
+      //controlo que no se repita, distinto al mismo
+      $nombre = strtolower(trim($validated['producto_nombre']));
+      $existe = Producto::whereRaw('LOWER(TRIM(nombre)) = ?', [$nombre])
+                        ->where('producto_id','!=',$producto->producto_id)
+                        ->where('precio', $validated['precio'])
+                        ->exists();
+      if($existe){
+        return inertia('productos/createEdit',[
+          'resultado' => 0,
+          'mensaje'   => 'Ya existe un producto con esas especificaciones',
+        ]);
+      }
+      //actualizo el producto y sus tablas intermedias
+      $producto->update([
+        'producto_nombre' => $validated['producto_nombre'],
+        'descripcion'     => $validated['descripcion'],
+        'inhabilitado'    => $validated['inhabilitado'] ? 1 : 0,
+        'precio'          => $validated['precio'],
+      ]);
+      $producto_id = $producto->producto_id;
+      
+      $listasProd = collect($request->input('listas'))
+      ->filter(fn($l) => $l['precio'] != 0)
+      ->map(fn($l) => (object)[
+        'id'     => $l['id'],
+        'nombre' => $l['nombre'],
+        'precio' => $l['precio']
+      ])
+      ->values();
+      $actuales = ProductoLista::where('producto_id', $producto_id)->get()->keyBy('lista_precio_id');
+      $nuevas   = $listasProd->keyBy('id');
+      $idsNuevas   = $nuevas->keys()->all();
+      $idsEliminar = $actuales->keys()->diff($idsNuevas);
+      ProductoLista::where('producto_id', $producto_id)
+                    ->whereIn('lista_precio_id', $idsEliminar)
+                    ->delete();
+      foreach($nuevas as $id => $lp){
+        ProductoLista::updateOrCreate(
+          [
+            'producto_id'     => $producto_id,
+            'lista_precio_id' => $id
+          ],
+          [
+            'precio_lista'    => $lp->precio
+          ]
+        );
+      }
 
-      $producto->update($validated);
-      return $producto;
+      $categoriasId = collect($request->input('categorias'))->pluck('id')->unique()->toArray();
+      $producto->categorias()->sync($categoriasId);
+
+      //commit
+      DB::commit();
+      return inertia('productos/createEdit',[
+        'resultado'   => 1,
+        'mensaje'     => 'Se actualizó correctamente el producto',
+        'producto_id' => $producto->producto_id
+      ]);
+    } catch (\Throwable $e) {
+      DB::rollback();
+      return inertia('productos/createEdit',[
+        'resultado' => 0,
+        'mensaje'   => 'Ocurrió un problema al momento de actualizar el producto: '.$e->getMessage()
+      ]);
+    }
   }
 
   public function edit(Producto $producto){
-    $producto->load(['categorias:id,nombrer','listasPrecios: id, nombre']);
+    $producto->load([
+      'listasPrecios' => function ($q) {
+        $q->select('listas_precios.lista_precio_id', 'listas_precios.nombre');
+      },
+      'categorias' => function ($q) {
+        $q->select('categorias.categoria_id', 'categorias.nombre');
+      }
+    ]);
+
     $categorias = $producto->categorias->map(fn($c)=>[
       'id'     => $c->categoria_id?? $c->id,
       'nombre' => $c->nombre
     ]);
-    $listasPrecio = $producto->listasPrecio->map(fn($l) => [
+    $listasPrecio = $producto->listasPrecios->map(fn($l) => [
       'lista_precio_id' => $l->lista_precio_id ?? $l->id,
       'nombre'          => $l->nombre,
-      'precio'          => $l->pivot->precio,
+      'precio'          => $l->pivot->precio_lista,
     ]);
+
     return inertia('productos/createEdit',[
       'mode'          => 'edit',
-      'producto'      => $producto,
+      'producto' => [
+        'producto_id'         => $producto->producto_id,
+        'producto_nombre'     => $producto->nombre,
+        'descripcion'         => $producto->descripcion,
+        'precio'              => $producto->precio,
+        'inhabilitado'        => $producto->inhabilitado,
+        'categoria_id'        => '',
+        'categoria_nombre'    => '',
+        'lista_precio_id'     => '',
+        'lista_precio_nombre' => '',
+        'created_at'          => $producto->created_at,
+        'updated_at'          => $producto->updated_at,
+      ],
       'categorias'    => $categorias,
       'listasPrecios' => $listasPrecio
     ]);

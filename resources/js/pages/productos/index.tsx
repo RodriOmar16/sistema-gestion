@@ -111,7 +111,7 @@ export function FiltrosForm({ resetearProducto, listasPrecios, categorias }: pro
           <label htmlFor="descripcion">Listas de Precio</label>
             <Select
               value={String(data.lista_precio_id)}
-              onValueChange={(value) => setData('categoria_id', Number(value))}
+              onValueChange={(value) => setData('lista_precio_id', Number(value))}
             >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="" />
@@ -235,59 +235,6 @@ export default function Productos(){
       }
     );
   };
-
-  /*const openCreate = () => {
-    setModalMode('create');
-    setSelectedProveedor(undefined);
-    setModalOpen(true);
-  };
-
-  const handleSave = (data: Proveedor) => {
-    setPendingData(data);
-    let texto = (modalMode === 'create')? 'grabar' : 'guardar cambios a';
-    setTextConfirm('¿Estás seguro de '+texto+' este proveedor?');
-    setConfirOpen(true);
-  };
-
-  const accionar = () => {
-    if (!pendingData) return;
-    setLoading(true);
-
-    const payload = JSON.parse(JSON.stringify(pendingData));
-
-    if (modalMode === 'create') {
-      router.post(
-        route('proveedores.store'), payload,
-        {
-          preserveScroll: true,
-          preserveState: true,
-          onFinish: () => {
-            setLoading(false);
-            setTextConfirmar('');
-            setConfirmar(false);
-            setProveedorCopia(proveedorVacio);
-          }
-        }
-      );
-    } else {
-      router.put(
-        route('proveedores.update',{proveedor: pendingData.proveedor_id}), payload,
-        {
-          preserveScroll: true,
-          preserveState: true,
-          onFinish: () => {
-            setLoading(false);
-            setPendingData(undefined);
-          }
-        }
-      );
-    }
-    setConfirOpen(false);
-  };
-
-  const cancelarConfirmacion = () => {
-    setConfirOpen(false);
-  };*/
 
   //effect
   useEffect(() => {

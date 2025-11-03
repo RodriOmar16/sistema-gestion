@@ -35,7 +35,7 @@ export function getColumns(confirmar: (data: Producto) => void, openEdit: (data:
       ),
     },
     {
-      accessorKey: "producto_nombre",
+      accessorKey: "nombre",
       header: ({column}) => {
         return (
           <div className="flex">
@@ -45,9 +45,9 @@ export function getColumns(confirmar: (data: Producto) => void, openEdit: (data:
         )
       }
       ,
-      cell: ({ row }) => ( <div className="">{row.getValue("producto_nombre")}</div> ),
+      cell: ({ row }) => ( <div className="">{row.getValue("nombre")}</div> ),
     },
-    {
+    /*{
       accessorKey: "categoria_nombre",
       header: ({column}) => {
         return (
@@ -70,7 +70,7 @@ export function getColumns(confirmar: (data: Producto) => void, openEdit: (data:
         )
       } ,
       cell: ({ row }) => ( <div className="">{row.getValue("lista_precio_nombre")}</div> ),
-    },
+    },*/
     {
       accessorKey: "precio",
       header: ({column}) => {

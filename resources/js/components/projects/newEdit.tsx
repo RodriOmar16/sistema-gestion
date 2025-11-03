@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import React, { use, useState } from "react"
 import { Project } from '@/types/typeCrud';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Save } from 'lucide-react';
 import Swal from 'sweetalert2';
 import ShowMessage from "@/components/utils/showMessage"
 
@@ -107,9 +107,9 @@ export default function NewEditDialog({ open, onOpenChange, mode, project, onSub
             onClick={handleSubmit} 
             type="button" 
           >
-            { loading ? ( <Loader2 size={20} className="animate-spin mr-2"/> ) :
-                        ( mode === 'create' ? 'Grabar' : 'Actualizar')  
-            }          
+            { loading ? ( <Loader2 size={20} className="animate-spin"/> ) : 
+                         (<Save size={20} className=""/>)  }
+            { ( mode === 'create' ? 'Grabar' : 'Actualizar')  }             
           </Button>
         </DialogFooter>
       </DialogContent>

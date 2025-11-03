@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\Categoria;
 use App\Models\ProductoCategoria;
 use App\Models\DetVenta;
+use App\Models\Venta;
 use App\Models\ProductoLista;
 use App\Models\ListaPrecio;
 use App\Models\Stock;
@@ -15,9 +16,9 @@ use App\Models\Proveedor;
 
 class Producto extends Model
 {
-    protected $table = 'productos';
+    protected $table      = 'productos';
     protected $primaryKey = 'producto_id';
-    protected $fillable = ['nombre', 'descripcion', 'precio', 'inhabilitado'];
+    protected $fillable   = ['nombre', 'descripcion', 'precio', 'inhabilitado'];
 
     // Categoria
     public function categorias()
@@ -45,7 +46,7 @@ class Producto extends Model
     }
     public function listasPrecios(){
         return $this->belongsToMany(ListaPrecio::class, 'productos_listas','producto_id', 'lista_precio_id')
-                    ->withPrecio('precio');
+                    ->withPivot('precio_lista');
     }
 
     //Stock

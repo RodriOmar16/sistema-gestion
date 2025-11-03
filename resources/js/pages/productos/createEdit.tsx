@@ -7,13 +7,15 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Save } from 'lucide-react';
 import {  Table,  TableBody,  TableCaption,  TableCell,  TableHead,  TableHeader,  TableRow,
 } from "@/components/ui/table"
 import SelectMultiple from '@/components/utils/select-multiple';
 import { Multiple } from '@/types/typeCrud';
 import { ordenarPorTexto } from '@/utils';
 import ShowMessage from '@/components/utils/showMessage';
+import ModalConfirmar from '@/components/modalConfirmar';
+import { route } from 'ziggy-js';
 
 const breadcrumbs: BreadcrumbItem[] = [ { title: '', href: '', } ];
 const productoVacio = {
@@ -43,7 +45,7 @@ export function DetallesProducto({modo, data, set}:Props){
         {modo === 'edit' ? (
           <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-2'>
             <label htmlFor="id">Id</label>
-            <Input value={data.producto_id} onChange={(e)=>set({...data, producto_id:e.target.value})}/>	
+            <Input disabled value={data.producto_id} onChange={(e)=>set({...data, producto_id:e.target.value})}/>	
           </div>
         ): <></>}
         <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
@@ -56,7 +58,7 @@ export function DetallesProducto({modo, data, set}:Props){
         </div>
         <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
           <label htmlFor="precio">Precio</label>
-          <Input className='text-right' value={data.precio} onChange={(e)=>set({...data, precio:Number(e.target.value)})}/>	
+          <Input type='number' className='text-right' value={data.precio} onChange={(e)=>set({...data, precio:Number(e.target.value)})}/>	
         </div>
         <div className='col-span-6 sm:col-span-4 md:col-span-4 lg:col-span-2 flex flex-col'>
           <label className='mr-2'>Inhabilitado</label>
@@ -97,6 +99,7 @@ export function TablaListas({listado, setListado}:PropsTabla){
                 <TableCell className='w-1/2'>{e.nombre}</TableCell>
                 <TableCell className="w-1/2 text-right">
                   <Input
+                  type='number'
                     value={e.precio}
                     className='text-right w-full'
                     onChange={(ev)=> {controlarPrecio(e.id,ev.target.value)}}
@@ -122,54 +125,182 @@ export function TablaListas({listado, setListado}:PropsTabla){
 
 export default function NewEditProductos(){
   //data
-  const { mode, producto, categorias } = usePage().props as { 
-    mode?: string | 'create' | 'edit';
-    producto?:Producto;
-    categorias: {id: number, nombre:string }[];
-    listas: { lista_precio_id: number; nombre: string; precio: number }[];
+  const [ load, setLoad ] = useState(false);
+  const { mode, producto, categorias, listasPrecios, resultado, mensaje, producto_id } = usePage().props as { 
+    mode?:          string | 'create' | 'edit';
+    producto?:      Producto;
+    categorias?:    {id: number, nombre:string }[];
+    listasPrecios?: { lista_precio_id: number; nombre: string; precio: number }[];
+    resultado?:     number;
+    mensaje?:       string;
+    producto_id?:   number;
   };
   breadcrumbs[0].title = (mode=='create'? 'Nuevo' : 'Editar')+' producto';
+  const [propsActuales, setPropsActuales] = useState<{
+    resultado: number | undefined | null;
+    mensaje: string | undefined | null | '';
+    producto_id: number | undefined | null;
+  }>({ resultado: undefined, mensaje: undefined, producto_id: undefined });
 
   const { data, setData, errors, processing } = useForm<Producto>(productoVacio);
-  const [catOpciones, setCatOpciones] = useState<Multiple[]>([]);
-  const [catSelected, setCatSelected] = useState<Multiple[]>(categorias);
-  const [listasHab, setListasHab] = useState<Multiple[]>([]); //opciones
-  const [listas , setListas] = useState<{
+  const [categoriaHab, setCatHab]             = useState<Multiple[]>([]);
+  const [catSelected, setCatSelected]         = useState<Multiple[]>(categorias??[]);
+  //const [listasHab, setListasHab]           = useState<Multiple[]>([]);
+  const [listas , setListas]                  = useState<{
     id: number|string;
     nombre: string;
     precio: number;
   }[]>([]);
 
+  const [confirmOpen, setConfirOpen] = useState(false); //modal para confirmar acciones para cuado se crea o edita
+	const [textConfir, setTextConfirm] = useState('');
+
+  const [activo, setActivo] = useState(false);
+  const [title, setTitle]   = useState('');
+  const [text, setText]     = useState('');
+  const [color, setColor]   = useState('success');
+
   //funciones
+  const tieneListas = () => {
+    let i=0, n=listas.length; 
+    while(i<n && (listas[i].precio == 0)){
+      i++;
+    }
+    return (i<n);
+  };
+
   const handleSubmit = (e:React.FormEvent) => {
     e.preventDefault();
-    
+    if(!data.producto_nombre){
+      setTitle('Campo requerido!');
+      setText('Se requiere ingresar un nombre para el producto.');
+      setColor('warning');
+      setActivo(true);
+      return 
+    }
+    if(!data.precio || data.precio === 0){
+      setTitle('Campo requerido!');
+      setText('Se requiere ingresar un precio para el producto.');
+      setColor('warning');
+      setActivo(true);
+      return 
+    }
+    if(catSelected.length === 0){
+      setTitle('Categoría requerida!');
+      setText('Se requiere seleccionar al menos una categoría.');
+      setColor('warning');
+      setActivo(true);
+      return 
+    }
+    if(!tieneListas()){
+      setTitle('Lista de precios requerida!');
+      setText('Se requiere asignar precio a almenos una lista de precios.');
+      setColor('warning');
+      setActivo(true);
+      return 
+    }
+    setTextConfirm("Estás seguro de "+(mode==='create'?'crear':'actualizar')+' este producto?');
+    setConfirOpen(true);
+  };
+  const grabarGuardar = () => {
+    //reseteo el confirmar    
+    setConfirOpen(false);
+    setTextConfirm('');
+    //muestro el cargando...
+    setLoad(true);
+    console.log("procedo a guardar o grabar");
+    const payload = {
+      ...data,
+      categorias: catSelected,
+      listas: listas
+    };
+    console.log("payload: ", payload)
+    if (mode === 'create') {
+      router.post(
+        route('productos.store'),payload,
+        {
+          preserveScroll: true,
+          preserveState: true,
+          onFinish: () => {
+            setLoad(false);
+          }
+        }
+      );
+    } else {
+      router.put(
+        route('productos.update',{producto: data.producto_id}),
+        payload,
+        {
+          preserveScroll: true,
+          preserveState: true,
+          onFinish: () => {
+            setLoad(false);
+          }
+        }
+      );
+    }
+    setTitle('');
+    setText('');
+    setActivo(false);
+  };
+  
+  const cancelar = () => {
+    setConfirOpen(false);
   };
 
   //Effect
   useEffect(() => {
-    //optengo los datos del formulario
-    fetch('/listas_precios_habilitadas')
+    fetch('/listas_precios_habilitadas') //optengo los datos del formulario
     .then(res => res.json())
     .then(data => {
-      const ordenadas:Multiple[] = ordenarPorTexto(data, 'nombre');
-      setListasHab(ordenadas);
-      setListas(ordenadas.map(e => ({
-        id: e.id,
-        nombre: e.nombre,
-        precio: 0
-      })));
+      //setListasHab(data);
+      setListas(data.map((e:any) =>{
+          let elemento = listasPrecios?.find((l:any) => l.lista_precio_id === e.id );
+          return {
+            id:     e.id, 
+            nombre: e.nombre,  
+            precio: elemento?.precio ?? 0 
+          };
+        }
+      ));
     });
   }, []);
   useEffect(() => {
-    //optengo los datos del formulario
-    fetch('/categorias_habilitadas')
+    fetch('/categorias_habilitadas') //optengo los datos del formulario
     .then(res => res.json())
     .then(data => {
-      setCatOpciones(ordenarPorTexto(data, 'nombre'));
+      setCatHab(ordenarPorTexto(data, 'nombre'));
     });
   }, []);
+  useEffect(() => {
+		const cambioDetectado = (resultado && resultado  !== propsActuales.resultado) || (mensaje && mensaje    !== propsActuales.mensaje) 
 
+		if (cambioDetectado) {
+      setPropsActuales({ resultado, mensaje, producto_id });
+
+      const esError = resultado === 0;
+      setTitle(esError ? 'Error' : mode === 'create' ? 'Producto nuevo' : 'Producto modificado');
+      setText(esError ? mensaje ?? 'Error inesperado' : `${mensaje} (ID: ${producto_id})`);
+      setColor(esError ? 'error' : 'success');
+      setActivo(true); 
+    }
+	}, [resultado, mensaje, producto_id]);
+  useEffect(() => {
+    if(producto && mode === 'edit'){
+      console.log("producto: ", producto)
+      setData({
+        producto_id:         producto.producto_id,
+        producto_nombre:     producto.producto_nombre,
+        descripcion:         producto.descripcion,
+        categoria_id:        '',
+        categoria_nombre:    '',
+        lista_precio_id:     '',
+        lista_precio_nombre: '', 
+        precio:              producto.precio,
+        inhabilitado:        producto.inhabilitado,
+      });
+    }
+  }, []);
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title={(mode=='create'? 'Nuevo' : 'Editar')+' producto'} />
@@ -194,7 +325,7 @@ export default function NewEditProductos(){
                 <hr />
               </div>
               <SelectMultiple
-                opciones={catOpciones}
+                opciones={categoriaHab}
                 seleccionados={catSelected}
                 setSeleccionados={setCatSelected}
               />
@@ -204,7 +335,7 @@ export default function NewEditProductos(){
                 Listas de precios
                 <hr />
               </div>
-              <div className=''>
+              <div className='max-h-[300px] overflow-y-auto border rounded'>
                 <TablaListas
                   listado={listas}
                   setListado={setListas}
@@ -213,27 +344,33 @@ export default function NewEditProductos(){
             </div>
             <div  className='flex justify-end px-4 pb-4 col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>
               <Button type="button" onClick={handleSubmit}>
-                { processing ? ( <Loader2 size={20} className="animate-spin mr-2"/> ) :
-                            ( mode === 'create' ? 'Grabar' : 'Actualizar')  
-                }          
+                { load ? ( <Loader2 size={20} className="animate-spin"/> ) : 
+                         (<Save size={20} className=""/>)  }
+                { ( mode === 'create' ? 'Grabar' : 'Actualizar')  }          
               </Button>
             </div>
           </form>
         </div>
       </div>
-      {/*<ModalConfirmar
-        open={openConfirmar}
-        text={textConfirmar}
-        onSubmit={inhabilitarHabilitar}
-        onCancel={cancelarInhabilitarHabilitar}
+      <ModalConfirmar
+        open={confirmOpen}
+        text={textConfir}
+        onSubmit={grabarGuardar}
+        onCancel={cancelar}
       />
       <ShowMessage 
         open={activo}
         title={title}
         text={text}
         color={color}
-        onClose={() => setActivo(false)}
-      />*/}
+        onClose={() => {
+            setActivo(false);
+            if (resultado === 1 && producto_id){
+              router.get(route('productos.edit', { producto: producto_id }));
+            }
+          }
+        }
+      />
     </AppLayout>
   );
 }

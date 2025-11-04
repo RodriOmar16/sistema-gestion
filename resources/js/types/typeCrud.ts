@@ -94,7 +94,7 @@ export interface Producto{
   categoria_nombre: string;
   lista_precio_id: number | string;
   lista_precio_nombre: string;
-  precio: number;
+  precio: number | string | '';
   inhabilitado: boolean | 1 | 0 | 'true' | 'false';
   created_at?: string;
   updated_at?: string;

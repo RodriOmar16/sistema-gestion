@@ -20,55 +20,52 @@ class ProductoController extends Controller
     });
     return response()->json($productos);
   }
+
   public function index(Request $request)
   {
-    if(!$request->has('buscar')){
-      return inertia('productos/index',[
-        'productos' => []
-      ]);
+    if (!$request->has('buscar')) {
+      return inertia('productos/index', ['productos' => []]);
     }
-    
-    $query = Producto::query();
 
-    if($request->filled('producto_id')){
+    $query = Producto::query()->with(['categorias', 'productosLista']);
+
+    // Campos propios
+    if ($request->filled('producto_id')) {
       $query->where('producto_id', $request->producto_id);
     }
-    if($request->filled('producto_nombre')){
-      $query->where('nombre','like', '%'.$request->producto_nombre.'%');
+    if ($request->filled('producto_nombre')) {
+      $query->where('nombre', 'like', '%' . $request->producto_nombre . '%');
     }
-    if($request->filled('descripcion')){
-      $query->where('descripcion','like', '%'.$request->descripcion.'%');
+    if ($request->filled('descripcion')) {
+      $query->where('descripcion', 'like', '%' . $request->descripcion . '%');
     }
-    if($request->filled('precio') && $request->precio > 0){
+    if ($request->filled('precio') && $request->precio >= 0) {
       $query->where('precio', $request->precio);
     }
     if ($request->filled('inhabilitado')) {
       $estado = filter_var($request->inhabilitado, FILTER_VALIDATE_BOOLEAN);
       $query->where('inhabilitado', $estado);
     }
-    /*if ($request->filled('categoria_id')) {
-      $query->whereHas('categorias',fn($c) => 
-                        $c->where('categorias.categoria_id', $request->categoria_id)
-                      );
-    }
-    if ($request->filled('lista_precio_id')) {
-      $query->whereHas('productosLista',fn($l) => 
-                        $l->where('lista_precio_id', $request->lista_precio_id)
-                          ->where('precio_lista', '>',0)
-                      );
-    }*/
 
-    if(!$request->filled('producto_id') && !$request->filled('producto_nombre') && !$request->filled('descripcion') &&
-       !$request->filled('inhabilitado') && !$request->filled('precio')/* && !$request->filled('categoria_id') && !$request->filled('lista_precio_id')*/){
-      $query = Producto::query();
+    // Relaciones intermedias
+    if ($request->filled('categoria_id') && $request->categoria_id !== '') {
+      $query->whereHas('categorias', fn($q) =>
+        $q->where('categorias.categoria_id', $request->categoria_id)
+      );
+    }
+
+    if ($request->filled('lista_precio_id') && $request->lista_precio_id !== '') {
+      $query->whereHas('productosLista', fn($q) =>
+        $q->where('lista_precio_id', $request->lista_precio_id)
+          ->where('precio_lista', '>', 0)
+      );
     }
 
     $productos = $query->latest()->get();
 
-    return inertia('productos/index',[
-      'productos' => $productos
-    ]);
+    return inertia('productos/index', ['productos' => $productos]);
   }
+
 
   public function create(){
     return inertia('productos/createEdit',[

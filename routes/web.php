@@ -101,11 +101,11 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
     //Productos
     Route::get('/productos_habilitados', [ProductoController::class, 'productosHabilitados'])->name('productos.productosHabilitados');
     Route::get('/productos', [ProductoController::class, 'index'])->name('productos.index');
-    Route::get('productos/create', [ProductoController::class, 'create'])->name('productos.create');
+    Route::get('producto/create', [ProductoController::class, 'create'])->name('productos.create');
     Route::post('/productos/producto-nuevo', [ProductoController::class, 'store'])->name('productos.store');
-    Route::get('productos/ver/{producto}', [ProductoController::class, 'edit'])->name('productos.edit');
+    Route::get('producto/ver/{producto}', [ProductoController::class, 'edit'])->name('productos.edit');
     Route::put('/productos/update/{producto}', [ProductoController::class, 'update'])->name('productos.update');
-    Route::put('/productos/cambio-estado/{producto}', [ProductoController::class, 'toggleEstado'])->name('productos.toggleEstado');
+    Route::put('/producto/cambio-estado/{producto}', [ProductoController::class, 'toggleEstado'])->name('productos.toggleEstado');
 
     //banners
     Route::resource('carousel', CarouselController::class);

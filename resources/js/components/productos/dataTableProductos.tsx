@@ -47,6 +47,18 @@ export function getColumns(confirmar: (data: Producto) => void, openEdit: (data:
       ,
       cell: ({ row }) => ( <div className="">{row.getValue("nombre")}</div> ),
     },
+    {
+      accessorKey: "descripcion",
+      header: ({column}) => {
+        return (
+          <div className="flex">
+            Descripción
+            <ArrowUpDown className="ml-1" size={17} onClick={() => column.toggleSorting(column.getIsSorted() === "asc")} />
+          </div>
+        )
+      } ,
+      cell: ({ row }) => ( <div className="">{row.getValue("descripcion")}</div> ),
+    },
     /*{
       accessorKey: "categoria_nombre",
       header: ({column}) => {
@@ -59,7 +71,7 @@ export function getColumns(confirmar: (data: Producto) => void, openEdit: (data:
       } ,
       cell: ({ row }) => ( <div className="">{row.getValue("categoria_nombre")}</div> ),
     },
-        {
+    {
       accessorKey: "lista_precio_nombre",
       header: ({column}) => {
         return (

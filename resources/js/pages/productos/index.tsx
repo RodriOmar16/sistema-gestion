@@ -33,27 +33,32 @@ const productoVacio = {
   categoria_nombre:    '',
   lista_precio_id:     '',
   lista_precio_nombre: '', 
-  precio:              0,
+  precio:              '',
   inhabilitado:        false,
 }
 
 export function FiltrosForm({ resetearProducto, listasPrecios, categorias }: propsForm){
   const [esperandoRespuesta, setEsperandoRespuesta] = useState(false);
   const { data, setData, errors, processing } = useForm<Producto>(productoVacio);
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     resetearProducto([]);
+    setLoading(true);
     const payload = {      ...data, buscar: true    }
     router.get(route('productos.index'), payload, {
       preserveState: true,
       preserveScroll: true,
-      onFinish: () => setEsperandoRespuesta(false),
+      onFinish: () => {
+        setEsperandoRespuesta(false);
+        setLoading(false);
+      }
     });
   };
   const handleReset = () => {
     setData(productoVacio);
-  };
+  }; 
 
   return (
     <div>
@@ -128,8 +133,8 @@ export function FiltrosForm({ resetearProducto, listasPrecios, categorias }: pro
             </Select>
         </div>
         <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
-          <label htmlFor="nroTel">Nro. Teléfono</label>
-          <Input className='text-right' type='number' value={data.precio} onChange={(e)=>setData('precio',Number(e.target.value))}/>	
+          <label htmlFor="precio">Precio</label>
+          <Input type='number' className='text-right' value={data.precio} onChange={(e)=>setData('precio',Number(e.target.value))}/>	
           { errors.precio && <p className='text-red-500	'>{ errors.precio }</p> }
         </div>
         <div className='col-span-6 sm:col-span-4 md:col-span-4 lg:col-span-2 flex flex-col'>
@@ -148,12 +153,9 @@ export function FiltrosForm({ resetearProducto, listasPrecios, categorias }: pro
             <Brush size={30} className="text-orange-500" />
           </Button>
           <Button type="submit" title="Buscar" disabled={processing}>
-            {processing ? (
-              <Loader2 size={20} className="animate-spin mr-2" />
-            ) : (
-              <Search size={20} className="mr-2" />
-            )}
-            Buscar
+            {loading ? (<Loader2 size={20} className="animate-spin" />) : 
+                       (<Search size={20} className="" />)
+            } Buscar
           </Button>
         </div>
       </form>
@@ -162,19 +164,10 @@ export function FiltrosForm({ resetearProducto, listasPrecios, categorias }: pro
 };
 
 export default function Productos(){
-  //data
-  const [confirmOpen, setConfirOpen] = useState(false); //modal para confirmar acciones para cuado se crea o edita
-  const [textConfir, setTextConfirm] = useState('');
-  
-  //const [modalOpen, setModalOpen]               = useState(false); //modal editar/crear
-  //const [modalMode, setModalMode]               = useState<'create' | 'edit'>('create');
-  //const [selectedProducto, setSelectedProducto] = useState<Producto | undefined>(undefined);
-  //const [pendingData, setPendingData]           = useState<Producto | undefined>(undefined);
-  const [loading, setLoading]                   = useState(false);
-  
+  //data  
   const [openConfirmar, setConfirmar]       = useState(false); //para editar el estado
   const [textConfirmar, setTextConfirmar]   = useState(''); 
-  const [productoCopia, setProductoCopia] = useState<Producto>(productoVacio);
+  const [productoCopia, setProductoCopia]   = useState<Producto>(productoVacio);
 
   const [activo, setActivo] = useState(false);//ShowMessage
   const [text, setText]     = useState('');
@@ -208,14 +201,12 @@ export default function Productos(){
   };
   const inhabilitarHabilitar = () => {
     if (!productoCopia || !productoCopia.producto_id) return;
-    setLoading(true);
     router.put(
       route('productos.toggleEstado', { producto: productoCopia.producto_id }),{},
       {
         preserveScroll: true,
         preserveState: true,
         onFinish: () => {
-          setLoading(false);
           setTextConfirmar('');
           setConfirmar(false);
           setProductoCopia(productoVacio);
@@ -230,9 +221,8 @@ export default function Productos(){
 
   const openEdit = (data: Producto) => {
     router.get(
-      route('productos.edit', { producto: data.producto_id }),{},{
-
-      }
+      route('productos.edit', { producto: data.producto_id }),
+      {},{}
     );
   };
 
@@ -289,7 +279,6 @@ export default function Productos(){
       setActivo(true);
 
       if (resultado === 1 && producto_id) {
-        //setModalOpen(false);
         router.get(route('productos.index'),
           { producto_id, buscar: true },
           { preserveScroll: true,	preserveState: true	}

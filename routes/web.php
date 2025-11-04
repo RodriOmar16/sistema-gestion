@@ -13,6 +13,7 @@ use App\Http\Controllers\ProveedorController;
 use App\Http\Controllers\ListaPrecioController;
 use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\GraficosController;
 use App\Http\Controllers\CarouselController;
 
 use Illuminate\Support\Facades\Route;
@@ -114,6 +115,9 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
     Route::get('/banners', [CarouselController::class, 'index'])->name('carousel.index');
     Route::put('/carousel/{carousel}', [CarouselController::class, 'update'])->name('carousel.update');
     Route::put('/carousel/{carousel}/estado', [CarouselController::class, 'toggleEstado'])->name('carousel.toggleEstado');
+
+    //Gráficos
+    Route::get('/graficos', [GraficosController::class, 'index'])->name('graficos.index');
     
     //Proyectos
     Route::get('/projects/pdf', [ProjectController::class, 'generarPDF'])->name('projects.pdf');

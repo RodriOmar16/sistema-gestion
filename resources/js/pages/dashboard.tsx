@@ -7,12 +7,7 @@ import Carousel from '@/components/carousel';
 import { type SharedData } from '@/types';
 import { usePage } from '@inertiajs/react';
 
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Dashboard',
-        href: dashboard().url,
-    },
-];
+const breadcrumbs: BreadcrumbItem[] = [ { title: 'Dashboard', href: dashboard().url } ];
 
 interface PageProps extends SharedData {
 	carouselImages: string[];

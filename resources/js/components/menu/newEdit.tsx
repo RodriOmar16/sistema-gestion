@@ -139,6 +139,7 @@ export default function NewEditDialog({ open, onOpenChange, mode, menu, onSubmit
           />
           <label className='mr-2'>Inhabilitado</label>
           <Switch checked={data.inhabilitado?true:false} onCheckedChange={(val:any) => setData('inhabilitado', val)} />
+          <div>asignarle la ruta</div>
         </form>
         <DialogFooter>
           <DialogClose asChild>

@@ -1,14 +1,18 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { FileText } from 'lucide-react';
+import { route } from 'ziggy-js';
 
 interface Props{
-  deshabilitado: boolean
+  deshabilitado: boolean;
+  url: string;
+  payload: object, 
 }
 
-export default function PdfButton({ deshabilitado }:Props) {
+export default function PdfButton({ deshabilitado, url, payload }:Props) {
   const handleClick = () => {
-    window.open('/projects/report', '_blank');
+    console.log("payload: ", payload)
+    window.open(route(url,{...payload}), '_blank');
   };
   return (
     <Button 

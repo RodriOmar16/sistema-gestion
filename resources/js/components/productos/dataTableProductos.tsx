@@ -8,13 +8,14 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {  Table,  TableBody,  TableCell,  TableHead,  TableHeader,  TableRow } from "@/components/ui/table"
 import { Producto } from "@/types/typeCrud"
-import { convertirFechaGuionesBarras, convertirNumberPlata } from "@/utils"
+import { convertirNumberPlata } from "@/utils"
 import { Badge } from "../ui/badge"
-
+import PdfButton from "../utils/pdf-button"
 interface Props {
   datos: Producto[];
   openEdit: (data:Producto) => void;
   abrirConfirmar: (data:Producto) => void;
+  dataIndex: object
 }
 
 //export const columns: ColumnDef<Project>[] = [
@@ -172,7 +173,7 @@ export function getColumns(confirmar: (data: Producto) => void, openEdit: (data:
   ]
 //]
 }
-export default function DataTableProductos({datos, openEdit, abrirConfirmar}:Props) {
+export default function DataTableProductos({datos, openEdit, abrirConfirmar, dataIndex}:Props) {
   const [sorting, setSorting]                   = useState<SortingState>([])
   const [columnFilters, setColumnFilters]       = useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
@@ -220,10 +221,14 @@ export default function DataTableProductos({datos, openEdit, abrirConfirmar}:Pro
   return (
     <div className="w-full">
       <div className=" grid grid-cols-12 gap-4  py-2">
-        {/*<div className="col-span-6 sm:col-span-4 md:col-span-4 lg:col-span-2">
-          <PdfButton deshabilitado={datos.length == 0}/>
-        </div>*/}
-        <div className="col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12 flex justify-end  items-center">
+        <div className="col-span-3 sm:col-span-2 md:col-span-2 lg:col-span-2">
+          <PdfButton 
+            deshabilitado={datos.length == 0}
+            url="productos.pdf"
+            payload={dataIndex}
+            />
+        </div>
+        <div className="col-span-9 sm:col-span-10 md:col-span-10 lg:col-span-10 flex justify-end  items-center">
           <Input
             placeholder="Filtrar"
             value={busqueda}

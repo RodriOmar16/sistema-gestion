@@ -21,8 +21,10 @@ const breadcrumbs: BreadcrumbItem[] = [ { title: 'Productos', href: '', } ];
 
 type propsForm = {
   resetearProducto: (data:Producto[]) => void;
-  listasPrecios: Multiple[],
-  categorias: Multiple[],
+  listasPrecios: Multiple[];
+  categorias: Multiple[];
+  data: Producto;
+  set: (e:any) => void;
 }
 
 const productoVacio = {
@@ -37,9 +39,8 @@ const productoVacio = {
   inhabilitado:        false,
 }
 
-export function FiltrosForm({ resetearProducto, listasPrecios, categorias }: propsForm){
-  const [esperandoRespuesta, setEsperandoRespuesta] = useState(false);
-  const { data, setData, errors, processing } = useForm<Producto>(productoVacio);
+export function FiltrosForm({ resetearProducto, listasPrecios, categorias, data, set }: propsForm){
+  const [esperandoRespuesta, setEsperandoRespuesta] = useState(false)
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -57,7 +58,7 @@ export function FiltrosForm({ resetearProducto, listasPrecios, categorias }: pro
     });
   };
   const handleReset = () => {
-    setData(productoVacio);
+    set(productoVacio);
   }; 
 
   return (
@@ -79,24 +80,21 @@ export function FiltrosForm({ resetearProducto, listasPrecios, categorias }: pro
       <form className='grid grid-cols-12 gap-4 px-4 pt-1 pb-4' onSubmit={handleSubmit}>
         <div className='col-span-12 sm:col-span-4 md:col-span-6 lg:col-span-2'>
           <label htmlFor="id">Id</label>
-          <Input value={data.producto_id} onChange={(e)=>setData('producto_id',e.target.value)}/>	
-          { errors.producto_id && <p className='text-red-500	'>{ errors.producto_id }</p> }
+          <Input value={data.producto_id} onChange={(e)=>set({...data, producto_id: Number(e.target.value)})}/>	
         </div>
         <div className='col-span-12 sm:col-span-4 md:col-span-6 lg:col-span-3'>
           <label htmlFor="nombre">Nombre</label>
-          <Input value={data.producto_nombre} onChange={(e)=>setData('producto_nombre',e.target.value)}/>	
-          { errors.producto_nombre && <p className='text-red-500	'>{ errors.producto_nombre }</p> }
+          <Input value={data.producto_nombre} onChange={(e)=>set({...data, producto_nombre:e.target.value})}/>	
         </div>
         <div className='col-span-12 sm:col-span-4 md:col-span-12 lg:col-span-4'>
           <label htmlFor="descripcion">Descripcion</label>
-          <Input value={data.descripcion} onChange={(e)=>setData('descripcion',e.target.value)}/>	
-          { errors.descripcion && <p className='text-red-500	'>{ errors.descripcion }</p> }
+          <Input value={data.descripcion} onChange={(e)=>set({...data, descripcion:e.target.value})}/>	
         </div>
         <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3'>
           <label htmlFor="descripcion">Categorías</label>
             <Select
               value={String(data.categoria_id)}
-              onValueChange={(value) => setData('categoria_id', Number(value))}
+              onValueChange={(value) => set({...data, categoria_id: Number(value)}) }
             >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="" />
@@ -116,7 +114,7 @@ export function FiltrosForm({ resetearProducto, listasPrecios, categorias }: pro
           <label htmlFor="descripcion">Listas de Precio</label>
             <Select
               value={String(data.lista_precio_id)}
-              onValueChange={(value) => setData('lista_precio_id', Number(value))}
+              onValueChange={(value) => set({...data, lista_precio_id:Number(value)})}
             >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="" />
@@ -134,12 +132,11 @@ export function FiltrosForm({ resetearProducto, listasPrecios, categorias }: pro
         </div>
         <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
           <label htmlFor="precio">Precio</label>
-          <Input type='number' className='text-right' value={data.precio} onChange={(e)=>setData('precio',Number(e.target.value))}/>	
-          { errors.precio && <p className='text-red-500	'>{ errors.precio }</p> }
+          <Input type='number' className='text-right' value={data.precio} onChange={(e)=>set({...data, precio: Number(e.target.value)})}/>	
         </div>
         <div className='col-span-6 sm:col-span-4 md:col-span-4 lg:col-span-2 flex flex-col'>
           <label className='mr-2'>Inhabilitado</label>
-          <Switch checked={data.inhabilitado==0 ? false: true} onCheckedChange={(val) => setData('inhabilitado', val)} />
+          <Switch checked={data.inhabilitado==0 ? false: true} onCheckedChange={(val) => set({...data, inhabilitado: val})} />
         </div>
         <div className='col-span-6 sm:col-span-4 md:col-span-4 lg:col-span-4 flex justify-end items-center'>
           <Button 
@@ -152,7 +149,7 @@ export function FiltrosForm({ resetearProducto, listasPrecios, categorias }: pro
           >
             <Brush size={30} className="text-orange-500" />
           </Button>
-          <Button type="submit" title="Buscar" disabled={processing}>
+          <Button type="submit" title="Buscar" disabled={loading}>
             {loading ? (<Loader2 size={20} className="animate-spin" />) : 
                        (<Search size={20} className="" />)
             } Buscar
@@ -165,6 +162,8 @@ export function FiltrosForm({ resetearProducto, listasPrecios, categorias }: pro
 
 export default function Productos(){
   //data  
+  const { data, setData, errors, processing } = useForm<Producto>(productoVacio); //formulario que busca
+
   const [openConfirmar, setConfirmar]       = useState(false); //para editar el estado
   const [textConfirmar, setTextConfirmar]   = useState(''); 
   const [productoCopia, setProductoCopia]   = useState<Producto>(productoVacio);
@@ -292,7 +291,9 @@ export default function Productos(){
       <Head title="Productos" />
       <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
         <div className="relative flex-none flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
-          <FiltrosForm 
+          <FiltrosForm
+            data={data}
+            set={setData}
             resetearProducto={setProductosCacheados}
             listasPrecios={listasPrecio}
             categorias={categorias}/>
@@ -302,6 +303,7 @@ export default function Productos(){
             datos={productosCacheados?? []} 
             openEdit={openEdit} 
             abrirConfirmar={confirmar}
+            dataIndex={data}
             />
         </div>
       </div>

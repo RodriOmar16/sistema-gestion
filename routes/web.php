@@ -100,6 +100,7 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
 
     //Productos
     Route::get('/productos_habilitados', [ProductoController::class, 'productosHabilitados'])->name('productos.productosHabilitados');
+    Route::get('/productos/pdf', [ProductoController::class, 'generarPDF'])->name('productos.pdf');
     Route::get('/productos', [ProductoController::class, 'index'])->name('productos.index');
     Route::get('producto/create', [ProductoController::class, 'create'])->name('productos.create');
     Route::post('/productos/producto-nuevo', [ProductoController::class, 'store'])->name('productos.store');
@@ -114,6 +115,7 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
     Route::put('/carousel/{carousel}/estado', [CarouselController::class, 'toggleEstado'])->name('carousel.toggleEstado');
     
     //Proyectos
+    Route::get('/projects/pdf', [ProjectController::class, 'generarPDF'])->name('projects.pdf');
     Route::get('/projects', [ProjectController::class, 'index'])->name('projects.index');
     Route::post('/projects', [ProjectController::class, 'store'])->name('projects.store');
     Route::put('/projects/{project}', [ProjectController::class, 'update'])->name('projects.update');

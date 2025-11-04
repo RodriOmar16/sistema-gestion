@@ -27,6 +27,7 @@ interface Props {
   datos: Project[];
   openEdit: (project:Project) => void;
   abrirConfirmar: (project:Project) => void;
+  dataIndex: object
   /*accion: (project:Project) => void;
   cancel: () => void;*/
 }
@@ -230,7 +231,7 @@ export function getColumns(confirmar: (project: Project) => void, openEdit: (pro
   ]
 //]
 }
-export function DataTableProjects({datos, openEdit, abrirConfirmar}:Props) {
+export function DataTableProjects({datos, openEdit, abrirConfirmar, dataIndex}:Props) {
 
   //data = datos;
   /*const projectVacio = {
@@ -287,7 +288,10 @@ export function DataTableProjects({datos, openEdit, abrirConfirmar}:Props) {
     <div className="w-full">
       <div className=" grid grid-cols-12 gap-4  py-2">
         <div className="col-span-6 sm:col-span-4 md:col-span-4 lg:col-span-2">
-          <PdfButton deshabilitado={datos.length == 0}/>
+          <PdfButton 
+            deshabilitado={datos.length == 0}
+            url="projects.pdf"
+            payload={dataIndex}/>
         </div>
         <div className="col-span-6 sm:col-span-8 md:col-span-8 lg:col-span-10 flex justify-end  items-center">
           <Input

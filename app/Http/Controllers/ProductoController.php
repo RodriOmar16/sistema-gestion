@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\DB;
-
 use Illuminate\Http\Request;
+
 use App\Models\Producto;
 use App\Models\ProductoCategoria;
 use App\Models\ProductoLista;
+
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class ProductoController extends Controller
 {
@@ -19,6 +21,48 @@ class ProductoController extends Controller
       ];
     });
     return response()->json($productos);
+  }
+
+  public function generarPDF(Request $request){
+
+    $query = Producto::query()->with(['categorias', 'productosLista.listaPrecio']);
+
+    // Campos propios
+    if ($request->filled('producto_id')) {
+      $query->where('producto_id', $request->producto_id);
+    }
+    if ($request->filled('producto_nombre')) {
+      $query->where('nombre', 'like', '%' . $request->producto_nombre . '%');
+    }
+    if ($request->filled('descripcion')) {
+      $query->where('descripcion', 'like', '%' . $request->descripcion . '%');
+    }
+    if ($request->filled('precio') && $request->precio >= 0) {
+      $query->where('precio', $request->precio);
+    }
+    if ($request->filled('inhabilitado')) {
+      $estado = filter_var($request->inhabilitado, FILTER_VALIDATE_BOOLEAN);
+      $query->where('inhabilitado', $estado);
+    }
+
+    // Relaciones intermedias
+    if ($request->filled('categoria_id') && $request->categoria_id !== '') {
+      $query->whereHas('categorias', fn($q) =>
+        $q->where('categorias.categoria_id', $request->categoria_id)
+      );
+    }
+
+    if ($request->filled('lista_precio_id') && $request->lista_precio_id !== '') {
+      $query->whereHas('productosLista', fn($q) =>
+        $q->where('lista_precio_id', $request->lista_precio_id)
+          ->where('precio_lista', '>', 0)
+      );
+    }
+
+    $productos = $query->get();
+
+    $pdf = Pdf::loadView('pdf.productos', compact('productos'));
+    return $pdf->download('productos.pdf');
   }
 
   public function index(Request $request)
@@ -65,7 +109,6 @@ class ProductoController extends Controller
 
     return inertia('productos/index', ['productos' => $productos]);
   }
-
 
   public function create(){
     return inertia('productos/createEdit',[

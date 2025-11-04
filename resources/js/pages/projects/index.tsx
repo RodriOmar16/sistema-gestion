@@ -13,40 +13,32 @@ import ShowMessage from '@/components/utils/showMessage';
 import { DataTableProjects } from '@/components/projects/dataTableProjects';
 import { Select,  SelectContent,  SelectItem,  SelectTrigger,  SelectValue } from "@/components/ui/select"
 import { route } from 'ziggy-js';
+import { Switch } from '@/components/ui/switch';
 
 /*import {
   Table, TableBody, TableCell, TableFooter, TableHead, TableHeader,  TableRow,
 } from "@/components/ui/table";*/
 
 //nombre en el Layout principal, no quitar
-const breadcrumbs: BreadcrumbItem[] = [
-  {
-    title: 'Proyectos',
-    href: '/projects',
-  },
-];
+const breadcrumbs: BreadcrumbItem[] = [ { title: 'Proyectos', href: '/projects' } ];
+
+const projectVacio = {
+	id: '',
+	name: '',
+	descripcion: '',
+	inhabilitado: false,
+	created_at: '',
+	updated_at: ''
+}
 
 type propsForm = {
 	openCreate: () => void;
 	resetearProject: (projects:Project[]) => void;
+	data: Project;
+	set: (e:any) => void;
 }
-
-export const FormProyectos = ({ openCreate,resetearProject }: propsForm) => {
+export const FormProyectos = ({ openCreate,resetearProject, data, set }: propsForm) => {
 	const [loading, setLoading] = useState(false);
-
-	const { filters } = usePage().props as { filters?: { id: string; name: string; descripcion: string, inhabilitado: boolean|string } };
-
-	const { data, setData, get, processing, errors } = useForm<{
-		id: string;
-		name: string;
-		descripcion: string;
-		inhabilitado: string | boolean;
-	}>({
-		id: filters?.id || '',
-		name: filters?.name || '',
-		descripcion: filters?.descripcion || '',
-		inhabilitado: filters?.inhabilitado ?? '',
-	});
 
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
@@ -78,7 +70,7 @@ export const FormProyectos = ({ openCreate,resetearProject }: propsForm) => {
 	};
 
 	const handleReset = () => {
-		setData({
+		set({
 			id: '',
 			name: '',
 			descripcion: '',
@@ -104,40 +96,19 @@ export const FormProyectos = ({ openCreate,resetearProject }: propsForm) => {
 			<form className='grid grid-cols-12 gap-4 px-4 pt-1 pb-4' onSubmit={handleSubmit}>
 				<div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-2'>
 					<label htmlFor="id">Id</label>
-					<Input value={data.id} onChange={(e)=>setData('id',e.target.value)}/>	
-					{ errors.id && <p className='text-red-500	'>{ errors.id }</p> }
+					<Input value={data.id} onChange={(e)=>set({...data ,id:e.target.value})}/>	
 				</div>
 				<div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
 					<label htmlFor="nombre">Nombre</label>
-					<Input value={data.name} onChange={(e)=>setData('name',e.target.value)}/>	
-					{ errors.name && <p className='text-red-500	'>{ errors.name }</p> }
+					<Input value={data.name} onChange={(e)=>set({...data, name: e.target.value})}/>	
 				</div>
 				<div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
 					<label htmlFor="descripcion">Descripción</label>
-					<Input value={data.descripcion} onChange={(e)=>setData('descripcion',e.target.value)}/>	
-					{ errors.descripcion && <p className='text-red-500	'>{ errors.descripcion }</p> }
+					<Input value={data.descripcion} onChange={(e)=>set({...data, descripcion: e.target.value})}/>	
 				</div>
 				<div className='col-span-6 sm:col-span-4 md:col-span-4 lg:col-span-2'>
-					<label htmlFor="estado">Estado</label>
-					<Select
-						value={data.inhabilitado === '' ? 'all' : String(!data.inhabilitado)}
-						onValueChange={(value) => {
-							if (value === 'all') {
-								setData('inhabilitado', '');
-							} else {
-								setData('inhabilitado', value === 'true' ? false : true);
-							}
-						}}
-					>
-						<SelectTrigger className="w-[180px]">
-							<SelectValue placeholder="Seleccionar estado" />
-						</SelectTrigger>
-						<SelectContent>
-							<SelectItem value="true">Habilitado</SelectItem>
-							<SelectItem value="false">Inhabilitado</SelectItem>
-							<SelectItem value="all">Todos</SelectItem>
-						</SelectContent>
-					</Select>
+					<label className='mr-2'>Inhabilitado</label>
+          <Switch checked={data.inhabilitado==0 ? false: true} onCheckedChange={(val) => set({...data, inhabilitado: val})} />
 				</div>
 				<div className='col-span-6 sm:col-span-8 md:col-span-8 lg:col-span-2 flex justify-end items-center'>
 					<Button 
@@ -150,7 +121,7 @@ export const FormProyectos = ({ openCreate,resetearProject }: propsForm) => {
 					>
 						<Brush size={30} className="text-orange-500" />
 					</Button>
-					<Button type="submit" title="Buscar" disabled={processing}>
+					<Button type="submit" title="Buscar" disabled={loading}>
 						{loading ? (
 							<Loader2 size={20} className="animate-spin mr-2" />
 						) : (
@@ -298,6 +269,9 @@ export const FormProyectos = ({ openCreate,resetearProject }: propsForm) => {
 }*/
 
 export default function Projects() {
+	//para controlar la data del form desde aqui
+	const {data, setData, errors, processing} = useForm<Project>(projectVacio);
+
 	//para guardar la data del modal mientras se abre el modal de confirmar
 	const [pendingData, setPendingData] = useState<Project | undefined>(undefined);
 
@@ -329,14 +303,6 @@ export default function Projects() {
 	const [proyectosCacheados, setProyectosCacheados] = useState<Project[]>([]);
 
 	//para editar
-	const projectVacio = {
-		id: '',
-		name: '',
-		descripcion: '',
-		inhabilitado: false,
-		created_at: '',
-		updated_at: ''
-	}
 	const [openConfirmar, setConfirmar]     = useState(false);
 	const [textConfirmar, setTextConfirmar] = useState(''); 
 	const [projectCopia, setProjectCopia]   = useState<Project>(projectVacio);
@@ -530,7 +496,12 @@ export default function Projects() {
       <Head title="Proyectos" />
       <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
         <div className="relative flex-none flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
-          <FormProyectos openCreate={openCreate} resetearProject={setProyectosCacheados}/>
+          <FormProyectos 
+						openCreate={openCreate} 
+						resetearProject={setProyectosCacheados}
+						data={data}
+						set={setData}
+						/>
         </div>
         {/*<div className="p-4 relative flex-1 overflow-auto rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
 					<h2 className='text-center pb-4'>Resultado de Proyectos</h2>
@@ -542,6 +513,7 @@ export default function Projects() {
 						datos={proyectosCacheados?? []} 
 						openEdit={openEdit} 
 						abrirConfirmar={confirmar}
+						dataIndex={data}
 						/>
         </div>
       </div>

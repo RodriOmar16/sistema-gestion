@@ -11,6 +11,9 @@ use App\Models\ProductoLista;
 
 use Barryvdh\DomPDF\Facade\Pdf;
 
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+
 class ProductoController extends Controller
 {
   public function productosHabilitados(){
@@ -63,6 +66,45 @@ class ProductoController extends Controller
 
     $pdf = Pdf::loadView('pdf.productos', compact('productos'));
     return $pdf->download('productos.pdf');
+  }
+
+  public function exportarExcelManual(Request $request){
+    $productos = Producto::with(['categorias', 'productosLista.listaPrecio'])->get();
+
+    $spreadsheet = new Spreadsheet();
+    $sheet = $spreadsheet->getActiveSheet();
+
+    // Encabezados
+    $sheet->setCellValue('A1', 'ID');
+    $sheet->setCellValue('B1', 'Nombre');
+    $sheet->setCellValue('C1', 'Precio');
+    $sheet->setCellValue('D1', 'Inhabilitado');
+    $sheet->setCellValue('E1', 'Categorías');
+    $sheet->setCellValue('F1', 'Listas');
+
+    // Filas
+    foreach ($productos as $i => $p) {
+      $row = $i + 2;
+      $categorias = $p->categorias->pluck('nombre')->implode(', ');
+      $listas = $p->productosLista->map(fn($l) =>
+        ($l->listaPrecio->nombre ?? 'Sin nombre') . ' ($' . $l->precio_lista . ')'
+      )->implode(', ');
+
+      $sheet->setCellValue("A{$row}", $p->producto_id);
+      $sheet->setCellValue("B{$row}", $p->nombre);
+      $sheet->setCellValue("C{$row}", $p->precio);
+      $sheet->setCellValue("D{$row}", $p->inhabilitado ? 'Sí' : 'No');
+      $sheet->setCellValue("E{$row}", $categorias);
+      $sheet->setCellValue("F{$row}", $listas);
+    }
+
+    // Guardar en archivo temporal
+    $writer = new Xlsx($spreadsheet);
+    $filename = 'productos.xlsx';
+    $tempFile = tempnam(sys_get_temp_dir(), $filename);
+    $writer->save($tempFile);
+
+    return response()->download($tempFile, $filename)->deleteFileAfterSend(true);
   }
 
   public function index(Request $request)

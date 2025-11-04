@@ -100,6 +100,7 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
 
     //Productos
     Route::get('/productos_habilitados', [ProductoController::class, 'productosHabilitados'])->name('productos.productosHabilitados');
+    Route::get('/productos/excel', [ProductoController::class, 'exportarExcelManual'])->name('productos.excel');
     Route::get('/productos/pdf', [ProductoController::class, 'generarPDF'])->name('productos.pdf');
     Route::get('/productos', [ProductoController::class, 'index'])->name('productos.index');
     Route::get('producto/create', [ProductoController::class, 'create'])->name('productos.create');

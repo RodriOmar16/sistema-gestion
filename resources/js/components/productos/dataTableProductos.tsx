@@ -11,6 +11,7 @@ import { Producto } from "@/types/typeCrud"
 import { convertirNumberPlata } from "@/utils"
 import { Badge } from "../ui/badge"
 import PdfButton from "../utils/pdf-button"
+import ExcelButton from "../utils/excel-button"
 interface Props {
   datos: Producto[];
   openEdit: (data:Producto) => void;
@@ -221,12 +222,21 @@ export default function DataTableProductos({datos, openEdit, abrirConfirmar, dat
   return (
     <div className="w-full">
       <div className=" grid grid-cols-12 gap-4  py-2">
-        <div className="col-span-3 sm:col-span-2 md:col-span-2 lg:col-span-2">
-          <PdfButton 
+        <div className="col-span-3 sm:col-span-2 md:col-span-2 lg:col-span-2 flex">
+          <div className="mr-2">
+            <PdfButton 
             deshabilitado={datos.length == 0}
             url="productos.pdf"
             payload={dataIndex}
             />
+          </div>
+          <div>
+            <ExcelButton
+              deshabilitado={datos.length == 0}
+              url="productos.excel"
+              payload={dataIndex}
+            />
+          </div>
         </div>
         <div className="col-span-9 sm:col-span-10 md:col-span-10 lg:col-span-10 flex justify-end  items-center">
           <Input

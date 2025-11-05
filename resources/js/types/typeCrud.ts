@@ -99,6 +99,13 @@ export interface Producto{
   created_at?: string;
   updated_at?: string;
 }
+export interface Stock{
+  stock_id: number|string;
+  producto_id:number|string;
+  cantidad: null|number;
+  created_at?: string;
+  updated_at?: string;
+}
 
 //para componente selec multiple
 export type Multiple = { 

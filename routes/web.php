@@ -12,8 +12,9 @@ use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\ProveedorController;
 use App\Http\Controllers\ListaPrecioController;
 use App\Http\Controllers\ProductoController;
-use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\GraficosController;
+use App\Http\Controllers\StockController;
+use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\CarouselController;
 
 use Illuminate\Support\Facades\Route;
@@ -109,6 +110,11 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
     Route::get('producto/ver/{producto}', [ProductoController::class, 'edit'])->name('productos.edit');
     Route::put('/productos/update/{producto}', [ProductoController::class, 'update'])->name('productos.update');
     Route::put('/producto/cambio-estado/{producto}', [ProductoController::class, 'toggleEstado'])->name('productos.toggleEstado');
+
+    //Stock
+    Route::get('/stock', [StockController::class, 'index'])->name('stock.index');
+    Route::post('/stock/stock-nuevo', [StockController::class, 'store'])->name('stock.store');
+    Route::put('/stock/update/{stock}', [StockController::class, 'update'])->name('stock.update');
 
     //banners
     Route::resource('carousel', CarouselController::class);

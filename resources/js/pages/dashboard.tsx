@@ -36,11 +36,11 @@ export default function Dashboard() {
 							{/* Seccion de Texto */}
 							<div className="flex flex-col justify-center w-full lg:w-1/4 textcenter lg:text-left">
 								<h1 className="text-3xl font-semibold mb-3 dark:text-white">
-								Bienvenido/a
+								Bienvenido/a a SGVSA
 								</h1>
 								<p className="text-gray-700 dark:text-gray-300">
-									Aprenderemos a implementar un Slider (Carousel)
-									con Laravel + Inertia + React + Tailwind.
+									Este es un sistema versátil, te permite hacer control de Stock, 
+									Ventas y Arqueos de caja.
 								</p>
 							</div>
 						</main>

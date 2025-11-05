@@ -20,6 +20,12 @@ export default function Graficos(){
     { name: 'Enero', ventas: 12000 },
     { name: 'Febrero', ventas: 9000 },
     { name: 'Marzo', ventas: 18000 },
+    { name: 'Mayo', ventas: 20000 },
+    { name: 'Junio', ventas: 11000 },
+    { name: 'Julio', ventas: 13500 },
+    { name: 'Agosto', ventas: 9000 },
+    { name: 'Septiembre', ventas: 10000 },
+    { name: 'Octubre', ventas: 15000 },
   ]);
   return (
     <AppLayout breadcrumbs={breadcrumbs}>

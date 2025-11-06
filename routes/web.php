@@ -112,6 +112,8 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
     Route::put('/producto/cambio-estado/{producto}', [ProductoController::class, 'toggleEstado'])->name('productos.toggleEstado');
 
     //Stock
+    Route::get('/stock/excel', [StockController::class, 'exportarExcelManual'])->name('stock.excel');
+    Route::get('/stock/pdf', [StockController::class, 'generarPDF'])->name('stock.pdf');
     Route::get('/stock', [StockController::class, 'index'])->name('stock.index');
     Route::post('/stock/stock-nuevo', [StockController::class, 'store'])->name('stock.store');
     Route::put('/stock/update/{stock}', [StockController::class, 'update'])->name('stock.update');

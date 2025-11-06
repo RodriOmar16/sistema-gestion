@@ -29,7 +29,7 @@ export default function Graficos(){
   ]);
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
-      <Head title="Productos" />
+      <Head title="Gráficos" />
       <div className="grid grid-cols-12 gap-2 h-full overflow-x-auto rounded-xl p-4">
         <div className="col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-4 overflow-auto rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
           <div className='ml-4 my-3 text-center'>Barras</div>

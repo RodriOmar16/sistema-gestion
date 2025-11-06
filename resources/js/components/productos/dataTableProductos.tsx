@@ -129,19 +129,19 @@ export function getColumns(confirmar: (data: Producto) => void, openEdit: (data:
       enableHiding: false,
       header: "Acciones",
       cell: ({ row }) => {
-        const rol = row.original;
+        const producto = row.original;
   
         return (
           <div className='flex'>
             {
-              rol?.inhabilitado === 0 ? (
+              producto?.inhabilitado === 0 ? (
                 <>
                   <Button 
                     className="p-0 hover:bg-transparent cursor-pointer"
                     title="Editar" 
                     variant="ghost" 
                     size="icon" 
-                    onClick={() => openEdit(rol)}>
+                    onClick={() => openEdit(producto)}>
                     <Pen size={20} className="text-orange-500" />
                   </Button>
                   <Button 
@@ -149,7 +149,7 @@ export function getColumns(confirmar: (data: Producto) => void, openEdit: (data:
                     title="Inhabilitar" 
                     variant="ghost" 
                     size="icon"
-                    onClick={ () => confirmar(rol) }>
+                    onClick={ () => confirmar(producto) }>
                     <Ban size={20} className="text-red-500" />
                   </Button>
                 </>
@@ -160,7 +160,7 @@ export function getColumns(confirmar: (data: Producto) => void, openEdit: (data:
                     title="Habilitar" 
                     variant="ghost" 
                     size="icon"
-                    onClick={ () => confirmar(rol) }
+                    onClick={ () => confirmar(producto) }
                   >
                     <Check size={20} className='text-green-600'/>
                   </Button>

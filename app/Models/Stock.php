@@ -11,7 +11,7 @@ class Stock extends Model
     /** @use HasFactory<\Database\Factories\StockFactory> */
     use HasFactory;
     protected $primaryKey = 'stock_id';
-    protected $table      = 'stock';
+    protected $table      = 'stocks';
 
     protected $fillable = ['producto_id', 'cantidad'];
 

@@ -102,7 +102,8 @@ export interface Producto{
 export interface Stock{
   stock_id: number|string;
   producto_id:number|string;
-  cantidad: null|number;
+  producto_nombre: string;
+  cantidad: string|number;
   created_at?: string;
   updated_at?: string;
 }

@@ -73,10 +73,10 @@ class StockController extends Controller
       //variables de movimiento
       $tipo   = TipoMovimiento::where('nombre','=','Ingreso')->first();
       $origen = OrigenMovimiento::where('nombre','=','Stock')->first();
-
       $tipoUp   = TipoMovimiento::where('nombre','=','Modificacion')->first();
       $origenUp = OrigenMovimiento::where('nombre','=','Actualizacion')->first();
 
+      //recorro todos los productos que vinieron
       foreach($productos as $elem){
         $registro = Stock::where('producto_id', $elem['producto_id'])->first();
         if(!$registro){
@@ -137,8 +137,15 @@ class StockController extends Controller
       ]);
 
       //insertar en mov stock este cambio
-      //...
-      //fin
+      $tipoUp   = TipoMovimiento::where('nombre','=','Modificacion')->first();
+      $origenUp = OrigenMovimiento::where('nombre','=','Actualizacion')->first();
+      MovimientoStock::create([
+        'producto_id' => $request->producto_id,
+        'tipo_id'     => $tipoUp->tipo_id,
+        'origen_id'   => $origenUp->origen_id,
+        'fecha'       => now()->toDateString(),
+        'cantidad'    => $request->cantidad
+      ]);
 
       DB::commit();
       return inertia('stock/index',[

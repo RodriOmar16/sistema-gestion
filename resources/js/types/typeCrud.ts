@@ -108,6 +108,24 @@ export interface Stock{
   updated_at?: string;
 }
 
+export interface MovimientoStock{
+  movimiento_id:     number|string;
+  producto_id:       number|string;
+  producto_nombre:   string;
+  proveedor_id?:     number|string;
+  proveedor_nombre?: string;
+  tipo_id:           number|string;
+  tipo_nombre:       number|string;
+  origen_id:         number|string;
+  origen_nombre:     number|string;
+  fecha?:            string;
+  fecha_inicio:      string;
+  fecha_fin:         string;
+  cantidad:          string|number;
+  created_at?:       string;
+  updated_at?:       string;
+}
+
 //para componente selec multiple
 export type Multiple = { 
   id: number; 

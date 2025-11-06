@@ -12,6 +12,10 @@ use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\ProveedorController;
 use App\Http\Controllers\ListaPrecioController;
 use App\Http\Controllers\ProductoController;
+use App\Http\Controllers\MovimientoStockController;
+use App\Http\Controllers\TipoMovimientoController;
+use App\Http\Controllers\OrigenMovimientoController;
+
 use App\Http\Controllers\GraficosController;
 use App\Http\Controllers\StockController;
 use App\Http\Controllers\ProjectController;
@@ -117,6 +121,18 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
     Route::get('/stock', [StockController::class, 'index'])->name('stock.index');
     Route::post('/stock/stock-nuevo', [StockController::class, 'store'])->name('stock.store');
     Route::put('/stock/update/{stock}', [StockController::class, 'update'])->name('stock.update');
+
+    //TipoMovimiento
+    Route::get('/tipos_mov_habilitados', [TipoMovimientoController::class, 'tiposHabilitados'])->name('tiposMov.habilitados');
+    //OrigenMovimiento
+    Route::get('/origenes_mov_habilitados', [OrigenMovimientoController::class, 'origenesHabilitados'])->name('origenesMov.habilitados');
+
+    //Movimientos Stock
+    Route::get('/movimientos-stock/excel', [MovimientoStockController::class, 'exportarExcelManual'])->name('movStock.excel');
+    Route::get('/movimientos-stock/pdf', [MovimientoStockController::class, 'generarPDF'])->name('movStock.pdf');
+    Route::get('/movimientos-stock', [MovimientoStockController::class, 'index'])->name('movStock.index');
+    //Route::post('/movimientos-stock/mov-nuevo', [MovimientoStockController::class, 'store'])->name('stock.store');
+    //Route::put('/movimientos-stock/update/{mov}', [MovimientoStockController::class, 'update'])->name('stock.update');
 
     //banners
     Route::resource('carousel', CarouselController::class);

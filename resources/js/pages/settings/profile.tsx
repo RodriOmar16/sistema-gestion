@@ -16,7 +16,7 @@ import { edit } from '@/routes/profile';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Profile settings',
+        title: 'Ajustes perfil',
         href: edit().url,
     },
 ];
@@ -137,7 +137,7 @@ export default function Profile({
                     </Form>
                 </div>
 
-                <DeleteUser />
+                {/*<DeleteUser />*/}
             </SettingsLayout>
         </AppLayout>
     );

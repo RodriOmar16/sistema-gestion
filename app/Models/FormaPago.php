@@ -10,7 +10,8 @@ use App\Models\Venta;
 class FormaPago extends Model
 {
     protected $primaryKey = 'forma_pago_id';
-    protected $fillable = ['nombre', 'descripcion', 'inhabilitada'];
+    protected $table      = 'formas_pago';
+    protected $fillable   = ['nombre', 'descripcion', 'inhabilitada'];
 
     public function pagos()
     {

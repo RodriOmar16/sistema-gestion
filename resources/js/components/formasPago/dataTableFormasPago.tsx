@@ -7,22 +7,22 @@ import {
 import { ArrowUpDown, ChevronDown, MoreHorizontal, Pen , Check, Ban,Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import {  Table,  TableBody,  TableCell,  TableHead,  TableHeader,  TableRow } from "@/components/ui/table"
-import { Proveedor } from "@/types/typeCrud"
+import { Table,  TableBody,  TableCell,  TableHead,  TableHeader,  TableRow } from "@/components/ui/table"
+import { FormaPago } from "@/types/typeCrud"
 import { formatDateTime, formatearCuilCompleto } from "@/utils"
 import { Badge } from "../ui/badge"
 
 interface Props {
-  datos: Proveedor[];
-  openEdit: (data:Proveedor) => void;
-  abrirConfirmar: (data:Proveedor) => void;
+  datos: FormaPago[];
+  openEdit: (data:FormaPago) => void;
+  abrirConfirmar: (data:FormaPago) => void;
 }
 
 //export const columns: ColumnDef<Project>[] = [
-export function getColumns(confirmar: (data: Proveedor) => void, openEdit: (data: Proveedor) => void): ColumnDef<Proveedor>[] {
+export function getColumns(confirmar: (data: FormaPago) => void, openEdit: (data: FormaPago) => void): ColumnDef<FormaPago>[] {
   return [
     {
-      accessorKey: "proveedor_id",
+      accessorKey: "forma_pago_id",
       header: ({column}) => {
         return (
           <div className="flex">
@@ -32,7 +32,7 @@ export function getColumns(confirmar: (data: Proveedor) => void, openEdit: (data
         )
       },
       cell: ({ row }) => (
-        <div className="text-right">{row.getValue("proveedor_id")}</div>
+        <div className="text-right">{row.getValue("forma_pago_id")}</div>
       ),
     },
     {
@@ -61,46 +61,7 @@ export function getColumns(confirmar: (data: Proveedor) => void, openEdit: (data
       cell: ({ row }) => ( <div className="">{row.getValue("descripcion")}</div> ),
     },
     {
-      accessorKey: "razon_social",
-      header: ({column}) => {
-        return (
-          <div className="flex">
-            Razón social
-            <ArrowUpDown className="ml-1" size={17} onClick={() => column.toggleSorting(column.getIsSorted() === "asc")} />
-          </div>
-        )
-      }
-      ,
-      cell: ({ row }) => ( <div className="">{row.getValue("razon_social")}</div> ),
-    },
-    {
-      accessorKey: "cuit",
-      header: ({column}) => {
-        return (
-          <div className="flex">
-            Cuit
-            <ArrowUpDown className="ml-1" size={17} onClick={() => column.toggleSorting(column.getIsSorted() === "asc")} />
-          </div>
-        )
-      }
-      ,
-      cell: ({ row }) => ( <div className="">{formatearCuilCompleto(row.getValue("cuit"))}</div> ),
-    },
-     {
-      accessorKey: "nro_telefono",
-      header: ({column}) => {
-        return (
-          <div className="flex">
-            Nro. Tel.
-            <ArrowUpDown className="ml-1" size={17} onClick={() => column.toggleSorting(column.getIsSorted() === "asc")} />
-          </div>
-        )
-      }
-      ,
-      cell: ({ row }) => ( <div className="">{row.getValue("nro_telefono")}</div> ),
-    },
-    {
-      accessorKey: "inhabilitado",
+      accessorKey: "inhabilitada",
       header: ({column}) => {
         return (
           <div className="flex">
@@ -110,20 +71,20 @@ export function getColumns(confirmar: (data: Proveedor) => void, openEdit: (data
         )
       },
       cell: ({ row }) => {
-        const proveedor = row.original;
-        const colorClasses = proveedor.inhabilitado === 0
+        const fp = row.original;
+        const colorClasses = fp.inhabilitada === 0
           ? 'bg-green-500 text-white dark:bg-green-600'
           : 'bg-red-500 text-white dark:bg-red-600';
 
         return (
           <Badge variant="secondary" className={`flex items-center gap-1 ${colorClasses}`}>
-            {proveedor.inhabilitado === 0 ? 'Habilitado' : 'Inhabilitado'}
+            {fp.inhabilitada === 0 ? 'Habilitado' : 'Inhabilitado'}
           </Badge>
         );
 
       },
     },
-    /*{
+    {
       accessorKey: "created_at",
       header: ({column}) => {
         return (
@@ -152,25 +113,25 @@ export function getColumns(confirmar: (data: Proveedor) => void, openEdit: (data
         const fechaString = row.getValue("updated_at") as string;
         return <div>{ formatDateTime(fechaString) }</div> 
       },
-    },*/
+    },
     {
       id: "acciones",
       enableHiding: false,
       header: "Acciones",
       cell: ({ row }) => {
-        const prov = row.original;
+        const fp = row.original;
   
         return (
           <div className='flex'>
             {
-              prov?.inhabilitado === 0 ? (
+              fp?.inhabilitada === 0 ? (
                 <>
                   <Button 
                     className="p-0 hover:bg-transparent cursor-pointer"
                     title="Editar" 
                     variant="ghost" 
                     size="icon" 
-                    onClick={() => openEdit(prov)}>
+                    onClick={() => openEdit(fp)}>
                     <Pen size={20} className="text-orange-500" />
                   </Button>
                   <Button 
@@ -178,7 +139,7 @@ export function getColumns(confirmar: (data: Proveedor) => void, openEdit: (data
                     title="Inhabilitar" 
                     variant="ghost" 
                     size="icon"
-                    onClick={ () => confirmar(prov) }>
+                    onClick={ () => confirmar(fp) }>
                     <Ban size={20} className="text-red-500" />
                   </Button>
                 </>
@@ -189,7 +150,7 @@ export function getColumns(confirmar: (data: Proveedor) => void, openEdit: (data
                     title="Habilitar" 
                     variant="ghost" 
                     size="icon"
-                    onClick={ () => confirmar(prov) }
+                    onClick={ () => confirmar(fp) }
                   >
                     <Check size={20} className='text-green-600'/>
                   </Button>
@@ -203,7 +164,7 @@ export function getColumns(confirmar: (data: Proveedor) => void, openEdit: (data
   ]
 //]
 }
-export default function DataTableProveedores({datos, openEdit, abrirConfirmar}:Props) {
+export default function DataTableFormasPago({datos, openEdit, abrirConfirmar}:Props) {
   const [sorting, setSorting]                   = useState<SortingState>([])
   const [columnFilters, setColumnFilters]       = useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
@@ -214,17 +175,15 @@ export default function DataTableProveedores({datos, openEdit, abrirConfirmar}:P
     const texto = busqueda.toLowerCase();
     return busqueda
       ? datos.filter((campo) =>
-          campo.proveedor_id?.toString().includes(texto) ||
-          campo.nombre?.toLowerCase().includes(texto) ||
-          campo.razon_social?.toString().includes(texto) ||
-          campo.cuit?.toString().includes(texto) ||
-          campo.nro_telefono?.toString().includes(texto)
+          campo.forma_pago_id?.toString().includes(texto) ||
+          campo.nombre?.toLowerCase().includes(texto)     ||
+          campo.descripcion?.toLowerCase().includes(texto)
         )
       : datos;
   }, [busqueda, datos]);
 
   //functions
-  const confirmar = (data: Proveedor) => {
+  const confirmar = (data: FormaPago) => {
     abrirConfirmar(data);
   };
   const columns = getColumns(confirmar, openEdit); 
@@ -306,7 +265,7 @@ export default function DataTableProveedores({datos, openEdit, abrirConfirmar}:P
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  No hay resultados para mostrar. Utiliza los filtros para obtener proveedores.
+                  No hay resultados para mostrar. Utiliza los filtros para obtener formas de pago.
                 </TableCell>
               </TableRow>
             )}

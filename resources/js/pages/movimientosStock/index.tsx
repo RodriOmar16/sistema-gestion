@@ -1,14 +1,11 @@
 import { Head, useForm, router, usePage } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
-import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem } from '@/types';
 import { MovimientoStock } from '@/types/typeCrud';
 import { Search, Brush, Loader2, CirclePlus, Filter } from 'lucide-react';
-import ModalConfirmar from '@/components/modalConfirmar';
-import ShowMessage from '@/components/utils/showMessage';
 import { Select,  SelectContent, SelectGroup,  SelectItem,  SelectTrigger,  SelectValue } from "@/components/ui/select"
 import { route } from 'ziggy-js';
 import { Multiple } from '@/types/typeCrud';
@@ -169,67 +166,12 @@ export default function MovimientosStock(){
   //data  
   const { data, setData, errors, processing } = useForm<MovimientoStock>(movVacio); //formulario que busca
 
-  /*const [openConfirmar, setConfirmar]       = useState(false); //para editar el estado
-  const [textConfirmar, setTextConfirmar]   = useState(''); 
-  const [productoCopia, setProductoCopia]   = useState<MovimientoStock>(movVacio);
-
-  const [activo, setActivo] = useState(false);//ShowMessage
-  const [text, setText]     = useState('');
-  const [title, setTitle]   = useState('');
-  const [color, setColor]   = useState('');*/
   const movs:MovimientoStock[] = [];
   const { movimientos } = usePage().props as { movimientos?: MovimientoStock[] }; //necesito los props de inertia
-  /*const { resultado, mensaje, producto_id } = usePage().props as {
-    resultado?: number;
-    mensaje?: string;
-    producto_id?: number;
-  };
-  const [propsActuales, setPropsActuales] = useState<{
-    resultado: number | undefined | null;
-    mensaje: string | undefined | null | '';
-    producto_id: number | undefined | null;
-  }>({ resultado: undefined, mensaje: undefined, producto_id: undefined });
-  const [productosCacheados, setProductosCacheados] = useState<Producto[]>([]);*/
 
   const [productoHab, setProductosHab] = useState<Multiple[]>([]);
   const [tiposHab, setTiposHab]        = useState<Multiple[]>([]);
   const [origenesHab, setOrigenesHab]  = useState<Multiple[]>([]);
-
-  //funciones
-  /*const confirmar = (data: MovimientoStock) => {
-    if(data){
-      setProductoCopia( JSON.parse(JSON.stringify(data)) );
-      const texto : string = data.inhabilitado === 0 ? 'inhabilitar': 'habilitar';
-      setTextConfirmar('Estás seguro de querer '+texto+' este producto?');
-      setConfirmar(true);
-    }
-  };
-  const inhabilitarHabilitar = () => {
-    if (!productoCopia || !productoCopia.producto_id) return;
-    router.put(
-      route('productos.toggleEstado', { producto: productoCopia.producto_id }),{},
-      {
-        preserveScroll: true,
-        preserveState: true,
-        onFinish: () => {
-          setTextConfirmar('');
-          setConfirmar(false);
-          setProductoCopia(productoVacio);
-        }
-      }
-    );
-  };
-
-  const cancelarInhabilitarHabilitar = () => { 
-    setConfirmar(false);
-  };
-
-  const openEdit = (data: Producto) => {
-    router.get(
-      route('productos.edit', { producto: data.producto_id }),
-      {},{}
-    );
-  };*/
 
   //effect
   useEffect(() => {
@@ -255,51 +197,7 @@ export default function MovimientosStock(){
 
     cargarDatos();
   }, []);
-
- /* useEffect(() => {
-    if (!activo && propsActuales.resultado !== undefined) {
-      setPropsActuales({
-        resultado: undefined,
-        mensaje: undefined,
-        producto_id: undefined
-      });
-    }
-  }, [activo]);*/
-
-  /*useEffect(() => {
-    if (
-      movimientos &&
-      productos.length > 0 &&
-      JSON.stringify(productos) !== JSON.stringify(productosCacheados)
-    ) {
-      setProductosCacheados(productos);
-    }
-  }, [productos]);*/
-
-
-  /*useEffect(() => {
-    const cambioDetectado =
-      (resultado && resultado  !== propsActuales.resultado)  ||
-      (mensaje && mensaje    !== propsActuales.mensaje)
-
-    if (cambioDetectado) {
-      setPropsActuales({ resultado, mensaje, producto_id });
-
-      const esError = resultado === 0;
-      setTitle(esError ? 'Error' : 'Producto modificado');
-      setText(esError ? mensaje ?? 'Error inesperado' : `${mensaje} (ID: ${producto_id})`);
-      setColor(esError ? 'error' : 'success');
-      setActivo(true);
-
-      if (resultado === 1 && producto_id) {
-        router.get(route('productos.index'),
-          { producto_id, buscar: true },
-          { preserveScroll: true,	preserveState: true	}
-        )
-      }
-    }
-  }, [resultado, mensaje, producto_id]);*/
-
+ 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Movimientos Stock" />

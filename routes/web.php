@@ -15,6 +15,7 @@ use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\MovimientoStockController;
 use App\Http\Controllers\TipoMovimientoController;
 use App\Http\Controllers\OrigenMovimientoController;
+use App\Http\Controllers\FormaPagoController;
 
 use App\Http\Controllers\GraficosController;
 use App\Http\Controllers\StockController;
@@ -124,6 +125,7 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
 
     //TipoMovimiento
     Route::get('/tipos_mov_habilitados', [TipoMovimientoController::class, 'tiposHabilitados'])->name('tiposMov.habilitados');
+    
     //OrigenMovimiento
     Route::get('/origenes_mov_habilitados', [OrigenMovimientoController::class, 'origenesHabilitados'])->name('origenesMov.habilitados');
 
@@ -133,6 +135,13 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
     Route::get('/movimientos-stock', [MovimientoStockController::class, 'index'])->name('movStock.index');
     //Route::post('/movimientos-stock/mov-nuevo', [MovimientoStockController::class, 'store'])->name('stock.store');
     //Route::put('/movimientos-stock/update/{mov}', [MovimientoStockController::class, 'update'])->name('stock.update');
+
+    //Formas de Pago
+    Route::get('/formas_pago_habilitadas', [FormaPagoController::class, 'formasPagoHabilitadas'])->name('formasPago.habilitadas');
+    Route::get('/formas-pago', [FormaPagoController::class, 'index'])->name('formasPago.index');
+    Route::post('/forma-pago/nueva', [FormaPagoController::class, 'store'])->name('formasPago.store');
+    Route::put('/forma-pago/update/{fp}', [FormaPagoController::class, 'update'])->name('formasPago.update');
+    Route::put('/forma-pago/cambio-estado/{fp}', [FormaPagoController::class, 'toggleEstado'])->name('formasPago.toggleEstado');
 
     //banners
     Route::resource('carousel', CarouselController::class);

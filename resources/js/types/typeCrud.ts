@@ -126,6 +126,15 @@ export interface MovimientoStock{
   updated_at?:       string;
 }
 
+export interface FormaPago{
+  forma_pago_id: number|string;
+  nombre:        string;
+  descripcion:   string;
+  inhabilitada:  boolean | 1 | 0 | 'true' | 'false';
+  created_at?:   string;
+  updated_at?:   string;
+}
+
 //para componente selec multiple
 export type Multiple = { 
   id: number; 

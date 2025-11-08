@@ -3,26 +3,27 @@ import {
   ColumnDef,  ColumnFiltersState,  flexRender,  getCoreRowModel,  getFilteredRowModel,
   getPaginationRowModel,  getSortedRowModel,  SortingState,  useReactTable,  VisibilityState,
 } from "@tanstack/react-table"
-import { ArrowUpDown, ChevronDown, MoreHorizontal, Pen , Check, Ban,Search } from "lucide-react"
+import { ArrowUpDown, Eye } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Table,  TableBody,  TableCell,  TableHead,  TableHeader,  TableRow } from "@/components/ui/table"
-import { MovimientoStock } from "@/types/typeCrud"
-import { convertirNumberPlata, formatDateTime } from "@/utils"
+import {  Table,  TableBody,  TableCell,  TableHead,  TableHeader,  TableRow } from "@/components/ui/table"
+import { Venta } from "@/types/typeCrud"
+import { convertirFechaGuionesBarras, convertirNumberPlata } from "@/utils"
 import { Badge } from "../ui/badge"
 import PdfButton from "../utils/pdf-button"
 import ExcelButton from "../utils/excel-button"
 
 interface Props {
-  datos:          MovimientoStock[];
-  dataIndex:      object
+  datos: Venta[];
+  openEdit: (data:Venta) => void;
+  dataIndex: object
 }
 
 //export const columns: ColumnDef<Project>[] = [
-export function getColumns(): ColumnDef<MovimientoStock>[] {
+export function getColumns(openEdit: (data: Venta) => void): ColumnDef<Venta>[] {
   return [
     {
-      accessorKey: "movimiento_id",
+      accessorKey: "venta_id",
       header: ({column}) => {
         return (
           <div className="flex">
@@ -32,11 +33,11 @@ export function getColumns(): ColumnDef<MovimientoStock>[] {
         )
       },
       cell: ({ row }) => (
-        <div className="text-right">{row.getValue("movimiento_id")}</div>
+        <div className="text-right">{row.getValue("venta_id")}</div>
       ),
     },
-        {
-      accessorKey: "fecha",
+    {
+      accessorKey: "fecha_grabacion",
       header: ({column}) => {
         return (
           <div className="flex">
@@ -46,63 +47,96 @@ export function getColumns(): ColumnDef<MovimientoStock>[] {
         )
       }
       ,
-      cell: ({ row }) => ( <div className="">{formatDateTime(row.getValue("fecha"))}</div> ),
+      cell: ({ row }) => ( <div className="">{convertirFechaGuionesBarras(row.getValue("fecha_grabacion"))}</div> ),
     },
     {
-      accessorKey: "producto_nombre",
+      accessorKey: "cliente_nombre",
       header: ({column}) => {
         return (
           <div className="flex">
-            Producto
-            <ArrowUpDown className="ml-1" size={17} onClick={() => column.toggleSorting(column.getIsSorted() === "asc")} />
-          </div>
-        )
-      }
-      ,
-      cell: ({ row }) => ( <div className="">{row.getValue("producto_nombre")}</div> ),
-    },
-    {
-      accessorKey: "tipo_nombre",
-      header: ({column}) => {
-        return (
-          <div className="flex">
-            Tipo
-            <ArrowUpDown className="ml-1" size={17} onClick={() => column.toggleSorting(column.getIsSorted() === "asc")} />
-          </div>
-        )
-      }
-      ,
-      cell: ({ row }) => ( <div className="">{row.getValue("tipo_nombre")}</div> ),
-    },
-    {
-      accessorKey: "origen_nombre",
-      header: ({column}) => {
-        return (
-          <div className="flex">
-            Origen
-            <ArrowUpDown className="ml-1" size={17} onClick={() => column.toggleSorting(column.getIsSorted() === "asc")} />
-          </div>
-        )
-      }
-      ,
-      cell: ({ row }) => ( <div className="">{row.getValue("origen_nombre")}</div> ),
-    },
-    {
-      accessorKey: "cantidad",
-      header: ({column}) => {
-        return (
-          <div className="flex">
-            Cantidad
+            Cliente
             <ArrowUpDown className="ml-1" size={17} onClick={() => column.toggleSorting(column.getIsSorted() === "asc")} />
           </div>
         )
       } ,
-      cell: ({ row }) => ( <div className="">{row.getValue("cantidad")}</div> ),
+      cell: ({ row }) => ( <div className="">{row.getValue("cliente_nombre")}</div> ),
+    },
+    {
+      accessorKey: "total",
+      header: ({column}) => {
+        return (
+          <div className="flex">
+            Total
+            <ArrowUpDown className="ml-1" size={20} onClick={() => column.toggleSorting(column.getIsSorted() === "asc")} />
+          </div>
+        )
+      },
+      cell: ({ row }) => {
+        const totalRow = row.getValue("total") as string;
+        return <div>{ convertirNumberPlata(totalRow) }</div> 
+      },
+    },
+    {
+      accessorKey: "anulada",
+      header: ({column}) => {
+        return (
+          <div className="flex">
+            Estado
+          </div>
+        )
+      },
+      cell: ({ row }) => {
+        const elem = row.original;
+        const colorClasses = elem.anulada === 0
+          ? 'bg-green-500 text-white dark:bg-green-600'
+          : 'bg-red-500 text-white dark:bg-red-600';
+
+        return (
+          <Badge variant="secondary" className={`flex items-center gap-1 ${colorClasses}`}>
+            {elem.anulada === 0 ? 'Aprobada' : 'Anulada'}
+          </Badge>
+        );
+
+      },
+    },
+    {
+      accessorKey: "fecha_anulacion",
+      header: ({column}) => {
+        return (
+          <div className="flex">
+            Anulación
+            <ArrowUpDown className="ml-1" size={17} onClick={() => column.toggleSorting(column.getIsSorted() === "asc")} />
+          </div>
+        )
+      }
+      ,
+      cell: ({ row }) => ( <div className="">{convertirFechaGuionesBarras(row.getValue("fecha_anulacion"))}</div> ),
+    },
+    {
+      id: "acciones",
+      enableHiding: false,
+      header: "Acciones",
+      cell: ({ row }) => {
+        const venta = row.original;
+  
+        return (
+          <div className='flex'>
+            <Button 
+              className="p-0 hover:bg-transparent cursor-pointer"
+              title="Ver" 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => openEdit(venta)}>
+              <Eye size={20} className="text-primary-500" />
+            </Button>
+          </div>
+        )
+      },
     },
   ]
 //]
 }
-export default function DataTableMovimientos({datos, dataIndex}:Props) {
+export default function DataTableVentas({datos, openEdit, dataIndex}:Props) {
   const [sorting, setSorting]                   = useState<SortingState>([])
   const [columnFilters, setColumnFilters]       = useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
@@ -113,15 +147,17 @@ export default function DataTableMovimientos({datos, dataIndex}:Props) {
     const texto = busqueda.toLowerCase();
     return busqueda
       ? datos.filter((campo) =>
-          String(campo.producto_id).toLowerCase().includes(texto) ||
-          campo.producto_nombre?.toLowerCase().includes(texto) ||
-          campo.cantidad?.toString().includes(texto)
+          campo.venta_id?.toString().toLowerCase().includes(texto) ||
+          campo.cliente_nombre?.toLowerCase().includes(texto) ||
+          campo.fecha_grabacion?.toLowerCase().includes(texto) ||
+          campo.fecha_anulacion?.toLowerCase().includes(texto) ||
+          campo.total?.toString().includes(texto)
         )
       : datos;
   }, [busqueda, datos]);
 
   //functions
-  const columns = getColumns(); 
+  const columns = getColumns(openEdit); 
 
   const table = useReactTable({
     data,
@@ -149,14 +185,14 @@ export default function DataTableMovimientos({datos, dataIndex}:Props) {
           <div className="mr-2">
             <PdfButton 
             deshabilitado={datos.length == 0}
-            url="movStock.pdf"
+            url="ventas.pdf"
             payload={dataIndex}
             />
           </div>
           <div>
             <ExcelButton
               deshabilitado={datos.length == 0}
-              url="movStock.excel"
+              url="ventas.excel"
               payload={dataIndex}
             />
           </div>
@@ -213,7 +249,7 @@ export default function DataTableMovimientos({datos, dataIndex}:Props) {
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  No hay resultados para mostrar. Utiliza los filtros para obtener movimientos de stock.
+                  No hay resultados para mostrar. Utiliza los filtros para obtener ventas.
                 </TableCell>
               </TableRow>
             )}

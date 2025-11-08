@@ -107,7 +107,6 @@ export interface Stock{
   created_at?: string;
   updated_at?: string;
 }
-
 export interface MovimientoStock{
   movimiento_id:     number|string;
   producto_id:       number|string;
@@ -125,7 +124,6 @@ export interface MovimientoStock{
   created_at?:       string;
   updated_at?:       string;
 }
-
 export interface FormaPago{
   forma_pago_id: number|string;
   nombre:        string;
@@ -133,6 +131,31 @@ export interface FormaPago{
   inhabilitada:  boolean | 1 | 0 | 'true' | 'false';
   created_at?:   string;
   updated_at?:   string;
+}
+export interface Cliente{
+  cliente_id:       number|string;
+  nombre:           string;
+  fecha_nacimiento: string;
+  domicilio:        string;
+  email:            string;
+  dni:              number | string;
+  inhabilitado:     boolean | 1 | 0 | 'true' | 'false';
+  created_at?:      string;
+  updated_at?:      string;
+}
+
+export interface Venta{
+  venta_id:        string|number;
+  fecha_grabacion: string;
+  fecha_desde:     string;
+  fecha_hasta:     string;
+  cliente_id:      number|string;
+  cliente_nombre:  string;
+  fecha_anulacion: string;
+  total:           number;
+  anulada:         boolean | 1 | 0 | 'true' | 'false';
+  created_at?:     string;
+  updated_at?:     string;
 }
 
 //para componente selec multiple

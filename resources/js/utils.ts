@@ -30,7 +30,7 @@ export function formatearCuilCompleto(cuil: number): string {
   const parte2 = limpio.slice(2, 10);
   const parte3 = limpio.slice(10);
 
-  return `${parte1}-${parte2}-${parte3}`;
+  return `${parte1}-${parte2}-${parte3}`; //dd-dddddddd-d
 }
 
 export function convertirFechaBarrasGuiones(fecha:string ){
@@ -49,4 +49,23 @@ export function convertirNumberPlata(monto:string){
   }).format(amount)
 
   return formatted;
+}
+
+export function formatearNro(valor: string){
+  const limpio = valor.replace(/\D/g, '');
+  return limpio.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+};
+export function formatearNroCompleto(nro: string): string {
+  const limpio = nro.replace(/\D/g, '');
+  let nroInverso = limpio.split('').reverse();
+
+  let cad = '';
+  for(let i=0;i<nroInverso.length;i++){
+    if(i>0 && i%3==0){
+      cad += '.';
+    }
+    cad += nroInverso[i];
+  }
+
+  return cad.split('').reverse().join(''); 
 }

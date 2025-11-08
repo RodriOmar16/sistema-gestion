@@ -16,6 +16,7 @@ export default function InputCuil({data, setData, placeholder}:Props){
 
   return (
     <Input
+      className="text-right"
       value={formatearCuit(String(data))}
       onChange={(e) => {
         const soloNumeros = e.target.value.replace(/\D/g, '').slice(0, 11);

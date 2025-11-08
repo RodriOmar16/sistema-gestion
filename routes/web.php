@@ -16,6 +16,8 @@ use App\Http\Controllers\MovimientoStockController;
 use App\Http\Controllers\TipoMovimientoController;
 use App\Http\Controllers\OrigenMovimientoController;
 use App\Http\Controllers\FormaPagoController;
+use App\Http\Controllers\ClienteController;
+use App\Http\Controllers\VentaController;
 
 use App\Http\Controllers\GraficosController;
 use App\Http\Controllers\StockController;
@@ -143,6 +145,23 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
     Route::put('/forma-pago/update/{fp}', [FormaPagoController::class, 'update'])->name('formasPago.update');
     Route::put('/forma-pago/cambio-estado/{fp}', [FormaPagoController::class, 'toggleEstado'])->name('formasPago.toggleEstado');
 
+    //Clientes
+    Route::get('/clientes_habilitados', [ClienteController::class, 'clientesHabilitados'])->name('clientes.habilitados');
+    Route::get('/clientes', [ClienteController::class, 'index'])->name('clientes.index');
+    Route::post('/cliente/nuevo', [ClienteController::class, 'store'])->name('clientes.store');
+    Route::put('/cliente/update/{cliente}', [ClienteController::class, 'update'])->name('clientes.update');
+    Route::put('/cliente/cambio-estado/{cliente}', [ClienteController::class, 'toggleEstado'])->name('clientes.toggleEstado');
+
+    //Ventas
+    Route::get('/ventas/excel', [VentaController::class, 'exportarExcelManual'])->name('ventas.excel');
+    Route::get('/ventas/pdf', [VentaController::class, 'generarPDF'])->name('ventas.pdf');
+    Route::get('/ventas', [VentaController::class, 'index'])->name('ventas.index');
+    Route::get('/nueva-venta', [VentaController::class, 'create'])->name('ventas.create');
+    Route::post('/ventas/venta-nueva', [VentaController::class, 'store'])->name('ventas.store');
+    Route::get('venta/ver/{venta}', [VentaController::class, 'edit'])->name('ventas.edit');
+    Route::put('/ventas/update/{venta}', [VentaController::class, 'update'])->name('ventas.update');
+    Route::put('/ventas/anular/{venta}', [VentaController::class, 'destroy'])->name('ventas.destroy');
+
     //banners
     Route::resource('carousel', CarouselController::class);
     Route::get('/banners', [CarouselController::class, 'index'])->name('carousel.index');
@@ -159,11 +178,7 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
     Route::put('/projects/{project}', [ProjectController::class, 'update'])->name('projects.update');
     Route::put('/projects/{project}/estado', [ProjectController::class, 'toggleEstado'])->name('projects.toggleEstado');
 
-
-    //Route::get('/productos', [ProductoController::class, 'index'])->middleware('verificarRuta');
 });
-
-
 
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';

@@ -26,10 +26,11 @@ function isValidDate(date: Date | undefined) {
 
 interface Props{
   fecha: string;
-  setFecha: (date:string) => void
+  setFecha: (date:string) => void;
+  disable?: boolean;
 }
 
-export function DatePicker({fecha,setFecha}:Props) {
+export function DatePicker({fecha, setFecha, disable = false}:Props) {
   const [open, setOpen]   = React.useState(false);
   const [date, setDate]   = useState(fecha? crearFechaLocal(convertirFechaBarrasGuiones(fecha)) : new Date())
   
@@ -48,6 +49,7 @@ export function DatePicker({fecha,setFecha}:Props) {
     <div className="flex flex-col gap-3">
       <div className="relative flex gap-2">
         <Input
+          disabled={disable}
           id="date"
           value={fecha}
           placeholder="dd/mm/yyyy"
@@ -71,6 +73,7 @@ export function DatePicker({fecha,setFecha}:Props) {
               id="date-picker"
               variant="ghost"
               className="absolute top-1/2 right-2 size-6 -translate-y-1/2"
+              disabled={disable}
             >
               <CalendarIcon className="size-3.5" />
               <span className="sr-only">Seleccionar fecha</span>

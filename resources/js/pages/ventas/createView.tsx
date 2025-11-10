@@ -1,5 +1,5 @@
 import AppLayout from '@/layouts/app-layout';
-import { Producto } from "@/types/typeCrud";
+import { Venta, Cliente } from "@/types/typeCrud";
 import { useState, useEffect } from 'react';
 import { Head, useForm, router, usePage } from '@inertiajs/react';
 import { BreadcrumbItem } from '@/types';
@@ -7,204 +7,372 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { Loader2, Save } from 'lucide-react';
+import { Loader2, Save, Plus, Search } from 'lucide-react';
 import {  Table,  TableBody,  TableCaption,  TableCell,  TableHead,  TableHeader,  TableRow,
 } from "@/components/ui/table"
+import { Select,  SelectContent,  SelectGroup,  SelectItem,  SelectLabel,  SelectTrigger,  SelectValue } from "@/components/ui/select"
 import SelectMultiple from '@/components/utils/select-multiple';
 import { Multiple } from '@/types/typeCrud';
-import { ordenarPorTexto } from '@/utils';
+import { convertirNumberPlata, ordenarPorTexto } from '@/utils';
 import ShowMessage from '@/components/utils/showMessage';
 import ModalConfirmar from '@/components/modalConfirmar';
 import { route } from 'ziggy-js';
+import { DatePicker } from '@/components/utils/date-picker';
+import TableDetalles from '@/components/ventas/tableDetalles';
+import Autocomplete from '@/components/utils/autocomplete';
+import InputDni from '@/components/utils/input-dni';
 
 const breadcrumbs: BreadcrumbItem[] = [ { title: '', href: '', } ];
-const productoVacio = {
-  producto_id:         '',
-  producto_nombre:     '',
-  descripcion:         '',
-  categoria_id:        '',
-  categoria_nombre:    '',
-  lista_precio_id:     '',
-  lista_precio_nombre: '', 
-  precio:              0,
-  inhabilitado:        false,
+const ventaVacia = {
+  venta_id:        '',
+  fecha_grabacion: (new Date()).toLocaleDateString(),
+  fecha_desde:     '',
+  fecha_hasta:     '',
+  cliente_id:      '',
+  cliente_nombre:  '',
+  fecha_anulacion: '',
+  total:           0,
+  anulada:         false,
 };
-
-interface Props{
-  data: Producto;
-  set: (e:any) => void;
-  modo: string;
+const clienteVacio = {
+  cliente_id:       '',
+  nombre:           '',
+  fecha_nacimiento: '',
+  domicilio:        '',
+  email:            '',
+  dni:              '',
+  inhabilitado:     false,
+}
+const formaPagoVacia = {
+  id: 0, 
+  nombre: '', 
+  monto: 0, 
+  fecha: (new Date()).toLocaleDateString()
 }
 
-export function DetallesProducto({modo, data, set}:Props){
-  //const [data, setData] = useState<Producto>(datos);
+
+type ProductoHab = {
+  id: number; 
+  nombre: string, 
+  precio: number, 
+};
+interface PropsDet{
+  data: Venta;
+  set: (e:any) => void;
+  modo: string;
+  productos: Detalle[];
+  setProd: (e:any) => void;
+  productosHab: ProductoHab[];
+};
+export function DetallesVenta({modo, data, set, productosHab, productos,setProd}:PropsDet){
+  const [totalAux, setTotalAux] = useState(0); 
+  const [productoId, setProdId] = useState(0);
+  
+  const controlarTotal = (e:number) => {
+    setTotalAux(e);
+    set({...data, total:Number(e)})
+  };
+
+  const agregarProducto = () => {
+    if(productoId===0){
+      return;
+    }
+    if(productos.length == 0){
+      setProd((prev:any) => [...prev, {
+        id: productoId, 
+        nombre: productosHab.find(e => e.id === productoId)?.nombre, 
+        precio: productosHab.find(e => e.id === productoId)?.precio, 
+        cantidad: 1
+      }]);
+      setProdId(0);
+      return 
+    }
+
+    const obj = productos.find(e => e.id === productoId)
+    if(obj){
+      setProd((prev:any) =>
+        prev.map((d:any) =>
+          d.id === productoId ? { ...d, cantidad: d.cantidad + 1 } : d
+        )
+      );
+    } else {
+      const producto = productosHab.find(e => e.id === productoId);
+      if (producto) {
+        setProd((prev:any) => [
+          ...prev,
+          {
+            id: producto.id,
+            nombre: producto.nombre,
+            precio: producto.precio,
+            cantidad: 1,
+          },
+        ]);
+      }
+    }
+    setProdId(0);
+  };
 
   return (
     <div className='px-4'>
       <div className='grid grid-cols-12 gap-4'>
-        {modo === 'edit' ? (
-          <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-2'>
+        {modo === 'view' ? (
+          <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
             <label htmlFor="id">Id</label>
-            <Input disabled value={data.producto_id} onChange={(e)=>set({...data, producto_id:e.target.value})}/>	
+            <Input disabled value={data.venta_id} onChange={(e)=>set({...data, venta_id:e.target.value})}/>	
           </div>
         ): <></>}
-        <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
-          <label htmlFor="nombre">Nombre</label>
-          <Input value={data.producto_nombre} onChange={(e)=>set({...data, producto_nombre:e.target.value})}/>	
+        <div className="col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3">
+          <label htmlFor="fechaHasta">Fecha</label>
+          <DatePicker disable={true} fecha={(data.fecha_grabacion)} setFecha={ (fecha:string) => {set({...data,fecha_grabacion: fecha})} }/>
         </div>
-        <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-4'>
-          <label htmlFor="descripcion">Descripcion</label>
-          <Input value={data.descripcion} onChange={(e)=>set({...data, descripcion:e.target.value})}/>	
+        {
+          data.anulada == true || data.anulada == 1? 
+          (
+            <div className="col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3">
+              <label htmlFor="fechaAnulacion">Anulacion</label>
+              <DatePicker disable={true} fecha={(data.fecha_anulacion)} setFecha={ (fecha:string) => {set({...data,fecha_anulacion: fecha})} }/>
+            </div>
+          ) : ( <> </> )
+        }
+        <div className='col-span-12 grid grid-cols-12 gap-4'>
+          <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3'>
+            <label htmlFor="cliente">Productos</label>
+              <Select
+                value={String(productoId)}
+                onValueChange={(value) => setProdId(Number(value))}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {productosHab.map((e: any) => (
+                      <SelectItem key={e.id} value={String(e.id)}>
+                        {e.nombre}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+          </div>
+          <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3 flex items-center'>
+            <Button type="button" onClick={agregarProducto}>
+                <Plus size={20}/> Agregar
+              </Button>
+          </div>
         </div>
-        <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
-          <label htmlFor="precio">Precio</label>
-          <Input type='number' className='text-right' value={data.precio} onChange={(e)=>set({...data, precio:Number(e.target.value)})}/>	
-        </div>
-        <div className='col-span-6 sm:col-span-4 md:col-span-4 lg:col-span-2 flex flex-col'>
-          <label className='mr-2'>Inhabilitado</label>
-          <Switch checked={data.inhabilitado==0 ? false: true} onCheckedChange={(val) => set({...data, inhabilitado: Boolean(val)})} />
+      </div>
+      <div className='pt-3'>
+        <TableDetalles datos={productos} setTotal={controlarTotal} />
+        <div className="text-right font-bold text-lg mt-4">
+          Total: {convertirNumberPlata(totalAux.toString())}
         </div>
       </div>
     </div>
   );
 }
+//-----------------------------------------------------------------------------
 
-interface PropsTabla{
-  listado: any[],
-  setListado: (array:any[]) => void
+interface PropsCli{
+  data: Cliente;
+  set: (e:any) => void;
+  modo: string;
 }
-export function TablaListas({listado, setListado}:PropsTabla){
 
-  const controlarPrecio = (id: number|string, nuevoPrecio: string) => {
-    const actualizado = listado.map(item =>
-      item.id === id ? { ...item, precio: Number(nuevoPrecio) } 
-                       : item
-    );
-    setListado(actualizado);
+export function DatosCliente({modo, data, set}:PropsCli){
+  const [dni, setDni] = useState('');
+  const [bloquear, setBloquear] = useState(false);
+  const buscarCliente = async () => {
+    if(!dni){
+      setBloquear(false);
+      set(clienteVacio);
+      return;
+    }
+    const res = await fetch(route('clientes.porDni',{dni: dni}));
+    const cli = await res.json();
+    
+    if(cli && cli.length > 0){
+      setBloquear(true);
+      set(cli[0]);
+    }else {
+      setBloquear(false);
+      set(clienteVacio);
+    }
+    setDni('');
+  };
+  return (
+    <div className='px-4'>
+      <div className='grid grid-cols-12 gap-4'>
+        <div className="col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-12 grid grid-cols-12 gap-4">
+          <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3'>
+            <label htmlFor="dni">Documento</label>
+            <InputDni placeholder='Buscar por documento' data={String(dni)} setData={(nro) => setDni(nro) }/>
+          </div>
+          <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3 flex items-center'>
+            <Button type="button" onClick={buscarCliente}>
+              <Search size={20}/> Buscar         
+            </Button>
+          </div>
+        </div>
+        {modo === 'view' ? (
+          <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-2'>
+            <label htmlFor="id">Id</label>
+            <Input disabled value={data.cliente_id} onChange={(e)=>set({...data, cliente_id:e.target.value})}/>	
+          </div>
+        ): <></>}
+        <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-5'>
+          <label htmlFor="nombre">Nombre</label>
+          <Input disabled={bloquear} value={data.nombre} onChange={(e)=>set({...data, nombre:e.target.value})}/>	
+        </div>
+        <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-4'>
+          <label htmlFor="email">Email</label>
+          <Input disabled={bloquear} value={data.email} onChange={(e)=>set({...data, email:e.target.value})}/>	
+        </div>
+        <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3'>
+          <label htmlFor="dni">Documento</label>
+          <InputDni disabled={bloquear} data={String(data.dni)} setData={(nro) => set({...data, dni: Number(nro)}) }/>
+        </div>
+        <div className="col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3">
+          <label htmlFor="fechaHasta">Nacimiento</label>
+          <DatePicker disable={bloquear} fecha={(data.fecha_nacimiento)} setFecha={ (fecha:string) => {set({...data,fecha_nacimiento: fecha})} }/>
+        </div>
+        <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
+          <label htmlFor="domicilio">Domicilio</label>
+          <Input disabled={bloquear} value={data.domicilio} onChange={(e)=>set({...data, domicilio:e.target.value})}/>	
+        </div>
+      </div>
+    </div>
+  );
+}
+//-------------------------------------------------------------------------------
+interface PropsFp{
+  formasPagoHab: Multiple[],
+  formasPagoSelected:    FormPago[],
+  setFormaPagoSelected: (array:any[]) => void
+}
+export function FormasPagosForm({formasPagoHab, formasPagoSelected, setFormaPagoSelected}:PropsFp){
+  const [fpId, setFpId] = useState(0);
+  const [monto, setMonto] = useState(0);
+  const agregaFp = () => {
+    if(!fpId || !monto){
+      return
+    }
+    //agregar
+    console.log("agregar: ", fpId, monto)    
+    setFpId(0);
+    setMonto(0);
   };
 
   return(
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead className="">Nombre</TableHead>
-          <TableHead className="text-right">Precio</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {
-          listado.length != 0? (
-            listado.map(e => (
-              <TableRow key={e.id}>
-                <TableCell className='w-1/2'>{e.nombre}</TableCell>
-                <TableCell className="w-1/2 text-right">
-                  <Input
-                  type='number'
-                    value={e.precio}
-                    className='text-right w-full'
-                    onChange={(ev)=> {controlarPrecio(e.id,ev.target.value)}}
-                  >
-                  </Input>
-                </TableCell>
-              </TableRow>
-            ))
-          ):(
-            <TableRow>
-              <TableCell
-                className="w-full h-24 text-center"
-              >
-                No hay listas para mostrar
-              </TableCell>
-            </TableRow>
-          )
-        }
-      </TableBody>
-    </Table>
+    <div className='px-4'>
+      <div className='grid grid-cols-12 gap-4'>
+        <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3'>
+          <label htmlFor="cliente">Forma de pago</label>
+          <Select
+            value={String(fpId)}
+            onValueChange={(value) => setFpId(Number(value)) }
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                {formasPagoHab.map((e: any) => (
+                  <SelectItem key={e.id} value={String(e.id)}>
+                    {e.nombre}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
+          <label htmlFor="monto">Monto</label>
+          <Input className='text-right' type='number' value={monto} onChange={(e)=> setMonto(Number(e.target.value))}/>	
+        </div>
+        <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3 flex items-center'>
+          <Button type="button" onClick={agregaFp}>
+            <Plus size={20}/> Agregar         
+          </Button>
+        </div>
+        <div className="col-span-12 ">
+          {/* crear el datable table de las formas de pago aquí */}
+        </div>
+      </div>
+    </div>
   );
 }
+//---------------------------------------------------------------------------------
+type Detalle  = {id: number, nombre:string, precio:number , cantidad: number };
+type FormPago = {id: number, nombre: string, monto: number, fecha: string};
 
 export default function NewViewVenta(){
   //data
   const [ load, setLoad ] = useState(false);
-  const { mode, producto, categorias, listasPrecios, resultado, mensaje, producto_id } = usePage().props as { 
-    mode?:          string | 'create' | 'edit';
-    producto?:      Producto;
-    categorias?:    {id: number, nombre:string }[];
-    listasPrecios?: { lista_precio_id: number; nombre: string; precio: number }[];
-    resultado?:     number;
-    mensaje?:       string;
-    producto_id?:   number;
+  const { mode, venta, detalles, cliente, formasPago } = usePage().props as { 
+    mode?:       string | 'create' | 'view';
+    venta?:      Venta | undefined;
+    detalles?:   Detalle[] | undefined;
+    cliente?:    Cliente | undefined;
+    formasPago?: FormPago[] | undefined;
   };
   breadcrumbs[0].title = (mode=='create'? 'Nueva' : 'Ver')+' venta';
   const [propsActuales, setPropsActuales] = useState<{
     resultado: number | undefined | null;
     mensaje: string | undefined | null | '';
-    producto_id: number | undefined | null;
-  }>({ resultado: undefined, mensaje: undefined, producto_id: undefined });
+    venta_id: number | undefined | null;
+  }>({ resultado: undefined, mensaje: undefined, venta_id: undefined });
 
-  const { data, setData, errors, processing } = useForm<Producto>(productoVacio);
-  const [categoriaHab, setCatHab]             = useState<Multiple[]>([]);
-  const [catSelected, setCatSelected]         = useState<Multiple[]>(categorias??[]);
-  //const [listasHab, setListasHab]           = useState<Multiple[]>([]);
-  const [listas , setListas]                  = useState<{
-    id: number|string;
-    nombre: string;
-    precio: number;
-  }[]>([]);
+  const { data, setData }                          = useForm<Venta>(ventaVacia);
+  const {data: dataCli, setData: setDataCli }      = useForm<Cliente>(cliente??clienteVacio);
+  const {data: dataFp, setData: setDataFp }        = useForm<FormPago>(formaPagoVacia);
+  const [productosHab, setProductosHab]            = useState<ProductoHab[]>([]);
+  const [productosDet, setProductosDet]            = useState<Detalle[]>(detalles??[]);
+  const [formasPagoHab, setFormasPagoHab]          = useState<Multiple[]>([]);
+  const [formasPagoSelected,setFormasPagoSelected] = useState<FormPago[]>(formasPago??[]);
 
-  const [confirmOpen, setConfirOpen] = useState(false); //modal para confirmar acciones para cuado se crea o edita
-  const [textConfir, setTextConfirm] = useState('');
+  const [confirmOpen, setConfirOpen]  = useState(false); //modal para confirmar acciones para cuado se crea
+  const [textConfirm, setTextConfirm] = useState('');
 
-  const [activo, setActivo] = useState(false);
+  const [activo, setActivo] = useState(false);  //ShowMessage
   const [title, setTitle]   = useState('');
   const [text, setText]     = useState('');
   const [color, setColor]   = useState('success');
 
   //funciones
-  const tieneListas = () => {
-    let i=0, n=listas.length; 
-    while(i<n && (listas[i].precio == 0)){
-      i++;
-    }
-    return (i<n);
-  };
 
   const handleSubmit = (e:React.FormEvent) => {
     e.preventDefault();
-    if(!data.producto_nombre){
+    if(productosDet.length <= 0){
       setTitle('Campo requerido!');
-      setText('Se requiere ingresar un nombre para el producto.');
+      setText('Es necesario agregar al menos un producto para la venta.');
       setColor('warning');
       setActivo(true);
       return 
     }
-    if(!data.precio || data.precio === 0){
+    if(!dataCli.nombre || !dataCli.dni || !dataCli.email || !dataCli.fecha_nacimiento || !dataCli.domicilio){
       setTitle('Campo requerido!');
-      setText('Se requiere ingresar un precio para el producto.');
+      setText('Se requiere rellenar todos los campos del cliente');
       setColor('warning');
       setActivo(true);
       return 
     }
-    if(catSelected.length === 0){
-      setTitle('Categoría requerida!');
-      setText('Se requiere seleccionar al menos una categoría.');
+    if(formasPagoSelected.length <= 0){
+      setTitle('Formas de Pago requeridas');
+      setText('Es necesario agregar al menos una forma de pago.!');
       setColor('warning');
       setActivo(true);
       return 
     }
-    if(!tieneListas()){
-      setTitle('Lista de precios requerida!');
-      setText('Se requiere asignar precio a almenos una lista de precios.');
-      setColor('warning');
-      setActivo(true);
-      return 
-    }
-    setTextConfirm("Estás seguro de "+(mode==='create'?'crear':'actualizar')+' este producto?');
+    /* que la cantidad de los elementos sea mayor que 0 */
+    /* Controlar que el total de ventas sea el total de las formas de pago */
+
+    setTextConfirm("Estás seguro de "+(mode==='create'?'grabar':'actualizar')+' esta venta?');
     setConfirOpen(true);
   };
   const grabarGuardar = () => {
     //reseteo el confirmar    
-    setConfirOpen(false);
+   /* setConfirOpen(false);
     setTextConfirm('');
     //muestro el cargando...
     setLoad(true);
@@ -241,7 +409,7 @@ export default function NewViewVenta(){
     }
     setTitle('');
     setText('');
-    setActivo(false);
+    setActivo(false);*/
   };
   
   const cancelar = () => {
@@ -250,62 +418,62 @@ export default function NewViewVenta(){
 
   //Effect
   useEffect(() => {
-    fetch('/listas_precios_habilitadas') //optengo los datos del formulario
-    .then(res => res.json())
-    .then(data => {
-      //setListasHab(data);
-      setListas(data.map((e:any) =>{
-          let elemento = listasPrecios?.find((l:any) => l.lista_precio_id === e.id );
-          return {
-            id:     e.id, 
-            nombre: e.nombre,  
-            precio: elemento?.precio ?? 0 
-          };
-        }
-      ));
-    });
-  }, []);
-  useEffect(() => {
-    fetch('/categorias_habilitadas') //optengo los datos del formulario
-    .then(res => res.json())
-    .then(data => {
-      setCatHab(ordenarPorTexto(data, 'nombre'));
-    });
-  }, []);
-  useEffect(() => {
-    const cambioDetectado = (resultado && resultado  !== propsActuales.resultado) || (mensaje && mensaje    !== propsActuales.mensaje) 
+    const cargarDatos = async () => {
+      try {
+        const [resProductos, resFp] = await Promise.all([
+          fetch(route('productos.productosHabilitados')),
+          fetch(route('formasPago.habilitadas'))
+        ]);
 
-    if (cambioDetectado) {
-      setPropsActuales({ resultado, mensaje, producto_id });
+        const productos = await resProductos.json();
+        const fps       = await resFp.json();
 
-      const esError = resultado === 0;
-      setTitle(esError ? 'Error' : mode === 'create' ? 'Producto nuevo' : 'Producto modificado');
-      setText(esError ? mensaje ?? 'Error inesperado' : `${mensaje} (ID: ${producto_id})`);
-      setColor(esError ? 'error' : 'success');
-      setActivo(true); 
-    }
-  }, [resultado, mensaje, producto_id]);
+        setProductosHab(ordenarPorTexto(productos,'nombre'));
+        setFormasPagoHab(ordenarPorTexto(fps,'nombre'));
+      } catch (error) {
+        console.error('Error al cargar datos:', error);
+      }
+    };
+
+    cargarDatos();
+  }, []);
+
   useEffect(() => {
-    if(producto && mode === 'edit'){
-      console.log("producto: ", producto)
+    if(venta && mode === 'view'){
+      //console.log("producto: ", producto)
       setData({
-        producto_id:         producto.producto_id,
-        producto_nombre:     producto.producto_nombre,
-        descripcion:         producto.descripcion,
-        categoria_id:        '',
-        categoria_nombre:    '',
-        lista_precio_id:     '',
-        lista_precio_nombre: '', 
-        precio:              producto.precio,
-        inhabilitado:        producto.inhabilitado,
+        venta_id:         venta?.venta_id,
+        fecha_grabacion:  venta.fecha_grabacion?? (new Date()).toLocaleDateString(),
+        fecha_desde:      '',
+        fecha_hasta:      '',
+        cliente_id:       venta.cliente_id,
+        cliente_nombre:   '',
+        fecha_anulacion:  venta.fecha_anulacion,
+        total:            venta.total,
+        anulada:          venta.anulada,
       });
+      
+      setDataCli({
+        cliente_id:       cliente?.cliente_id,
+        nombre:           cliente?.nombre,
+        fecha_nacimiento: cliente?.fecha_nacimiento,
+        domicilio:        cliente?.domicilio,
+        email:            cliente?.email,
+        dni:              cliente?.dni,
+        inhabilitado:     cliente?.inhabilitado,
+      });
+      
+    }else{
+      setData(ventaVacia);
+      setDataCli(clienteVacio);
     }
+    setProductosDet(JSON.parse(JSON.stringify(detalles??[])));
+    setFormasPagoSelected(JSON.parse(JSON.stringify(formasPago??[])));
   }, []);
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title={(mode=='create'? 'Nueva' : 'Ver')+' venta'} />
-      <div>hola mundo</div>
-      {/*<div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
+      <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
         <div className="relative flex-none flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
           <form 
             className='grid grid-cols-12 gap-1'
@@ -315,33 +483,35 @@ export default function NewViewVenta(){
                 Detalles de la venta
                 <hr />
               </div>
-              <DetallesProducto 
+              <DetallesVenta
                 modo={mode??'create'}
                 data={data}
-                set={setData}/>
-            </div>
-            <div className='px-4 pb-1 col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>
-              <div className='py-4'>
-                Categorías
-                <hr />
-              </div>
-              <SelectMultiple
-                opciones={categoriaHab}
-                seleccionados={catSelected}
-                setSeleccionados={setCatSelected}
+                set={setData}
+                productosHab={productosHab}
+                productos={productosDet} //trabajo con una copia de los detalles
+                setProd={setProductosDet}
               />
             </div>
-            <div className='px-4 pb-1 col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>
-              <div className='py-4'>
-                Listas de precios
+            <div className='pb-1 col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>
+              <div className='py-4 px-4'>
+                Datos del cliente
                 <hr />
               </div>
-              <div className='max-h-[300px] overflow-y-auto border rounded'>
-                <TablaListas
-                  listado={listas}
-                  setListado={setListas}
-                />
+              <DatosCliente 
+                modo={mode??'create'}
+                data={dataCli}
+                set={setDataCli}/>
+            </div>
+            <div className='px-4 pb-1 col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>
+              <div className='py-4'>
+                Formas de pago
+                <hr />
               </div>
+              <FormasPagosForm
+                formasPagoHab={formasPagoHab}
+                formasPagoSelected={formasPagoSelected}
+                setFormaPagoSelected={setFormasPagoSelected}
+              />
             </div>
             <div  className='flex justify-end px-4 pb-4 col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>
               <Button type="button" onClick={handleSubmit}>
@@ -352,10 +522,10 @@ export default function NewViewVenta(){
             </div>
           </form>
         </div>
-      </div>*/}
+      </div>
       <ModalConfirmar
         open={confirmOpen}
-        text={textConfir}
+        text={textConfirm}
         onSubmit={grabarGuardar}
         onCancel={cancelar}
       />
@@ -366,9 +536,9 @@ export default function NewViewVenta(){
         color={color}
         onClose={() => {
             setActivo(false);
-            if (resultado === 1 && producto_id){
-              router.get(route('productos.edit', { producto: producto_id }));
-            }
+            /*if (resultado === 1 && venta_id){
+              router.get(route('ventas.view', { venta: venta_id }));
+            }*/
           }
         }
       />

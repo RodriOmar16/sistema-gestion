@@ -147,6 +147,7 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
 
     //Clientes
     Route::get('/clientes_habilitados', [ClienteController::class, 'clientesHabilitados'])->name('clientes.habilitados');
+    Route::get('/clientes_habilitados-ventas', [ClienteController::class, 'clientesPorDni'])->name('clientes.porDni');
     Route::get('/clientes', [ClienteController::class, 'index'])->name('clientes.index');
     Route::post('/cliente/nuevo', [ClienteController::class, 'store'])->name('clientes.store');
     Route::put('/cliente/update/{cliente}', [ClienteController::class, 'update'])->name('clientes.update');
@@ -158,7 +159,7 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
     Route::get('/ventas', [VentaController::class, 'index'])->name('ventas.index');
     Route::get('/nueva-venta', [VentaController::class, 'create'])->name('ventas.create');
     Route::post('/ventas/venta-nueva', [VentaController::class, 'store'])->name('ventas.store');
-    Route::get('venta/ver/{venta}', [VentaController::class, 'edit'])->name('ventas.edit');
+    Route::get('venta/ver/{venta}', [VentaController::class, 'view'])->name('ventas.view');
     Route::put('/ventas/update/{venta}', [VentaController::class, 'update'])->name('ventas.update');
     Route::put('/ventas/anular/{venta}', [VentaController::class, 'destroy'])->name('ventas.destroy');
 

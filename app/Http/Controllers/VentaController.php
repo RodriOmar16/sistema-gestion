@@ -62,6 +62,13 @@ class VentaController extends Controller
 
   public function store(Request $request)
   {
+    //cargar el encabezado
+    //si el cliente no existe crearlo
+    //cargar los detalles de la venta
+    //registrar el movimiento de stock para cada detalle, update en el stock también
+    //registrar los métodos de pago
+
+
     /*$validated = $request->validate([
       'cliente_id' => 'required|exists:clientes,cliente_id',
       'fecha_grabacion' => 'required|date',
@@ -81,6 +88,10 @@ class VentaController extends Controller
 
     $venta->update($validated);
     return $venta;*/
+  }
+
+  public function view(){
+    
   }
 
   public function destroy(Venta $venta, Request $request)

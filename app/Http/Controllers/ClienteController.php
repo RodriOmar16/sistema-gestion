@@ -13,10 +13,15 @@ class ClienteController extends Controller
     $clientes = Cliente::where('inhabilitado', false)->get()->map(function($c){
       return [
         'id'     => $c->cliente_id,
-        'nombre' => $c->nombre
+        'nombre' => $c->nombre,
       ];
     });
     return response()->json($clientes);
+  }
+
+  public function clientesPorDni(Request $request){
+    $cliente = Cliente::where('inhabilitado', false)->where('dni',$request->dni)->get();
+    return response()->json($cliente);
   }
 
   public function index(Request $request)

@@ -88,23 +88,23 @@ export function FiltrosForm({ clientes, data, set }: propsForm){
         </div>
         <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3'>
           <label htmlFor="cliente">Cliente</label>
-            <Select
-              value={String(data.cliente_id)}
-              onValueChange={(value) => set({...data, cliente_id: Number(value)}) }
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  {clientes.map((e: any) => (
-                    <SelectItem key={e.id} value={String(e.id)}>
-                      {e.nombre}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
+          <Select
+            value={String(data.cliente_id)}
+            onValueChange={(value) => set({...data, cliente_id: Number(value)}) }
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                {clientes.map((e: any) => (
+                  <SelectItem key={e.id} value={String(e.id)}>
+                    {e.nombre}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
         </div>
         <div className="col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3">
           <label htmlFor="fechaAnulacion">Anulación</label>

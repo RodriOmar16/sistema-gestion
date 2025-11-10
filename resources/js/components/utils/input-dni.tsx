@@ -5,11 +5,13 @@ interface Props {
   data: string;
   placeholder?: string;
   setData: (data: string) => void;
+  disabled?: boolean
 }
 
-export default function InputDni({ data, setData, placeholder }: Props) {
+export default function InputDni({ data, setData, placeholder, disabled=false }: Props) {
   return (
     <Input
+      disabled={disabled}
       className="text-right"
       value={formatearNro(data)}
       onChange={(e) => {

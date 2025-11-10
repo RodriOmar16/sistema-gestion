@@ -20,7 +20,8 @@ class ProductoController extends Controller
     $productos = Producto::where('inhabilitado',false)->get()->map(function($prod){
       return [
         'id' => $prod->producto_id,
-        'nombre' => $prod->nombre
+        'nombre' => $prod->nombre,
+        'precio' => $prod->precio,
       ];
     });
     return response()->json($productos);

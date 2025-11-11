@@ -8,25 +8,21 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {  Table,  TableBody,  TableCell,  TableHead,  TableHeader,  TableRow } from "@/components/ui/table"
 import { Venta } from "@/types/typeCrud"
-import { convertirFechaGuionesBarras, convertirNumberPlata, redondear } from "@/utils"
+import { convertirFechaGuionesBarras, convertirNumberPlata } from "@/utils"
 import { Badge } from "../ui/badge"
 
-type Detalle  = {id: number, nombre:string, precio: number, cantidad: number };
+type FormPago = {id: number, nombre: string, monto: number, fecha: string};
 
 interface Props {
-  datos: Detalle[];
-  setDatos: (e:any) => void;
-  setTotal: (total:number) => void;
+  datos: FormPago[];
   quitar: (id:number) => void;
 }
 
 //export const columns: ColumnDef<Project>[] = [
 export function getColumns(  
-  sumar: (d: Detalle) => void,
-  restar: (d: Detalle) => void,
-  cambiarCantidad: (id: number, valor: string) => void,
   quitar: (id:number) => void
-): ColumnDef<Detalle>[] {
+): ColumnDef<FormPago>[] {
+
   return [
     {
       accessorKey: "id",
@@ -56,82 +52,19 @@ export function getColumns(
       cell: ({ row }) => ( <div className="">{row.getValue("nombre")}</div> ),
     },
     {
-      accessorKey: "precio",
+      accessorKey: "monto",
       header: ({column}) => {
         return (
           <div className="flex">
-            Precio
+            Monto
           </div>
         )
       }
       ,
-      cell: ({ row }) => ( <div className="">{ convertirNumberPlata( row.getValue("precio"))}</div> ),
+      cell: ({ row }) => ( <div className="">{ convertirNumberPlata( row.getValue("monto"))}</div> ),
     },
     {
-      accessorKey: "cantidad",
-      header: ({column}) => {
-        return (
-          <div className="flex">
-            Cantidad
-          </div>
-        )
-      } ,
-      cell: ({ row }) => {
-        const fila = row.original;
-        const cant = fila.cantidad;
-        /*( 
-        <div className="">{row.getValue("cliente_nombre")}</div> )*/
-        return (
-          <>
-            <div className="flex justify-">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={()=>restar(fila)}
-                disabled={cant == 1}
-              >
-                <Minus size={20}/>
-              </Button>
-              <Input
-                className="mx-2 w-30 text-center"
-                value={cant}
-                onChange={(e) => cambiarCantidad(fila.id, e.target.value)}
-                inputMode="numeric"
-              />
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={()=>sumar(fila)}
-              >
-                <Plus size={20}/>
-              </Button>
-            </div>
-          </>
-        );
-      },
-    },
-    {
-      accessorKey: "SubTotal",
-      header: ({column}) => {
-        return (
-          <div className="flex">
-            Sub total
-          </div>
-        )
-      }
-      ,
-      cell: ({ row }) => {
-        //( <div className="">{ convertirNumberPlata( row.getValue("precio"))}</div> )
-        const det = row.original;
-        const subtotal = det.cantidad * det.precio; 
-        
-        return (
-          <div className="">{ convertirNumberPlata(subtotal.toString())}</div>
-        );
-      },
-    },    
-    {
-      accessorKey: "acciones",
+      accessorKey: "Acciones",
       header: ({column}) => {
         return (
           <div className="flex">
@@ -156,17 +89,17 @@ export function getColumns(
           </div>
         );
       },
-    },
+    }
   ]
+//]
 }
-export default function TableDetalles({datos, setDatos, setTotal, quitar/*, openEdit*/}:Props) {
+export default function TableFormasPago({datos, quitar}:Props) {
   const [sorting, setSorting]                   = useState<SortingState>([])
   const [columnFilters, setColumnFilters]       = useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [rowSelection, setRowSelection]         = useState({});
   //const [detalles, setDetalles]                 = useState<Detalle[]>(datos);
   const [busqueda, setBusqueda]                 = useState('');
-  const [totalTable, setTotalTable]             = useState(0);
   
   const data = useMemo(() => {
     const texto = busqueda.toLowerCase();
@@ -178,47 +111,7 @@ export default function TableDetalles({datos, setDatos, setTotal, quitar/*, open
       : datos;
   }, [busqueda, datos]);
 
-  useEffect(() => { //calcula el total
-    const t = datos.reduce((acc, det) => acc + det.precio * det.cantidad, 0);
-    setTotalTable(t);
-    setTotal(t);
-  }, [datos]);
-
-  /*useEffect(() => { //permite renderizar los elementos agregados
-    setDetalles(datos);
-  }, [datos]);*/
-
-
-  //functions
-  const sumar = (det: Detalle) => {
-    setDatos((prev:any) =>
-      prev.map((d:any) =>
-        d.id === det.id ? { ...d, cantidad: d.cantidad + 1 } : d
-      )
-    );
-  };
-
-  const restar = (det: Detalle) => {
-    setDatos((prev:any) =>
-      prev.map((d:any) =>
-        d.id === det.id && d.cantidad > 0
-          ? { ...d, cantidad: d.cantidad - 1 }
-          : d
-      )
-    );
-  };
-
-  const cambiarCantidad = (id: number, valor: string) => {
-    const cantidad = parseInt(valor.replace(/\D/g, '')) || 0;
-    setDatos((prev:any) =>
-      prev.map((d:any) =>
-        d.id === id ? { ...d, cantidad } : d
-      )
-    );
-  };
-
-
-  const columns = getColumns(sumar, restar, cambiarCantidad, quitar); 
+  const columns = getColumns(quitar); 
 
   const table = useReactTable({
     data,
@@ -241,16 +134,6 @@ export default function TableDetalles({datos, setDatos, setTotal, quitar/*, open
 
   return (
     <div className="w-full">
-      {/*<div className=" grid grid-cols-12 gap-4  py-2">
-        <div className="col-span-9 sm:col-span-10 md:col-span-10 lg:col-span-10 flex justify-end  items-center">
-          <Input
-            placeholder="Filtrar"
-            value={busqueda}
-            onChange={(e) => setBusqueda(e.target.value)}
-            className="max-w-sm"
-          />
-        </div>
-      </div>*/}
       <div className="overflow-hidden rounded-md border">
         <Table>
           <TableHeader>
@@ -292,22 +175,12 @@ export default function TableDetalles({datos, setDatos, setTotal, quitar/*, open
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
-                  className="h-18 text-center"
+                  className="h-24 text-center"
                 >
-                  No se agregó ningún producto.
+                  No se agregó ninguna forma de pago.
                 </TableCell>
               </TableRow>
             )}
-            <TableRow>
-              <TableCell colSpan={columns.length - 2}
-                  className={`${totalTable===0? '' : 'text-lg'} text-right font-bold`}>
-                Total:
-              </TableCell>
-              <TableCell
-                  className={`${totalTable===0? '' : 'text-lg'} text-left font-bold`}>
-                ${redondear(totalTable,2)}
-              </TableCell>
-            </TableRow>
           </TableBody>
         </Table>
       </div>

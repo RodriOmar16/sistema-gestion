@@ -10,7 +10,8 @@ use App\Models\Venta;
 class DetVenta extends Model
 {
     protected $primaryKey = 'det_venta_id';
-    protected $fillable = ['venta_id', 'producto_id', 'cantidad', 'descuento', 'subtotal'];
+    protected $table      = 'det_ventas';
+    protected $fillable   = ['venta_id', 'producto_id', 'cantidad', 'descuento', 'subtotal'];
 
     public function venta()
     {

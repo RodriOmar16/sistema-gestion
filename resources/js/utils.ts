@@ -69,3 +69,13 @@ export function formatearNroCompleto(nro: string): string {
 
   return cad.split('').reverse().join(''); 
 }
+
+export function redondear(nro:number, precision:number){
+  const redondeado = new Intl.NumberFormat('es-AR', {
+    style: 'decimal',
+    minimumFractionDigits: precision,
+    maximumFractionDigits: precision
+  }).format(nro); // "123,46"
+  return redondeado;
+} 
+

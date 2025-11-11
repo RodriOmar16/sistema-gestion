@@ -14,7 +14,8 @@ use App\Models\VentaAnulada;
 class Venta extends Model
 {
     protected $primaryKey = 'venta_id';
-    protected $fillable = ['fecha_grabacion', 'cliente_id', 'fecha_anulacion', 'anulada', 'total'];
+    protected $table      = 'ventas';
+    protected $fillable   = ['fecha_grabacion', 'cliente_id', 'fecha_anulacion', 'anulada', 'total'];
 
     //Cliente
     public function cliente()

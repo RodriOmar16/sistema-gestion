@@ -9,7 +9,8 @@ use App\Models\Venta;
 class VentaAnulada extends Model
 {
     protected $primaryKey = 'venta_anulada_id';
-    protected $fillable = ['venta_id', 'fecha_anulacion', 'motivo'];
+    protected $table      = 'ventas_anuladas';
+    protected $fillable   = ['venta_id', 'fecha_anulacion', 'motivo'];
 
     public function venta()
     {

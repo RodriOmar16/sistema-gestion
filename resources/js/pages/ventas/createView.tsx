@@ -13,7 +13,7 @@ import {  Table,  TableBody,  TableCaption,  TableCell,  TableHead,  TableHeader
 import { Select,  SelectContent,  SelectGroup,  SelectItem,  SelectLabel,  SelectTrigger,  SelectValue } from "@/components/ui/select"
 import SelectMultiple from '@/components/utils/select-multiple';
 import { Multiple } from '@/types/typeCrud';
-import { convertirNumberPlata, ordenarPorTexto } from '@/utils';
+import { convertirFechaBarrasGuiones, convertirFechaGuionesBarras, convertirNumberPlata, ordenarPorTexto, redondear } from '@/utils';
 import ShowMessage from '@/components/utils/showMessage';
 import ModalConfirmar from '@/components/modalConfirmar';
 import { route } from 'ziggy-js';
@@ -21,6 +21,7 @@ import { DatePicker } from '@/components/utils/date-picker';
 import TableDetalles from '@/components/ventas/tableDetalles';
 import Autocomplete from '@/components/utils/autocomplete';
 import InputDni from '@/components/utils/input-dni';
+import TableFormasPago from '@/components/ventas/tableFormasPago';
 
 const breadcrumbs: BreadcrumbItem[] = [ { title: '', href: '', } ];
 const ventaVacia = {
@@ -49,8 +50,9 @@ const formaPagoVacia = {
   monto: 0, 
   fecha: (new Date()).toLocaleDateString()
 }
-
-
+type Detalle  = {id: number, nombre:string, precio:number , cantidad: number };
+type FormPago = {id: number, nombre: string, monto: number, fecha: string};
+//-----------------------------------------------------------------------------------
 type ProductoHab = {
   id: number; 
   nombre: string, 
@@ -74,10 +76,10 @@ export function DetallesVenta({modo, data, set, productosHab, productos,setProd}
   };
 
   const agregarProducto = () => {
-    if(productoId===0){
+    if(productoId===0){ //si no seleccionas nada 
       return;
     }
-    if(productos.length == 0){
+    if(productos.length == 0){ //si la lista está vacía
       setProd((prev:any) => [...prev, {
         id: productoId, 
         nombre: productosHab.find(e => e.id === productoId)?.nombre, 
@@ -87,15 +89,17 @@ export function DetallesVenta({modo, data, set, productosHab, productos,setProd}
       setProdId(0);
       return 
     }
-
+    //si ya existe al menos 1
     const obj = productos.find(e => e.id === productoId)
     if(obj){
+      //si está agregado le sumo la cantidad
       setProd((prev:any) =>
         prev.map((d:any) =>
           d.id === productoId ? { ...d, cantidad: d.cantidad + 1 } : d
         )
       );
     } else {
+      //si no está, lo agrego con cantidad 1
       const producto = productosHab.find(e => e.id === productoId);
       if (producto) {
         setProd((prev:any) => [
@@ -110,6 +114,11 @@ export function DetallesVenta({modo, data, set, productosHab, productos,setProd}
       }
     }
     setProdId(0);
+  };
+
+  const quitarProducto = (id:number) => {
+    const aux = productos.filter(e => e.id !== id);
+    setProd(aux);
   };
 
   return (
@@ -136,7 +145,7 @@ export function DetallesVenta({modo, data, set, productosHab, productos,setProd}
         }
         <div className='col-span-12 grid grid-cols-12 gap-4'>
           <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3'>
-            <label htmlFor="cliente">Productos</label>
+            <label htmlFor="cliente">Productos en Stock</label>
               <Select
                 value={String(productoId)}
                 onValueChange={(value) => setProdId(Number(value))}
@@ -163,10 +172,15 @@ export function DetallesVenta({modo, data, set, productosHab, productos,setProd}
         </div>
       </div>
       <div className='pt-3'>
-        <TableDetalles datos={productos} setTotal={controlarTotal} />
-        <div className="text-right font-bold text-lg mt-4">
+        <TableDetalles 
+          datos={productos} 
+          setDatos={(e:any)=> setProd(e)} 
+          setTotal={controlarTotal} 
+          quitar={quitarProducto}
+        />
+        {/*<div className="text-right font-bold text-lg mb-1">
           Total: {convertirNumberPlata(totalAux.toString())}
-        </div>
+        </div>*/}
       </div>
     </div>
   );
@@ -193,7 +207,7 @@ export function DatosCliente({modo, data, set}:PropsCli){
     
     if(cli && cli.length > 0){
       setBloquear(true);
-      set(cli[0]);
+      set({...cli[0], fecha_nacimiento: convertirFechaGuionesBarras(cli[0].fecha_nacimiento)});
     }else {
       setBloquear(false);
       set(clienteVacio);
@@ -246,22 +260,46 @@ export function DatosCliente({modo, data, set}:PropsCli){
 }
 //-------------------------------------------------------------------------------
 interface PropsFp{
-  formasPagoHab: Multiple[],
-  formasPagoSelected:    FormPago[],
-  setFormaPagoSelected: (array:any[]) => void
+  formasPagoHab:         Multiple[];
+  formasPagoSelected:    FormPago[];
+  setFormaPagoSelected:  (array:any[]) => void;
+  totalVenta:            number;
+  totalFp:               number;
+  setTotalFp:            (e:number) => void;   
 }
-export function FormasPagosForm({formasPagoHab, formasPagoSelected, setFormaPagoSelected}:PropsFp){
-  const [fpId, setFpId] = useState(0);
-  const [monto, setMonto] = useState(0);
+export function FormasPagosForm({formasPagoHab, formasPagoSelected, setFormaPagoSelected, totalVenta, totalFp, setTotalFp}:PropsFp){
+  const [fpId, setFpId]       = useState(0);
+  const [monto, setMonto]     = useState(0);
+  
+
   const agregaFp = () => {
     if(!fpId || !monto){
       return
     }
     //agregar
-    console.log("agregar: ", fpId, monto)    
+    setFormaPagoSelected([
+      ...formasPagoSelected,
+      {
+        id: fpId, 
+        nombre: formasPagoHab.find(e=>e.id===fpId)?.nombre, 
+        monto: monto, 
+        fecha: (new Date()).toLocaleDateString(),
+      }
+    ]); 
+    
     setFpId(0);
     setMonto(0);
   };
+
+  const quitarFp = (id:number) => {
+    //quitar aqui y en los detalles del producto
+    const aux:FormPago[] = formasPagoSelected.filter(e => e.id !== id);
+    setFormaPagoSelected(aux);
+  }
+
+  useEffect(() => { //calcula el total
+    setTotalFp(formasPagoSelected.reduce((acc, fp) => acc + fp.monto, 0));
+  }, [formasPagoSelected]);
 
   return(
     <div className='px-4'>
@@ -291,30 +329,48 @@ export function FormasPagosForm({formasPagoHab, formasPagoSelected, setFormaPago
           <Input className='text-right' type='number' value={monto} onChange={(e)=> setMonto(Number(e.target.value))}/>	
         </div>
         <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3 flex items-center'>
-          <Button type="button" onClick={agregaFp}>
+          <Button type="button" onClick={agregaFp} disabled={totalVenta==0}>
             <Plus size={20}/> Agregar         
           </Button>
         </div>
-        <div className="col-span-12 ">
-          {/* crear el datable table de las formas de pago aquí */}
+        <div className="col-span-12">
+          <TableFormasPago datos={formasPagoSelected} quitar={quitarFp}/>
+        </div>
+        <div className="col-span-12 flex justify-end mb-2">
+          <div className="p-2 rounded border">
+            <span className="text-sm text-muted-foreground">Total</span><br />
+            <span className="font-bold text-lg">${redondear(totalVenta, 2)}</span>
+          </div>
+          <div className="mx-4 p-2 rounded border border-blue-300 text-blue-700">
+            <span className="text-sm text-muted-foreground">Acumulado</span><br />
+            <span className="font-bold text-lg text-primary">$ {redondear(totalFp, 2)}</span>
+          </div>
+          <div className={`p-2 rounded border ${
+              parseFloat(redondear(totalVenta - totalFp, 2)) > 0
+                ? 'bg-red-100 text-red-700 border-red-300'
+                : 'bg-green-100 text-green-700 border-green-300'
+            }`}>
+            <span className="text-sm">Pendiente</span><br />
+            <span className="font-bold text-lg">$ {redondear(totalVenta - totalFp, 2)}</span>
+          </div>
         </div>
       </div>
     </div>
   );
 }
 //---------------------------------------------------------------------------------
-type Detalle  = {id: number, nombre:string, precio:number , cantidad: number };
-type FormPago = {id: number, nombre: string, monto: number, fecha: string};
 
 export default function NewViewVenta(){
   //data
-  const [ load, setLoad ] = useState(false);
-  const { mode, venta, detalles, cliente, formasPago } = usePage().props as { 
+  const { mode, venta, detalles, cliente, formasPago, resultado, mensaje, venta_id } = usePage().props as { 
     mode?:       string | 'create' | 'view';
     venta?:      Venta | undefined;
     detalles?:   Detalle[] | undefined;
     cliente?:    Cliente | undefined;
     formasPago?: FormPago[] | undefined;
+    resultado?:  number;
+    mensaje?:    string;
+    venta_id?:   number;
   };
   breadcrumbs[0].title = (mode=='create'? 'Nueva' : 'Ver')+' venta';
   const [propsActuales, setPropsActuales] = useState<{
@@ -323,9 +379,11 @@ export default function NewViewVenta(){
     venta_id: number | undefined | null;
   }>({ resultado: undefined, mensaje: undefined, venta_id: undefined });
 
+  const [ load, setLoad ] = useState(false);
   const { data, setData }                          = useForm<Venta>(ventaVacia);
   const {data: dataCli, setData: setDataCli }      = useForm<Cliente>(cliente??clienteVacio);
-  const {data: dataFp, setData: setDataFp }        = useForm<FormPago>(formaPagoVacia);
+  //const {data: dataFp, setData: setDataFp }        = useForm<FormPago>(formaPagoVacia);
+  const [totalFp, setTotalFp] = useState(0);
   const [productosHab, setProductosHab]            = useState<ProductoHab[]>([]);
   const [productosDet, setProductosDet]            = useState<Detalle[]>(detalles??[]);
   const [formasPagoHab, setFormasPagoHab]          = useState<Multiple[]>([]);
@@ -348,6 +406,7 @@ export default function NewViewVenta(){
       setText('Es necesario agregar al menos un producto para la venta.');
       setColor('warning');
       setActivo(true);
+    
       return 
     }
     if(!dataCli.nombre || !dataCli.dni || !dataCli.email || !dataCli.fecha_nacimiento || !dataCli.domicilio){
@@ -364,28 +423,39 @@ export default function NewViewVenta(){
       setActivo(true);
       return 
     }
-    /* que la cantidad de los elementos sea mayor que 0 */
-    /* Controlar que el total de ventas sea el total de las formas de pago */
-
+    if(parseFloat(redondear(data.total - totalFp,2)) > 0){
+      setTitle('Pagos pendientes');
+      setText('Es necesario completar los pagos para avanzar!');
+      setColor('warning');
+      setActivo(true);
+      return
+    }
+    //pregunto
     setTextConfirm("Estás seguro de "+(mode==='create'?'grabar':'actualizar')+' esta venta?');
     setConfirOpen(true);
+    //les doy a las fechas el formato que requiere la base
+    setDataCli({...dataCli, fecha_nacimiento: convertirFechaBarrasGuiones(dataCli.fecha_nacimiento)});
+    const aux = formasPagoSelected.map(e => ({...e, fecha:convertirFechaBarrasGuiones(e.fecha)}));
+    setFormasPagoSelected(aux);
   };
   const grabarGuardar = () => {
-    //reseteo el confirmar    
-   /* setConfirOpen(false);
-    setTextConfirm('');
-    //muestro el cargando...
-    setLoad(true);
-    console.log("procedo a guardar o grabar");
     const payload = {
-      ...data,
-      categorias: catSelected,
-      listas: listas
-    };
+      ...dataCli,
+      venta_id:        '',
+      fecha_grabacion: convertirFechaBarrasGuiones(data.fecha_grabacion),
+      venta_cliente_id:dataCli.cliente_id,
+      fecha_anulacion: '',
+      total:           data.total,
+      anulada:         false,
+      detalles:        productosDet,
+      formasPagos:     formasPagoSelected
+    } 
     console.log("payload: ", payload)
-    if (mode === 'create') {
-      router.post(
-        route('productos.store'),payload,
+    if(mode === 'create'){
+      setConfirOpen(false);
+      setTextConfirm('');
+      setLoad(true);
+      router.post(route('ventas.store'),payload,
         {
           preserveScroll: true,
           preserveState: true,
@@ -394,22 +464,10 @@ export default function NewViewVenta(){
           }
         }
       );
-    } else {
-      router.put(
-        route('productos.update',{producto: data.producto_id}),
-        payload,
-        {
-          preserveScroll: true,
-          preserveState: true,
-          onFinish: () => {
-            setLoad(false);
-          }
-        }
-      );
-    }
-    setTitle('');
-    setText('');
-    setActivo(false);*/
+      /*setTitle('');
+      setText('');
+      setActivo(false);*/
+    } 
   };
   
   const cancelar = () => {
@@ -421,7 +479,7 @@ export default function NewViewVenta(){
     const cargarDatos = async () => {
       try {
         const [resProductos, resFp] = await Promise.all([
-          fetch(route('productos.productosHabilitados')),
+          fetch(route('stock.disponible')),
           fetch(route('formasPago.habilitadas'))
         ]);
 
@@ -437,10 +495,22 @@ export default function NewViewVenta(){
 
     cargarDatos();
   }, []);
+  useEffect(() => {
+		const cambioDetectado = (resultado && resultado  !== propsActuales.resultado) || (mensaje && mensaje    !== propsActuales.mensaje) 
+
+		if (cambioDetectado) {
+      setPropsActuales({ resultado, mensaje, venta_id});
+
+      const esError = resultado === 0;
+      setTitle(esError ? 'Error' : mode === 'create' ? 'Venta nueva' : '');
+      setText(esError ? mensaje ?? 'Error inesperado' : `${mensaje} (ID: ${venta_id})`);
+      setColor(esError ? 'error' : 'success');
+      setActivo(true); 
+    }
+	}, [resultado, mensaje, venta_id]);
 
   useEffect(() => {
     if(venta && mode === 'view'){
-      //console.log("producto: ", producto)
       setData({
         venta_id:         venta?.venta_id,
         fecha_grabacion:  venta.fecha_grabacion?? (new Date()).toLocaleDateString(),
@@ -492,7 +562,7 @@ export default function NewViewVenta(){
                 setProd={setProductosDet}
               />
             </div>
-            <div className='pb-1 col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>
+            <div className='pb-4 col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>
               <div className='py-4 px-4'>
                 Datos del cliente
                 <hr />
@@ -502,8 +572,8 @@ export default function NewViewVenta(){
                 data={dataCli}
                 set={setDataCli}/>
             </div>
-            <div className='px-4 pb-1 col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>
-              <div className='py-4'>
+            <div className='pb-1 col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>
+              <div className='py-4 px-4'>
                 Formas de pago
                 <hr />
               </div>
@@ -511,6 +581,9 @@ export default function NewViewVenta(){
                 formasPagoHab={formasPagoHab}
                 formasPagoSelected={formasPagoSelected}
                 setFormaPagoSelected={setFormasPagoSelected}
+                totalVenta={data.total}
+                totalFp={totalFp}
+                setTotalFp={(x) => setTotalFp(x)}
               />
             </div>
             <div  className='flex justify-end px-4 pb-4 col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>
@@ -536,9 +609,9 @@ export default function NewViewVenta(){
         color={color}
         onClose={() => {
             setActivo(false);
-            /*if (resultado === 1 && venta_id){
+            if (resultado === 1 && venta_id){
               router.get(route('ventas.view', { venta: venta_id }));
-            }*/
+            }
           }
         }
       />

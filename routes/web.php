@@ -101,7 +101,7 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
     Route::put('/proveedores/{proveedor}/estado', [ProveedorController::class, 'toggleEstado'])->name('proveedores.toggleEstado');
 
     //Listas de Precios
-    Route::get('/listas_precios_habilitadas', [ListaPrecioController::class, 'listasPreciosHabilitadas'])->name('listasPrecios.listasPreciosHabilitadas');
+    Route::get('/listas_precios_habilitadas', [ListaPrecioController::class, 'listasPreciosHabilitadas'])->name('listasPrecios.habilitadas');
     Route::get('/listas-precios', [ListaPrecioController::class, 'index'])->name('listasPrecios.index');
     Route::post('/listas-precios', [ListaPrecioController::class, 'store'])->name('listasPrecios.store');
     Route::put('/listas-precios/{lista}', [ListaPrecioController::class, 'update'])->name('listasPrecios.update');
@@ -119,6 +119,7 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
     Route::put('/producto/cambio-estado/{producto}', [ProductoController::class, 'toggleEstado'])->name('productos.toggleEstado');
 
     //Stock
+    Route::get('/sotck-disponible', [StockController::class, 'stockDisponible'])->name('stock.disponible');;
     Route::get('/stock/excel', [StockController::class, 'exportarExcelManual'])->name('stock.excel');
     Route::get('/stock/pdf', [StockController::class, 'generarPDF'])->name('stock.pdf');
     Route::get('/stock', [StockController::class, 'index'])->name('stock.index');
@@ -158,7 +159,7 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
     Route::get('/ventas/pdf', [VentaController::class, 'generarPDF'])->name('ventas.pdf');
     Route::get('/ventas', [VentaController::class, 'index'])->name('ventas.index');
     Route::get('/nueva-venta', [VentaController::class, 'create'])->name('ventas.create');
-    Route::post('/ventas/venta-nueva', [VentaController::class, 'store'])->name('ventas.store');
+    Route::post('/ventas/grabar', [VentaController::class, 'store'])->name('ventas.store');
     Route::get('venta/ver/{venta}', [VentaController::class, 'view'])->name('ventas.view');
     Route::put('/ventas/update/{venta}', [VentaController::class, 'update'])->name('ventas.update');
     Route::put('/ventas/anular/{venta}', [VentaController::class, 'destroy'])->name('ventas.destroy');

@@ -250,28 +250,32 @@ export default function NewEditProductos(){
 
   //Effect
   useEffect(() => {
-    fetch('/listas_precios_habilitadas') //optengo los datos del formulario
-    .then(res => res.json())
-    .then(data => {
-      //setListasHab(data);
-      setListas(data.map((e:any) =>{
-          let elemento = listasPrecios?.find((l:any) => l.lista_precio_id === e.id );
-          return {
-            id:     e.id, 
-            nombre: e.nombre,  
-            precio: elemento?.precio ?? 0 
-          };
-        }
-      ));
-    });
-  }, []);
-  useEffect(() => {
-    fetch('/categorias_habilitadas') //optengo los datos del formulario
-    .then(res => res.json())
-    .then(data => {
-      setCatHab(ordenarPorTexto(data, 'nombre'));
-    });
-  }, []);
+    const cargarDatos = async() => {
+      try {
+        const [resCategorias, resListas] = await Promise.all([
+          fetch(route('categorias.habilitadas')),
+          fetch(route('listasPrecios.habilitadas')),
+        ]);
+        const categorias = await resCategorias.json();
+        const listas     = await resListas.json();
+
+        setCatHab(ordenarPorTexto(categorias, 'nombre'));
+        setListas(listas.map((e:any) =>{
+            let elemento = listasPrecios?.find((l:any) => l.lista_precio_id === e.id );
+            return {
+              id:     e.id, 
+              nombre: e.nombre,  
+              precio: elemento?.precio ?? 0 
+            };
+          }
+        ));
+      } catch (error) {
+        console.error("Error al cargar los datos: ", error);
+      }
+    };
+    cargarDatos();
+  },[]);
+
   useEffect(() => {
 		const cambioDetectado = (resultado && resultado  !== propsActuales.resultado) || (mensaje && mensaje    !== propsActuales.mensaje) 
 

@@ -15,6 +15,25 @@ use App\Http\Requests\UpdateStockRequest;
 
 class StockController extends Controller
 {
+  public function stockDisponible() {
+    $stock = Stock::query()
+      ->where('cantidad', '>', 0)
+      ->whereHas('producto', function ($q) {
+        $q->where('inhabilitado', false);
+      })
+      ->with('producto')
+      ->get()
+      ->map(function ($s) {
+        return [
+          'id'     => $s->producto_id,
+          'nombre'=> optional($s->producto)->nombre,
+          'precio'=> optional($s->producto)->precio,
+        ];
+      });
+
+    return response()->json($stock);
+  }
+
   public function index(Request $request)
   {
     if(!$request->has('buscar')){

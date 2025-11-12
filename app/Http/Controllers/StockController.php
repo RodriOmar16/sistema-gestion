@@ -92,8 +92,8 @@ class StockController extends Controller
       //variables de movimiento
       $tipo   = TipoMovimiento::where('nombre','=','Ingreso')->first();
       $origen = OrigenMovimiento::where('nombre','=','Stock')->first();
-      $tipoUp   = TipoMovimiento::where('nombre','=','Modificacion')->first();
-      $origenUp = OrigenMovimiento::where('nombre','=','Actualizacion')->first();
+      //$tipoUp   = TipoMovimiento::where('nombre','=','Modificacion')->first();
+      //$origenUp = OrigenMovimiento::where('nombre','=','Stock')->first();
 
       //recorro todos los productos que vinieron
       foreach($productos as $elem){
@@ -118,8 +118,8 @@ class StockController extends Controller
           ]);
           MovimientoStock::create([
             'producto_id' => $elem['producto_id'],
-            'tipo_id'     => $tipoUp->tipo_id,
-            'origen_id'   => $origenUp->origen_id,
+            'tipo_id'     => $tipo->tipo_id,
+            'origen_id'   => $origen->origen_id,
             'fecha'       => now()->toDateString(),
             'cantidad'    => $elem['cantidad']
           ]);

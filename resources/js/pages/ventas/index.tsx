@@ -194,10 +194,7 @@ export default function Ventas(){
   };*/
 
   const openEdit = (data: Venta) => {
-    router.get(
-      route('ventas.edit', { venta: data.venta_id }),
-      {},{}
-    );
+    router.get(route('ventas.view', { venta: data.venta_id }));
   };
 
   //effect

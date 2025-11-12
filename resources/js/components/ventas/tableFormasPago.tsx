@@ -14,13 +14,15 @@ import { Badge } from "../ui/badge"
 type FormPago = {id: number, nombre: string, monto: number, fecha: string};
 
 interface Props {
-  datos: FormPago[];
+  modo:   string;
+  datos:  FormPago[];
   quitar: (id:number) => void;
 }
 
 //export const columns: ColumnDef<Project>[] = [
 export function getColumns(  
-  quitar: (id:number) => void
+  quitar: (id:number) => void,
+  modo: string
 ): ColumnDef<FormPago>[] {
 
   return [
@@ -79,6 +81,7 @@ export function getColumns(
         return (
           <div className='flex'>
             <Button 
+              disabled={modo!='create'}
               className="p-0 hover:bg-transparent cursor-pointer"
               title="Quitar" 
               variant="ghost" 
@@ -93,7 +96,7 @@ export function getColumns(
   ]
 //]
 }
-export default function TableFormasPago({datos, quitar}:Props) {
+export default function TableFormasPago({modo, datos, quitar}:Props) {
   const [sorting, setSorting]                   = useState<SortingState>([])
   const [columnFilters, setColumnFilters]       = useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
@@ -111,7 +114,7 @@ export default function TableFormasPago({datos, quitar}:Props) {
       : datos;
   }, [busqueda, datos]);
 
-  const columns = getColumns(quitar); 
+  const columns = getColumns(quitar, modo); 
 
   const table = useReactTable({
     data,

@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {  Table,  TableBody,  TableCell,  TableHead,  TableHeader,  TableRow } from "@/components/ui/table"
 import { Venta } from "@/types/typeCrud"
-import { convertirFechaGuionesBarras, convertirNumberPlata } from "@/utils"
+import { convertirFechaGuionesBarras, convertirNumberPlata, formatDateTime } from "@/utils"
 import { Badge } from "../ui/badge"
 import PdfButton from "../utils/pdf-button"
 import ExcelButton from "../utils/excel-button"
@@ -47,7 +47,7 @@ export function getColumns(openEdit: (data: Venta) => void): ColumnDef<Venta>[] 
         )
       }
       ,
-      cell: ({ row }) => ( <div className="">{convertirFechaGuionesBarras(row.getValue("fecha_grabacion"))}</div> ),
+      cell: ({ row }) => ( <div className="">{formatDateTime(row.getValue("fecha_grabacion"))}</div> ),
     },
     {
       accessorKey: "cliente_nombre",
@@ -110,7 +110,7 @@ export function getColumns(openEdit: (data: Venta) => void): ColumnDef<Venta>[] 
         )
       }
       ,
-      cell: ({ row }) => ( <div className="">{convertirFechaGuionesBarras(row.getValue("fecha_anulacion"))}</div> ),
+      cell: ({ row }) => ( <div className="">{row.getValue("fecha_anulacion") ? formatDateTime(row.getValue("fecha_anulacion")) : ''}</div> ),
     },
     {
       id: "acciones",
@@ -127,7 +127,7 @@ export function getColumns(openEdit: (data: Venta) => void): ColumnDef<Venta>[] 
               variant="ghost" 
               size="icon" 
               onClick={() => openEdit(venta)}>
-              <Eye size={20} className="text-primary-500" />
+              <Eye size={20} className="text-blue-800" />
             </Button>
           </div>
         )

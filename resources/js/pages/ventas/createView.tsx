@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { Loader2, Save, Plus, Search } from 'lucide-react';
+import { Loader2, Save, Plus, Search, Ban } from 'lucide-react';
 import {  Table,  TableBody,  TableCaption,  TableCell,  TableHead,  TableHeader,  TableRow,
 } from "@/components/ui/table"
 import { Select,  SelectContent,  SelectGroup,  SelectItem,  SelectLabel,  SelectTrigger,  SelectValue } from "@/components/ui/select"
@@ -147,6 +147,7 @@ export function DetallesVenta({modo, data, set, productosHab, productos,setProd}
           <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3'>
             <label htmlFor="cliente">Productos en Stock</label>
               <Select
+                disabled={modo!='create'}
                 value={String(productoId)}
                 onValueChange={(value) => setProdId(Number(value))}
               >
@@ -165,7 +166,7 @@ export function DetallesVenta({modo, data, set, productosHab, productos,setProd}
               </Select>
           </div>
           <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3 flex items-center'>
-            <Button type="button" onClick={agregarProducto}>
+            <Button disabled={modo!='create'} type="button" onClick={agregarProducto}>
                 <Plus size={20}/> Agregar
               </Button>
           </div>
@@ -177,6 +178,7 @@ export function DetallesVenta({modo, data, set, productosHab, productos,setProd}
           setDatos={(e:any)=> setProd(e)} 
           setTotal={controlarTotal} 
           quitar={quitarProducto}
+          modo={modo}
         />
         {/*<div className="text-right font-bold text-lg mb-1">
           Total: {convertirNumberPlata(totalAux.toString())}
@@ -191,13 +193,20 @@ interface PropsCli{
   data: Cliente;
   set: (e:any) => void;
   modo: string;
+  setActivo: (e:boolean) => void;
+  setTitle: (e:string) => void;
+  setText: (e:string) => void;
+  setColor: (e:string) => void;
 }
 
-export function DatosCliente({modo, data, set}:PropsCli){
+export function DatosCliente({modo, data, set, setActivo, setTitle, setText, setColor}:PropsCli){
   const [dni, setDni] = useState('');
   const [bloquear, setBloquear] = useState(false);
+  const [found, setFound] = useState(0);
+
   const buscarCliente = async () => {
     if(!dni){
+      setFound(0)
       setBloquear(false);
       set(clienteVacio);
       return;
@@ -208,9 +217,19 @@ export function DatosCliente({modo, data, set}:PropsCli){
     if(cli && cli.length > 0){
       setBloquear(true);
       set({...cli[0], fecha_nacimiento: convertirFechaGuionesBarras(cli[0].fecha_nacimiento)});
+      setFound(1)
+      setTitle('');
+      setText('');
+      setColor('warning');
+      setActivo(false);
     }else {
+      setFound(-1)
       setBloquear(false);
       set(clienteVacio);
+      setTitle('Cliente no encontrado');
+      setText('Ingresa los datos del cliente manualmente.');
+      setColor('warning');
+      setActivo(true);
     }
     setDni('');
   };
@@ -220,13 +239,20 @@ export function DatosCliente({modo, data, set}:PropsCli){
         <div className="col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-12 grid grid-cols-12 gap-4">
           <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3'>
             <label htmlFor="dni">Documento</label>
-            <InputDni placeholder='Buscar por documento' data={String(dni)} setData={(nro) => setDni(nro) }/>
+            <InputDni disabled={modo!='create'} placeholder='Buscar por documento' data={String(dni)} setData={(nro) => setDni(nro) }/>
           </div>
-          <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3 flex items-center'>
-            <Button type="button" onClick={buscarCliente}>
+          <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-2 flex items-center'>
+            <Button disabled={modo!='create'} type="button" onClick={buscarCliente}>
               <Search size={20}/> Buscar         
             </Button>
           </div>
+          {
+            found==-1?(
+              <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-6 flex items-center'>
+                El cliente no se encuentra registrado, ingresa sus datos.
+              </div>
+            ):(<></>)
+          }
         </div>
         {modo === 'view' ? (
           <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-2'>
@@ -236,23 +262,23 @@ export function DatosCliente({modo, data, set}:PropsCli){
         ): <></>}
         <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-5'>
           <label htmlFor="nombre">Nombre</label>
-          <Input disabled={bloquear} value={data.nombre} onChange={(e)=>set({...data, nombre:e.target.value})}/>	
+          <Input disabled={bloquear || modo!=='create'} value={data.nombre} onChange={(e)=>set({...data, nombre:e.target.value})}/>	
         </div>
         <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-4'>
           <label htmlFor="email">Email</label>
-          <Input disabled={bloquear} value={data.email} onChange={(e)=>set({...data, email:e.target.value})}/>	
+          <Input disabled={bloquear || modo!=='create'} value={data.email} onChange={(e)=>set({...data, email:e.target.value})}/>	
         </div>
         <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3'>
           <label htmlFor="dni">Documento</label>
-          <InputDni disabled={bloquear} data={String(data.dni)} setData={(nro) => set({...data, dni: Number(nro)}) }/>
+          <InputDni disabled={bloquear || modo!=='create'} data={String(data.dni)} setData={(nro) => set({...data, dni: Number(nro)}) }/>
         </div>
         <div className="col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3">
           <label htmlFor="fechaHasta">Nacimiento</label>
-          <DatePicker disable={bloquear} fecha={(data.fecha_nacimiento)} setFecha={ (fecha:string) => {set({...data,fecha_nacimiento: fecha})} }/>
+          <DatePicker disable={bloquear || modo!=='create'} fecha={(data.fecha_nacimiento)} setFecha={ (fecha:string) => {set({...data,fecha_nacimiento: fecha})} }/>
         </div>
         <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
           <label htmlFor="domicilio">Domicilio</label>
-          <Input disabled={bloquear} value={data.domicilio} onChange={(e)=>set({...data, domicilio:e.target.value})}/>	
+          <Input disabled={bloquear || modo!=='create'} value={data.domicilio} onChange={(e)=>set({...data, domicilio:e.target.value})}/>	
         </div>
       </div>
     </div>
@@ -260,6 +286,7 @@ export function DatosCliente({modo, data, set}:PropsCli){
 }
 //-------------------------------------------------------------------------------
 interface PropsFp{
+  modo:                  string;
   formasPagoHab:         Multiple[];
   formasPagoSelected:    FormPago[];
   setFormaPagoSelected:  (array:any[]) => void;
@@ -267,7 +294,7 @@ interface PropsFp{
   totalFp:               number;
   setTotalFp:            (e:number) => void;   
 }
-export function FormasPagosForm({formasPagoHab, formasPagoSelected, setFormaPagoSelected, totalVenta, totalFp, setTotalFp}:PropsFp){
+export function FormasPagosForm({modo, formasPagoHab, formasPagoSelected, setFormaPagoSelected, totalVenta, totalFp, setTotalFp}:PropsFp){
   const [fpId, setFpId]       = useState(0);
   const [monto, setMonto]     = useState(0);
   
@@ -307,6 +334,7 @@ export function FormasPagosForm({formasPagoHab, formasPagoSelected, setFormaPago
         <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3'>
           <label htmlFor="cliente">Forma de pago</label>
           <Select
+            disabled={modo!='create'}
             value={String(fpId)}
             onValueChange={(value) => setFpId(Number(value)) }
           >
@@ -326,15 +354,19 @@ export function FormasPagosForm({formasPagoHab, formasPagoSelected, setFormaPago
         </div>
         <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
           <label htmlFor="monto">Monto</label>
-          <Input className='text-right' type='number' value={monto} onChange={(e)=> setMonto(Number(e.target.value))}/>	
+          <Input disabled={modo!='create'} className='text-right' type='number' value={monto} onChange={(e)=> setMonto(Number(e.target.value))}/>	
         </div>
         <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3 flex items-center'>
-          <Button type="button" onClick={agregaFp} disabled={totalVenta==0}>
+          <Button type="button" onClick={agregaFp} disabled={totalVenta==0 || modo!='create'}>
             <Plus size={20}/> Agregar         
           </Button>
         </div>
         <div className="col-span-12">
-          <TableFormasPago datos={formasPagoSelected} quitar={quitarFp}/>
+          <TableFormasPago 
+            modo={modo}
+            datos={formasPagoSelected} 
+            quitar={quitarFp}
+          />
         </div>
         <div className="col-span-12 flex justify-end mb-2">
           <div className="p-2 rounded border">
@@ -431,10 +463,11 @@ export default function NewViewVenta(){
       return
     }
     //pregunto
-    setTextConfirm("Estás seguro de "+(mode==='create'?'grabar':'actualizar')+' esta venta?');
+    setTextConfirm("Estás seguro de "+(mode==='create'?'grabar':'anular')+' esta venta?');
     setConfirOpen(true);
     //les doy a las fechas el formato que requiere la base
     setDataCli({...dataCli, fecha_nacimiento: convertirFechaBarrasGuiones(dataCli.fecha_nacimiento)});
+    setDataCli('dni', dataCli.dni.toString())
     const aux = formasPagoSelected.map(e => ({...e, fecha:convertirFechaBarrasGuiones(e.fecha)}));
     setFormasPagoSelected(aux);
   };
@@ -444,17 +477,17 @@ export default function NewViewVenta(){
       venta_id:        '',
       fecha_grabacion: convertirFechaBarrasGuiones(data.fecha_grabacion),
       venta_cliente_id:dataCli.cliente_id,
-      fecha_anulacion: '',
+      fecha_anulacion: convertirFechaBarrasGuiones(data.fecha_anulacion)??'',
       total:           data.total,
       anulada:         false,
       detalles:        productosDet,
       formasPagos:     formasPagoSelected
     } 
     console.log("payload: ", payload)
+    setConfirOpen(false);
+    setTextConfirm('');
+    setLoad(true);
     if(mode === 'create'){
-      setConfirOpen(false);
-      setTextConfirm('');
-      setLoad(true);
       router.post(route('ventas.store'),payload,
         {
           preserveScroll: true,
@@ -467,7 +500,17 @@ export default function NewViewVenta(){
       /*setTitle('');
       setText('');
       setActivo(false);*/
-    } 
+    }else {
+      router.put(route('ventas.destroy',{venta: venta?.venta_id??0}),{motivo:'prueba'},
+        {
+          preserveScroll: true,
+          preserveState: true,
+          onFinish: () => {
+            setLoad(false);
+          }
+        }
+      );
+    }
   };
   
   const cancelar = () => {
@@ -502,7 +545,7 @@ export default function NewViewVenta(){
       setPropsActuales({ resultado, mensaje, venta_id});
 
       const esError = resultado === 0;
-      setTitle(esError ? 'Error' : mode === 'create' ? 'Venta nueva' : '');
+      setTitle(esError ? 'Error' : mode === 'create' ? 'Venta nueva' : 'Venta Anulada');
       setText(esError ? mensaje ?? 'Error inesperado' : `${mensaje} (ID: ${venta_id})`);
       setColor(esError ? 'error' : 'success');
       setActivo(true); 
@@ -513,12 +556,12 @@ export default function NewViewVenta(){
     if(venta && mode === 'view'){
       setData({
         venta_id:         venta?.venta_id,
-        fecha_grabacion:  venta.fecha_grabacion?? (new Date()).toLocaleDateString(),
+        fecha_grabacion:  convertirFechaGuionesBarras(venta.fecha_grabacion)?? (new Date()).toLocaleDateString(),
         fecha_desde:      '',
         fecha_hasta:      '',
         cliente_id:       venta.cliente_id,
         cliente_nombre:   '',
-        fecha_anulacion:  venta.fecha_anulacion,
+        fecha_anulacion:  venta.fecha_anulacion? convertirFechaGuionesBarras(venta.fecha_anulacion) : '',
         total:            venta.total,
         anulada:          venta.anulada,
       });
@@ -570,7 +613,11 @@ export default function NewViewVenta(){
               <DatosCliente 
                 modo={mode??'create'}
                 data={dataCli}
-                set={setDataCli}/>
+                set={setDataCli}
+                setActivo={setActivo}
+                setTitle={setTitle}
+                setText={setText}
+                setColor={setColor}/>
             </div>
             <div className='pb-1 col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>
               <div className='py-4 px-4'>
@@ -578,6 +625,7 @@ export default function NewViewVenta(){
                 <hr />
               </div>
               <FormasPagosForm
+                modo={mode??'create'}
                 formasPagoHab={formasPagoHab}
                 formasPagoSelected={formasPagoSelected}
                 setFormaPagoSelected={setFormasPagoSelected}
@@ -586,13 +634,17 @@ export default function NewViewVenta(){
                 setTotalFp={(x) => setTotalFp(x)}
               />
             </div>
-            <div  className='flex justify-end px-4 pb-4 col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>
-              <Button type="button" onClick={handleSubmit}>
-                { load ? ( <Loader2 size={20} className="animate-spin"/> ) : 
-                         (<Save size={20} className=""/>)  }
-                { ( mode === 'create' ? 'Grabar' : 'Actualizar')  }          
-              </Button>
-            </div>
+            {
+              !data.anulada ? (
+                <div  className='flex justify-end px-4 pb-4 col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>
+                  <Button type="button" onClick={handleSubmit} className={mode!='create'? 'bg-red-600 hover:bg-red-700 text-white' : ''}>
+                    { load ? ( <Loader2 size={20} className="animate-spin"/> ) : 
+                            ( mode === 'create'? (<Save size={20} className=""/>) : (<Ban size={20} className=""/>) )}
+                    { ( mode === 'create' ? 'Grabar' : 'Anular')  }          
+                  </Button>
+                </div>
+              ): (<></>)
+            }
           </form>
         </div>
       </div>
@@ -609,8 +661,8 @@ export default function NewViewVenta(){
         color={color}
         onClose={() => {
             setActivo(false);
-            if (resultado === 1 && venta_id){
-              router.get(route('ventas.view', { venta: venta_id }));
+            if (resultado === 1 && (venta_id||venta)){
+              router.get(route('ventas.view', { venta: venta_id??venta?.venta_id }));
             }
           }
         }

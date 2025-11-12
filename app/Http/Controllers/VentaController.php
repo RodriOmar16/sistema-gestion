@@ -75,11 +75,11 @@ class VentaController extends Controller
       $validated = $request->validate([
         //datos de la venta
         'fecha_grabacion' => 'required|date',
-        'venta_cliente_id'=> 'integer',
+        'venta_cliente_id'=> 'nullable|integer',
         'total'           => 'required|numeric',
         'anulada'         => 'boolean',
         //datos del cliente
-        'cliente_id'       => 'integer',
+        'cliente_id'       => 'nullable|integer',
         'dni'              => 'required|string',
         'nombre'           => 'required|string|max:255',
         'domicilio'        => 'string|max:255',
@@ -111,9 +111,8 @@ class VentaController extends Controller
           'dni'              => $validated['dni'],
           'inhabilitado'     => 0,
         ]);
-      }else{ 
-        $cliente_id = $cliente->cliente_id;
       }
+      $cliente_id = $cliente->cliente_id;
 
       //creo la venta
       $venta = Venta::create([
@@ -133,6 +132,7 @@ class VentaController extends Controller
           return inertia('ventas/createView', [
             'resultado' => 0,
             'mensaje'   => 'Stock insuficiente para el producto ID: '.$det['id'],
+            'mode'      => 'create'
           ]);
         }
         //actualizo el stock
@@ -176,7 +176,8 @@ class VentaController extends Controller
       DB::rollback();
       return inertia('ventas/createView',[
         'resultado' => 0,
-        'mensaje'   => 'Ocurrió un error al grabar la venta: '.$e->getMessage()
+        'mensaje'   => 'Ocurrió un error al grabar la venta: '.$e->getMessage(),
+        'mode'      => 'create'
       ]);
     }
   }
@@ -224,11 +225,20 @@ class VentaController extends Controller
         'fecha'  => $fp->fecha
       ];
     });
+    //preparo ventas sobre todo por las fechas que recibe el front
+    $ventaAux = [
+      'venta_id'        => $venta->venta_id,
+      'fecha_grabacion' => $venta->fecha_grabacion->format('Y-m-d'),
+      'fecha_anulacion' => $venta->fecha_anulacion?->format('Y-m-d'),
+      'cliente_id'      => $venta->cliente_id,
+      'total'           => $venta->total,
+      'anulada'         => $venta->anulada,
+    ];
 
     //devuelvo
     return inertia('ventas/createView',[
       'mode' => 'view',
-      'venta' => $venta,
+      'venta' => $ventaAux,
       'detalles' => $detalles, 
       'cliente'  => $cliente, 
       'formasPago' => $formasPagos
@@ -237,16 +247,54 @@ class VentaController extends Controller
 
   public function destroy(Venta $venta, Request $request)
   {
-    $venta->update(['anulada' => true, 'fecha_anulacion' => now()]);
-    $anulada = VentaAnulada::create([
-      'venta_id'        => $venta->venta_id,
-      'fecha_anulacion' => now(),
-      'motivo'          => $request->motivo
-    ]);
+    DB::beginTransaction();
+    try {
+      // Marcar la venta como anulada
+      $venta->update([
+        'anulada'         => true,
+        'fecha_anulacion' => now()
+      ]);
 
-    return inertia('ventas/createView',[
-      'resultado' => 1,
-      'mensaje'   => 'La venta se anuló correctamente.'
-    ]);
+      // Registrar motivo de anulación
+      VentaAnulada::create([
+        'venta_id'        => $venta->venta_id,
+        'fecha_anulacion' => now(),
+        'motivo'          => $request->motivo
+      ]);
+
+      // Revertir el stock de cada producto vendido
+      $detalles = DetVenta::where('venta_id', $venta->venta_id)->get();
+      foreach ($detalles as $det) {
+        $stock = Stock::where('producto_id', $det->producto_id)->first();
+        if ($stock) {
+          $stock->update([
+            'cantidad' => $stock->cantidad + $det->cantidad
+          ]);
+        }
+
+        // Registrar movimiento de stock por anulación
+        MovimientoStock::create([
+          'producto_id'  => $det->producto_id,
+          'proveedor_id' => null,
+          'tipo_id'      => 4, // anulación
+          'origen_id'    => 4, // origen: anulación
+          'fecha'        => now(),
+          'cantidad'     => $det->cantidad
+        ]);
+      }
+
+      DB::commit();
+      return inertia('ventas/createView', [
+        'resultado' => 1,
+        'mensaje'   => 'La venta se anuló correctamente y el stock fue revertido.'
+      ]);
+    } catch (\Throwable $e) {
+      DB::rollback();
+      return inertia('ventas/createView', [
+        'resultado' => 0,
+        'mensaje'   => 'Error al anular la venta: '.$e->getMessage()
+      ]);
+    }
   }
+
 }

@@ -18,6 +18,7 @@ interface Props {
   setDatos: (e:any) => void;
   setTotal: (total:number) => void;
   quitar: (id:number) => void;
+  modo: string;
 }
 
 //export const columns: ColumnDef<Project>[] = [
@@ -25,7 +26,8 @@ export function getColumns(
   sumar: (d: Detalle) => void,
   restar: (d: Detalle) => void,
   cambiarCantidad: (id: number, valor: string) => void,
-  quitar: (id:number) => void
+  quitar: (id:number) => void,
+  modo: string,
 ): ColumnDef<Detalle>[] {
   return [
     {
@@ -88,13 +90,14 @@ export function getColumns(
                 variant="outline"
                 size="sm"
                 onClick={()=>restar(fila)}
-                disabled={cant == 1}
+                disabled={modo!='create' || cant == 1}
               >
                 <Minus size={20}/>
               </Button>
               <Input
                 className="mx-2 w-30 text-center"
                 value={cant}
+                disabled={modo!='create'}
                 onChange={(e) => cambiarCantidad(fila.id, e.target.value)}
                 inputMode="numeric"
               />
@@ -102,6 +105,7 @@ export function getColumns(
                 variant="outline"
                 size="sm"
                 onClick={()=>sumar(fila)}
+                disabled={modo!='create'}
               >
                 <Plus size={20}/>
               </Button>
@@ -150,6 +154,7 @@ export function getColumns(
               title="Quitar" 
               variant="ghost" 
               size="icon" 
+              disabled={modo!='create'}
               onClick={() => quitar(fila.id)}>
               <X size={20} className="text-red-500" />
             </Button>
@@ -159,7 +164,7 @@ export function getColumns(
     },
   ]
 }
-export default function TableDetalles({datos, setDatos, setTotal, quitar/*, openEdit*/}:Props) {
+export default function TableDetalles({datos, setDatos, setTotal, quitar, modo/*, openEdit*/}:Props) {
   const [sorting, setSorting]                   = useState<SortingState>([])
   const [columnFilters, setColumnFilters]       = useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
@@ -218,7 +223,7 @@ export default function TableDetalles({datos, setDatos, setTotal, quitar/*, open
   };
 
 
-  const columns = getColumns(sumar, restar, cambiarCantidad, quitar); 
+  const columns = getColumns(sumar, restar, cambiarCantidad, quitar, modo); 
 
   const table = useReactTable({
     data,

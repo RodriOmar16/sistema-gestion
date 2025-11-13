@@ -158,6 +158,12 @@ export interface Venta{
   updated_at?:     string;
 }
 
+export interface Turno{
+  turno_id:     string|number;
+  nombre:       string;
+  inhabilitado: boolean | 1 | 0 | 'true' | 'false';
+}
+
 //para componente selec multiple
 export type Multiple = { 
   id: number; 

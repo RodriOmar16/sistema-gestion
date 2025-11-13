@@ -8,21 +8,21 @@ import { ArrowUpDown, ChevronDown, MoreHorizontal, Pen , Check, Ban,Search } fro
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table,  TableBody,  TableCell,  TableHead,  TableHeader,  TableRow } from "@/components/ui/table"
-import { Cliente } from "@/types/typeCrud"
+import { Turno } from "@/types/typeCrud"
 import { convertirFechaGuionesBarras, formatDateTime, formatearNroCompleto } from "@/utils"
 import { Badge } from "../ui/badge"
 
 interface Props {
-  datos: Cliente[];
-  openEdit: (data:Cliente) => void;
-  abrirConfirmar: (data:Cliente) => void;
+  datos: Turno[];
+  openEdit: (data:Turno) => void;
+  abrirConfirmar: (data:Turno) => void;
 }
 
 //export const columns: ColumnDef<Project>[] = [
-export function getColumns(confirmar: (data: Cliente) => void, openEdit: (data: Cliente) => void): ColumnDef<Cliente>[] {
+export function getColumns(confirmar: (data: Turno) => void, openEdit: (data: Turno) => void): ColumnDef<Turno>[] {
   return [
     {
-      accessorKey: "cliente_id",
+      accessorKey: "turno_id",
       header: ({column}) => {
         return (
           <div className="flex">
@@ -32,7 +32,7 @@ export function getColumns(confirmar: (data: Cliente) => void, openEdit: (data: 
         )
       },
       cell: ({ row }) => (
-        <div className="text-right">{row.getValue("cliente_id")}</div>
+        <div className="text-right">{row.getValue("turno_id")}</div>
       ),
     },
     {
@@ -49,54 +49,6 @@ export function getColumns(confirmar: (data: Cliente) => void, openEdit: (data: 
       cell: ({ row }) => ( <div className="">{row.getValue("nombre")}</div> ),
     },
     {
-      accessorKey: "domicilio",
-      header: ({column}) => {
-        return (
-          <div className="flex">
-            Domicilio
-            <ArrowUpDown className="ml-1" size={20} onClick={() => column.toggleSorting(column.getIsSorted() === "asc")} />
-          </div>
-        )
-      },
-      cell: ({ row }) => ( <div className="">{row.getValue("domicilio")}</div> ),
-    },
-    {
-      accessorKey: "fecha_nacimiento",
-      header: ({column}) => {
-        return (
-          <div className="flex">
-            Fecha nac.
-            <ArrowUpDown className="ml-1" size={20} onClick={() => column.toggleSorting(column.getIsSorted() === "asc")} />
-          </div>
-        )
-      },
-      cell: ({ row }) => ( <div className="">{convertirFechaGuionesBarras(row.getValue("fecha_nacimiento"))}</div> ),
-    },
-    {
-      accessorKey: "email",
-      header: ({column}) => {
-        return (
-          <div className="flex">
-            Email
-            <ArrowUpDown className="ml-1" size={20} onClick={() => column.toggleSorting(column.getIsSorted() === "asc")} />
-          </div>
-        )
-      },
-      cell: ({ row }) => ( <div className="">{row.getValue("email")}</div> ),
-    },
-    {
-      accessorKey: "dni",
-      header: ({column}) => {
-        return (
-          <div className="flex">
-            Documento
-            <ArrowUpDown className="ml-1" size={20} onClick={() => column.toggleSorting(column.getIsSorted() === "asc")} />
-          </div>
-        )
-      },
-      cell: ({ row }) => ( <div className="">{formatearNroCompleto(row.getValue("fecha_nacimiento"))}</div> ),
-    },
-    {
       accessorKey: "inhabilitado",
       header: ({column}) => {
         return (
@@ -107,67 +59,36 @@ export function getColumns(confirmar: (data: Cliente) => void, openEdit: (data: 
         )
       },
       cell: ({ row }) => {
-        const cliente = row.original;
-        const colorClasses = cliente.inhabilitado === 0
+        const fila = row.original;
+        const colorClasses = fila.inhabilitado === 0
           ? 'bg-green-500 text-white dark:bg-green-600'
           : 'bg-red-500 text-white dark:bg-red-600';
 
         return (
           <Badge variant="secondary" className={`flex items-center gap-1 ${colorClasses}`}>
-            {cliente.inhabilitado === 0 ? 'Habilitado' : 'Inhabilitado'}
+            {fila.inhabilitado === 0 ? 'Habilitado' : 'Inhabilitado'}
           </Badge>
         );
-
       },
     },
-    /*{
-      accessorKey: "created_at",
-      header: ({column}) => {
-        return (
-          <div className="flex">
-            Creado
-            <ArrowUpDown className="ml-1" size={20} onClick={() => column.toggleSorting(column.getIsSorted() === "asc")} />
-          </div>
-        )
-      },
-      cell: ({ row }) => {
-        const fechaString = row.getValue("created_at") as string;
-        return <div>{ formatDateTime(fechaString) }</div> 
-      },
-    },
-    {
-      accessorKey: "updated_at",
-      header: ({column}) => {
-        return (
-          <div className="flex">
-            Modificado
-            <ArrowUpDown className="ml-1" size={20} onClick={() => column.toggleSorting(column.getIsSorted() === "asc")} />
-          </div>
-        )
-      },
-      cell: ({ row }) => {
-        const fechaString = row.getValue("updated_at") as string;
-        return <div>{ formatDateTime(fechaString) }</div> 
-      },
-    },*/
     {
       id: "acciones",
       enableHiding: false,
       header: "Acciones",
       cell: ({ row }) => {
-        const cliente = row.original;
+        const fila = row.original;
   
         return (
           <div className='flex'>
             {
-              cliente?.inhabilitado === 0 ? (
+              fila?.inhabilitado === 0 ? (
                 <>
                   <Button 
                     className="p-0 hover:bg-transparent cursor-pointer"
                     title="Editar" 
                     variant="ghost" 
                     size="icon" 
-                    onClick={() => openEdit(cliente)}>
+                    onClick={() => openEdit(fila)}>
                     <Pen size={20} className="text-orange-500" />
                   </Button>
                   <Button 
@@ -175,7 +96,7 @@ export function getColumns(confirmar: (data: Cliente) => void, openEdit: (data: 
                     title="Inhabilitar" 
                     variant="ghost" 
                     size="icon"
-                    onClick={ () => confirmar(cliente) }>
+                    onClick={ () => confirmar(fila) }>
                     <Ban size={20} className="text-red-500" />
                   </Button>
                 </>
@@ -186,7 +107,7 @@ export function getColumns(confirmar: (data: Cliente) => void, openEdit: (data: 
                     title="Habilitar" 
                     variant="ghost" 
                     size="icon"
-                    onClick={ () => confirmar(cliente) }
+                    onClick={ () => confirmar(fila) }
                   >
                     <Check size={20} className='text-green-600'/>
                   </Button>
@@ -200,7 +121,7 @@ export function getColumns(confirmar: (data: Cliente) => void, openEdit: (data: 
   ]
 //]
 }
-export default function DataTableClientes({datos, openEdit, abrirConfirmar}:Props) {
+export default function DataTableTurnos({datos, openEdit, abrirConfirmar}:Props) {
   const [sorting, setSorting]                   = useState<SortingState>([])
   const [columnFilters, setColumnFilters]       = useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
@@ -211,18 +132,14 @@ export default function DataTableClientes({datos, openEdit, abrirConfirmar}:Prop
     const texto = busqueda.toLowerCase();
     return busqueda
       ? datos.filter((campo) =>
-          campo.cliente_id?.toString().includes(texto) ||
-          campo.nombre?.toLowerCase().includes(texto)     ||
-          campo.domicilio?.toLowerCase().includes(texto) ||
-          campo.email?.toLowerCase().includes(texto) ||
-          campo.fecha_nacimiento?.toLowerCase().includes(texto) ||
-          campo.dni?.toString().toLowerCase().includes(texto)
+          campo.turno_id?.toString().includes(texto) ||
+          campo.nombre?.toLowerCase().includes(texto) 
         )
       : datos;
   }, [busqueda, datos]);
 
   //functions
-  const confirmar = (data: Cliente) => {
+  const confirmar = (data: Turno) => {
     abrirConfirmar(data);
   };
   const columns = getColumns(confirmar, openEdit); 
@@ -304,7 +221,7 @@ export default function DataTableClientes({datos, openEdit, abrirConfirmar}:Prop
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  No hay resultados para mostrar. Utiliza los filtros para obtener formas de pago.
+                  No hay resultados para mostrar. Utiliza los filtros para obtener clientes.
                 </TableCell>
               </TableRow>
             )}

@@ -2,65 +2,143 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Turno;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
 use App\Http\Requests\StoreTurnoRequest;
 use App\Http\Requests\UpdateTurnoRequest;
 
+use App\Models\Turno;
+
 class TurnoController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        //
+  public function turnosHabilitados(){
+    $turnos = Turno::where('inhabilitado',false)->get()->map(function($t){
+      return [
+        'id' => $t->turno_id,
+        'nombre' => $t->nombre,
+      ];
+    });
+    return response()->json($turnos);
+  }
+  /**
+   * Display a listing of the resource.
+   */
+  public function index(Request $request)
+  {
+    if(!$request->has('buscar')){
+      return inertia('turnos/index',[
+        'turnos' => [],
+      ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
+    $query = Turno::query();
+    if($request->filled('turno_id')){
+      $query->where('turno_id', $request->turno_id);
+    }
+    if($request->filled('nombre')){
+      $query->where('nombre','like', '%'.$request->nombre.'%');
+    }
+    if ($request->filled('inhabilitado')) {
+      $estado = filter_var($request->inhabilitado, FILTER_VALIDATE_BOOLEAN);
+      $query->where('inhabilitado', $estado);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(StoreTurnoRequest $request)
-    {
-        //
-    }
+    $turnos = $query->latest()->get();
+    return inertia('turnos/index',[
+      'turnos' => $turnos,
+    ]);
+  }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Turno $turno)
-    {
-        //
+  public function store(Request $request)
+  {
+    DB::beginTransaction();
+    try {
+      //controlo los datos
+      $validated = $request->validate([
+        'nombre'       => 'required|string|max:255',
+        'inhabilitado' => 'boolean'
+      ]);
+      //verifico que no se repita
+      $nombre = strtolower(trim($validated['nombre']));
+      $existe = Turno::whereRaw('LOWER(TRIM(nombre)) = ?', [$nombre])->exists();
+      if($existe){
+        DB::rollback();
+        return inertia('turnos/index',[
+          'resultado' => 0,
+          'mensaje'   => 'Ya existe un turno registrado con ese nombre.',
+        ]);
+      }
+      //creo el turno
+      $turno = Turno::create([
+        'nombre'       => $validated['nombre'],
+        'inhabilitado' => $validated['inhabilitado'] ? 1 : 0,
+      ]);
+      //commit
+      DB::commit();
+      return inertia('turnos/index',[
+        'resultado' => 1,
+        'mensaje'   => 'Turno creado correctamente',
+        'turno_id'  => $turno->turno_id
+      ]);
+    } catch (\Throwable $e) {
+      DB::rollback();
+      return inertia('turnos/index',[
+        'resultado' => 0,
+        'mensaje'   => "Ocurrió un error al crear el turno: ".$e->getMessage(),
+      ]);
     }
+  }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Turno $turno)
-    {
-        //
+  public function update(Request $request, Turno $turno)
+  {
+    DB::beginTransaction();
+    try {
+      //controlo los datos
+      $validated = $request->validate([
+        'nombre'       => 'required|string|max:255',
+        'inhabilitado' => 'boolean'
+      ]);
+      //verifico que no se repita
+      $nombre = strtolower(trim($validated['nombre']));
+      $existe = Turno::whereRaw('LOWER(TRIM(nombre)) = ?', [$nombre])
+                ->where('turno_id','!=',$turno->turno_id)
+                ->exists();
+      if($existe){
+        DB::rollback();
+        return inertia('turnos/index',[
+          'resultado' => 0,
+          'mensaje'   => 'Ya existe un turno registrado con ese nombre.',
+        ]);
+      }
+      //creo el turno
+      $turno->update([
+        'nombre'       => $validated['nombre'],
+        'inhabilitado' => $validated['inhabilitado'] ? 1 : 0,
+      ]);
+      //commit
+      DB::commit();
+      return inertia('turnos/index',[
+        'resultado' => 1,
+        'mensaje'   => 'Turno modificado correctamente',
+        'turno_id'  => $turno->turno_id
+      ]);
+    } catch (\Throwable $e) {
+      DB::rollback();
+      return inertia('turnos/index',[
+        'resultado' => 0,
+        'mensaje'   => "Ocurrió un error al modificar el turno: ".$e->getMessage(),
+      ]);
     }
+  }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(UpdateTurnoRequest $request, Turno $turno)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Turno $turno)
-    {
-        //
-    }
+  public function toggleEstado(Request $request, Turno $turno)
+  {
+    $turno->update(['inhabilitado' => !$turno->inhabilitado]);
+    return inertia('turnos/index',[
+      'resultado' => 1,
+      'mensaje'   => 'Estado modificado existosamente',
+      'turno_id'  => $turno->turno_id
+    ]);
+  }
 }

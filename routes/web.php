@@ -18,7 +18,7 @@ use App\Http\Controllers\OrigenMovimientoController;
 use App\Http\Controllers\FormaPagoController;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\VentaController;
-
+use App\Http\Controllers\TurnoController;
 use App\Http\Controllers\GraficosController;
 use App\Http\Controllers\StockController;
 use App\Http\Controllers\ProjectController;
@@ -163,6 +163,13 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
     Route::get('venta/ver/{venta}', [VentaController::class, 'view'])->name('ventas.view');
     Route::put('/ventas/update/{venta}', [VentaController::class, 'update'])->name('ventas.update');
     Route::put('/ventas/anular/{venta}', [VentaController::class, 'destroy'])->name('ventas.destroy');
+
+    //Turnos
+    Route::get('/turnos_habilitados', [TurnoController::class, 'turnosHabilitados'])->name('turnos.habilitados');
+    Route::get('/turnos', [TurnoController::class, 'index'])->name('turnos.index');
+    Route::post('/turno/nuevo', [TurnoController::class, 'store'])->name('turnos.store');
+    Route::put('/turno/update/{turno}', [TurnoController::class, 'update'])->name('turnos.update');
+    Route::put('/turno/cambio-estado/{turno}', [TurnoController::class, 'toggleEstado'])->name('turnos.toggleEstado');
 
     //banners
     Route::resource('carousel', CarouselController::class);

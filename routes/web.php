@@ -172,10 +172,10 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
     Route::put('/turno/cambio-estado/{turno}', [TurnoController::class, 'toggleEstado'])->name('turnos.toggleEstado');
 
     //banners
-    Route::resource('carousel', CarouselController::class);
-    Route::get('/banners', [CarouselController::class, 'index'])->name('carousel.index');
-    Route::put('/carousel/{carousel}', [CarouselController::class, 'update'])->name('carousel.update');
-    Route::put('/carousel/{carousel}/estado', [CarouselController::class, 'toggleEstado'])->name('carousel.toggleEstado');
+    Route::get('/banners', [CarouselController::class, 'index'])->name('banners.index');
+    Route::post('/banner/nuevo', [CarouselController::class, 'store'])->name('banners.store');
+    Route::put('/banner/update/{carousel}', [CarouselController::class, 'update'])->name('banners.update');
+    Route::put('/banner/cambiar-estado/{carousel}', [CarouselController::class, 'toggleEstado'])->name('banners.toggleEstado');
 
     //Gráficos
     Route::get('/graficos', [GraficosController::class, 'index'])->name('graficos.index');

@@ -8,14 +8,10 @@ import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem } from '@/types';
 import { Turno } from '@/types/typeCrud';
 import { Search, Brush, Loader2, CirclePlus, Filter, Check } from 'lucide-react';
-//import NewEditClientes from '@/components/clientes/newEditClientes';
-//import DataTableClientes from '@/components/clientes/dataTableClientes';
 import DataTableTurnos from '@/components/turnos/dataTableTurnos';
 import NewEditTurno from '@/components/turnos/newEditTurno';
 import ModalConfirmar from '@/components/modalConfirmar';
 import ShowMessage from '@/components/utils/showMessage';
-import { DatePicker } from '@/components/utils/date-picker';
-import InputDni from '@/components/utils/input-dni';
 
 const breadcrumbs: BreadcrumbItem[] = [ { title: 'Turnos', href: '', } ];
 
@@ -124,17 +120,13 @@ export default function Turnos(){
   const [color, setColor]   = useState('');
 
   const { turnos } = usePage().props as { turnos?: Turno[] }; //necesito los props de inertia
-  const { resultado, mensaje, turno_id } = usePage().props as {
+  const { resultado, mensaje, turno_id, timestamp } = usePage().props as {
     resultado?: number;
     mensaje?: string;
     turno_id?: number;
+    timestamp?: number;
   };
-  
-  const [propsActuales, setPropsActuales] = useState<{
-    resultado: number | undefined | null;
-    mensaje: string | undefined | null | '';
-    turno_id: number | undefined | null;
-  }>({ resultado: undefined, mensaje: undefined, turno_id: undefined });
+  const [ultimoTimestamp, setUltimoTimestamp] = useState<number | null>(null);
   const [turnosCacheados, setTurnosCacheados] = useState<Turno[]>([]);
 
   //funciones
@@ -194,7 +186,6 @@ export default function Turnos(){
     setLoading(true);
 
     const payload = JSON.parse(JSON.stringify(pendingData));
-    console.log("payload: ", payload)
     if (modalMode === 'create') {
       router.post(
         route('turnos.store'), payload,
@@ -231,16 +222,6 @@ export default function Turnos(){
 
   //effect
   useEffect(() => {
-    if (!activo && propsActuales.resultado !== undefined) {
-      setPropsActuales({
-        resultado: undefined,
-        mensaje: undefined,
-        turno_id: undefined
-      });
-    }
-  }, [activo]);
-
-  useEffect(() => {
     if (
       turnos &&
       turnos.length > 0 &&
@@ -252,12 +233,10 @@ export default function Turnos(){
 
 
   useEffect(() => {
-    const cambioDetectado =
-      (resultado && resultado !== propsActuales.resultado)  ||
-      (mensaje && mensaje !== propsActuales.mensaje)
+    const cambioDetectado = timestamp && timestamp !== ultimoTimestamp;
 
     if (cambioDetectado) {
-      setPropsActuales({ resultado, mensaje, turno_id });
+      setUltimoTimestamp(timestamp)
 
       const esError = resultado === 0;
       setTitle(esError ? 'Error' : modalMode === 'create' ? 'Turno nuevo' : 'Turno modificado');

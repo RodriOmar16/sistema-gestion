@@ -84,7 +84,8 @@ class ClienteController extends Controller
       if($existe){
         return inertia('clientes/index',[
           'resultado' => 0,
-          'mensaje'   => 'Ya existe un cliente con esos datos.'
+          'mensaje'   => 'Ya existe un cliente con esos datos.',
+          'timestamp' => now()->timestamp,
         ]);
       }
       //creo el usuario en la base
@@ -101,13 +102,15 @@ class ClienteController extends Controller
       return inertia('clientes/index',[
         'resultado'  => 1,
         'mensaje'    => 'Cliente creado correctamente',
-        'cliente_id' => $cliente->cliente_id
+        'cliente_id' => $cliente->cliente_id,
+        'timestamp' => now()->timestamp,
       ]);
     } catch (\Throwable $e) {
       DB::rollback();
       return inertia('clientes/index',[
         'resultado' => 0,
-        'mensaje'   => 'Ocurrió un problema al crear el cliente: '.$e->getMessage()
+        'mensaje'   => 'Ocurrió un problema al crear el cliente: '.$e->getMessage(),
+        'timestamp' => now()->timestamp,
       ]);
     }
   }
@@ -135,7 +138,8 @@ class ClienteController extends Controller
       if($existe){
         return inertia('clientes/index',[
           'resultado' => 0,
-          'mensaje'   => 'Ya existe un cliente con esos datos.'
+          'mensaje'   => 'Ya existe un cliente con esos datos.',
+          'timestamp' => now()->timestamp,
         ]);
       }
       //actualizo
@@ -149,12 +153,14 @@ class ClienteController extends Controller
         'resultado'  => 1,
         'mensaje'    => 'Se actualizó correctamente los datos del cliente',
         'cliente_id' => $cliente->cliente_id,
+        'timestamp' => now()->timestamp,
       ]);
     } catch (\Throwable $e) {
       DB::rollback();
       return inertia('clientes/index',[
         'resultado' => 0,
-        'mensaje'   => 'Ocurrió un error al intentar actualizar el cliente: '.$e->getMessage()
+        'mensaje'   => 'Ocurrió un error al intentar actualizar el cliente: '.$e->getMessage(),
+        'timestamp' => now()->timestamp,
       ]);
     }
   }
@@ -164,7 +170,8 @@ class ClienteController extends Controller
     $cliente->update(['inhabilitado' => !$cliente->inhabilitado]);
     return inertia('clientes/index',[
       'resultado' => 1,
-      'mensaje'   => 'El estado se actualizó correctamente'
+      'mensaje'   => 'El estado se actualizó correctamente',
+      'timestamp' => now()->timestamp,
     ]);
   }
 }

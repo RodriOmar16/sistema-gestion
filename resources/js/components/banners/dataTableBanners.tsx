@@ -8,21 +8,21 @@ import { ArrowUpDown, ChevronDown, MoreHorizontal, Pen , Check, Ban,Search } fro
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table,  TableBody,  TableCell,  TableHead,  TableHeader,  TableRow } from "@/components/ui/table"
-import { Turno } from "@/types/typeCrud"
+import { Banner } from "@/types/typeCrud"
 import { convertirFechaGuionesBarras, formatDateTime, formatearNroCompleto } from "@/utils"
 import { Badge } from "../ui/badge"
 
 interface Props {
-  datos: Turno[];
-  openEdit: (data:Turno) => void;
-  abrirConfirmar: (data:Turno) => void;
+  datos: Banner[];
+  openEdit: (data:Banner) => void;
+  abrirConfirmar: (data:Banner) => void;
 }
 
 //export const columns: ColumnDef<Project>[] = [
-export function getColumns(confirmar: (data: Turno) => void, openEdit: (data: Turno) => void): ColumnDef<Turno>[] {
+export function getColumns(confirmar: (data: Banner) => void, openEdit: (data: Banner) => void): ColumnDef<Banner>[] {
   return [
     {
-      accessorKey: "turno_id",
+      accessorKey: "id",
       header: ({column}) => {
         return (
           <div className="flex">
@@ -32,21 +32,60 @@ export function getColumns(confirmar: (data: Turno) => void, openEdit: (data: Tu
         )
       },
       cell: ({ row }) => (
-        <div className="text-right">{row.getValue("turno_id")}</div>
+        <div className="text-right">{row.getValue("id")}</div>
       ),
     },
     {
-      accessorKey: "nombre",
+      accessorKey: "url",
       header: ({column}) => {
         return (
           <div className="flex">
-            Nombre
+            Url
             <ArrowUpDown className="ml-1" size={17} onClick={() => column.toggleSorting(column.getIsSorted() === "asc")} />
           </div>
         )
       }
       ,
-      cell: ({ row }) => ( <div className="">{row.getValue("nombre")}</div> ),
+      cell: ({ row }) => ( <div className="">{row.getValue("url")}</div> ),
+    },
+    {
+      accessorKey: "title",
+      header: ({column}) => {
+        return (
+          <div className="flex">
+            Tìtulo
+            <ArrowUpDown className="ml-1" size={17} onClick={() => column.toggleSorting(column.getIsSorted() === "asc")} />
+          </div>
+        )
+      }
+      ,
+      cell: ({ row }) => ( <div className="">{row.getValue("title")}</div> ),
+    },
+    {
+      accessorKey: "description",
+      header: ({column}) => {
+        return (
+          <div className="flex">
+            Descripción
+            <ArrowUpDown className="ml-1" size={17} onClick={() => column.toggleSorting(column.getIsSorted() === "asc")} />
+          </div>
+        )
+      }
+      ,
+      cell: ({ row }) => ( <div className="">{row.getValue("description")}</div> ),
+    },
+    {
+      accessorKey: "priority",
+      header: ({column}) => {
+        return (
+          <div className="flex">
+            Prioridad
+            <ArrowUpDown className="ml-1" size={17} onClick={() => column.toggleSorting(column.getIsSorted() === "asc")} />
+          </div>
+        )
+      }
+      ,
+      cell: ({ row }) => ( <div className="">{row.getValue("priority")}</div> ),
     },
     {
       accessorKey: "inhabilitado",
@@ -121,7 +160,7 @@ export function getColumns(confirmar: (data: Turno) => void, openEdit: (data: Tu
   ]
 //]
 }
-export default function DataTableTurnos({datos, openEdit, abrirConfirmar}:Props) {
+export default function DataTableBanners({datos, openEdit, abrirConfirmar}:Props) {
   const [sorting, setSorting]                   = useState<SortingState>([])
   const [columnFilters, setColumnFilters]       = useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
@@ -132,14 +171,17 @@ export default function DataTableTurnos({datos, openEdit, abrirConfirmar}:Props)
     const texto = busqueda.toLowerCase();
     return busqueda
       ? datos.filter((campo) =>
-          campo.turno_id?.toString().includes(texto) ||
-          campo.nombre?.toLowerCase().includes(texto) 
+          campo.id?.toString().includes(texto) ||
+          campo.url?.toLowerCase().includes(texto) ||
+          campo.title?.toLowerCase().includes(texto) ||
+          campo.description?.toLowerCase().includes(texto) ||
+          campo.priority?.toString().toLowerCase().includes(texto) 
         )
       : datos;
   }, [busqueda, datos]);
 
   //functions
-  const confirmar = (data: Turno) => {
+  const confirmar = (data: Banner) => {
     abrirConfirmar(data);
   };
   const columns = getColumns(confirmar, openEdit); 
@@ -221,7 +263,7 @@ export default function DataTableTurnos({datos, openEdit, abrirConfirmar}:Props)
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  No hay resultados para mostrar. Utiliza los filtros para obtener turnos.
+                  No hay resultados para mostrar. Utiliza los filtros para obtener banners.
                 </TableCell>
               </TableRow>
             )}

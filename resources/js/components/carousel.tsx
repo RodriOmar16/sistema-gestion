@@ -40,7 +40,7 @@ const Carousel: React.FC<CarouselProps> = ({
               key={i}
               src={src}
               className="w-full flex-shrink-0 object-cover h-64 sm:h-80 md:h-[400px] lg:h-
-              [500px] xl:h-[600px]"
+              [480px] xl:h-[480px]"
               alt={`Slide ${i + 1}`}
             />
           ))

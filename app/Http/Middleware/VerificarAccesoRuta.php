@@ -25,16 +25,9 @@ class VerificarAccesoRuta
             return $next($request);
         }
 
-        /*$tieneAcceso = Ruta::where('url', '/' . $rutaActual)
-            ->whereHas('roles', function ($q) use ($usuario) {
-                $q->whereIn('rol_id', $usuario->roles->pluck('rol_id'));
-            })->exists();
-
-        if (!$tieneAcceso) {
-            abort(403, 'Acceso no autorizado');
+        if ($ruta->inhabilitada) {
+            abort(403, 'Ruta inhabilitada');
         }
-
-        return $next($request);*/
 
         $tieneAcceso = $ruta->roles()->whereIn('rol_id', $usuario->roles->pluck('rol_id'))->exists();
 

@@ -1,74 +1,53 @@
-import AppLayout from "@/layouts/app-layout";
-import { type BreadcrumbItem } from "@/types";
-import { Head, usePage, useForm, router } from '@inertiajs/react';
-import ModalConfirmar from "@/components/modalConfirmar";
-import NewEditBanner from "../../components/banners/newEdit";
-import { Button } from '@/components/ui/button';
+import { Head, useForm, router, usePage } from '@inertiajs/react';
+import { useState, useEffect } from 'react';
+import { route } from 'ziggy-js';
 import { Input } from '@/components/ui/input';
-import { useState } from 'react';
-import { Banner } from "@/types/typeCrud";
-import { Pen, Ban, Search, Brush, Loader2, CirclePlus, Filter, Check } from 'lucide-react';
-import {
-  Select,  SelectContent,  SelectItem,  SelectTrigger,  SelectValue,
-} from "@/components/ui/select"
-import {
-  Table, TableBody, TableCell, TableFooter, TableHead, TableHeader,  TableRow,
-} from "@/components/ui/table";
+import { Switch } from '@/components/ui/switch';
+import { Button } from '@/components/ui/button';
+import AppLayout from '@/layouts/app-layout';
+import { BreadcrumbItem } from '@/types';
+import { Banner } from '@/types/typeCrud';
+import { Search, Brush, Loader2, CirclePlus, Filter, Check } from 'lucide-react';
+import DataTableBanners from '@/components/banners/dataTableBanners';
+import NewEditBanner from '@/components/banners/newEdit';
+import ModalConfirmar from '@/components/modalConfirmar';
+import ShowMessage from '@/components/utils/showMessage';
 
-const breadcrumbs: BreadcrumbItem[] = [
-  {
-    title: 'Banners',
-    href: '/banners',
-  },
-];
+const breadcrumbs: BreadcrumbItem[] = [ { title: 'Banners', href: '', } ];
 
-export const FormBanners = ({ openCreate }: { openCreate: () => void }) => {
-	const [loading, setLoading] = useState(false);
+type propsForm = {
+	openCreate: () => void;
+	resetearBanner: (data:Banner[]) => void;
+}
 
-	const { filters } = usePage().props as { filters?: { id: string; url: string; title:string; description: string; priority: number|string; inhabilitado: boolean|string } };
+const bannerVacio = {
+  id:    				'',
+  url:   				'',
+  title: 				'',
+  description:  '',
+  priority:     '',
+  inhabilitado: false,
+}
 
-	const { data, setData, get, processing, errors } = useForm<{
-		id: string;
-		url: string;
-    title: string;
-		description: string;
-    priority: number|string;
-		inhabilitado: string | boolean;
-	}>({
-		id: filters?.id || '',
-		url: filters?.url || '',
-    title: filters?.title || '',
-		description: filters?.description || '',
-    priority: filters?.priority || '',
-		inhabilitado: filters?.inhabilitado ?? '',
-	});
+export function FiltrosForm({ openCreate, resetearBanner }: propsForm){
+	const [esperandoRespuesta, setEsperandoRespuesta] = useState(false);
+	const { data, setData, errors, processing }       = useForm<Banner>(bannerVacio);
+	const [load, setLoad]                             = useState(false);
 
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
-		setLoading(true);
-		router.get('/carousel', {
-			id: data.id,
-			url: data.url,
-      title: data.title,
-			description: data.description,
-      priority: data.priority,
-			inhabilitado: data.inhabilitado,
-		}, {
+		resetearBanner([]);
+		setLoad(true);
+		const payload = { ...data, buscar: true }
+		
+		router.get(route('banners.index'), payload, {
 			preserveState: true,
 			preserveScroll: true,
-			onFinish: () => setLoading(false),
+			onFinish: () => setLoad(false),
 		});
 	};
-
 	const handleReset = () => {
-		setData({
-			id: '',
-			url: '',
-      title:'',
-			description: '',
-      priority: '',
-			inhabilitado: ''
-		});
+		setData(bannerVacio);
 	};
 
 	return (
@@ -87,49 +66,36 @@ export const FormBanners = ({ openCreate }: { openCreate: () => void }) => {
 				</Button>
 			</div>
 			<form className='grid grid-cols-12 gap-4 px-4 pt-1 pb-4' onSubmit={handleSubmit}>
-				<div className="col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-2">
+				<div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-2'>
 					<label htmlFor="id">Id</label>
-					<Input value={data.id} onChange={(e)=>setData('id',e.target.value)}/>	
+					<Input className='text-right' value={data.id} onChange={(e)=>setData('id',Number(e.target.value))}/>	
 					{ errors.id && <p className='text-red-500	'>{ errors.id }</p> }
 				</div>
-				<div className="col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-2">
-					<label htmlFor="nombre">Url</label>
+				<div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-5'>
+					<label htmlFor="url">Url</label>
 					<Input value={data.url} onChange={(e)=>setData('url',e.target.value)}/>	
 					{ errors.url && <p className='text-red-500	'>{ errors.url }</p> }
-				</div>
-				<div className="col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-2">
-					<label htmlFor="descripcion">Título</label>
+				</div>  
+				<div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-5'>
+					<label htmlFor="title">Título</label>
 					<Input value={data.title} onChange={(e)=>setData('title',e.target.value)}/>	
 					{ errors.title && <p className='text-red-500	'>{ errors.title }</p> }
-				</div>
-				<div className="col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-2">
-					<label htmlFor="descripcion">Descripción</label>
+				</div>  
+				<div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-4'>
+					<label htmlFor="description">Descripción</label>
 					<Input value={data.description} onChange={(e)=>setData('description',e.target.value)}/>	
 					{ errors.description && <p className='text-red-500	'>{ errors.description }</p> }
 				</div>
-				<div className="col-span-6 sm:col-span-4 md:col-span-4 lg:col-span-2">
-					<label htmlFor="estado">Estado</label>
-					<Select
-						value={data.inhabilitado === '' ? 'all' : String(!data.inhabilitado)}
-						onValueChange={(value) => {
-							if (value === 'all') {
-								setData('inhabilitado', '');
-							} else {
-								setData('inhabilitado', value === 'true' ? false : true);
-							}
-						}}
-					>
-						<SelectTrigger className="w-[180px]">
-							<SelectValue placeholder="Seleccionar estado" />
-						</SelectTrigger>
-						<SelectContent>
-							<SelectItem value="true">Habilitado</SelectItem>
-							<SelectItem value="false">Inhabilitado</SelectItem>
-							<SelectItem value="all">Todos</SelectItem>
-						</SelectContent>
-					</Select>
+				<div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
+					<label htmlFor="priority">Prioridad</label>
+					<Input value={data.priority} onChange={(e)=>setData('priority',e.target.value)}/>	
+					{ errors.priority && <p className='text-red-500	'>{ errors.priority }</p> }
+				</div>        
+				<div className='col-span-6 sm:col-span-4 md:col-span-4 lg:col-span-2 flex flex-col'>
+					<label className='mr-2'>Inhabilitado</label>
+					<Switch checked={data.inhabilitado==0 ? false: true} onCheckedChange={(val) => setData('inhabilitado', val)} />
 				</div>
-				<div className='col-span-6 sm:col-span-4 md:col-span-4 lg:col-span-2 flex justify-end items-center'>
+				<div className='col-span-6 sm:col-span-12 md:col-span-12 lg:col-span-3 flex justify-end items-center'>
 					<Button 
 						className="p-0 hover:bg-transparent cursor-pointer"
 						type="button"
@@ -140,12 +106,9 @@ export const FormBanners = ({ openCreate }: { openCreate: () => void }) => {
 					>
 						<Brush size={30} className="text-orange-500" />
 					</Button>
-					<Button type="submit" title="Buscar" disabled={processing}>
-						{loading ? (
-							<Loader2 size={20} className="animate-spin mr-2" />
-						) : (
-							<Search size={20} className="mr-2" />
-						)}
+					<Button type="submit" title="Buscar" disabled={load}>
+						{load ? (<Loader2 size={20} className="animate-spin" />) : 
+										(<Search size={20} className="" />)}
 						Buscar
 					</Button>
 				</div>
@@ -154,240 +117,204 @@ export const FormBanners = ({ openCreate }: { openCreate: () => void }) => {
 	);
 };
 
-export function TablaBanners({ openEdit }: { openEdit: (banner: Banner) => void }) {
-	const bannerVacio = {
-		id: '',
-    url: '',
-    title:'' ,
-    description: '',
-    priority: '',
-    inhabilitado: false,
-    created_at: '',
-    updated_at: '',
-	}
-
-  const { banners } = usePage().props as { banners?: { data: Banner[] } };
-	const [openConfirmar, setConfirmar]     = useState(false);
+export default function Banners(){
+	//data
+	const [confirmOpen, setConfirOpen] = useState(false); //modal para confirmar acciones para cuado se crea o edita
+	const [textConfir, setTextConfirm] = useState('');
+	
+	const [modalOpen, setModalOpen]         	= useState(false); //modal editar/crear
+	const [modalMode, setModalMode]         	= useState<'create' | 'edit'>('create');
+	const [selectedBanner, setSelectedBanner] = useState<Banner | undefined>(undefined);
+	const [pendingData, setPendingData]     	= useState<Banner | undefined>(undefined);
+	const [loading, setLoading]             	= useState(false);
+	
+	const [openConfirmar, setConfirmar]     = useState(false); //para editar el estado
 	const [textConfirmar, setTextConfirmar] = useState(''); 
-	const [bannerCopia, setBannerCopia]   = useState<Banner>(bannerVacio);
+	const [bannerCopia, setBannerCopia]     = useState<Banner>(bannerVacio);
 
-	const confirmar = (banner: Banner) => {
-		if(banner){
-			setBannerCopia( JSON.parse(JSON.stringify(banner)) );
-			const texto : string = banner.inhabilitado === 0 ? 'inhabilitar': 'habilitar';
+	const [activo, setActivo] = useState(false);//ShowMessage
+	const [text, setText]     = useState('');
+	const [title, setTitle]   = useState('');
+	const [color, setColor]   = useState('');
+
+	const { banners } = usePage().props as { banners?: Banner[] }; //necesito los props de inertia
+	const { resultado, mensaje, id, timestamp } = usePage().props as {
+		resultado?: number;
+		mensaje?: string;
+		id?: number;
+		timestamp?: number;
+	};
+	
+	const [ultimoTimestamp, setUltimoTimestamp] = useState<number | null>(null);
+	const [bannersCacheados, setBannersCacheados] = useState<Banner[]>([]);
+
+	//funciones
+	const confirmar = (data: Banner) => {
+		if(data){
+			setBannerCopia( JSON.parse(JSON.stringify(data)) );
+			const texto : string = data.inhabilitado === 0 ? 'inhabilitar': 'habilitar';
 			setTextConfirmar('Estás seguro de querer '+texto+' este banner?');
 			setConfirmar(true);
+			setModalMode('edit');
 		}
 	};
-
 	const inhabilitarHabilitar = () => {
 		if (!bannerCopia || !bannerCopia.id) return;
-
-		router.put(`/carousel/${bannerCopia.id}/estado`, {}, {
-			preserveScroll: true,
-			onFinish: () => {
-				setBannerCopia(bannerVacio);
-				setTextConfirmar('');
-				setConfirmar(false);
+		
+		setLoading(true);
+		router.put(
+			route('turnos.toggleEstado', { carousel: bannerCopia.id }),{},
+			{
+				preserveScroll: true,
+				preserveState: true,
+				onFinish: () => {
+					setLoading(false);
+					setTextConfirmar('');
+					setConfirmar(false);
+					setBannerCopia(bannerVacio);
+				}
 			}
-		});
+		);
 	};
 
-	const cancelarConfirmacion = () => { 
+	const cancelarInhabilitarHabilitar = () => { 
 		setConfirmar(false);
 	};
 
-  return (
-    <div>
-			{/*<div className='pb-2'>
-				<PdfButton
-					deshabilitado={projects?.data?.length==0}
-				/>
-			</div>*/}
-			<Table>
-				<TableHeader>
-					<TableRow>
-						<TableHead className="w-[80px]">ID</TableHead>
-						<TableHead>Url</TableHead>
-						<TableHead>Título</TableHead>
-						<TableHead>Descripción</TableHead>
-						<TableHead>Estado</TableHead>
-						<TableHead>Acciones</TableHead>
-					</TableRow>
-				</TableHeader>
-				<TableBody>
-					{banners?.data?.length ? (
-							banners.data.map((banner) => (
-								<TableRow key={banner.id}>
-									<TableCell className="font-medium">{banner.id}</TableCell>
-									<TableCell>{banner.url}</TableCell>
-                  <TableCell>{banner.title}</TableCell>
-									<TableCell>{banner.description}</TableCell>
-                  <TableCell>{banner.inhabilitado === 0? 'Habilitado' : 'Inhabilitado'}</TableCell>
-									<TableCell>
-										<div className='flex'>
-											{
-												banner?.inhabilitado === 0 ? (
-													<>
-														<Button 
-															className="p-0 hover:bg-transparent cursor-pointer"
-															title="Editar" 
-															variant="ghost" 
-															size="icon" 
-															onClick={() => openEdit(banner)}>
-															<Pen size={20} className="text-orange-500" />
-														</Button>
-														<Button 
-															className="p-0 hover:bg-transparent cursor-pointer"
-															title="Inhabilitar" 
-															variant="ghost" 
-															size="icon"
-															onClick={ () => confirmar(banner) }>
-															<Ban size={20} className="text-red-500" />
-														</Button>
-													</>
-												) : (
-													<>
-														<Button 
-															className="p-0 hover:bg-transparent cursor-pointer"
-															title="Habilitar" 
-															variant="ghost" 
-															size="icon"
-															onClick={ () => confirmar(banner) }
-														>
-															<Check size={20} className='text-green-600'/>
-														</Button>
-													</>
-												)
-											}
-										</div>
-									</TableCell>
-								</TableRow>
-							))
-					): ( 
-							<TableRow>
-								<TableCell colSpan={6} className="text-center text-muted-foreground">
-									No hay resultados. Usá el formulario para buscar.
-								</TableCell>
-							</TableRow>
-						)
+	const openCreate = () => {
+		setModalMode('create');
+		setSelectedBanner(undefined);
+		setModalOpen(true);
+	};
+
+	const openEdit = (data: Banner) => {
+		setModalMode('edit');
+		setSelectedBanner(data);
+		setModalOpen(true);
+	};
+
+	const handleSave = (data: Banner) => {
+		setPendingData(data);
+		let texto = (modalMode === 'create')? 'grabar' : 'guardar cambios a';
+		setTextConfirm('¿Estás seguro de '+texto+' este banner?');
+		setConfirOpen(true);
+	};
+
+	const accionar = () => {
+		if (!pendingData) return;
+		setLoading(true);
+
+		const payload = JSON.parse(JSON.stringify(pendingData));
+		console.log("payload: ", payload)
+		if (modalMode === 'create') {
+			router.post(
+				route('banners.store'), payload,
+				{
+					preserveScroll: true,
+					preserveState: true,
+					onFinish: () => {
+						setLoading(false);
+						setTextConfirmar('');
+						setConfirmar(false);
+						setBannerCopia(bannerVacio);
 					}
-				</TableBody>
-				<TableFooter>
-					<TableRow>
-						{/* Podés agregar resumen o totales si lo necesitás */}
-					</TableRow>
-				</TableFooter>
-			</Table>
-			<ModalConfirmar
-				open={openConfirmar}
-				text={textConfirmar}
-				onSubmit={inhabilitarHabilitar}
-				onCancel={cancelarConfirmacion}
-			/>
-		</div>
-  );
-}
+				}
+			);
+		} else {
+			router.put(
+				route('banners.update',{carousel: pendingData.id}), payload,
+				{
+					preserveScroll: true,
+					preserveState: true,
+					onFinish: () => {
+						setLoading(false);
+						setPendingData(undefined);
+					}
+				}
+			);
+		}
+		setConfirOpen(false);
+	};
 
-export default function Banners(){
-//para guardar la data del modal mientras se abre el modal de confirmar
-  const [pendingData, setPendingData] = useState<Banner | undefined>(undefined);
+	const cancelarConfirmacion = () => {
+		setConfirOpen(false);
+	};
 
-  //controla cuando se abre el modal de confirmar y el texto que se quiera mostrar
-  const [confirmOpen, setConfirOpen] = useState(false);
-  const [textConfir, setTextConfirm] = useState('');
-
-  //controla el modal newEdit y los datos que recibe para mostrarlos
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
-  const [selectedProject, setSelectedProject] = useState<Banner | undefined>(undefined);
-
-  //para dar la apariencia de loading
-  const [loading, setLoading] = useState(false);
-
-  const openCreate = () => {
-    setModalMode('create');
-    setSelectedProject(undefined);
-    setModalOpen(true);
-  };
-
-  const openEdit = (project: Banner) => {
-    setModalMode('edit');
-    setSelectedProject(project);
-    setModalOpen(true);
-  };
-
-  const handleSave = (data: Banner) => {
-    setPendingData(data);
-    if (modalMode === 'create') {
-      setTextConfirm('¿Estás seguro de grabar este proyecto?');
-    } else {
-      setTextConfirm('¿Estás seguro de guardar cambios a este proyecto?');
-    }
-    setConfirOpen(true);
-  };
+	//effect
+	useEffect(() => {
+		if (
+			banners &&
+			banners.length > 0 &&
+			JSON.stringify(banners) !== JSON.stringify(bannersCacheados)
+		) {
+			setBannersCacheados(banners);
+		}
+	}, [banners]);
 
 
-  const accionar = () => {
-    if (!pendingData) return;
-    setLoading(true);
+	useEffect(() => {
+		const cambioDetectado = timestamp && timestamp !== ultimoTimestamp;
 
-    const payload = {
-      url: pendingData.url,
-      description: pendingData.description,
-    };
+		if (cambioDetectado) {
+			setUltimoTimestamp(timestamp)
 
-    if (modalMode === 'create') {
-      router.post('/carousel', payload, {
-        onFinish: () => {
-          setLoading(false);
-          setModalOpen(false);
-          setPendingData(undefined);
-        }
-      });
-    } else {
-      router.put(`/carousel/${pendingData.id}`, payload, {
-        onFinish: () => {
-          setLoading(false);
-          setModalOpen(false);
-          setPendingData(undefined);
-        }
-      });
-    }
+			const esError = resultado === 0;
+			setTitle(esError ? 'Error' : modalMode === 'create' ? 'Banner nuevo' : 'Banner modificado');
+			setText(esError ? mensaje ?? 'Error inesperado' : `${mensaje} (ID: ${id})`);
+			setColor(esError ? 'error' : 'success');
+			setActivo(true);
 
-    setConfirOpen(false);
-  };
+			if (resultado === 1 && id) {
+				setModalOpen(false);
+				router.get(route('banners.index'),
+					{ id, buscar: true },
+					{ preserveScroll: true,	preserveState: true	}
+				)
+			}
+		}
+	}, [timestamp]);
 
-  const cancelarConfirmacion = () => {
-    setConfirOpen(false);
-  };
-
-  return (
-    <AppLayout breadcrumbs={breadcrumbs}>
+	return (
+		<AppLayout breadcrumbs={breadcrumbs}>
 			<Head title="Banners" />
 			<div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
 				<div className="relative flex-none flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
-					<FormBanners openCreate={openCreate}/>
+					<FiltrosForm openCreate={openCreate} resetearBanner={setBannersCacheados}/>
 				</div>
 				<div className="p-4 relative flex-1 overflow-auto rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
-					<h2 className='text-center pb-4'>Resultado de Banners</h2>
-					<TablaBanners openEdit={openEdit} />
+					<DataTableBanners
+						datos={bannersCacheados?? []} 
+						openEdit={openEdit} 
+						abrirConfirmar={confirmar}
+						/>
 				</div>
 			</div>
-			{/*<NewEditBanner
+			<NewEditBanner
 				open={modalOpen}
 				onOpenChange={setModalOpen}
 				mode={modalMode}
-				project={selectedProject}
+				banner={selectedBanner}
 				onSubmit={handleSave}
-				loading={loading}
-			/>*/}
+			/>
 			<ModalConfirmar
 				open={confirmOpen}
 				text={textConfir}
 				onSubmit={accionar}
 				onCancel={cancelarConfirmacion}
 			/>
+			<ModalConfirmar
+				open={openConfirmar}
+				text={textConfirmar}
+				onSubmit={inhabilitarHabilitar}
+				onCancel={cancelarInhabilitarHabilitar}
+			/>
+			<ShowMessage 
+				open={activo}
+				title={title}
+				text={text}
+				color={color}
+				onClose={() => setActivo(false)}
+			/>
 		</AppLayout>
-  );
+	);
 }

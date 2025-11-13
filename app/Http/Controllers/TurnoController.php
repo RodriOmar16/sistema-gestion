@@ -67,6 +67,7 @@ class TurnoController extends Controller
         return inertia('turnos/index',[
           'resultado' => 0,
           'mensaje'   => 'Ya existe un turno registrado con ese nombre.',
+          'timestamp' => now()->timestamp,
         ]);
       }
       //creo el turno
@@ -79,13 +80,15 @@ class TurnoController extends Controller
       return inertia('turnos/index',[
         'resultado' => 1,
         'mensaje'   => 'Turno creado correctamente',
-        'turno_id'  => $turno->turno_id
+        'turno_id'  => $turno->turno_id,
+        'timestamp' => now()->timestamp,
       ]);
     } catch (\Throwable $e) {
       DB::rollback();
       return inertia('turnos/index',[
         'resultado' => 0,
         'mensaje'   => "Ocurrió un error al crear el turno: ".$e->getMessage(),
+        'timestamp' => now()->timestamp,
       ]);
     }
   }
@@ -109,6 +112,7 @@ class TurnoController extends Controller
         return inertia('turnos/index',[
           'resultado' => 0,
           'mensaje'   => 'Ya existe un turno registrado con ese nombre.',
+          'timestamp' => now()->timestamp,
         ]);
       }
       //creo el turno
@@ -121,13 +125,15 @@ class TurnoController extends Controller
       return inertia('turnos/index',[
         'resultado' => 1,
         'mensaje'   => 'Turno modificado correctamente',
-        'turno_id'  => $turno->turno_id
+        'turno_id'  => $turno->turno_id,
+        'timestamp' => now()->timestamp,
       ]);
     } catch (\Throwable $e) {
       DB::rollback();
       return inertia('turnos/index',[
         'resultado' => 0,
         'mensaje'   => "Ocurrió un error al modificar el turno: ".$e->getMessage(),
+        'timestamp' => now()->timestamp,
       ]);
     }
   }
@@ -138,7 +144,8 @@ class TurnoController extends Controller
     return inertia('turnos/index',[
       'resultado' => 1,
       'mensaje'   => 'Estado modificado existosamente',
-      'turno_id'  => $turno->turno_id
+      'turno_id'  => $turno->turno_id,
+      'timestamp' => now()->timestamp,
     ]);
   }
 }

@@ -56,9 +56,20 @@ class TurnoController extends Controller
     try {
       //controlo los datos
       $validated = $request->validate([
-        'nombre'       => 'required|string|max:255',
-        'inhabilitado' => 'boolean'
+        'nombre'        => 'required|string|max:255',
+        'apertura'      => 'required|date_format:H:i:s',
+        'cierre'        => 'required|date_format:H:i:s',
+        'inhabilitado'  => 'boolean'
       ]);
+      if (strtotime($validated['apertura']) >= strtotime($validated['cierre'])) {
+        DB::rollback();
+        return inertia('turnos/index', [
+          'resultado' => 0,
+          'mensaje'   => 'La hora de apertura debe ser anterior a la hora de cierre.',
+          'timestamp' => now()->timestamp,
+        ]);
+      }
+
       //verifico que no se repita
       $nombre = strtolower(trim($validated['nombre']));
       $existe = Turno::whereRaw('LOWER(TRIM(nombre)) = ?', [$nombre])->exists();
@@ -70,10 +81,14 @@ class TurnoController extends Controller
           'timestamp' => now()->timestamp,
         ]);
       }
+
       //creo el turno
       $turno = Turno::create([
         'nombre'       => $validated['nombre'],
+        'apertura'     => $validated['apertura'],
+        'cierre'       => $validated['cierre'],
         'inhabilitado' => $validated['inhabilitado'] ? 1 : 0,
+        'created_at'   => now(),
       ]);
       //commit
       DB::commit();
@@ -99,9 +114,19 @@ class TurnoController extends Controller
     try {
       //controlo los datos
       $validated = $request->validate([
-        'nombre'       => 'required|string|max:255',
-        'inhabilitado' => 'boolean'
+        'nombre'        => 'required|string|max:255',
+        'apertura'      => 'required|date_format:H:i:s',
+        'cierre'        => 'required|date_format:H:i:s',
+        'inhabilitado'  => 'boolean'
       ]);
+      if (strtotime($validated['apertura']) >= strtotime($validated['cierre'])) {
+        DB::rollback();
+        return inertia('turnos/index', [
+          'resultado' => 0,
+          'mensaje'   => 'La hora de apertura debe ser anterior a la hora de cierre.',
+          'timestamp' => now()->timestamp,
+        ]);
+      }
       //verifico que no se repita
       $nombre = strtolower(trim($validated['nombre']));
       $existe = Turno::whereRaw('LOWER(TRIM(nombre)) = ?', [$nombre])
@@ -118,7 +143,10 @@ class TurnoController extends Controller
       //creo el turno
       $turno->update([
         'nombre'       => $validated['nombre'],
+        'apertura'     => $validated['apertura'],
+        'cierre'       => $validated['cierre'],
         'inhabilitado' => $validated['inhabilitado'] ? 1 : 0,
+        'updated_at'   => now(),
       ]);
       //commit
       DB::commit();

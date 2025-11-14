@@ -23,6 +23,8 @@ type propsForm = {
 const turnoVacio = {
   turno_id:     '',
   nombre:       '',
+  apertura:     '',
+  cierre:       '',
   inhabilitado: false,
 }
 

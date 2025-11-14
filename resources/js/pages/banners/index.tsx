@@ -163,7 +163,7 @@ export default function Banners(){
 		
 		setLoading(true);
 		router.put(
-			route('turnos.toggleEstado', { carousel: bannerCopia.id }),{},
+			route('banners.toggleEstado', { carousel: bannerCopia.id }),{},
 			{
 				preserveScroll: true,
 				preserveState: true,

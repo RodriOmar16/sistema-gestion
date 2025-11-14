@@ -49,6 +49,30 @@ export function getColumns(confirmar: (data: Turno) => void, openEdit: (data: Tu
       cell: ({ row }) => ( <div className="">{row.getValue("nombre")}</div> ),
     },
     {
+      accessorKey: "apertura",
+      header: ({column}) => {
+        return (
+          <div className="flex">
+            Apertura
+          </div>
+        )
+      }
+      ,
+      cell: ({ row }) => ( <div className="">{row.getValue("apertura")}</div> ),
+    },
+    {
+      accessorKey: "cierre",
+      header: ({column}) => {
+        return (
+          <div className="flex">
+            Cierre
+          </div>
+        )
+      }
+      ,
+      cell: ({ row }) => ( <div className="">{row.getValue("cierre")}</div> ),
+    },
+    {
       accessorKey: "inhabilitado",
       header: ({column}) => {
         return (

@@ -14,7 +14,7 @@ class Turno extends Model
 
     protected $table      = 'turnos';
     protected $primaryKey = 'turno_id';
-    protected $fillable   = ['nombre', 'inhabilitado'];
+    protected $fillable   = ['nombre', 'inhabilitado', 'apertura', 'cierre'];
 
     public function cajas() {
         return $this->hasOne(Caja::class, 'turno_id');

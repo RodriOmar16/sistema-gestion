@@ -116,7 +116,7 @@ class VentaController extends Controller
 
       //creo la venta
       $venta = Venta::create([
-        'fecha_grabacion' => $validated['fecha_grabacion'],
+        'fecha_grabacion' => now(),
         'cliente_id'      => $cliente_id,
         'total'           => $validated['total'],
         'anulada'         => $validated['anulada'] ? 1 : 0,
@@ -161,7 +161,7 @@ class VentaController extends Controller
         VentaPago::create([
           'venta_id'      => $venta->venta_id,
           'forma_pago_id' => $fp['id'],
-          'fecha_pago'    => $fp['fecha'],
+          'fecha_pago'    => now() /*$fp['fecha']*/,
           'monto'         => $fp['monto']
         ]);
       }

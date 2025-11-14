@@ -161,6 +161,8 @@ export interface Venta{
 export interface Turno{
   turno_id:     string|number;
   nombre:       string;
+  apertura:     string;
+  cierre:       string;
   inhabilitado: boolean | 1 | 0 | 'true' | 'false';
 }
 

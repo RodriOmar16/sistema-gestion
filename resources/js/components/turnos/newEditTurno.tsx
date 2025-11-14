@@ -11,9 +11,6 @@ import React, { useState, useEffect } from "react"
 import { Loader2 } from 'lucide-react';
 import ShowMessage from "@/components/utils/showMessage";
 import { Turno } from "@/types/typeCrud";
-import InputDni from "../utils/input-dni";
-import { DatePicker } from '@/components/utils/date-picker';
-import { convertirFechaBarrasGuiones } from "@/utils";
 
 interface Props{
   open: boolean;
@@ -26,6 +23,8 @@ interface Props{
 const turnoVacio = {
   turno_id:     '',
   nombre:       '',
+  apertura:     '',
+  cierre:       '',
   inhabilitado: false 
 }
 
@@ -46,10 +45,12 @@ export default function NewEditTurno({ open, onOpenChange, mode, turno, onSubmit
   useEffect(() => {
     if (turno && mode === 'edit') {
       setData({
-        turno_id:         turno.turno_id,
-        nombre:           turno.nombre,
-        inhabilitado:     turno.inhabilitado,
-      });      
+        turno_id:     turno.turno_id,
+        nombre:       turno.nombre,
+        apertura:     turno.apertura,
+        cierre:       turno.cierre,
+        inhabilitado: turno.inhabilitado,
+      });
     } else {
       setData(turnoVacio);
     }
@@ -61,6 +62,18 @@ export default function NewEditTurno({ open, onOpenChange, mode, turno, onSubmit
     if(!data.nombre){
       setTitle('¡Campo faltante!');
       setText('Se requiere que ingreses un nombre válido');
+      setActivo(true);
+      return 
+    }
+    if(!data.apertura || data.apertura.length < 5){
+      setTitle('¡Campo faltante!');
+      setText('Se requiere que ingreses un horario de apertura válido');
+      setActivo(true);
+      return 
+    }
+    if(!data.cierre || data.cierre.length < 5){
+      setTitle('¡Campo faltante!');
+      setText('Se requiere que ingreses un horario de cierre válido');
       setActivo(true);
       return 
     }
@@ -98,6 +111,26 @@ export default function NewEditTurno({ open, onOpenChange, mode, turno, onSubmit
               value={data.nombre}
               onChange={(e) => setData({ ...data, nombre: e.target.value })}
               placeholder="Ingresar nombre"
+            />
+          </div>
+          <div className="col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-4">
+            <label htmlFor="apertura" className='mr-2'>Hora apertura</label>
+            <Input
+              type="time"
+              value={data.apertura}
+              onChange={(e) => setData('apertura',e.target.value)}
+              step="1"
+              className="bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
+            />
+          </div>
+          <div className="col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-4">
+            <label htmlFor="cierre" className='mr-2'>Hora cierre</label>
+            <Input
+              type="time"
+              value={data.cierre}
+              onChange={(e) => setData('cierre',e.target.value)}
+              step="1"
+              className="bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
             />
           </div>
           <div className="col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-6 flex flex-col">

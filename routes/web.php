@@ -50,7 +50,7 @@ Route::middleware(['auth'])->get('/menu-usuario', [MenuWebController::class, 'me
 Route::middleware(['auth', 'verificarRuta'])->group(function () {
     //dashboard
     Route::get('dashboard', function () {
-        $images = Carousel::orderBy('priority')->pluck('url')->toArray();
+        $images = Carousel::where('inhabilitado', false)->orderBy('priority')->pluck('url')->toArray();
         return Inertia::render('dashboard', [
             'carouselImages' => $images,
         ]);

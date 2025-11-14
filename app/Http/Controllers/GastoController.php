@@ -2,65 +2,122 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Gasto;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
 use App\Http\Requests\StoreGastoRequest;
 use App\Http\Requests\UpdateGastoRequest;
 
+use App\Models\Gasto;
+
 class GastoController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        //
+  public function index(Request $request)
+  {
+    if(!$request->has('buscar')){
+      return inertia('gastos/index',[
+        'gastos' => []
+      ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
+    $query = Gasto::query();
+    if($request->filled('gasto_id')){
+      $query->where('gasto_id', $request->gasto_id);
+    }
+    if($request->filled('caja_id')){
+      $query->where('caja_id', $request->caja_id);
+    }
+    if($request->filled('proveedor_id')){
+      $query->where('proveedor_id', $request->proveedor_id);
+    }
+    if ($request->filled('fecha_desde')) {
+      $query->where('fecha', '>=', $request->fecha_desde);
+    }
+    if ($request->filled('fecha_hasta')) {
+      $query->where('fecha', '<=', $request->fecha_hasta);
+    }
+    if($request->filled('descripcion')){
+      $query->where('descripcion', 'like', '%'.$request->descripcion.'%');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(StoreGastoRequest $request)
-    {
-        //
-    }
+    $gastos = $query->latest()->get();
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Gasto $gasto)
-    {
-        //
-    }
+    return inertia('gastos/index',[
+      'gastos' => $gastos
+    ]);
+  }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Gasto $gasto)
-    {
-        //
-    }
+  public function store(Request $request)
+  {
+    DB::beginTransaction();
+    try {
+      //controlo los datos
+      $validated = $request->validate([
+        'fecha'            => 'required|date',
+        'caja_id'          => 'integer',
+        'proveedor_id'     => 'integer',
+        'monto'            => 'required|numeric',
+        'descripcion'      => 'string|max:255',
+      ]);
+      
+      //creo el gasto
+      $gasto = Gasto::create([
+        'fecha'            => $validated['fecha'],
+        'caja_id'          => $request->caja_id ?? null,
+        'proveedor_id'     => $validated['proveedor_id'],
+        'monto'            => $validated['monto'],
+        'descripcion'      => $validated['descripcion'],
+        'created_at'       => now(),
+      ]);
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(UpdateGastoRequest $request, Gasto $gasto)
-    {
-        //
+      //éxito
+      DB::commit();
+      return inertia('gastos/index',[
+        'resultado' => 1,
+        'mensaje'   => 'El gasto se creó correctamente',
+        'gasto_id'  => $gasto->gasto_id,
+        'timestamp' => now()->timestamp
+      ]);
+    } catch (\Throwable $e) {
+      DB::rollback();
+      return inertia('gastos/index',[
+        'resultado' => 0,
+        'mensaje'   => 'Ocurrió un error al intentar crear el gasto: '.$e->getMessage(),
+        'timestamp' => now()->timestamp
+      ]);
     }
+  }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Gasto $gasto)
-    {
-        //
+  public function update(Request $request, Gasto $gasto)
+  {
+    DB::beginTransaction();
+    try {
+      //controlo los datos
+      $validated = $request->validate([
+        'descripcion' => 'string|max:255',
+      ]);
+      
+      //creo el gasto
+      $gasto->update([
+        'descripcion' => $validated['descripcion'],
+        'updated_at'  => now(),
+      ]);
+
+      //éxito
+      DB::commit();
+      return inertia('gastos/index',[
+        'resultado' => 1,
+        'mensaje'   => 'El gasto se modificó correctamente',
+        'gasto_id'  => $gasto->gasto_id,
+        'timestamp' => now()->timestamp
+      ]);
+    } catch (\Throwable $e) {
+      DB::rollback();
+      return inertia('gastos/index',[
+        'resultado' => 0,
+        'mensaje'   => 'Ocurrió un error al intentar actualizar el gasto: '.$e->getMessage(),
+        'timestamp' => now()->timestamp
+      ]);
     }
+  }
 }

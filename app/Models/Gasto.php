@@ -15,7 +15,7 @@ class Gasto extends Model
 
     protected $table      = 'gastos';
     protected $primaryKey = 'gasto_id';
-    protected $fillable   = ['fecha', 'caja_id', 'proveedor_id', 'monto', 'descripcion'];
+    protected $fillable   = ['caja_id', 'proveedor_id', 'fecha', 'monto', 'descripcion'];
 
     public function caja(){
         return $this->belongsTo(Caja::class, 'caja_id');

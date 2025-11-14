@@ -19,10 +19,12 @@ use App\Http\Controllers\FormaPagoController;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\VentaController;
 use App\Http\Controllers\TurnoController;
+use App\Http\Controllers\GastoController;
 use App\Http\Controllers\GraficosController;
 use App\Http\Controllers\StockController;
-use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\CarouselController;
+
+use App\Http\Controllers\ProjectController;
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
@@ -170,6 +172,12 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
     Route::post('/turno/nuevo', [TurnoController::class, 'store'])->name('turnos.store');
     Route::put('/turno/update/{turno}', [TurnoController::class, 'update'])->name('turnos.update');
     Route::put('/turno/cambio-estado/{turno}', [TurnoController::class, 'toggleEstado'])->name('turnos.toggleEstado');
+
+    //Gastos
+    //Route::get('/turnos_habilitados', [GastoController::class, 'turnosHabilitados'])->name('turnos.habilitados');
+    Route::get('/gastos', [GastoController::class, 'index'])->name('gastos.index');
+    Route::post('/gasto/nuevo', [GastoController::class, 'store'])->name('gasto.store');
+    Route::put('/gasto/update/{gasto}', [GastoController::class, 'update'])->name('gasto.update');
 
     //banners
     Route::get('/banners', [CarouselController::class, 'index'])->name('banners.index');

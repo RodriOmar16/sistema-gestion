@@ -164,6 +164,22 @@ export interface Turno{
   apertura:     string;
   cierre:       string;
   inhabilitado: boolean | 1 | 0 | 'true' | 'false';
+  created_at?:  string;
+  updated_at?:  string;
+}
+
+export interface Gasto{
+  gasto_id:         string|number;
+  fecha:            string;
+  fecha_desde:      string;
+  fecha_hasta:      string;
+  caja_id:          string|number;
+  proveedor_id:     number|string;
+  proveedor_nombre: string;
+  monto:            number;
+  descripcion:      string;
+  created_at?:      string;
+  updated_at?:     string;
 }
 
 //para componente selec multiple

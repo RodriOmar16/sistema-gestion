@@ -221,13 +221,33 @@ class MenuWebController extends Controller
         }
 
         $menu->update($validated);
-        $hijos = MenuWeb::where('padre', $padre)->get(); //busco todos los hijos del padre
-        $ordenados = $hijos->sortBy(function ($item) { // ordeno
+        $hijos = MenuWeb::where('padre', $padre)->get();
+
+        // separo los fijos
+        $dashboard = $hijos->firstWhere(fn($item) => strtolower(trim($item->nombre)) === 'dashboard');
+        $inicio   = $hijos->firstWhere(fn($item) => strtolower(trim($item->nombre)) === 'inicio');
+
+        // excluyo los fijos del ordenamiento
+        $resto = $hijos->filter(function ($item) {
+          $nombre = strtolower(trim($item->nombre));
+          return $nombre !== 'dashboard' && $nombre !== 'inicio';
+        })->sortBy(function ($item) {
           return strtolower(trim($item->nombre));
         })->values();
-        foreach ($ordenados as $index => $item) { //genero el orden secuencial
-          MenuWeb::where('menu_id', $item->menu_id)->update(['orden' => $index + 1]);
+
+        // asigno orden desde 3 en adelante
+        foreach ($resto as $index => $item) {
+          MenuWeb::where('menu_id', $item->menu_id)->update(['orden' => $index + 3]);
         }
+
+        // asigno orden fijo a gráficos y inicio
+        if ($inicio) {
+          MenuWeb::where('menu_id', $inicio->menu_id)->update(['orden' => 1]);
+        }
+        if ($dashboard) {
+          MenuWeb::where('menu_id', $dashboard->menu_id)->update(['orden' => 2]);
+        }
+
 
 				DB::commit();
 				return inertia('menu/index', [

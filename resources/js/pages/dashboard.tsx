@@ -1,51 +1,55 @@
-import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
+import { Head, useForm, router, usePage } from '@inertiajs/react';
+import { useState, useEffect } from 'react';
 import AppLayout from '@/layouts/app-layout';
-import { dashboard } from '@/routes';
-import { type BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/react';
-import Carousel from '@/components/carousel';
-import { type SharedData } from '@/types';
-import { usePage } from '@inertiajs/react';
+import { BreadcrumbItem } from '@/types';
+import GraficoBarras from '@/components/utils/grafico-barras';
+import GraficoTortas from '@/components/utils/grafico-tortas';
+import GraficoLineas from '@/components/utils/grafico-lineas';
 
-const breadcrumbs: BreadcrumbItem[] = [ { title: 'Dashboard', href: dashboard().url } ];
+const breadcrumbs: BreadcrumbItem[] = [ { title: 'Gráficos', href: '', } ];
 
-interface PageProps extends SharedData {
-	carouselImages: string[];
+interface PropsMenu{
+  set: (ob:string) => void;
+  tipoGrafico: string;
 }
 
-export default function Dashboard() {
-	const { carouselImages } = usePage<PageProps>().props;
 
-    return (
-			<AppLayout breadcrumbs={breadcrumbs}>
-				<Head title="Dashboard" />
-				<div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
-					<div className="flex w-full items-center justify-center opacity-100 transition-opacity duration-750 lg:grow starting:opacity-0">
-						<main className="flex w-full max-w-[335px] flex-col-reverse lg:max-w-4xl lg:flex-row gap-8">
-							{/* Carousel */}
-							<div className="w-full lg:w-3/4">
-								{Array.isArray(carouselImages) && carouselImages.length > 0 && (
-									<Carousel
-										images={carouselImages}
-										autoPlay
-										interval={4000}
-										pauseOnHover
-									/>
-								)}
-							</div>
-							{/* Seccion de Texto */}
-							<div className="flex flex-col justify-center w-full lg:w-1/4 textcenter lg:text-left">
-								<h1 className="text-3xl font-semibold mb-3 dark:text-white">
-								Bienvenido/a a SGVSA
-								</h1>
-								<p className="text-gray-700 dark:text-gray-300">
-									Este es un sistema versátil, te permite hacer control de Stock, 
-									Ventas y Arqueos de caja.
-								</p>
-							</div>
-						</main>
-						</div>
-				</div>
-			</AppLayout>
-    );
+export default function Graficos(){
+  //data  
+  const [data, setData] = useState<any[]>([
+    { name: 'Enero', ventas: 12000 },
+    { name: 'Febrero', ventas: 9000 },
+    { name: 'Marzo', ventas: 18000 },
+    { name: 'Mayo', ventas: 20000 },
+    { name: 'Junio', ventas: 11000 },
+    { name: 'Julio', ventas: 13500 },
+    { name: 'Agosto', ventas: 9000 },
+    { name: 'Septiembre', ventas: 10000 },
+    { name: 'Octubre', ventas: 15000 },
+  ]);
+  return (
+    <AppLayout breadcrumbs={breadcrumbs}>
+      <Head title="Gráficos" />
+      <div className="grid grid-cols-12 gap-2 h-full overflow-x-auto rounded-xl p-4">
+        <div className="col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-4 overflow-auto rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
+          <div className='ml-4 my-3 text-center'>Barras</div>
+          <GraficoBarras data={data} ejeX='name' ejeY='ventas'/>
+        </div>
+        <div className="col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-4 overflow-auto rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
+          <div className='ml-4 my-3 text-center'>Tortas</div>
+          <GraficoTortas 
+            data={data} 
+            name='name' 
+            valor='ventas'
+            colores={['#0088FE', '#00C49F', '#FFBB28', '#FF8042']}/>
+        </div>
+        <div className="col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-4 overflow-auto rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
+          <div className='ml-4 my-3 text-center'>Líneas</div>
+          <GraficoLineas
+            data={data} name='name' valor='ventas'
+            color="#82ca9d"/>
+        </div>
+      </div>
+    </AppLayout>
+  );
 }

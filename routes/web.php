@@ -36,7 +36,7 @@ Route::get('/login', function () {
 
 Route::get('/', function () {
     return Auth::check()
-        ? redirect()->route('dashboard')
+        ? redirect()->route('inicio')
         : redirect()->route('login');
 });
 
@@ -51,12 +51,12 @@ Route::middleware(['auth'])->get('/menu-usuario', [MenuWebController::class, 'me
 
 Route::middleware(['auth', 'verificarRuta'])->group(function () {
     //dashboard
-    Route::get('dashboard', function () {
+    Route::get('inicio', function () {
         $images = Carousel::where('inhabilitado', false)->orderBy('priority')->pluck('url')->toArray();
-        return Inertia::render('dashboard', [
+        return Inertia::render('inicio/index', [
             'carouselImages' => $images,
         ]);
-    })->name('dashboard');
+    })->name('inicio');
 
     //Menu
     Route::get('/init_menu', [MenuWebController::class, 'padresHabilitados'])->name('menu.padres');
@@ -186,7 +186,7 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
     Route::put('/banner/cambiar-estado/{carousel}', [CarouselController::class, 'toggleEstado'])->name('banners.toggleEstado');
 
     //Gráficos
-    Route::get('/graficos', [GraficosController::class, 'index'])->name('graficos.index');
+    Route::get('/dashboard', [GraficosController::class, 'index'])->name('graficos.index');
     
     //Proyectos
     Route::get('/projects/pdf', [ProjectController::class, 'generarPDF'])->name('projects.pdf');

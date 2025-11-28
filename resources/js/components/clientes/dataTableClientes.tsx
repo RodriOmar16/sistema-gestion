@@ -94,7 +94,7 @@ export function getColumns(confirmar: (data: Cliente) => void, openEdit: (data: 
           </div>
         )
       },
-      cell: ({ row }) => ( <div className="">{formatearNroCompleto(row.getValue("fecha_nacimiento"))}</div> ),
+      cell: ({ row }) => ( <div className="text-right">{formatearNroCompleto(row.getValue("dni"))}</div> ),
     },
     {
       accessorKey: "inhabilitado",

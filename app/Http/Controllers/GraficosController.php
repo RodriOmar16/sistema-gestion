@@ -22,6 +22,6 @@ class GraficosController extends Controller
         ->get();
 
       return view('graficos.index', compact('ventasPorMes', 'productosMasVendidos'));*/
-      return inertia('graficos/index');
+      return inertia('dashboard');
     }
 }

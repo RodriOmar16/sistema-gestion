@@ -60,7 +60,7 @@ export function formatearNroCompleto(nro: string): string {
   let nroInverso = limpio.split('').reverse();
 
   let cad = '';
-  for(let i=0;i<nroInverso.length;i++){
+  for(let i=0; i<nroInverso.length ;i++){
     if(i>0 && i%3==0){
       cad += '.';
     }

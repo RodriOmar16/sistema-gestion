@@ -172,16 +172,13 @@ export default function MenuForm() {
   const [padresMenu, setPadresMenu] = useState([]);
 
   const { menus } = usePage().props as { menus?: Menu[] }; //necesito los props de inertia
-  const { resultado, mensaje, menu_id } = usePage().props as {
+  const { resultado, mensaje, menu_id, timestamp } = usePage().props as {
     resultado?: number;
     mensaje?: string;
     menu_id?: number;
+    timestamp?: number;
   };
-  const [propsActuales, setPropsActuales] = useState<{
-    resultado: number | undefined | null;
-    mensaje: string | undefined | null | '';
-    menu_id: number | undefined | null;
-  }>({ resultado: undefined, mensaje: undefined, menu_id: undefined });
+  const [ultimoTimestamp, setUltimoTimestamp] = useState<number | null>(null);
   const [menusCacheados, setMenusCacheados] = useState<Menu[]>([]);
 
   //funciones
@@ -247,6 +244,7 @@ export default function MenuForm() {
       orden: pendingData.orden,
       icono: pendingData.icono.trim(),
       inhabilitado: pendingData.inhabilitado,
+      ruta_id: pendingData.ruta_id,
     };
     if (modalMode === 'create') {
       router.post(
@@ -285,16 +283,6 @@ export default function MenuForm() {
 
   //effect
   useEffect(() => {
-    if (!activo && propsActuales.resultado !== undefined) {
-      setPropsActuales({
-        resultado: undefined,
-        mensaje: undefined,
-        menu_id: undefined
-      });
-    }
-  }, [activo]);
-
-  useEffect(() => {
     if (
       menus &&
       menus.length > 0 &&
@@ -306,12 +294,10 @@ export default function MenuForm() {
 
 
   useEffect(() => {
-    const cambioDetectado =
-      (resultado && resultado  !== propsActuales.resultado)  ||
-      (mensaje && mensaje    !== propsActuales.mensaje)  
+    const cambioDetectado = timestamp && timestamp !== ultimoTimestamp;
 
     if (cambioDetectado) {
-      setPropsActuales({ resultado, mensaje, menu_id });
+      setUltimoTimestamp(timestamp)
 
       const esError = resultado === 0;
       setTitle(esError ? 'Error' : modalMode === 'create' ? 'Menú nuevo' : 'Menú modificado');
@@ -331,7 +317,7 @@ export default function MenuForm() {
 
   useEffect(() => {
     //optengo los datos del formulario
-    fetch('/init_menu')
+    fetch(route('menu.padres'))//('/init_menu')
     .then(res => res.json())
     .then(data => {
       setPadresMenu(data);

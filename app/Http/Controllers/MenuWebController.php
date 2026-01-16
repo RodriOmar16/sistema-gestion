@@ -124,11 +124,38 @@ class MenuWebController extends Controller
 			try {
 				//valido
 				$validated = $request->validate([
-						'nombre' => 'required|string|max:255',
-						'padre' => 'nullable|integer',
-            'icono' => 'required|string|max:255',
+						'nombre'       => 'required|string|max:255',
+						'padre'        => 'nullable|integer',
+            'icono'        => 'required|string|max:255',
             'inhabilitado' => 'nullable|boolean',
+            'ruta_id'      => 'nullable|integer',
 				]);
+
+        $rutaBuscada = $validated['ruta_id'] ?? null;
+        if($rutaBuscada !== null){
+          //verifico que si exita la ruta en Rutas
+          $existeRuta = Ruta::where('ruta_id', $rutaBuscada)->exists();
+          if(!$existeRuta){
+            DB::rollBack();
+            return inertia('menu/index', [
+              'resultado' => 0,
+              'mensaje' => 'La ruta que intentas asignar no fue dada de alta primero.',
+              'timestamp' => now()->timestamp,
+            ]);
+          }
+
+          //controlo que no se repita, no pueden 2 opciones apuntar al mismo menu
+          $esRutaRepetida = MenuWeb::where('ruta_id', $rutaBuscada)->exists();
+          if($esRutaRepetida){
+            DB::rollBack();
+            return inertia('menu/index', [
+              'resultado' => 0,
+              'mensaje' => 'La ruta que intentas asignar ya está vinculada a otra opción del menú.',
+              'timestamp' => now()->timestamp,
+            ]);
+          }
+        }
+
         //convierto valores
         $nombre = strtolower(trim($validated['nombre']));
         //$validated['nombre'] = $nombre;
@@ -144,6 +171,7 @@ class MenuWebController extends Controller
           return inertia('menu/index', [
             'resultado' => 0,
             'mensaje' => 'Ya existe un menú con ese nombre para el mismo padre.',
+            'timestamp' => now()->timestamp,
           ]);
         }
 
@@ -157,6 +185,7 @@ class MenuWebController extends Controller
         $ordenados = $hijos->sortBy(function ($item) {
           return strtolower(trim($item->nombre));
         })->values(); 
+
         foreach ($ordenados as $index => $item) {
           if (isset($item->menu_id)) {
             // Menú existente → actualizar orden
@@ -173,7 +202,8 @@ class MenuWebController extends Controller
 				return inertia('menu/index', [
 					'resultado'  => 1,
 					'mensaje' 	 => 'Menú creado correctamente',
-					'menu_id' => $menu->menu_id
+					'menu_id' => $menu->menu_id,
+          'timestamp' => now()->timestamp,
 				]);
 
 			} catch (\Throwable $e) {
@@ -182,6 +212,7 @@ class MenuWebController extends Controller
 				return inertia('menu/index', [
 					'resultado' => 0,
 					'mensaje' => 'Error inesperado: ' . $e->getMessage(),
+          'timestamp' => now()->timestamp,
 				]);
 			}
     }
@@ -196,7 +227,34 @@ class MenuWebController extends Controller
 						'padre' => 'nullable|integer',
             'icono' => 'required|string|max:255',
             'inhabilitado' => 'nullable|boolean',
+            'ruta_id'      => 'nullable|integer',
 				]);
+
+        $rutaBuscada = $validated['ruta_id'] ?? null;
+        if($rutaBuscada !== null){
+          //verifico que si exita la ruta en Rutas
+          $existeRuta = Ruta::where('ruta_id', $rutaBuscada)->exists();
+          if(!$existeRuta){
+            DB::rollBack();
+            return inertia('menu/index', [
+              'resultado' => 0,
+              'mensaje' => 'La ruta que intentas asignar no fue dada de alta primero.',
+              'timestamp' => now()->timestamp,
+            ]);
+          }
+
+          //controlo que no se repita, no pueden 2 opciones apuntar al mismo menu
+          $esRutaRepetida = MenuWeb::where('ruta_id', $rutaBuscada)->exists();
+          if($esRutaRepetida){
+            DB::rollBack();
+            return inertia('menu/index', [
+              'resultado' => 0,
+              'mensaje' => 'La ruta que intentas asignar ya está vinculada a otra opción del menú.',
+              'timestamp' => now()->timestamp,
+            ]);
+          }
+        }
+
         //convierto valores
         $nombre = strtolower(trim($validated['nombre']));
         $validated['padre'] = ($validated['padre'] ?? null) == 0 ? null : $validated['padre'];
@@ -216,6 +274,7 @@ class MenuWebController extends Controller
             return inertia('menu/index', [
               'resultado' => 0,
               'mensaje' => 'Ya existe un menú con ese nombre para el mismo padre.',
+              'timestamp' => now()->timestamp,
             ]);
           }
         }
@@ -253,7 +312,8 @@ class MenuWebController extends Controller
 				return inertia('menu/index', [
 					'resultado' => 1,
 					'mensaje'   => 'Menú actulizado correctamente',
-					'menu_id'   => $menu->menu_id
+					'menu_id'   => $menu->menu_id,
+          'timestamp' => now()->timestamp,
 				]);
 
 			} catch (\Throwable $e) {
@@ -262,6 +322,7 @@ class MenuWebController extends Controller
 				return inertia('menu/index', [
 					'resultado' => 0,
 					'mensaje' => 'Error inesperado: ' . $e->getMessage(),
+          'timestamp' => now()->timestamp,
 				]);
 			}
       //--
@@ -285,7 +346,8 @@ class MenuWebController extends Controller
 			return inertia('menu/index',[
 					'menu_id' => $menu->menu_id,
 					'resultado'  => 1,
-					'mensaje'		 => 'Estado actualizado correctamente.'
+					'mensaje'		 => 'Estado actualizado correctamente.',
+          'timestamp' => now()->timestamp,
 				]);
 		}
 

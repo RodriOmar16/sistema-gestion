@@ -13,6 +13,7 @@ use App\Models\ListaPrecio;
 use App\Models\Stock;
 use App\Models\MovimientoStock;
 use App\Models\Proveedor;
+use App\Models\Marca;
 
 class Producto extends Model
 {
@@ -61,5 +62,10 @@ class Producto extends Model
     }
     public function proveedores(){
         return $this->belongsToMany(Proveedor::class, 'movimientos_stock','producto_id', 'proveedor_id');
+    }
+
+    //marcas
+    public function marca(){
+        return $this->belongsTo(Marca::class, 'marca_id', 'marca_id');
     }
 }

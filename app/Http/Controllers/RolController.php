@@ -30,9 +30,10 @@ class RolController extends Controller
       ];
     });
     return response()->json([
-      'menus_asignados' => $menus,
-      'rutas_asignadas' => $rutas,
+      'menus_asignados' => $menus->values()->all(),
+      'rutas_asignadas' => $rutas->values()->all(),
     ]);
+
   }
   public function rolesHabilitados(){
     $roles = Rol::where('inhabilitado', false)->get()->map(function($rol){

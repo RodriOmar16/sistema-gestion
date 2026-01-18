@@ -23,6 +23,7 @@ use App\Http\Controllers\GastoController;
 use App\Http\Controllers\GraficosController;
 use App\Http\Controllers\StockController;
 use App\Http\Controllers\CarouselController;
+use App\Http\Controllers\MarcaController;
 
 use App\Http\Controllers\ProjectController;
 
@@ -187,6 +188,15 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
 
     //Gráficos
     Route::get('/dashboard', [GraficosController::class, 'index'])->name('graficos.index');
+
+    //Marcas
+    Route::get('/marcas_habilitadas', [MarcaController::class, 'marcasHabilitadas'])->name('marcas.marcasHabilitadas');
+    Route::get('/marcas', [MarcaController::class, 'index'])->name('marcas.index');
+    Route::get('marca/create', [MarcaController::class, 'create'])->name('marcas.create');
+    Route::post('/marcas/marca-nueva', [MarcaController::class, 'store'])->name('marcas.store');
+    Route::get('marcas/ver/{marca}', [MarcaController::class, 'edit'])->name('marcas.edit');
+    Route::put('/marcas/update/{marca}', [MarcaController::class, 'update'])->name('marcas.update');
+    Route::put('/marcas/cambio-estado/{marca}', [MarcaController::class, 'toggleEstado'])->name('marcas.toggleEstado');
     
     //Proyectos
     Route::get('/projects/pdf', [ProjectController::class, 'generarPDF'])->name('projects.pdf');

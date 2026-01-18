@@ -140,7 +140,7 @@ class TurnoController extends Controller
           'timestamp' => now()->timestamp,
         ]);
       }
-      //creo el turno
+      //modifico el turno
       $turno->update([
         'nombre'       => $validated['nombre'],
         'apertura'     => $validated['apertura'],

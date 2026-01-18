@@ -313,7 +313,7 @@ export default function MenuForm() {
         )
       }
     }
-  }, [resultado, mensaje, menu_id]);
+  }, [timestamp, ultimoTimestamp, resultado, mensaje, menu_id, modalMode]);
 
   useEffect(() => {
     //optengo los datos del formulario

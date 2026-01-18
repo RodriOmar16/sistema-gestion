@@ -18,6 +18,7 @@ import { AlertCircleIcon, CheckCircle2Icon, PopcornIcon } from "lucide-react"
 import Swal from 'sweetalert2';
 import ShowMessage from "@/components/utils/showMessage"
 import { route } from 'ziggy-js';
+import { ordenarPorTexto } from "@/utils";
 
 interface Props {
   open: boolean;
@@ -100,7 +101,7 @@ export default function NewEditDialog({ open, onOpenChange, mode, menu, onSubmit
     fetch(route('rutas.habilitadas'))//('/rutas_habilitadas')
     .then(res => res.json())
     .then(data => {
-      setRutas(data);
+      setRutas(ordenarPorTexto(data, 'nombre'));
     });
   }, []);
 

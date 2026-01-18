@@ -6,47 +6,45 @@ import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem } from '@/types';
-import { Turno } from '@/types/typeCrud';
+import { Marca } from '@/types/typeCrud';
 import { Search, Brush, Loader2, CirclePlus, Filter, Check } from 'lucide-react';
-import DataTableTurnos from '@/components/turnos/dataTableTurnos';
-import NewEditTurno from '@/components/turnos/newEditTurno';
+import DataTableMarcas from '@/components/marcas/dataTableMarcas';
+import NewEditMarca from '@/components/marcas/newEditMarca';
 import ModalConfirmar from '@/components/modalConfirmar';
 import ShowMessage from '@/components/utils/showMessage';
 
-const breadcrumbs: BreadcrumbItem[] = [ { title: 'Turnos', href: '', } ];
+const breadcrumbs: BreadcrumbItem[] = [ { title: 'Marcas', href: '', } ];
 
 type propsForm = {
   openCreate: () => void;
-  resetearTurno: (data:Turno[]) => void;
+  resetearMarca: (data:Marca[]) => void;
 }
 
-const turnoVacio = {
-  turno_id:     '',
+const marcaVacia = {
+  marca_id:     '',
   nombre:       '',
-  apertura:     '',
-  cierre:       '',
-  inhabilitado: false,
+  inhabilitada: false,
 }
 
-export function FiltrosForm({ openCreate, resetearTurno }: propsForm){
+export function FiltrosForm({ openCreate, resetearMarca }: propsForm){
   const [esperandoRespuesta, setEsperandoRespuesta] = useState(false);
-  const { data, setData, errors, processing }       = useForm<Turno>(turnoVacio);
+  const { data, setData, errors, processing }       = useForm<Marca>(marcaVacia);
   const [load, setLoad]                             = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    resetearTurno([]);
+    resetearMarca([]);
     setLoad(true);
-    const payload = {      ...data, buscar: true    }
+    const payload = { ...data, buscar: true }
     
-    router.get(route('turnos.index'), payload, {
+    router.get(route('marcas.index'), payload, {
       preserveState: true,
       preserveScroll: true,
       onFinish: () => setLoad(false),
     });
   };
   const handleReset = () => {
-    setData(turnoVacio);
+    setData(marcaVacia);
   };
 
   return (
@@ -56,7 +54,7 @@ export function FiltrosForm({ openCreate, resetearTurno }: propsForm){
         <Button 
           className="p-0 hover:bg-transparent cursor-pointer"
           type="button"
-          title="Nuevo" 
+          title="Nueva" 
           variant="ghost" 
           size="icon" 
           onClick={openCreate}
@@ -67,8 +65,8 @@ export function FiltrosForm({ openCreate, resetearTurno }: propsForm){
       <form className='grid grid-cols-12 gap-4 px-4 pt-1 pb-4' onSubmit={handleSubmit}>
         <div className='col-span-12 sm:col-span-3 md:col-span-3 lg:col-span-2'>
           <label htmlFor="id">Id</label>
-          <Input className='text-right' value={data.turno_id} onChange={(e)=>setData('turno_id',Number(e.target.value))}/>	
-          { errors.turno_id && <p className='text-red-500	'>{ errors.turno_id }</p> }
+          <Input className='text-right' value={data.marca_id} onChange={(e)=>setData('marca_id',Number(e.target.value))}/>	
+          { errors.marca_id && <p className='text-red-500	'>{ errors.marca_id }</p> }
         </div>
         <div className='col-span-12 sm:col-span-5 md:col-span-5 lg:col-span-4'>
           <label htmlFor="nombre">Nombre</label>
@@ -76,8 +74,8 @@ export function FiltrosForm({ openCreate, resetearTurno }: propsForm){
           { errors.nombre && <p className='text-red-500	'>{ errors.nombre }</p> }
         </div>        
         <div className='col-span-6 sm:col-span-4 md:col-span-4 lg:col-span-3 flex flex-col'>
-          <label className='mr-2'>Inhabilitado</label>
-          <Switch checked={data.inhabilitado==0 ? false: true} onCheckedChange={(val) => setData('inhabilitado', val)} />
+          <label className='mr-2'>Inhabilitada</label>
+          <Switch checked={data.inhabilitada==0 ? false: true} onCheckedChange={(val) => setData('inhabilitada', val)} />
         </div>
         <div className='col-span-6 sm:col-span-2 md:col-span-2 lg:col-span-2 flex justify-end items-center'>
           <Button 
@@ -101,52 +99,54 @@ export function FiltrosForm({ openCreate, resetearTurno }: propsForm){
   );
 };
 
-export default function Turnos(){
+export default function Marcas(){
   //data
   const [confirmOpen, setConfirOpen] = useState(false); //modal para confirmar acciones para cuado se crea o edita
   const [textConfir, setTextConfirm] = useState('');
   
   const [modalOpen, setModalOpen]         = useState(false); //modal editar/crear
   const [modalMode, setModalMode]         = useState<'create' | 'edit'>('create');
-  const [selectedTurno, setSelectedTurno] = useState<Turno | undefined>(undefined);
-  const [pendingData, setPendingData]     = useState<Turno | undefined>(undefined);
+  const [selectedMarca, setSelectedMarca] = useState<Marca | undefined>(undefined);
+  const [pendingData, setPendingData]     = useState<Marca | undefined>(undefined);
   const [loading, setLoading]             = useState(false);
   
   const [openConfirmar, setConfirmar]     = useState(false); //para editar el estado
   const [textConfirmar, setTextConfirmar] = useState(''); 
-  const [turnoCopia, setTurnoCopia]       = useState<Turno>(turnoVacio);
+  const [marcaCopia, setMarcaCopia]       = useState<Marca>(marcaVacia);
 
   const [activo, setActivo] = useState(false);//ShowMessage
   const [text, setText]     = useState('');
   const [title, setTitle]   = useState('');
   const [color, setColor]   = useState('');
 
-  const { turnos } = usePage().props as { turnos?: Turno[] }; //necesito los props de inertia
-  const { resultado, mensaje, turno_id, timestamp } = usePage().props as {
+  const { marcas } = usePage().props as { marcas?: Marca[] }; //necesito los props de inertia
+  const { resultado, mensaje, marca_id, timestamp } = usePage().props as {
     resultado?: number;
     mensaje?: string;
-    turno_id?: number;
+    marca_id?: number;
     timestamp?: number;
   };
   const [ultimoTimestamp, setUltimoTimestamp] = useState<number | null>(null);
-  const [turnosCacheados, setTurnosCacheados] = useState<Turno[]>([]);
+  const [marcasCacheadas, setMarcasCacheadas] = useState<Marca[]>([]);
+  console.log("ultimoTimeStamp: ", ultimoTimestamp);
+  console.log("timestamp: ", timestamp);
 
   //funciones
-  const confirmar = (data: Turno) => {
+  const confirmar = (data: Marca) => {
     if(data){
-      setTurnoCopia( JSON.parse(JSON.stringify(data)) );
-      const texto : string = data.inhabilitado === 0 ? 'inhabilitar': 'habilitar';
-      setTextConfirmar('Estás seguro de querer '+texto+' este turno?');
+      setMarcaCopia( JSON.parse(JSON.stringify(data)) );
+      const texto : string = data.inhabilitada === 0 ? 'inhabilitar': 'habilitar';
+      setTextConfirmar('Estás seguro de querer '+texto+' esta marca?');
       setConfirmar(true);
       setModalMode('edit');
     }
   };
   const inhabilitarHabilitar = () => {
-    if (!turnoCopia || !turnoCopia.turno_id) return;
+    if (!marcaCopia || !marcaCopia.marca_id) return;
     
     setLoading(true);
     router.put(
-      route('turnos.toggleEstado', { turno: turnoCopia.turno_id }),{},
+      route('marcas.toggleEstado', { marca: marcaCopia.marca_id }),{},
       {
         preserveScroll: true,
         preserveState: true,
@@ -154,7 +154,7 @@ export default function Turnos(){
           setLoading(false);
           setTextConfirmar('');
           setConfirmar(false);
-          setTurnoCopia(turnoVacio);
+          setMarcaCopia(marcaVacia);
         }
       }
     );
@@ -166,20 +166,20 @@ export default function Turnos(){
 
   const openCreate = () => {
     setModalMode('create');
-    setSelectedTurno(undefined);
+    setSelectedMarca(undefined);
     setModalOpen(true);
   };
 
-  const openEdit = (data: Turno) => {
+  const openEdit = (data: Marca) => {
     setModalMode('edit');
-    setSelectedTurno(data);
+    setSelectedMarca(data);
     setModalOpen(true);
   };
 
-  const handleSave = (data: Turno) => {
+  const handleSave = (data: Marca) => {
     setPendingData(data);
     let texto = (modalMode === 'create')? 'grabar' : 'guardar cambios a';
-    setTextConfirm('¿Estás seguro de '+texto+' este turno?');
+    setTextConfirm('¿Estás seguro de '+texto+' esta marca?');
     setConfirOpen(true);
   };
 
@@ -190,7 +190,7 @@ export default function Turnos(){
     const payload = JSON.parse(JSON.stringify(pendingData));
     if (modalMode === 'create') {
       router.post(
-        route('turnos.store'), payload,
+        route('marcas.store'), payload,
         {
           preserveScroll: true,
           preserveState: true,
@@ -198,13 +198,13 @@ export default function Turnos(){
             setLoading(false);
             setTextConfirmar('');
             setConfirmar(false);
-            setTurnoCopia(turnoVacio);
+            setMarcaCopia(marcaVacia);
           }
         }
       );
     } else {
       router.put(
-        route('turnos.update',{turno: pendingData.turno_id}), payload,
+        route('marcas.update',{marca: pendingData.marca_id}), payload,
         {
           preserveScroll: true,
           preserveState: true,
@@ -225,13 +225,13 @@ export default function Turnos(){
   //effect
   useEffect(() => {
     if (
-      turnos &&
-      turnos.length > 0 &&
-      JSON.stringify(turnos) !== JSON.stringify(turnosCacheados)
+      marcas &&
+      marcas.length > 0 &&
+      JSON.stringify(marcas) !== JSON.stringify(marcasCacheadas)
     ) {
-      setTurnosCacheados(turnos);
+      setMarcasCacheadas(marcas);
     }
-  }, [turnos]);
+  }, [marcas]);
 
 
   useEffect(() => {
@@ -241,41 +241,41 @@ export default function Turnos(){
       setUltimoTimestamp(timestamp)
 
       const esError = resultado === 0;
-      setTitle(esError ? 'Error' : modalMode === 'create' ? 'Turno nuevo' : 'Turno modificado');
-      setText(esError ? mensaje ?? 'Error inesperado' : `${mensaje} (ID: ${turno_id})`);
+      setTitle(esError ? 'Error' : modalMode === 'create' ? 'Marca nueva' : 'Marca modificada');
+      setText(esError ? mensaje ?? 'Error inesperado' : `${mensaje} (ID: ${marca_id})`);
       setColor(esError ? 'error' : 'success');
       setActivo(true);
 
-      if (resultado === 1 && turno_id) {
+      if (resultado === 1 && marca_id) {
         setModalOpen(false);
-        router.get(route('turnos.index'),
-          { turno_id, buscar: true },
+        router.get(route('marcas.index'),
+          { marca_id, buscar: true },
           { preserveScroll: true,	preserveState: true	}
         )
       }
     }
-  }, [timestamp, ultimoTimestamp, resultado, mensaje, turno_id, modalMode]);
+  }, [timestamp, ultimoTimestamp, resultado, mensaje, marca_id, modalMode]);
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
-      <Head title="Turnos" />
+      <Head title="Marcas" />
       <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
         <div className="relative flex-none flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
-          <FiltrosForm openCreate={openCreate} resetearTurno={setTurnosCacheados}/>
+          <FiltrosForm openCreate={openCreate} resetearMarca={setMarcasCacheadas}/>
         </div>
         <div className="p-4 relative flex-1 overflow-auto rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
-          <DataTableTurnos
-            datos={turnosCacheados?? []} 
+          <DataTableMarcas
+            datos={marcasCacheadas?? []} 
             openEdit={openEdit} 
             abrirConfirmar={confirmar}
             />
         </div>
       </div>
-      <NewEditTurno
+      <NewEditMarca
         open={modalOpen}
         onOpenChange={setModalOpen}
         mode={modalMode}
-        turno={selectedTurno}
+        marca={selectedMarca}
         onSubmit={handleSave}
       />
       <ModalConfirmar
@@ -290,7 +290,8 @@ export default function Turnos(){
         onSubmit={inhabilitarHabilitar}
         onCancel={cancelarInhabilitarHabilitar}
       />
-      <ShowMessage 
+      <ShowMessage
+        key={timestamp}
         open={activo}
         title={title}
         text={text}

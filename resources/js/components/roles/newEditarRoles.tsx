@@ -16,6 +16,7 @@ import ShowMessage from "@/components/utils/showMessage"
 import SelectMultiple from "../utils/select-multiple";
 import { Multiple } from "@/types/typeCrud";
 import { ordenarPorTexto } from "@/utils";
+import { route } from 'ziggy-js';
 
 interface Props{
   open: boolean;
@@ -51,62 +52,74 @@ export default function NewEditRol({ open, onOpenChange, mode, rol, onSubmit, lo
 
   //useEffect
   useEffect(() => {
-    //optengo los datos del formulario
-    fetch('/menu_habilitados')
-    .then(res => res.json())
-    .then(data => {
-      //const opcionesOrdenadas = ;
-      setMenu(ordenarPorTexto(data, 'nombre'));
-    });
+    const cargarDatos = async () => {
+      try {
+        const [ resMenus, resRutas ] = await Promise.all([
+          fetch(route('menu.habilitados')),
+          fetch(route('rutas.habilitadas')),
+        ]);
+
+        const menus = await resMenus.json();
+        const rutas = await resRutas.json();
+        console.log("menus: ", menus)
+        console.log("rutas: ", rutas)
+        setMenu(ordenarPorTexto(menus, 'nombre'));
+        setRutas(ordenarPorTexto(rutas, 'nombre'));
+      } catch (error) {
+        console.error("Error al cargar los datos: ", error);
+      }
+    };
+    cargarDatos();
   }, []);
-  useEffect(() => {
-    //optengo los datos del formulario
-    fetch('/rutas_habilitadas')
-    .then(res => res.json())
-    .then(data => {
-      //const opcionesOrdenadas = ;
-      setRutas(ordenarPorTexto(data, 'nombre'));
-    });
-  }, []);
-  useEffect(() => {
+
+  /*useEffect(() => {
     if (!open && mode === 'create') {
       setData(rolVacio);
       setSelectedMenus([{id: 1, nombre: 'Dashboard'}]);
       setSelectedRutas([{id: 1, nombre: '/dashboard'}]);
     }
-  }, [open, mode]);
+  }, [open, mode]);*/
 
   useEffect(() => {
-    if (rol && mode === 'edit') {
-      setData({
-        rol_id: rol.rol_id,
-        nombre: rol.nombre,
-        inhabilitado: Boolean(rol.inhabilitado),
-      });
-
-      // Consulta de menús y rutas asignados al rol
-      fetch(`/rol/${rol.rol_id}/menus_rutas`)
-        .then(res => res.json())
-        .then(({ menus_asignados, rutas_asignadas }) => {
-
-          if(menus_asignados && menus_asignados.length == 0){
-            // Asegurarse que vengan en formato Multiple[]
-            setSelectedMenus([{id: 1, nombre: 'Dashboard'}]);
-          }else{
-            setSelectedMenus(ordenarPorTexto(menus_asignados, 'nombre'));
-          }
-          if(rutas_asignadas && rutas_asignadas.length == 0){
-            setSelectedRutas([{id: 1, nombre: '/dashboard'}]);
-          }else{
-            setSelectedRutas(ordenarPorTexto(rutas_asignadas, 'nombre'));
-          }
+    if(open){
+      if (rol && mode === 'edit') {
+        setData({
+          rol_id: rol.rol_id,
+          nombre: rol.nombre,
+          inhabilitado: Boolean(rol.inhabilitado),
         });
-    } else {
+
+        // Consulta de menús y rutas asignados al rol
+        fetch(`/rol/${rol.rol_id}/menus_rutas`)
+          .then(res => res.json())
+          .then(({ menus_asignados, rutas_asignadas }) => {
+          console.log("menus_asignados: ",menus_asignados, ".. rutas_asignadas ", rutas_asignadas);
+          console.log("Array.isArray(menus_asignados): ", Array.isArray(menus_asignados))
+            setSelectedMenus(
+              Array.isArray(menus_asignados) && menus_asignados.length > 0
+                ? ordenarPorTexto(menus_asignados, 'nombre')
+                : [{ id: 1, nombre: 'Inicio' }]
+            );
+
+            setSelectedRutas(
+              Array.isArray(rutas_asignadas) && rutas_asignadas.length > 0
+                ? ordenarPorTexto(rutas_asignadas, 'nombre')
+                : [{ id: 1, nombre: '/inicio' }]
+            );
+
+          });
+        }
+        else {
+          setData(rolVacio);
+          setSelectedMenus([{id: 1, nombre: 'Inicio'}]);
+          setSelectedRutas([{id: 1, nombre: '/inicio'}]);
+        }
+    }else{
       setData(rolVacio);
-      setSelectedMenus([{id: 1, nombre: 'Dashboard'}]);
-      setSelectedRutas([{id: 1, nombre: '/dashboard'}]);
+      setSelectedMenus([{id: 1, nombre: 'Inicio'}]);
+      setSelectedRutas([{id: 1, nombre: '/inicio'}]);
     }
-  }, [rol, mode]);
+  }, [open, rol, mode]);
 
 
   //funciones

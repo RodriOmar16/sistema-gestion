@@ -14,6 +14,7 @@ use App\Models\Stock;
 use App\Models\MovimientoStock;
 use App\Models\Proveedor;
 use App\Models\Marca;
+use App\Models\ListaPrecioProducto;
 
 class Producto extends Model
 {
@@ -41,14 +42,11 @@ class Producto extends Model
     }
 
     //lista_precios
-    public function productosLista()
+    public function listaPreciosProductos()
     {
-        return $this->hasMany(ProductoLista::class, 'producto_id');
+        return $this->hasMany(ListaPrecioProducto::class, 'producto_id', 'producto_id');
     }
-    public function listasPrecios(){
-        return $this->belongsToMany(ListaPrecio::class, 'productos_listas','producto_id', 'lista_precio_id')
-                    ->withPivot('precio_lista');
-    }
+
 
     //Stock
     public function stock()

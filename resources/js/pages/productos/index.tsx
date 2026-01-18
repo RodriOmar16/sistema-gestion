@@ -16,12 +16,13 @@ import InputCuil from '@/components/utils/input-cuil';
 import { Multiple } from '@/types/typeCrud';
 import { ordenarPorTexto } from '@/utils';
 import DataTableProductos from '@/components/productos/dataTableProductos';
+import { DatePicker } from '@/components/utils/date-picker';
 
 const breadcrumbs: BreadcrumbItem[] = [ { title: 'Productos', href: '', } ];
 
 type propsForm = {
   resetearProducto: (data:Producto[]) => void;
-  listasPrecios: Multiple[];
+  marcas: Multiple[];
   categorias: Multiple[];
   data: Producto;
   set: (e:any) => void;
@@ -33,13 +34,16 @@ const productoVacio = {
   descripcion:         '',
   categoria_id:        '',
   categoria_nombre:    '',
-  lista_precio_id:     '',
-  lista_precio_nombre: '', 
+  marca_id:            '',
+  marca_nombre:        '', 
+  codigo_barra:        '',
+  stock_minimo:        0,
+  vencimiento:         '',
   precio:              '',
   inhabilitado:        false,
 }
 
-export function FiltrosForm({ resetearProducto, listasPrecios, categorias, data, set }: propsForm){
+export function FiltrosForm({ resetearProducto, marcas, categorias, data, set }: propsForm){
   const [esperandoRespuesta, setEsperandoRespuesta] = useState(false)
   const [loading, setLoading] = useState(false);
 
@@ -82,16 +86,32 @@ export function FiltrosForm({ resetearProducto, listasPrecios, categorias, data,
           <label htmlFor="id">Id</label>
           <Input value={data.producto_id} onChange={(e)=>set({...data, producto_id: Number(e.target.value)})}/>	
         </div>
-        <div className='col-span-12 sm:col-span-4 md:col-span-6 lg:col-span-3'>
+        <div className='col-span-12 sm:col-span-8 md:col-span-6 lg:col-span-4'>
           <label htmlFor="nombre">Nombre</label>
           <Input value={data.producto_nombre} onChange={(e)=>set({...data, producto_nombre:e.target.value})}/>	
         </div>
-        <div className='col-span-12 sm:col-span-4 md:col-span-12 lg:col-span-4'>
-          <label htmlFor="descripcion">Descripcion</label>
-          <Input value={data.descripcion} onChange={(e)=>set({...data, descripcion:e.target.value})}/>	
+        <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3'>
+          <label htmlFor="cliente">Marcas</label>
+            <Select
+              value={String(data.marca_id)}
+              onValueChange={(value) => set({...data, marca_id: Number(value)})}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {marcas.map((e: any) => (
+                    <SelectItem key={e.id} value={String(e.id)}>
+                      {e.nombre}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
         </div>
         <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3'>
-          <label htmlFor="descripcion">Categorías</label>
+          <label htmlFor="categorias">Categorías</label>
             <Select
               value={String(data.categoria_id)}
               onValueChange={(value) => set({...data, categoria_id: Number(value)}) }
@@ -110,26 +130,14 @@ export function FiltrosForm({ resetearProducto, listasPrecios, categorias, data,
               </SelectContent>
             </Select>
         </div>
-        <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3'>
-          <label htmlFor="descripcion">Listas de Precio</label>
-            <Select
-              value={String(data.lista_precio_id)}
-              onValueChange={(value) => set({...data, lista_precio_id:Number(value)})}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  {listasPrecios.map((e: any) => (
-                    <SelectItem key={e.id} value={String(e.id)}>
-                      {e.nombre}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
+        <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-4'>
+          <label htmlFor="codigoBarras">Código de Barras</label>
+          <Input value={data.codigo_barra} onChange={(e)=>set({...data, codigo_barra:e.target.value})}/>	
         </div>
+        <div className="col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3">
+          <label htmlFor="vencimiento">Vencimiento</label>
+          <DatePicker fecha={(data.vencimiento??'')} setFecha={ (fecha:string) => {set({...data, vencimiento: fecha})} }/>
+        </div>        
         <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
           <label htmlFor="precio">Precio</label>
           <Input type='number' className='text-right' value={data.precio} onChange={(e)=>set({...data, precio: Number(e.target.value)})}/>	
@@ -138,7 +146,7 @@ export function FiltrosForm({ resetearProducto, listasPrecios, categorias, data,
           <label className='mr-2'>Inhabilitado</label>
           <Switch checked={data.inhabilitado==0 ? false: true} onCheckedChange={(val) => set({...data, inhabilitado: val})} />
         </div>
-        <div className='col-span-6 sm:col-span-4 md:col-span-4 lg:col-span-4 flex justify-end items-center'>
+        <div className='col-span-6 sm:col-span-4 md:col-span-4 lg:col-span-12 flex justify-end items-center'>
           <Button 
             className="p-0 hover:bg-transparent cursor-pointer"
             type="button"
@@ -174,19 +182,21 @@ export default function Productos(){
   const [color, setColor]   = useState('');
 
   const { productos } = usePage().props as { productos?: Producto[] }; //necesito los props de inertia
-  const { resultado, mensaje, producto_id } = usePage().props as {
+  const { resultado, mensaje, producto_id, timestamp } = usePage().props as {
     resultado?: number;
     mensaje?: string;
     producto_id?: number;
+    timestamp?: number;
   };
-  const [propsActuales, setPropsActuales] = useState<{
+  /*const [propsActuales, setPropsActuales] = useState<{
     resultado: number | undefined | null;
     mensaje: string | undefined | null | '';
     producto_id: number | undefined | null;
-  }>({ resultado: undefined, mensaje: undefined, producto_id: undefined });
+  }>({ resultado: undefined, mensaje: undefined, producto_id: undefined });*/
   const [productosCacheados, setProductosCacheados] = useState<Producto[]>([]);
+  const [ultimoTimestamp, setUltimoTimestamp] = useState<number | null>(null);
 
-  const [listasPrecio, setListasPrecios] = useState<Multiple[]>([]);
+  const [marcas, setMarcas]              = useState<Multiple[]>([]);
   const [categorias, setCategorias]      = useState<Multiple[]>([]);
 
   //funciones
@@ -227,30 +237,24 @@ export default function Productos(){
 
   //effect
   useEffect(() => {
-    //optengo los datos del formulario
-    fetch('/listas_precios_habilitadas')
-    .then(res => res.json())
-    .then(data => {
-      setListasPrecios(ordenarPorTexto(data, 'nombre'));
-    });
-  }, []);
-  useEffect(() => {
-    //optengo los datos del formulario
-    fetch('/categorias_habilitadas')
-    .then(res => res.json())
-    .then(data => {
-      setCategorias(ordenarPorTexto(data, 'nombre'));
-    });
-  }, []);
-  useEffect(() => {
-    if (!activo && propsActuales.resultado !== undefined) {
-      setPropsActuales({
-        resultado: undefined,
-        mensaje: undefined,
-        producto_id: undefined
-      });
-    }
-  }, [activo]);
+    const cargarDatos = async () => {
+      try {
+        const [resMarcas, resCategorias] = await Promise.all([
+          fetch(route('marcas.marcasHabilitadas')),
+          fetch(route('categorias.habilitadas'))
+        ]);
+
+        const marcas     = await resMarcas.json();
+        const categorias = await resCategorias.json();
+
+        setMarcas(ordenarPorTexto(marcas, 'nombre'));
+        setCategorias(ordenarPorTexto(categorias, 'nombre'));
+      } catch (error) {
+        console.warn("Ocurrió un error al buscar los datos: ", error);
+      }
+    };
+    cargarDatos();
+  }, []); 
 
   useEffect(() => {
     if (
@@ -264,12 +268,11 @@ export default function Productos(){
 
 
   useEffect(() => {
-    const cambioDetectado =
-      (resultado && resultado  !== propsActuales.resultado)  ||
-      (mensaje && mensaje    !== propsActuales.mensaje)
+    const cambioDetectado = timestamp && timestamp !== ultimoTimestamp;
 
     if (cambioDetectado) {
-      setPropsActuales({ resultado, mensaje, producto_id });
+      //setPropsActuales({ resultado, mensaje, producto_id });
+      setUltimoTimestamp(timestamp);
 
       const esError = resultado === 0;
       setTitle(esError ? 'Error' : 'Producto modificado');
@@ -284,7 +287,7 @@ export default function Productos(){
         )
       }
     }
-  }, [resultado, mensaje, producto_id]);
+  }, [resultado, mensaje, producto_id, timestamp, ultimoTimestamp]);
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
@@ -295,7 +298,7 @@ export default function Productos(){
             data={data}
             set={setData}
             resetearProducto={setProductosCacheados}
-            listasPrecios={listasPrecio}
+            marcas={marcas}
             categorias={categorias}/>
         </div>
         <div className="p-4 relative flex-1 overflow-auto rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">

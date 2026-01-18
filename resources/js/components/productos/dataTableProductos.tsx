@@ -22,7 +22,7 @@ interface Props {
 //export const columns: ColumnDef<Project>[] = [
 export function getColumns(confirmar: (data: Producto) => void, openEdit: (data: Producto) => void): ColumnDef<Producto>[] {
   return [
-    {
+    /*{
       accessorKey: "producto_id",
       header: ({column}) => {
         return (
@@ -35,9 +35,21 @@ export function getColumns(confirmar: (data: Producto) => void, openEdit: (data:
       cell: ({ row }) => (
         <div className="text-right">{row.getValue("producto_id")}</div>
       ),
+    },*/
+    { 
+      accessorKey: "imagen", 
+      header: "Imagen", 
+      cell: ({ row }) => { 
+        const src = row.getValue("imagen") as string; 
+        return ( 
+          <div className="flex justify-center"> 
+            {src ? ( <img src={src} alt="miniatura" className="w-12 h-12 object-cover rounded-md border" /> ) 
+            : ( <span className="text-gray-400">Sin imagen</span> )} </div> 
+          ); 
+      }, 
     },
     {
-      accessorKey: "nombre",
+      accessorKey: "producto_nombre",
       header: ({column}) => {
         return (
           <div className="flex">
@@ -47,44 +59,48 @@ export function getColumns(confirmar: (data: Producto) => void, openEdit: (data:
         )
       }
       ,
-      cell: ({ row }) => ( <div className="">{row.getValue("nombre")}</div> ),
+      cell: ({ row }) => ( <div className="">{row.getValue("producto_nombre")}</div> ),
     },
     {
-      accessorKey: "descripcion",
+      accessorKey: "codigo_barra",
       header: ({column}) => {
         return (
           <div className="flex">
-            Descripción
+            Código barras
             <ArrowUpDown className="ml-1" size={17} onClick={() => column.toggleSorting(column.getIsSorted() === "asc")} />
           </div>
         )
       } ,
-      cell: ({ row }) => ( <div className="">{row.getValue("descripcion")}</div> ),
+      cell: ({ row }) => ( <div className="">{row.getValue("codigo_barra")}</div> ),
     },
-    /*{
+    {
       accessorKey: "categoria_nombre",
       header: ({column}) => {
         return (
           <div className="flex">
-            Categoría
-            <ArrowUpDown className="ml-1" size={17} onClick={() => column.toggleSorting(column.getIsSorted() === "asc")} />
+            Categoria
+            <ArrowUpDown className="ml-1" size={20} onClick={() => column.toggleSorting(column.getIsSorted() === "asc")} />
           </div>
         )
-      } ,
-      cell: ({ row }) => ( <div className="">{row.getValue("categoria_nombre")}</div> ),
+      },
+      cell: ({ row }) => {
+        return <div>{ row.getValue("categoria_nombre") }</div> 
+      },
     },
     {
-      accessorKey: "lista_precio_nombre",
+      accessorKey: "marca_nombre",
       header: ({column}) => {
         return (
           <div className="flex">
-            Lista Precios
-            <ArrowUpDown className="ml-1" size={17} onClick={() => column.toggleSorting(column.getIsSorted() === "asc")} />
+            Marca
+            <ArrowUpDown className="ml-1" size={20} onClick={() => column.toggleSorting(column.getIsSorted() === "asc")} />
           </div>
         )
-      } ,
-      cell: ({ row }) => ( <div className="">{row.getValue("lista_precio_nombre")}</div> ),
-    },*/
+      },
+      cell: ({ row }) => {
+        return <div>{row.getValue("marca_nombre")}</div> 
+      },
+    },
     {
       accessorKey: "precio",
       header: ({column}) => {
@@ -98,6 +114,20 @@ export function getColumns(confirmar: (data: Producto) => void, openEdit: (data:
       cell: ({ row }) => {
         const precioRow = row.getValue("precio") as string;
         return <div>{ convertirNumberPlata(precioRow) }</div> 
+      },
+    },
+    {
+      accessorKey: "stock_minimo",
+      header: ({column}) => {
+        return (
+          <div className="flex">
+            Stock Mínimo
+            <ArrowUpDown className="ml-1" size={20} onClick={() => column.toggleSorting(column.getIsSorted() === "asc")} />
+          </div>
+        )
+      },
+      cell: ({ row }) => {
+        return <div className="text-center">{ row.getValue("stock_minimo") }</div> 
       },
     },
     {
@@ -187,7 +217,6 @@ export default function DataTableProductos({datos, openEdit, abrirConfirmar, dat
       ? datos.filter((campo) =>
           campo.producto_nombre?.toLowerCase().includes(texto) ||
           campo.categoria_nombre?.toLowerCase().includes(texto) ||
-          campo.lista_precio_nombre?.toLowerCase().includes(texto) ||
           campo.precio?.toString().includes(texto) ||
           campo.descripcion?.toString().includes(texto)
         )

@@ -114,20 +114,26 @@ class ProductoController extends Controller
       return inertia('productos/index', ['productos' => []]);
     }
 
-    $query = Producto::query()->with(['categorias', 'productosLista']);
+    $query = Producto::query()->with(['categorias', 'marca']);
 
     // Campos propios
     if ($request->filled('producto_id')) {
       $query->where('producto_id', $request->producto_id);
     }
+    if ($request->filled('marca_id')) {
+      $query->where('marca_id', $request->marca_id);
+    }
     if ($request->filled('producto_nombre')) {
       $query->where('nombre', 'like', '%' . $request->producto_nombre . '%');
     }
-    if ($request->filled('descripcion')) {
-      $query->where('descripcion', 'like', '%' . $request->descripcion . '%');
+    if ($request->filled('codigo_barra')) {
+      $query->where('codigo_barra', 'like', '%' . $request->codigo_barra . '%');
     }
     if ($request->filled('precio') && $request->precio >= 0) {
       $query->where('precio', $request->precio);
+    }
+    if($request->filled('vencimiento')){
+      $query->where('vencimiento', $request->vencimiento);
     }
     if ($request->filled('inhabilitado')) {
       $estado = filter_var($request->inhabilitado, FILTER_VALIDATE_BOOLEAN);
@@ -141,15 +147,28 @@ class ProductoController extends Controller
       );
     }
 
-    if ($request->filled('lista_precio_id') && $request->lista_precio_id !== '') {
-      $query->whereHas('productosLista', fn($q) =>
-        $q->where('lista_precio_id', $request->lista_precio_id)
-          ->where('precio_lista', '>', 0)
-      );
-    }
-
-    $productos = $query->latest()->get();
-
+    $productos = $query->latest()->get()->map(
+      function ($producto) { 
+        return [ 
+          'producto_id' => $producto->producto_id, 
+          'producto_nombre' => $producto->nombre, 
+          'descripcion' => $producto->descripcion, 
+          'precio' => $producto->precio, 
+          'categoria_id' => $producto->categorias->first()->categoria_id ?? '', 
+          'categoria_nombre'=> $producto->categorias->first()->nombre ?? '', 
+          'marca_id' => $producto->marca->marca_id ?? '', 
+          'marca_nombre' => $producto->marca->nombre ?? '', 
+          'codigo_barra' => $producto->codigo_barra, 
+          'stock_minimo' => $producto->stock_minimo, 
+          'vencimiento' => $producto->vencimiento, 
+          'inhabilitado' => $producto->inhabilitado, 
+          'imagen' => $producto->imagen, 
+          'created_at' => $producto->created_at, 
+          'updated_at' => $producto->updated_at, 
+        ]; 
+      }
+    ); 
+    
     return inertia('productos/index', ['productos' => $productos]);
   }
 
@@ -170,18 +189,21 @@ class ProductoController extends Controller
         'descripcion'     => 'required|string|max:255',
         'inhabilitado'    => 'boolean',
         'precio'          => 'required|numeric',
+        'marca_id'        => 'required|numeric',
+        'stock_minimo'    => 'required|numeric',
         'categorias'      => 'required|array|min:1',
-        'listas'          => 'required|array|min:1',
+        'codigo_barra'    => 'required|string|max:255'
       ]);
       //controlar que no se repita
-      $nombre = strtolower(trim($validated['producto_nombre']));
-      $existe = Producto::whereRaw('LOWER(TRIM(nombre)) = ?', [$nombre])
-                        ->where('precio', $validated['precio'])
+      $codigoBarras = strtolower(trim($validated['codigo_barra']));
+      $existe = Producto::whereRaw('LOWER(TRIM(codigo_barra)) = ?', [$codigo_barra])
+                        //->where('precio', $validated['precio'])
                         ->exists();
       if($existe){
         return inertia('productos/createEdit',[
           'resultado' => 0,
           'mensaje'   => 'El producto que intentas registrar ya existe',
+          'timestamp' => now()->timestamp,
         ]);
       }
       //crear el producto y sus tablas intermedias
@@ -189,7 +211,10 @@ class ProductoController extends Controller
         'nombre'          => $validated['producto_nombre'],
         'descripcion'     => $validated['descripcion'],
         'inhabilitado'    => $validated['inhabilitado'] ? 1 : 0,
-        'precio'          => $validated['precio']
+        'precio'          => $validated['precio'],
+        'marca_id'        => $validated['marca_id'],
+        'stock_minimo'    => $validated['stock_minimo'],
+        'codigo_barra'    => $validated['codigo_barra']
       ]);
       $producto_id = $producto->producto_id;
       
@@ -222,13 +247,15 @@ class ProductoController extends Controller
       return inertia('productos/createEdit',[
         'resultado'   => 1,
         'mensaje'     => 'Producto create correctamente',
-        'producto_id' => $producto_id
+        'producto_id' => $producto_id,
+        'timestamp' => now()->timestamp,
       ]);
     } catch (\Throwable $e) {
       DB::rollback();
       return inertia('productos/createEdit',[
         'resultado' => 0,
-        'mensaje'   => 'Ocurrió un error al intentar crear el producto: '.$e->getMessage()
+        'mensaje'   => 'Ocurrió un error al intentar crear el producto: '.$e->getMessage(),
+        'timestamp' => now()->timestamp,
       ]);
     }
   }
@@ -256,6 +283,7 @@ class ProductoController extends Controller
         return inertia('productos/createEdit',[
           'resultado' => 0,
           'mensaje'   => 'Ya existe un producto con esas especificaciones',
+          'timestamp' => now()->timestamp,
         ]);
       }
       //actualizo el producto y sus tablas intermedias
@@ -302,35 +330,30 @@ class ProductoController extends Controller
       return inertia('productos/createEdit',[
         'resultado'   => 1,
         'mensaje'     => 'Se actualizó correctamente el producto',
-        'producto_id' => $producto->producto_id
+        'producto_id' => $producto->producto_id,
+        'timestamp' => now()->timestamp,
       ]);
     } catch (\Throwable $e) {
       DB::rollback();
       return inertia('productos/createEdit',[
         'resultado' => 0,
-        'mensaje'   => 'Ocurrió un problema al momento de actualizar el producto: '.$e->getMessage()
+        'mensaje'   => 'Ocurrió un problema al momento de actualizar el producto: '.$e->getMessage(),
+        'timestamp' => now()->timestamp,
       ]);
     }
   }
 
   public function edit(Producto $producto){
-    $producto->load([
-      'listasPrecios' => function ($q) {
-        $q->select('listas_precios.lista_precio_id', 'listas_precios.nombre');
-      },
+    $producto->load([      
       'categorias' => function ($q) {
         $q->select('categorias.categoria_id', 'categorias.nombre');
-      }
+      },
+      'marca' => function ($q) { $q->select('marca_id', 'nombre'); }
     ]);
 
     $categorias = $producto->categorias->map(fn($c)=>[
       'id'     => $c->categoria_id?? $c->id,
       'nombre' => $c->nombre
-    ]);
-    $listasPrecio = $producto->listasPrecios->map(fn($l) => [
-      'lista_precio_id' => $l->lista_precio_id ?? $l->id,
-      'nombre'          => $l->nombre,
-      'precio'          => $l->pivot->precio_lista,
     ]);
 
     return inertia('productos/createEdit',[
@@ -343,13 +366,12 @@ class ProductoController extends Controller
         'inhabilitado'        => $producto->inhabilitado,
         'categoria_id'        => '',
         'categoria_nombre'    => '',
-        'lista_precio_id'     => '',
-        'lista_precio_nombre' => '',
+        'marca_id'            => $producto->marca->marca_id ?? '', 
+        'marca_nombre'        => $producto->marca->nombre ?? '',
         'created_at'          => $producto->created_at,
         'updated_at'          => $producto->updated_at,
       ],
       'categorias'    => $categorias,
-      'listasPrecios' => $listasPrecio
     ]);
   }
 
@@ -359,7 +381,8 @@ class ProductoController extends Controller
     return inertia('productos/index',[
       'resultado'   => 1,
       'mensaje'     => 'Estado modificado exitosamente',
-      'producto_id' => $producto->producto_id
+      'producto_id' => $producto->producto_id,
+      'timestamp' => now()->timestamp,
     ]);
   }
 }

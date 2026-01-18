@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-use App\Models\ListaPrecio;
+use App\Models\ListaPrecioProducto;
 use App\Models\Gasto;
 use App\Models\Caja;
 use App\Models\MovimientoStock;
@@ -23,7 +23,7 @@ class Proveedor extends Model
 
     //lista de precios
     public function listaPrecios(){
-        return $this->hasMany(ListaPrecio::class, 'proveedor_id');
+        return $this->hasMany(ListaPrecioProducto::class, 'proveedor_id', 'proveedor_id');
     }
 
     //caja

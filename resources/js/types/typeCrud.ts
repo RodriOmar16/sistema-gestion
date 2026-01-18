@@ -90,12 +90,18 @@ export interface Producto{
   producto_id: number | string;
   producto_nombre: string;
   descripcion: string;
+  precio: number | string | '';
   categoria_id: number | string;
   categoria_nombre: string;
-  lista_precio_id: number | string;
-  lista_precio_nombre: string;
-  precio: number | string | '';
+  //lista_precio_id: number | string;
+  //lista_precio_nombre: string;
+  marca_id: number | string;
+  marca_nombre: string;
+  codigo_barra: string;
+  stock_minimo: number; 
+  vencimiento?: string;
   inhabilitado: boolean | 1 | 0 | 'true' | 'false';
+  imagen?: string;
   created_at?: string;
   updated_at?: string;
 }

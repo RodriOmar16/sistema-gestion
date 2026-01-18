@@ -9,13 +9,15 @@ import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Loader2, Save } from 'lucide-react';
 import {  Table,  TableBody,  TableCaption,  TableCell,  TableHead,  TableHeader,  TableRow,
-} from "@/components/ui/table"
+} from "@/components/ui/table";
+import { Select,  SelectContent, SelectGroup,  SelectItem,  SelectTrigger,  SelectValue } from "@/components/ui/select"
 import SelectMultiple from '@/components/utils/select-multiple';
 import { Multiple } from '@/types/typeCrud';
 import { ordenarPorTexto } from '@/utils';
 import ShowMessage from '@/components/utils/showMessage';
 import ModalConfirmar from '@/components/modalConfirmar';
 import { route } from 'ziggy-js';
+import { DatePicker } from '@/components/utils/date-picker';
 
 const breadcrumbs: BreadcrumbItem[] = [ { title: '', href: '', } ];
 const productoVacio = {
@@ -24,9 +26,12 @@ const productoVacio = {
   descripcion:         '',
   categoria_id:        '',
   categoria_nombre:    '',
-  lista_precio_id:     '',
-  lista_precio_nombre: '', 
-  precio:              0,
+  marca_id:            '',
+  marca_nombre:        '', 
+  codigo_barra:        '',
+  stock_minimo:        0,
+  vencimiento:         '',
+  precio:              '',
   inhabilitado:        false,
 };
 
@@ -34,25 +39,26 @@ interface Props{
   data: Producto;
   set: (e:any) => void;
   modo: string;
+  marcas: Multiple[];
 }
 
-export function DetallesProducto({modo, data, set}:Props){
+export function DetallesProducto({modo, data, set, marcas}:Props){
   //const [data, setData] = useState<Producto>(datos);
 
   return (
     <div className='px-4'>
       <div className='grid grid-cols-12 gap-4'>
-        {modo === 'edit' ? (
-          <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-2'>
+        {/*modo === 'edit' ? (
+          <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-12'>
             <label htmlFor="id">Id</label>
             <Input disabled value={data.producto_id} onChange={(e)=>set({...data, producto_id:e.target.value})}/>	
           </div>
-        ): <></>}
+        ): <></>*/}
         <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
           <label htmlFor="nombre">Nombre</label>
           <Input value={data.producto_nombre} onChange={(e)=>set({...data, producto_nombre:e.target.value})}/>	
         </div>
-        <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-4'>
+        <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-9'>
           <label htmlFor="descripcion">Descripcion</label>
           <Input value={data.descripcion} onChange={(e)=>set({...data, descripcion:e.target.value})}/>	
         </div>
@@ -60,6 +66,38 @@ export function DetallesProducto({modo, data, set}:Props){
           <label htmlFor="precio">Precio</label>
           <Input type='number' className='text-right' value={data.precio} onChange={(e)=>set({...data, precio:Number(e.target.value)})}/>	
         </div>
+        <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3'>
+          <label htmlFor="cliente">Marcas</label>
+            <Select
+              value={String(data.marca_id)}
+              onValueChange={(value) => set({...data, marca_id: Number(value)})}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {marcas.map((e: any) => (
+                    <SelectItem key={e.id} value={String(e.id)}>
+                      {e.nombre}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+        </div>
+        <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-6'>
+          <label htmlFor="codigoBarras">Código de barras</label>
+          <Input className='text-right' value={data.codigo_barra} onChange={(e)=>set({...data, codigo_barra:Number(e.target.value)})}/>	
+        </div>
+        <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
+          <label htmlFor="stockMinimo">Stock Mínimo</label>
+          <Input type='number' className='text-right' value={data.stock_minimo} onChange={(e)=>set({...data, stock_minimo:Number(e.target.value)})}/>	
+        </div>
+        <div className="col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3">
+          <label htmlFor="vencimiento">Vencimiento</label>
+          <DatePicker fecha={(data.vencimiento??'')} setFecha={ (fecha:string) => {set({...data, vencimiento: fecha})} }/>
+        </div>  
         <div className='col-span-6 sm:col-span-4 md:col-span-4 lg:col-span-2 flex flex-col'>
           <label className='mr-2'>Inhabilitado</label>
           <Switch checked={data.inhabilitado==0 ? false: true} onCheckedChange={(val) => set({...data, inhabilitado: Boolean(val)})} />
@@ -69,88 +107,35 @@ export function DetallesProducto({modo, data, set}:Props){
   );
 }
 
-interface PropsTabla{
-  listado: any[],
-  setListado: (array:any[]) => void
-}
-export function TablaListas({listado, setListado}:PropsTabla){
-
-  const controlarPrecio = (id: number|string, nuevoPrecio: string) => {
-    const actualizado = listado.map(item =>
-      item.id === id ? { ...item, precio: Number(nuevoPrecio) } 
-                       : item
-    );
-    setListado(actualizado);
-  };
-
-  return(
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead className="">Nombre</TableHead>
-          <TableHead className="text-right">Precio</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {
-          listado.length != 0? (
-            listado.map(e => (
-              <TableRow key={e.id}>
-                <TableCell className='w-1/2'>{e.nombre}</TableCell>
-                <TableCell className="w-1/2 text-right">
-                  <Input
-                  type='number'
-                    value={e.precio}
-                    className='text-right w-full'
-                    onChange={(ev)=> {controlarPrecio(e.id,ev.target.value)}}
-                  >
-                  </Input>
-                </TableCell>
-              </TableRow>
-            ))
-          ):(
-            <TableRow>
-              <TableCell
-                className="w-full h-24 text-center"
-              >
-                No hay listas para mostrar
-              </TableCell>
-            </TableRow>
-          )
-        }
-      </TableBody>
-    </Table>
-  );
-}
-
 export default function NewEditProductos(){
   //data
   const [ load, setLoad ] = useState(false);
-  const { mode, producto, categorias, listasPrecios, resultado, mensaje, producto_id } = usePage().props as { 
+  const { mode, producto, categorias, resultado, mensaje, producto_id, timestamp } = usePage().props as { 
     mode?:          string | 'create' | 'edit';
     producto?:      Producto;
     categorias?:    {id: number, nombre:string }[];
-    listasPrecios?: { lista_precio_id: number; nombre: string; precio: number }[];
     resultado?:     number;
     mensaje?:       string;
     producto_id?:   number;
+    timestamp?:     number;
   };
   breadcrumbs[0].title = (mode=='create'? 'Nuevo' : 'Editar')+' producto';
-  const [propsActuales, setPropsActuales] = useState<{
+  /*const [propsActuales, setPropsActuales] = useState<{
     resultado: number | undefined | null;
     mensaje: string | undefined | null | '';
     producto_id: number | undefined | null;
-  }>({ resultado: undefined, mensaje: undefined, producto_id: undefined });
-
+  }>({ resultado: undefined, mensaje: undefined, producto_id: undefined });*/
+  const [ultimoTimestamp, setUltimoTimestamp] = useState<number | null>(null);
   const { data, setData, errors, processing } = useForm<Producto>(productoVacio);
+  const [marcasHab, setMarcasHab]             = useState<Multiple[]>([]);
   const [categoriaHab, setCatHab]             = useState<Multiple[]>([]);
   const [catSelected, setCatSelected]         = useState<Multiple[]>(categorias??[]);
-  //const [listasHab, setListasHab]           = useState<Multiple[]>([]);
-  const [listas , setListas]                  = useState<{
+  
+  /*const [listas , setListas]                  = useState<{
     id: number|string;
     nombre: string;
     precio: number;
-  }[]>([]);
+  }[]>([]);*/
 
   const [confirmOpen, setConfirOpen] = useState(false); //modal para confirmar acciones para cuado se crea o edita
 	const [textConfir, setTextConfirm] = useState('');
@@ -161,19 +146,18 @@ export default function NewEditProductos(){
   const [color, setColor]   = useState('success');
 
   //funciones
-  const tieneListas = () => {
-    let i=0, n=listas.length; 
-    while(i<n && (listas[i].precio == 0)){
-      i++;
-    }
-    return (i<n);
-  };
-
   const handleSubmit = (e:React.FormEvent) => {
     e.preventDefault();
     if(!data.producto_nombre){
       setTitle('Campo requerido!');
       setText('Se requiere ingresar un nombre para el producto.');
+      setColor('warning');
+      setActivo(true);
+      return 
+    }
+    if(!data.codigo_barra){
+      setTitle('Campo requerido!');
+      setText('Se requiere ingresar un código de barras para el producto.');
       setColor('warning');
       setActivo(true);
       return 
@@ -185,6 +169,20 @@ export default function NewEditProductos(){
       setActivo(true);
       return 
     }
+    if(!data.stock_minimo || data.stock_minimo === 0){
+      setTitle('Campo requerido!');
+      setText('Se requiere ingresar un valor de stock mínimo para el producto.');
+      setColor('warning');
+      setActivo(true);
+      return 
+    }
+    if(!data.marca_id){
+      setTitle('Campo requerido!');
+      setText('Se requiere ingresar una marca para el producto.');
+      setColor('warning');
+      setActivo(true);
+      return 
+    }
     if(catSelected.length === 0){
       setTitle('Categoría requerida!');
       setText('Se requiere seleccionar al menos una categoría.');
@@ -192,13 +190,13 @@ export default function NewEditProductos(){
       setActivo(true);
       return 
     }
-    if(!tieneListas()){
+    /*if(!tieneListas()){
       setTitle('Lista de precios requerida!');
       setText('Se requiere asignar precio a almenos una lista de precios.');
       setColor('warning');
       setActivo(true);
       return 
-    }
+    }*/
     setTextConfirm("Estás seguro de "+(mode==='create'?'crear':'actualizar')+' este producto?');
     setConfirOpen(true);
   };
@@ -207,14 +205,11 @@ export default function NewEditProductos(){
     setConfirOpen(false);
     setTextConfirm('');
     //muestro el cargando...
-    setLoad(true);
-    console.log("procedo a guardar o grabar");
+    setLoad(true); 
     const payload = {
       ...data,
       categorias: catSelected,
-      listas: listas
     };
-    console.log("payload: ", payload)
     if (mode === 'create') {
       router.post(
         route('productos.store'),payload,
@@ -252,23 +247,16 @@ export default function NewEditProductos(){
   useEffect(() => {
     const cargarDatos = async() => {
       try {
-        const [resCategorias, resListas] = await Promise.all([
+        const [resCategorias, resMarcas] = await Promise.all([
           fetch(route('categorias.habilitadas')),
-          fetch(route('listasPrecios.habilitadas')),
+          fetch(route('marcas.marcasHabilitadas'))
         ]);
         const categorias = await resCategorias.json();
-        const listas     = await resListas.json();
+        const marcas = await resMarcas.json();
 
         setCatHab(ordenarPorTexto(categorias, 'nombre'));
-        setListas(listas.map((e:any) =>{
-            let elemento = listasPrecios?.find((l:any) => l.lista_precio_id === e.id );
-            return {
-              id:     e.id, 
-              nombre: e.nombre,  
-              precio: elemento?.precio ?? 0 
-            };
-          }
-        ));
+        setMarcasHab(ordenarPorTexto(marcas, 'nombre'));
+
       } catch (error) {
         console.error("Error al cargar los datos: ", error);
       }
@@ -277,10 +265,12 @@ export default function NewEditProductos(){
   },[]);
 
   useEffect(() => {
-		const cambioDetectado = (resultado && resultado  !== propsActuales.resultado) || (mensaje && mensaje    !== propsActuales.mensaje) 
+    const cambioDetectado = timestamp && timestamp !== ultimoTimestamp;
+		//const cambioDetectado = (resultado && resultado  !== propsActuales.resultado) || (mensaje && mensaje    !== propsActuales.mensaje) 
 
 		if (cambioDetectado) {
-      setPropsActuales({ resultado, mensaje, producto_id });
+      //setPropsActuales({ resultado, mensaje, producto_id });
+      setUltimoTimestamp(timestamp);
 
       const esError = resultado === 0;
       setTitle(esError ? 'Error' : mode === 'create' ? 'Producto nuevo' : 'Producto modificado');
@@ -289,25 +279,29 @@ export default function NewEditProductos(){
       setActivo(true); 
     }
 	}, [resultado, mensaje, producto_id]);
+
   useEffect(() => {
     if(producto && mode === 'edit'){
-      console.log("producto: ", producto)
+      
       setData({
         producto_id:         producto.producto_id,
         producto_nombre:     producto.producto_nombre,
         descripcion:         producto.descripcion,
         categoria_id:        '',
         categoria_nombre:    '',
-        lista_precio_id:     '',
-        lista_precio_nombre: '', 
         precio:              producto.precio,
         inhabilitado:        producto.inhabilitado,
+        marca_id:            producto.marca_id,
+        marca_nombre:        '', 
+        codigo_barra:        producto.codigo_barra,
+        stock_minimo:        producto.stock_minimo,
+        vencimiento:         producto.vencimiento,
       });
     }
   }, []);
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
-      <Head title={(mode=='create'? 'Nuevo' : 'Editar')+' producto'} />
+      <Head title={(mode=='create'? 'Nuevo' : 'Editar')+' producto'+(mode!='create'? ` ${producto_id}` : '')} />
       <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
         <div className="relative flex-none flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
           <form 
@@ -321,7 +315,8 @@ export default function NewEditProductos(){
               <DetallesProducto 
                 modo={mode??'create'}
                 data={data}
-                set={setData}/>
+                set={setData}
+                marcas={marcasHab}/>
             </div>
             <div className='px-4 pb-1 col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>
               <div className='py-4'>
@@ -333,18 +328,6 @@ export default function NewEditProductos(){
                 seleccionados={catSelected}
                 setSeleccionados={setCatSelected}
               />
-            </div>
-            <div className='px-4 pb-1 col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>
-              <div className='py-4'>
-                Listas de precios
-                <hr />
-              </div>
-              <div className='max-h-[300px] overflow-y-auto border rounded'>
-                <TablaListas
-                  listado={listas}
-                  setListado={setListas}
-                />
-              </div>
             </div>
             <div  className='flex justify-end px-4 pb-4 col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>
               <Button type="button" onClick={handleSubmit}>

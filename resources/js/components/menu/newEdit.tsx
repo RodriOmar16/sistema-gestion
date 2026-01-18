@@ -96,8 +96,6 @@ export default function NewEditDialog({ open, onOpenChange, mode, menu, onSubmit
 
   useEffect(() => {
     //optengo los datos del formulario
-    
-    
     fetch(route('rutas.habilitadas'))//('/rutas_habilitadas')
     .then(res => res.json())
     .then(data => {

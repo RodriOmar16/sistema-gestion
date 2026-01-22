@@ -7,17 +7,18 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { Loader2, Save } from 'lucide-react';
+import { Loader2, Save, Barcode } from 'lucide-react';
 import {  Table,  TableBody,  TableCaption,  TableCell,  TableHead,  TableHeader,  TableRow,
 } from "@/components/ui/table";
 import { Select,  SelectContent, SelectGroup,  SelectItem,  SelectTrigger,  SelectValue } from "@/components/ui/select"
 import SelectMultiple from '@/components/utils/select-multiple';
 import { Multiple } from '@/types/typeCrud';
-import { ordenarPorTexto } from '@/utils';
+import { convertirFechaBarrasGuiones, convertirFechaGuionesBarras, ordenarPorTexto } from '@/utils';
 import ShowMessage from '@/components/utils/showMessage';
 import ModalConfirmar from '@/components/modalConfirmar';
 import { route } from 'ziggy-js';
 import { DatePicker } from '@/components/utils/date-picker';
+import SubirImagen from '@/components/utils/subir-imagen';
 
 const breadcrumbs: BreadcrumbItem[] = [ { title: '', href: '', } ];
 const productoVacio = {
@@ -43,7 +44,22 @@ interface Props{
 }
 
 export function DetallesProducto({modo, data, set, marcas}:Props){
-  //const [data, setData] = useState<Producto>(datos);
+  const [load , setLoad] = useState(false);
+  
+  const generarCodigo = async () => {
+    try {
+      setLoad(true);
+      const res = await fetch(route('productos.generarCodigo'));
+      if (!res.ok) throw new Error("Error al generar código");
+      const json = await res.json();
+      set({...data, codigo_barra: json.codigo_barra});
+    } catch (error) {
+      console.warn("Ocurrió un error al intentar generar el código: ", error);
+    } finally{
+      setLoad(false);
+    }
+
+  };
 
   return (
     <div className='px-4'>
@@ -68,27 +84,46 @@ export function DetallesProducto({modo, data, set, marcas}:Props){
         </div>
         <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3'>
           <label htmlFor="cliente">Marcas</label>
-            <Select
-              value={String(data.marca_id)}
-              onValueChange={(value) => set({...data, marca_id: Number(value)})}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  {marcas.map((e: any) => (
-                    <SelectItem key={e.id} value={String(e.id)}>
-                      {e.nombre}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
+            {marcas.length > 0 ? (
+                <Select
+                  value={String(data.marca_id ?? '')}
+                  onValueChange={(value) => set({ ...data, marca_id: Number(value) })}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      {marcas.map((e: any) => (
+                        <SelectItem key={e.id} value={String(e.id)}>
+                          {e.nombre}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              ):(
+                <>
+                </>
+              )
+            }
         </div>
         <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-6'>
           <label htmlFor="codigoBarras">Código de barras</label>
-          <Input className='text-right' value={data.codigo_barra} onChange={(e)=>set({...data, codigo_barra:Number(e.target.value)})}/>	
+          <div className='flex items-center'>
+            <Input className='' value={data.codigo_barra} onChange={(e)=>set({...data, codigo_barra:e.target.value})}/>	
+            <Button 
+              className="p-0 hover:bg-transparent cursor-pointer"
+              type="button"
+              title="Generar código" 
+              variant="ghost" 
+              size="icon"
+              onClick={() => generarCodigo()}
+            >
+              { load ? ( <Loader2 size={20} className="animate-spin"/> ) : 
+                         (<Barcode size={20} color="blue"/>)  }
+            </Button>
+          </div>
         </div>
         <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
           <label htmlFor="stockMinimo">Stock Mínimo</label>
@@ -107,6 +142,55 @@ export function DetallesProducto({modo, data, set, marcas}:Props){
   );
 }
 
+//import { useEffect, useState } from "react";
+
+/*function SelectorImagen() {
+  const [images, setImages] = useState<string[]>([]);
+  const [selectedImage, setSelectedImage] = useState("");
+
+  useEffect(() => {
+    fetch('/productos/images') //fetch(route('productos.getImages'))
+      .then(res => res.json())
+      .then(data => setImages(data))
+      .catch(err => console.error("Error cargando imágenes:", err));
+  }, []);
+
+  return (
+    <div>
+      <label>Seleccionar imagen existente:</label>
+      <select
+        value={selectedImage}
+        onChange={(e) => setSelectedImage(e.target.value)}
+      >
+        <option value="">-- Elegir --</option>
+        {images.length>0 && images.map(img => (
+          <option key={img} value={img}>{img}</option>
+        ))}
+      </select>
+
+      {selectedImage && (
+        <img
+          src={`/${selectedImage}`}
+          alt="Preview"
+          className="w-24 h-24 mt-2 object-cover"
+        />
+      )}
+    </div>
+  );
+}*/
+
+interface PropsImage{
+  url: string | undefined;
+}
+
+function SelectImagen( { url } : PropsImage){
+  return (
+    <>
+      
+    </>
+  );
+}
+
 export default function NewEditProductos(){
   //data
   const [ load, setLoad ] = useState(false);
@@ -119,23 +203,12 @@ export default function NewEditProductos(){
     producto_id?:   number;
     timestamp?:     number;
   };
-  breadcrumbs[0].title = (mode=='create'? 'Nuevo' : 'Editar')+' producto';
-  /*const [propsActuales, setPropsActuales] = useState<{
-    resultado: number | undefined | null;
-    mensaje: string | undefined | null | '';
-    producto_id: number | undefined | null;
-  }>({ resultado: undefined, mensaje: undefined, producto_id: undefined });*/
+  breadcrumbs[0].title = (mode=='create'? 'Nuevo' : 'Editar')+' producto'+(mode!='create'? ` ${producto?.producto_id}` : '')//(mode=='create'? 'Nuevo' : 'Editar')+' producto';
   const [ultimoTimestamp, setUltimoTimestamp] = useState<number | null>(null);
   const { data, setData, errors, processing } = useForm<Producto>(productoVacio);
   const [marcasHab, setMarcasHab]             = useState<Multiple[]>([]);
   const [categoriaHab, setCatHab]             = useState<Multiple[]>([]);
   const [catSelected, setCatSelected]         = useState<Multiple[]>(categorias??[]);
-  
-  /*const [listas , setListas]                  = useState<{
-    id: number|string;
-    nombre: string;
-    precio: number;
-  }[]>([]);*/
 
   const [confirmOpen, setConfirOpen] = useState(false); //modal para confirmar acciones para cuado se crea o edita
 	const [textConfir, setTextConfirm] = useState('');
@@ -144,6 +217,9 @@ export default function NewEditProductos(){
   const [title, setTitle]   = useState('');
   const [text, setText]     = useState('');
   const [color, setColor]   = useState('success');
+
+  const [file, setFile] = useState(null);
+  const [urlImg, setUrlImg] = useState("");
 
   //funciones
   const handleSubmit = (e:React.FormEvent) => {
@@ -190,30 +266,52 @@ export default function NewEditProductos(){
       setActivo(true);
       return 
     }
-    /*if(!tieneListas()){
-      setTitle('Lista de precios requerida!');
-      setText('Se requiere asignar precio a almenos una lista de precios.');
-      setColor('warning');
-      setActivo(true);
-      return 
-    }*/
     setTextConfirm("Estás seguro de "+(mode==='create'?'crear':'actualizar')+' este producto?');
     setConfirOpen(true);
   };
+
   const grabarGuardar = () => {
     //reseteo el confirmar    
     setConfirOpen(false);
     setTextConfirm('');
+
     //muestro el cargando...
     setLoad(true); 
+    
     const payload = {
       ...data,
       categorias: catSelected,
+      vencimiento: data.vencimiento?convertirFechaBarrasGuiones(data.vencimiento) : '',
+      imagen: urlImg && data.imagen !== urlImg ? urlImg: data.imagen
+      //file: file,
+      //nombre: data.producto_nombre
     };
+    /*const payload = {
+      producto_id: String(data.producto_id),
+      producto_nombre: String(data.producto_nombre),
+      descripcion: String(data.descripcion),
+      precio: String(data.precio),
+      codigo_barra: String(data.codigo_barra),
+      marca_id: String(data.marca_id),
+      stock_minimo: String(data.stock_minimo),
+      inhabilitado: String(data.inhabilitado),
+      vencimiento: String(data.vencimiento || ''),
+      categorias: catSelected.map(cat => ({
+        id: String(cat.id),
+        nombre: String(cat.nombre),
+      })),
+      file,
+    };*/
+
+
+    //const formData = toFormData(payload);
+
+    console.log("payload: ", payload );
     if (mode === 'create') {
       router.post(
         route('productos.store'),payload,
         {
+          //forceFormData: true,
           preserveScroll: true,
           preserveState: true,
           onFinish: () => {
@@ -226,6 +324,7 @@ export default function NewEditProductos(){
         route('productos.update',{producto: data.producto_id}),
         payload,
         {
+          //forceFormData: true,
           preserveScroll: true,
           preserveState: true,
           onFinish: () => {
@@ -278,11 +377,10 @@ export default function NewEditProductos(){
       setColor(esError ? 'error' : 'success');
       setActivo(true); 
     }
-	}, [resultado, mensaje, producto_id]);
+	}, [resultado, mensaje, producto_id, timestamp, ultimoTimestamp, mode]);
 
   useEffect(() => {
     if(producto && mode === 'edit'){
-      
       setData({
         producto_id:         producto.producto_id,
         producto_nombre:     producto.producto_nombre,
@@ -291,19 +389,21 @@ export default function NewEditProductos(){
         categoria_nombre:    '',
         precio:              producto.precio,
         inhabilitado:        producto.inhabilitado,
+        imagen:              producto.imagen,
         marca_id:            producto.marca_id,
-        marca_nombre:        '', 
+        marca_nombre:        producto.marca_nombre, 
         codigo_barra:        producto.codigo_barra,
         stock_minimo:        producto.stock_minimo,
-        vencimiento:         producto.vencimiento,
+        vencimiento:         producto.vencimiento? convertirFechaGuionesBarras(producto.vencimiento) : '',
       });
     }
-  }, []);
+  }, [mode, producto]);
+
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
-      <Head title={(mode=='create'? 'Nuevo' : 'Editar')+' producto'+(mode!='create'? ` ${producto_id}` : '')} />
+      <Head title={(mode=='create'? 'Nuevo' : 'Editar')+' producto'} />
       <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
-        <div className="relative flex-none flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
+        <div className="pb-3 relative flex-none flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
           <form 
             className='grid grid-cols-12 gap-1'
             onSubmit={handleSubmit}>
@@ -329,14 +429,32 @@ export default function NewEditProductos(){
                 setSeleccionados={setCatSelected}
               />
             </div>
-            <div  className='flex justify-end px-4 pb-4 col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>
-              <Button type="button" onClick={handleSubmit}>
-                { load ? ( <Loader2 size={20} className="animate-spin"/> ) : 
-                         (<Save size={20} className=""/>)  }
-                { ( mode === 'create' ? 'Grabar' : 'Actualizar')  }          
-              </Button>
+            <div className='px-4 pb-1 col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>
+              <div className='py-4'>
+                Imagen
+                <hr />
+              </div>
+              {/*<SubirImagen
+                set={(e)=> setFile(e)}
+              />*/}
+              { data.imagen && (
+                <div className='flex justify-center'>
+                  <img src={`/${data.imagen}`} className="w-50 h-50 object-cover rounded-md border mb-4" alt="Imagen" width="50"/>
+                </div>
+              ) }
+              <Input placeholder='Ingresa la dirección de tu imagen' value={urlImg} onChange={(e) => setUrlImg(e.target.value)}/>
             </div>
+            {/*<div>
+              <SelectorImagen/>
+            </div>*/}
           </form>
+        </div>
+        <div  className='flex justify-end px-4 pb-4 col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>
+          <Button type="button" onClick={handleSubmit}>
+            { load ? ( <Loader2 size={20} className="animate-spin"/> ) : 
+                      (<Save size={20} className=""/>)  }
+            { ( mode === 'create' ? 'Grabar' : 'Actualizar')  }          
+          </Button>
         </div>
       </div>
       <ModalConfirmar

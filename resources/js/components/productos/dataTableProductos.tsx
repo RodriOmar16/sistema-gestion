@@ -38,7 +38,7 @@ export function getColumns(confirmar: (data: Producto) => void, openEdit: (data:
     },*/
     { 
       accessorKey: "imagen", 
-      header: "Imagen", 
+      header: "", 
       cell: ({ row }) => { 
         const src = row.getValue("imagen") as string; 
         return ( 
@@ -66,7 +66,7 @@ export function getColumns(confirmar: (data: Producto) => void, openEdit: (data:
       header: ({column}) => {
         return (
           <div className="flex">
-            Código barras
+            Cód. barras
             <ArrowUpDown className="ml-1" size={17} onClick={() => column.toggleSorting(column.getIsSorted() === "asc")} />
           </div>
         )
@@ -78,7 +78,7 @@ export function getColumns(confirmar: (data: Producto) => void, openEdit: (data:
       header: ({column}) => {
         return (
           <div className="flex">
-            Categoria
+            Categoría
             <ArrowUpDown className="ml-1" size={20} onClick={() => column.toggleSorting(column.getIsSorted() === "asc")} />
           </div>
         )
@@ -121,7 +121,7 @@ export function getColumns(confirmar: (data: Producto) => void, openEdit: (data:
       header: ({column}) => {
         return (
           <div className="flex">
-            Stock Mínimo
+            Stock Mín.
             <ArrowUpDown className="ml-1" size={20} onClick={() => column.toggleSorting(column.getIsSorted() === "asc")} />
           </div>
         )

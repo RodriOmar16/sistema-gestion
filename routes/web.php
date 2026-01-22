@@ -104,11 +104,11 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
     Route::put('/proveedores/{proveedor}/estado', [ProveedorController::class, 'toggleEstado'])->name('proveedores.toggleEstado');
 
     //Listas de Precios
-    Route::get('/listas_precios_habilitadas', [ListaPrecioController::class, 'listasPreciosHabilitadas'])->name('listasPrecios.habilitadas');
+    //Route::get('/listas_precios_habilitadas', [ListaPrecioController::class, 'listasPreciosHabilitadas'])->name('listasPrecios.habilitadas');
     Route::get('/listas-precios', [ListaPrecioController::class, 'index'])->name('listasPrecios.index');
     Route::post('/listas-precios', [ListaPrecioController::class, 'store'])->name('listasPrecios.store');
     Route::put('/listas-precios/{lista}', [ListaPrecioController::class, 'update'])->name('listasPrecios.update');
-    Route::put('/listas-precios/{lista}/estado', [ListaPrecioController::class, 'toggleEstado'])->name('listasPrecios.toggleEstado');
+    //Route::put('/listas-precios/{lista}/estado', [ListaPrecioController::class, 'toggleEstado'])->name('listasPrecios.toggleEstado');
 
     //Productos
     Route::get('/productos_habilitados', [ProductoController::class, 'productosHabilitados'])->name('productos.productosHabilitados');
@@ -116,10 +116,12 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
     Route::get('/productos/pdf', [ProductoController::class, 'generarPDF'])->name('productos.pdf');
     Route::get('/productos', [ProductoController::class, 'index'])->name('productos.index');
     Route::get('producto/create', [ProductoController::class, 'create'])->name('productos.create');
-    Route::post('/productos/producto-nuevo', [ProductoController::class, 'store'])->name('productos.store');
+    Route::post('/producto/producto-nuevo', [ProductoController::class, 'store'])->name('productos.store');
     Route::get('producto/ver/{producto}', [ProductoController::class, 'edit'])->name('productos.edit');
-    Route::put('/productos/update/{producto}', [ProductoController::class, 'update'])->name('productos.update');
+    Route::put('/producto/update/{producto}', [ProductoController::class, 'update'])->name('productos.update');
     Route::put('/producto/cambio-estado/{producto}', [ProductoController::class, 'toggleEstado'])->name('productos.toggleEstado');
+    Route::get('producto/generar-codigo', [ProductoController::class, 'generarCodigo'])->name('productos.generarCodigo');
+    Route::get('/productos/images', [ProductoController::class, 'getImages'])->name('productos.getImages');
 
     //Stock
     Route::get('/stock-disponible', [StockController::class, 'stockDisponible'])->name('stock.disponible');;

@@ -11,6 +11,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\ProveedorController;
 use App\Http\Controllers\ListaPrecioController;
+use App\Http\Controllers\ListaPrecioProductoController;
 use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\MovimientoStockController;
 use App\Http\Controllers\TipoMovimientoController;
@@ -97,6 +98,7 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
     Route::put('/categorias/{categoria}/estado', [CategoriaController::class, 'toggleEstado'])->name('categorias.toggleEstado');
 
     //Proveedores
+    Route::get('/proveedores/buscar', [ProveedorController::class, 'buscar'])->name('proveedores.buscar');
     Route::get('/proveedores_habilitados', [ProveedorController::class, 'proveedoresHabilitados'])->name('proveedores.proveedoresHabilitados');
     Route::get('/proveedores', [ProveedorController::class, 'index'])->name('proveedores.index');
     Route::post('/proveedores', [ProveedorController::class, 'store'])->name('proveedores.store');
@@ -105,12 +107,13 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
 
     //Listas de Precios
     //Route::get('/listas_precios_habilitadas', [ListaPrecioController::class, 'listasPreciosHabilitadas'])->name('listasPrecios.habilitadas');
-    Route::get('/listas-precios', [ListaPrecioController::class, 'index'])->name('listasPrecios.index');
-    Route::post('/listas-precios', [ListaPrecioController::class, 'store'])->name('listasPrecios.store');
-    Route::put('/listas-precios/{lista}', [ListaPrecioController::class, 'update'])->name('listasPrecios.update');
+    Route::get('/listas-precios', [ListaPrecioProductoController::class, 'index'])->name('listasPrecios.index');
+    Route::post('/listas-precios', [ListaPrecioProductoController::class, 'store'])->name('listasPrecios.store');
+    Route::put('/listas-precios/{lista}', [ListaPrecioProductoController::class, 'update'])->name('listasPrecios.update');
     //Route::put('/listas-precios/{lista}/estado', [ListaPrecioController::class, 'toggleEstado'])->name('listasPrecios.toggleEstado');
 
     //Productos
+    Route::get('/productos/buscar', [ProductoController::class, 'buscar'])->name('productos.buscar');
     Route::get('/productos_habilitados', [ProductoController::class, 'productosHabilitados'])->name('productos.productosHabilitados');
     Route::get('/productos/excel', [ProductoController::class, 'exportarExcelManual'])->name('productos.excel');
     Route::get('/productos/pdf', [ProductoController::class, 'generarPDF'])->name('productos.pdf');

@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
+
 
 use App\Models\Producto;
 use App\Models\ProductoCategoria;
@@ -27,6 +29,27 @@ class ProductoController extends Controller
     });
     return response()->json($productos);
   }
+
+  public function buscar(Request $request)
+  {
+    try {
+      $buscar = $request->get('buscar', '');
+
+      $productos = Producto::query()
+        ->when($buscar, fn($q) => $q->where('nombre', 'LIKE', "%{$buscar}%"))
+        ->select('producto_id as id', 'nombre')
+        ->paginate(20);
+
+      return response()->json([
+          'elementos' => $productos
+      ]);
+    } catch (\Throwable $e) {
+      //Log::error('Error en buscar productos: ' . $e->getMessage());
+      return response()->json(['error' => $e->getMessage()], 500);
+    }
+  }
+
+
 
   public function generarPDF(Request $request){
 

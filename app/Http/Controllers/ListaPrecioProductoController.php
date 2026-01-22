@@ -3,15 +3,22 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
+use App\Models\ListaPrecioProducto;
 
 class ListaPrecioProductoController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+      if(!$request->has('buscar')){
+        return inertia('listasPreciosProductos/index',[
+          'listas' => []
+        ]);
+      }
     }
 
     /**

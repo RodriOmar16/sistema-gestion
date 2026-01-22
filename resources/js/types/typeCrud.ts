@@ -86,6 +86,19 @@ export interface ListaPrecio{
   updated_at?: string;
 }
 
+export interface ListaPrecioProducto{
+  lista_precio_id:     number | string;
+  proveedor_id:        number | string;
+  proveedor_nombre:    string;
+  producto_id:         number|string;
+  producto_nombre:     string;
+  precio:              number;
+  porcentaje:          number;
+  precio_sugerido:     number;
+  created_at?:         string;
+  updated_at?:         string;
+}
+
 export interface Producto{
   producto_id: number | string;
   producto_nombre: string;

@@ -20,6 +20,25 @@ class ProveedorController extends Controller
     });
     return response()->json($proveedores);
   }
+
+  public function buscar(Request $request)
+  {
+    try {
+      $buscar = $request->get('buscar', '');
+
+      $provedores = Proveedor::query()
+        ->when($buscar, fn($q) => $q->where('nombre', 'LIKE', "%{$buscar}%"))
+        ->select('proveedor_id as id', 'nombre')
+        ->paginate(20);
+
+      return response()->json([
+          'elementos' => $provedores
+      ]);
+    } catch (\Throwable $e) {
+      //Log::error('Error en buscar productos: ' . $e->getMessage());
+      return response()->json(['error' => $e->getMessage()], 500);
+    }
+  }
   /**
    * Display a listing of the resource.
    */

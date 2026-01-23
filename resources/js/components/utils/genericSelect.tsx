@@ -1,3 +1,4 @@
+import { ordenarPorTexto } from "@/utils";
 import { useState } from "react";
 import AsyncSelect from "react-select/async";
 
@@ -15,7 +16,8 @@ export default function GenericSelect({ route, onChange, value, placeHolder }: G
       .then(res => res.json())
       .then(data => {
         callback(
-          data.elementos.data.map((e: any) => ({
+          ordenarPorTexto(data.elementos.data,'nombre')
+          /*data.elementos.data*/.map((e: any) => ({
             value: e.id,
             label: e.nombre,
           }))

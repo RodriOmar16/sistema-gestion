@@ -27,6 +27,7 @@ class ProveedorController extends Controller
       $buscar = $request->get('buscar', '');
 
       $provedores = Proveedor::query()
+        ->where('inhabilitado',0)
         ->when($buscar, fn($q) => $q->where('nombre', 'LIKE', "%{$buscar}%"))
         ->select('proveedor_id as id', 'nombre')
         ->paginate(20);

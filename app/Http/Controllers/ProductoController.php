@@ -36,6 +36,7 @@ class ProductoController extends Controller
       $buscar = $request->get('buscar', '');
 
       $productos = Producto::query()
+        ->where('inhabilitado',0)
         ->when($buscar, fn($q) => $q->where('nombre', 'LIKE', "%{$buscar}%"))
         ->select('producto_id as id', 'nombre')
         ->paginate(20);

@@ -141,8 +141,8 @@ export function FiltrosForm({ setOpen, resetearListaPrecio }: propsForm){
 };
 
 type PropAgregar = {
-  open: boolean;
-  controlarAgregar: () => void;
+  setOpen: (p:boolean) => void;
+  controlarAgregar: (p:any) => void;
   data: ListaPrecioProducto;
   setData: (l:ListaPrecioProducto) => void;
   activarMsj: (p:boolean) => void;
@@ -151,7 +151,7 @@ type PropAgregar = {
   colorNuevo: (p:string) => void; 
 };
 
-function AgregarPrecioProducto({open, data, setData,controlarAgregar, activarMsj, textNuevo, titleNuevo, colorNuevo}:PropAgregar){
+function AgregarPrecioProducto({setOpen, data, setData, controlarAgregar, activarMsj, textNuevo, titleNuevo, colorNuevo}:PropAgregar){
   const [optionProduct, setOptionProduct] = useState<{value:number, label: string}|null>(null);
   const [optionProv, setOptionProv]       = useState<{value:number, label: string}|null>(null);
   const [processing,setProcessing]        = useState(false);
@@ -178,31 +178,43 @@ function AgregarPrecioProducto({open, data, setData,controlarAgregar, activarMsj
     let obj = { text   : 'Se agregó correctamente a la lista!',  title  : 'Nuevo elemento',  color  : 'success',  activo : true, res    : 1 };
     
     if(!data.producto_id){
-      obj.title='Producto faltante';
-      obj.text='Se requiere seleccionar el producto para continuar.'
-      obj.color='warning',
-      obj.activo=true;
+      obj.title  = 'Producto faltante';
+      obj.text   = 'Se requiere seleccionar el producto para continuar.'
+      obj.color  = 'warning',
+      obj.activo = true;
+      obj.res    = 0;
       return obj;
     }
     if(!data.proveedor_id){
-      obj.title='Proveedor faltante';
-      obj.text='Se requiere seleccionar el proveedor para continuar.'
-      obj.color='warning',
-      obj.activo=true;
+      obj.title  = 'Proveedor faltante';
+      obj.text   = 'Se requiere seleccionar el proveedor para continuar.'
+      obj.color  = 'warning',
+      obj.activo = true;
+      obj.res    = 0;
       return obj;
     }
     if(data.precio <= 0){
-      obj.title='Precio incorrecto';
-      obj.text='Se requiere ingresar un precio válido para continuar.'
-      obj.color='warning',
-      obj.activo=true;
+      obj.title  = 'Precio incorrecto';
+      obj.text   = 'Se requiere ingresar un precio válido para continuar.'
+      obj.color  = 'warning',
+      obj.activo = true;
+      obj.res    = 0;
       return obj;
     }
     if(data.porcentaje <= 0){
-      obj.title='Porcentaje incorrecto';
-      obj.text='Se requiere ingresar un porcentaje válido para continuar.'
-      obj.color='warning',
-      obj.activo=true;
+      obj.title  = 'Porcentaje incorrecto';
+      obj.text   = 'Se requiere ingresar un porcentaje válido para continuar.'
+      obj.color  = 'warning',
+      obj.activo = true;
+      obj.res    = 0;
+      return obj;
+    }
+    if(data.precio_final && data.precio_final <= 0){
+      obj.title  = 'Precio Final incorrecto';
+      obj.text   = 'Se requiere ingresar un precio válido para continuar.'
+      obj.color  = 'warning',
+      obj.activo = true;
+      obj.res    = 0;
       return obj;
     }
     return obj;
@@ -211,21 +223,29 @@ function AgregarPrecioProducto({open, data, setData,controlarAgregar, activarMsj
     e.preventDefault();
     console.log("data: ", data)
     //
-    const {activo, title, text, color} = validar();
+    const {activo, title, text, color, res} = validar();
 
     setProcessing(true);
     //procesar en la BD y agregar por front al array
+    if(res !== 0){
+      controlarAgregar(data);    
+    }
+
     activarMsj(activo);
     titleNuevo(title);
     textNuevo(text);
     colorNuevo(color);
-    
+   
     setProcessing(false);
+
   }
 
   return (
     <div>
-      <div className='flex mb-2'> <Plus size={20} className="mr-2" color="green"/>  Crear elemento de lista de precios</div>
+      <div className='flex mb-2'> 
+        <Plus size={20} className="mr-2" color="green"/>  
+        Crear elemento de lista de precios
+      </div>
       <form className='grid grid-cols-12 gap-4 px-2 pt-1 pb-4' onSubmit={handleSubmit}>
         <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3'>
           <label htmlFor="productos">Productos</label>
@@ -273,7 +293,7 @@ function AgregarPrecioProducto({open, data, setData,controlarAgregar, activarMsj
             }}
             isAllowed={(values) =>
               values.floatValue === undefined ||
-              (values.floatValue >= 0 && values.floatValue <= 100)
+              (values.floatValue >= 0 /*&& values.floatValue <= 100*/)
             }
           />
         </div>
@@ -288,17 +308,28 @@ function AgregarPrecioProducto({open, data, setData,controlarAgregar, activarMsj
             className="text-right border rounded px-2 py-1" 
           />
         </div>
-        <div className='col-span-6 sm:col-span-4 md:col-span-4 lg:col-span-9 flex justify-end items-center'>
-          {/*<Button 
-            className="p-0 hover:bg-transparent cursor-pointer"
+        <div className='col-span-12 sm:col-span-4 md:col-span-6 lg:col-span-3'>
+          <label htmlFor="precios">Precio Final</label>
+          <NumericFormat 
+            value={data.precio_final} 
+            thousandSeparator="." 
+            decimalSeparator="," 
+            prefix="$" 
+            className="text-right border rounded px-2 py-1" 
+            onValueChange={(values) => {
+              setData({...data, precio_final: values.floatValue || 0});
+            }}
+          />
+        </div>
+        <div className='col-span-6 sm:col-span-4 md:col-span-4 lg:col-span-6 flex justify-end items-center'>
+          <Button 
+            className="bg-secondary mr-2"
             type="button"
-            title="Limpiar" 
-            variant="ghost" 
-            size="icon" 
-            onClick={handleReset}
+            title="Cancelar"  
+            onClick={() => setOpen(false)}
           >
-            <Brush size={30} className="text-orange-500" />
-          </Button>*/}
+            Cancelar
+          </Button>
           <Button type="submit" title="Buscar" disabled={processing}>
             {processing ? (
               <Loader2 size={20} className="animate-spin mr-2" />
@@ -348,10 +379,12 @@ export default function ListasPreciosProductos(){
 
   const [open, setOpen] = useState(false);
   const [dataAgregar, setDataAgregar] = useState<ListaPrecioProducto>(listaVacia);
+  const [idNegativo, setIdNegativo]   = useState(-1);
 
   //funciones
   const confirmar = (data: ListaPrecioProducto) => {
     if(data){
+      return console.log("data: ", data)
       setListaPrecioCopia( JSON.parse(JSON.stringify(data)) );
       //const texto : string = data.inhabilitada === 0 ? 'inhabilitar': 'habilitar';
       //setTextConfirmar('Estás seguro de querer '+texto+' esta lista de precio?');
@@ -441,10 +474,25 @@ export default function ListasPreciosProductos(){
     setConfirOpen(false);
   };
 
-  const controlarAgregar = () => {  };
+  const controlarAgregar = async(p:any) => { 
+    console.log("p: ", p);
+    const aux : (ListaPrecioProducto[] | undefined) = listasPreciosCacheadas?.filter(e => e.producto_id == p.producto_id && e.proveedor_id == p.proveedor_id);
+    if(aux && aux.length > 0){
+      console.log("hay repetidos")
+    }else{
+      p.lista_precio_id = idNegativo;
+      p.editar          = 1;
+      setListasPreciosCacheadas(prev => [...prev, p]);
+      setIdNegativo(idNegativo - 1);
+    }
+
+    console.log("listas: ", listas)
+  };
+
+  const quitar = (p:any) =>{ console.log("quitar") };
 
   //useEffect
-  useEffect(() => {
+  /*useEffect(() => {
     //esto se hace porque inertia me destruia muy rapido el array principal en este caso listas y por eso tuve que guardardo en una variable temporal
     //es solo para que no sea tan feo
     if (
@@ -454,7 +502,13 @@ export default function ListasPreciosProductos(){
     ) {
       setListasPreciosCacheadas(listas);
     }
+  }, [listas, listasPreciosCacheadas]);*/
+  useEffect(() => {
+    if (listas && listas.length > 0) {
+      setListasPreciosCacheadas(listas);
+    }
   }, [listas]);
+
 
 
   useEffect(() => {
@@ -494,7 +548,7 @@ export default function ListasPreciosProductos(){
             (
               <div>
                 <AgregarPrecioProducto
-                  open={open}
+                  setOpen={setOpen}
                   data={dataAgregar}
                   setData={setDataAgregar}
                   controlarAgregar={controlarAgregar}
@@ -509,8 +563,9 @@ export default function ListasPreciosProductos(){
           <div>
             <DataTableListasPreciosProductos
               datos={listasPreciosCacheadas?? []} 
-              openEdit={openEdit} 
+              quitar={quitar} 
               abrirConfirmar={confirmar}
+              setDatos={setListasPreciosCacheadas}
             />
           </div>
         </div>

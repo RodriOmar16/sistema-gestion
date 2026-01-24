@@ -93,8 +93,10 @@ export interface ListaPrecioProducto{
   producto_id:         number|string;
   producto_nombre:     string;
   precio:              number;
+  precio_final?:       number;
   porcentaje:          number;
   precio_sugerido:     number;
+  editar?:             0 | 1;
   created_at?:         string;
   updated_at?:         string;
 }

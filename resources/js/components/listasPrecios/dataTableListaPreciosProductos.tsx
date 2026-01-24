@@ -3,22 +3,24 @@ import {
   ColumnDef,  ColumnFiltersState,  flexRender,  getCoreRowModel,  getFilteredRowModel,
   getPaginationRowModel,  getSortedRowModel,  SortingState,  useReactTable,  VisibilityState,
 } from "@tanstack/react-table"
-import { ArrowUpDown, ChevronDown, MoreHorizontal, Pen , Check, Ban,Search } from "lucide-react"
+import { ArrowUpDown, ChevronDown, MoreHorizontal, Pen , Check, Ban,Search, Save, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {  Table,  TableBody,  TableCell,  TableHead,  TableHeader,  TableRow } from "@/components/ui/table"
 import { ListaPrecioProducto } from "@/types/typeCrud"
 import { convertirFechaGuionesBarras, formatDateTime, formatearCuilCompleto } from "@/utils"
 import { Badge } from "../ui/badge"
+import { NumericFormat } from 'react-number-format';
 
 interface Props {
   datos: ListaPrecioProducto[];
-  openEdit: (data:ListaPrecioProducto) => void;
+  quitar: (data:ListaPrecioProducto) => void;
   abrirConfirmar: (data:ListaPrecioProducto) => void;
+  setDatos: React.Dispatch<React.SetStateAction<ListaPrecioProducto[]>>; 
 }
 
 //export const columns: ColumnDef<Project>[] = [
-export function getColumns(confirmar: (data: ListaPrecio) => void, openEdit: (data: ListaPrecio) => void): ColumnDef<ListaPrecio>[] {
+export function getColumns(confirmar: (data: ListaPrecioProducto) => void, quitar: (data: ListaPrecioProducto) => void, setDatos: Props["setDatos"]): ColumnDef<ListaPrecioProducto>[] {
   return [
     {
       accessorKey: "lista_precio_id",
@@ -35,17 +37,16 @@ export function getColumns(confirmar: (data: ListaPrecio) => void, openEdit: (da
       ),
     },
     {
-      accessorKey: "lista_precio_nombre",
+      accessorKey: "producto_nombre",
       header: ({column}) => {
         return (
           <div className="flex">
-            Nombre
+            Producto
             <ArrowUpDown className="ml-1" size={17} onClick={() => column.toggleSorting(column.getIsSorted() === "asc")} />
           </div>
         )
-      }
-      ,
-      cell: ({ row }) => ( <div className="">{row.getValue("lista_precio_nombre")}</div> ),
+      } ,
+      cell: ({ row }) => ( <div className="">{row.getValue("producto_nombre")}</div> ),
     },
     {
       accessorKey: "proveedor_nombre",
@@ -60,130 +61,155 @@ export function getColumns(confirmar: (data: ListaPrecio) => void, openEdit: (da
       cell: ({ row }) => ( <div className="">{row.getValue("proveedor_nombre")}</div> ),
     },
     {
-      accessorKey: "fecha_inicio",
-      header: ({column}) => {
-        return (
-          <div className="flex">
-            Fecha Inicio
-            <ArrowUpDown className="ml-1" size={20} onClick={() => column.toggleSorting(column.getIsSorted() === "asc")} />
-          </div>
-        )
-      },
+      id: "precio",
+      enableHiding: false,
+      header: "Precio",
       cell: ({ row }) => {
-        const fechaString = row.getValue("fecha_inicio") as string;
-        return <div>{ convertirFechaGuionesBarras(fechaString) }</div> 
-      },
-    },
-    {
-      accessorKey: "fecha_fin",
-      header: ({column}) => {
-        return (
-          <div className="flex">
-            Fecha Fin
-            <ArrowUpDown className="ml-1" size={20} onClick={() => column.toggleSorting(column.getIsSorted() === "asc")} />
-          </div>
-        )
-      },
-      cell: ({ row }) => {
-        const fechaString = row.getValue("fecha_fin") as string;
-        return <div>{ convertirFechaGuionesBarras(fechaString) }</div> 
-      },
-    },
-    {
-      accessorKey: "inhabilitada",
-      header: ({column}) => {
-        return (
-          <div className="flex">
-            Estado
-            <ArrowUpDown className="ml-1" size={20} onClick={() => column.toggleSorting(column.getIsSorted() === "asc")} />
-          </div>
-        )
-      },
-      cell: ({ row }) => {
-        const user = row.original;
-        const colorClasses = user.inhabilitada === 0
-          ? 'bg-green-500 text-white dark:bg-green-600'
-          : 'bg-red-500 text-white dark:bg-red-600';
 
+        const fila = row.original;
+  
         return (
-          <Badge variant="secondary" className={`flex items-center gap-1 ${colorClasses}`}>
-            {user.inhabilitada === 0 ? 'Habilitado' : 'Inhabilitado'}
-          </Badge>
-        );
-
-      },
-    },
-    /*{
-      accessorKey: "created_at",
-      header: ({column}) => {
-        return (
-          <div className="flex">
-            Creado
-            <ArrowUpDown className="ml-1" size={20} onClick={() => column.toggleSorting(column.getIsSorted() === "asc")} />
-          </div>
+          fila.editar == 1 ? (
+            <NumericFormat 
+              value={fila.precio} 
+              thousandSeparator="." 
+              decimalSeparator="," 
+              prefix="$" 
+              className="text-right border rounded px-2 py-1" 
+              onValueChange={(values) => {
+                fila.precio = values.floatValue || 0
+              }}
+            />
+          ) : (
+            <div className="text-right">
+              { row.getValue("precio") }
+            </div>
+          )
         )
-      },
-      cell: ({ row }) => {
-        const fechaString = row.getValue("created_at") as string;
-        return <div>{ formatDateTime(fechaString) }</div> 
       },
     },
     {
-      accessorKey: "updated_at",
-      header: ({column}) => {
+      id: "porcentaje",
+      enableHiding: false,
+      header: "Porc (%)",
+      cell: ({ row }) => {
+
+        const fila = row.original;
+  
         return (
-          <div className="flex">
-            Modificado
-            <ArrowUpDown className="ml-1" size={20} onClick={() => column.toggleSorting(column.getIsSorted() === "asc")} />
-          </div>
+          fila.editar == 1 ? (
+            <NumericFormat 
+              value={fila.porcentaje} 
+              thousandSeparator="." 
+              decimalSeparator="," 
+              suffix="%" 
+              className="text-right border rounded px-2 py-1" 
+              onValueChange={(values) => {
+                fila.porcentaje = values.floatValue || 0
+              }}
+            />
+          ): (
+            <div className="text-right">
+              { row.getValue("porcentaje") }
+            </div>
+          )
         )
       },
+    },
+    {
+      accessorKey: "precio_sugerido",
+      header:" Sugerido",
+      cell: ({ row }) => ( 
+        <div className="text-right">
+          { row.getValue("precio_sugerido") }
+        </div> 
+      ),
+    },
+    {
+      id: "precio_final",
+      enableHiding: false,
+      header: "Final",
       cell: ({ row }) => {
-        const fechaString = row.getValue("updated_at") as string;
-        return <div>{ formatDateTime(fechaString) }</div> 
+
+        const fila = row.original;
+  
+        return (
+          fila.editar == 1 ? (
+            <NumericFormat 
+              value={fila.precio_final} 
+              thousandSeparator="." 
+              decimalSeparator="," 
+              prefix="$" 
+              className="text-right border rounded px-2 py-1" 
+              onValueChange={(values) => {
+                const nuevoPrecio = values.floatValue || 0;
+                setDatos(prev =>
+                  prev.map(item =>
+                    item.lista_precio_id === fila.lista_precio_id
+                      ? { ...item, precio: nuevoPrecio }
+                      : item
+                  )
+                );
+              }}
+            />
+          ) : (
+            <div className="text-right">
+              { row.getValue("precio_final") }
+            </div>
+          )
+        )
       },
-    },*/
+    },
     {
       id: "acciones",
       enableHiding: false,
       header: "Acciones",
       cell: ({ row }) => {
-        const rol = row.original;
+
+        const fila = row.original;
   
         return (
           <div className='flex'>
             {
-              rol?.inhabilitada === 0 ? (
+              Number(fila?.lista_precio_id) < 0 ? (
                 <>
+                  <Button 
+                    className="p-0 hover:bg-transparent cursor-pointer"
+                    title="Quitar" 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={() => quitar(fila)}>
+                    <X size={20} className="text-red-500" />
+                  </Button>
+                  <Button 
+                    className="p-0 hover:bg-transparent cursor-pointer"
+                    title="Guardar" 
+                    variant="ghost" 
+                    size="icon"
+                    onClick={ () => confirmar(fila) }>
+                    <Save size={20} className="text-indigo-500" />
+                  </Button>
+                </>
+              ) : ( 
+                <> 
                   <Button 
                     className="p-0 hover:bg-transparent cursor-pointer"
                     title="Editar" 
                     variant="ghost" 
-                    size="icon" 
-                    onClick={() => openEdit(rol)}>
+                    size="icon"
+                    onClick={ () => fila.editar = 1 }>
                     <Pen size={20} className="text-orange-500" />
                   </Button>
                   <Button 
                     className="p-0 hover:bg-transparent cursor-pointer"
-                    title="Inhabilitar" 
+                    title="Guardar Cambios" 
                     variant="ghost" 
-                    size="icon"
-                    onClick={ () => confirmar(rol) }>
-                    <Ban size={20} className="text-red-500" />
+                    size="icon" 
+                    onClick={() => confirmar(fila)}>
+                    <Save size={20} className="text-indigo-500" />
                   </Button>
-                </>
-              ) : (
-                <>
-                  <Button 
-                    className="p-0 hover:bg-transparent cursor-pointer"
-                    title="Habilitar" 
-                    variant="ghost" 
-                    size="icon"
-                    onClick={ () => confirmar(rol) }
-                  >
-                    <Check size={20} className='text-green-600'/>
-                  </Button>
-                </>
+                  
+                </> 
               )
             }
           </div>
@@ -193,7 +219,7 @@ export function getColumns(confirmar: (data: ListaPrecio) => void, openEdit: (da
   ]
 //]
 }
-export default function DataTableListasPreciosProductos({datos, openEdit, abrirConfirmar}:Props) {
+export default function DataTableListasPreciosProductos({datos, quitar, abrirConfirmar,setDatos}:Props) {
   const [sorting, setSorting]                   = useState<SortingState>([])
   const [columnFilters, setColumnFilters]       = useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
@@ -204,19 +230,17 @@ export default function DataTableListasPreciosProductos({datos, openEdit, abrirC
     const texto = busqueda.toLowerCase();
     return busqueda
       ? datos.filter((campo) =>
-          campo.lista_precio_nombre?.toLowerCase().includes(texto) ||
           campo.proveedor_nombre?.toLowerCase().includes(texto) ||
-          campo.fecha_fin?.toString().includes(texto) ||
-          campo.fecha_inicio?.toString().includes(texto)
+          campo.producto_nombre?.toLowerCase().includes(texto)
         )
       : datos;
   }, [busqueda, datos]);
 
   //functions
-  const confirmar = (data: ListaPrecio) => {
+  const confirmar = (data: ListaPrecioProducto) => {
     abrirConfirmar(data);
   };
-  const columns = getColumns(confirmar, openEdit); 
+  const columns = getColumns(confirmar, quitar, setDatos); 
 
   const table = useReactTable({
     data,

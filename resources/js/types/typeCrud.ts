@@ -97,6 +97,7 @@ export interface ListaPrecioProducto{
   porcentaje:          number;
   precio_sugerido:     number;
   editar?:             0 | 1;
+  cambiar?:            0 | 1;
   created_at?:         string;
   updated_at?:         string;
 }

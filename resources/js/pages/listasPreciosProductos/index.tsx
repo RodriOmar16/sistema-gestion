@@ -27,6 +27,7 @@ const listaVacia = {
   precio:              0,
   porcentaje:          0,
   precio_sugerido:     0,
+  precio_final:        0,
 }
 
 type propsForm = {
@@ -43,18 +44,19 @@ export function FiltrosForm({ setOpen, resetearListaPrecio }: propsForm){
   //funciones
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("data: ", data)
-    /*resetearListaPrecio([]);
-    const dataCopia = JSON.parse(JSON.stringify(data));
+    //console.log("data: ", data)
+    resetearListaPrecio([]);
+    //const dataCopia = JSON.parse(JSON.stringify(data));
     //dataCopia.fecha_inicio = convertirFechaBarrasGuiones(data.fecha_inicio);
-    dataCopia.fecha_fin = convertirFechaBarrasGuiones(data.fecha_fin);
-    const payload = {      ...dataCopia, buscar: true    }
+    //dataCopia.fecha_fin = convertirFechaBarrasGuiones(data.fecha_fin);
+    const payload = {      ...data/*Copia*/, buscar: true    }
     router.get(route('listasPrecios.index'), payload, {
       preserveState: true,
       preserveScroll: true,
       onFinish: () => setEsperandoRespuesta(false),
-    });*/
+    });
   };
+
   const handleReset = () => {
     setData(listaVacia);
     setOptionProduct(null);
@@ -228,7 +230,10 @@ function AgregarPrecioProducto({setOpen, data, setData, controlarAgregar, activa
     setProcessing(true);
     //procesar en la BD y agregar por front al array
     if(res !== 0){
-      controlarAgregar(data);    
+      controlarAgregar(data);
+      setData(listaVacia);
+      setOptionProduct(null);
+      setOptionProv(null);
     }
 
     activarMsj(activo);
@@ -274,7 +279,9 @@ function AgregarPrecioProducto({setOpen, data, setData, controlarAgregar, activa
             prefix="$" 
             className="text-right border rounded px-2 py-1" 
             onValueChange={(values) => {
-              setData({ ...data, precio: values.floatValue || 0 });
+              const precio = values.floatValue || 0;
+              const sugerido = precio + (precio * (data.porcentaje / 100));
+              setData({ ...data, precio, precio_sugerido: sugerido });
             }}
           />
         </div>
@@ -345,14 +352,11 @@ function AgregarPrecioProducto({setOpen, data, setData, controlarAgregar, activa
 }
 
 export default function ListasPreciosProductos(){
- //data
-  const [confirmOpen, setConfirOpen] = useState(false); //modal para confirmar acciones para cuado se crea o edita
-  const [textConfir, setTextConfirm] = useState('');
-  
-  const [modalOpen, setModalOpen]                     = useState(false); //modal editar/crear
+ //data  
+  //const [modalOpen, setModalOpen]                     = useState(false); //modal editar/crear
   const [modalMode, setModalMode]                     = useState<'create' | 'edit'>('create');
-  const [selectedListaPrecio, setSelectedListaPrecio] = useState<ListaPrecioProducto | undefined>(undefined);
-  const [pendingData, setPendingData]                 = useState<ListaPrecioProducto | undefined>(undefined);
+  //const [selectedListaPrecio, setSelectedListaPrecio] = useState<ListaPrecioProducto | undefined>(undefined);
+  //const [pendingData, setPendingData]                 = useState<ListaPrecioProducto | undefined>(undefined);
   const [loading, setLoading]                         = useState(false);
   
   const [openConfirmar, setConfirmar]           = useState(false); //para editar el estado
@@ -364,8 +368,6 @@ export default function ListasPreciosProductos(){
   const [title, setTitle]   = useState('');
   const [color, setColor]   = useState('');
 
-  const [buscar, setBuscar] = useState('');
-
   const { listas } = usePage().props as { listas?: ListaPrecioProducto[] }; //necesito los props de inertia
   const { resultado, mensaje, lista_precio_id, timestamp, productos } = usePage().props as {
     resultado?: number;
@@ -374,6 +376,8 @@ export default function ListasPreciosProductos(){
     timestamp?: number;
     productos?: Producto[];
   };
+  const { flash } = usePage().props as { flash?: { success?: string; error?: string } };
+
   const [ultimoTimestamp, setUltimoTimestamp] = useState<number | null>(null);
   const [listasPreciosCacheadas, setListasPreciosCacheadas] = useState<ListaPrecioProducto[]>([]);
 
@@ -384,112 +388,69 @@ export default function ListasPreciosProductos(){
   //funciones
   const confirmar = (data: ListaPrecioProducto) => {
     if(data){
-      return console.log("data: ", data)
+      //return console.log("data: ", data)
       setListaPrecioCopia( JSON.parse(JSON.stringify(data)) );
-      //const texto : string = data.inhabilitada === 0 ? 'inhabilitar': 'habilitar';
-      //setTextConfirmar('Estás seguro de querer '+texto+' esta lista de precio?');
+      setTextConfirmar('Estás seguro de querer grabar este producto a la lista de precio?');
       setConfirmar(true);
     }
   };
-  const inhabilitarHabilitar = () => {
-   /* console.log("listaPrecioCopia: ", listaPrecioCopia)
-    if (!listaPrecioCopia || !listaPrecioCopia.lista_precio_id) return;
-    console.log("Enviando ID:", listaPrecioCopia.lista_precio_id);
-    setLoading(true);
-    router.put(
-      route('listasPrecios.toggleEstado', { lista: listaPrecioCopia.lista_precio_id }),{},
-      {
-        preserveScroll: true,
-        preserveState: true,
-        onFinish: () => {
-          setLoading(false);
-          setTextConfirmar('');
-          setConfirmar(false);
-          setListaPrecioCopia(listaPrecioVacia);
-        }
-      }
-    );*/
-  };
-
-  const cancelarInhabilitarHabilitar = () => { 
-    setConfirmar(false);
-  };
-
-  const openCreate = () => {
-    setModalMode('create');
-    setSelectedListaPrecio(undefined);
-    setModalOpen(true);
-  };
-
-  const openEdit = (data: ListaPrecioProducto) => {
-    setModalMode('edit');
-    setSelectedListaPrecio(data);
-    setModalOpen(true);
-  };
-
-  const handleSave = (data: ListaPrecioProducto) => {
-    setPendingData(data);
-    let texto = (modalMode === 'create')? 'grabar' : 'guardar cambios a';
-    setTextConfirm('¿Estás seguro de '+texto+' esta lista de precio?');
-    setConfirOpen(true);
-  };
-
-  const accionar = () => {
-    if (!pendingData) return;
-    setLoading(true);
-
-    const payload = JSON.parse(JSON.stringify(pendingData));
-
-    if (modalMode === 'create') {
-      router.post(
-        route('listasPrecios.store'), payload,
-        {
-          preserveScroll: true,
-          preserveState: true,
-          onFinish: () => {
-            setLoading(false);
-            setTextConfirmar('');
-            setConfirmar(false);
-            setListaPrecioCopia(listaPrecioCopia);
-          }
-        }
-      );
-    } else {
-      router.put(
-        route('listasPrecios.update',{lista: pendingData.lista_precio_id}), payload,
-        {
-          preserveScroll: true,
-          preserveState: true,
-          onFinish: () => {
-            setLoading(false);
-            setPendingData(undefined);
-          }
-        }
-      );
-    }
-    setConfirOpen(false);
-  };
-
-  const cancelarConfirmacion = () => {
-    setConfirOpen(false);
-  };
-
   const controlarAgregar = async(p:any) => { 
-    console.log("p: ", p);
     const aux : (ListaPrecioProducto[] | undefined) = listasPreciosCacheadas?.filter(e => e.producto_id == p.producto_id && e.proveedor_id == p.proveedor_id);
-    if(aux && aux.length > 0){
-      console.log("hay repetidos")
-    }else{
-      p.lista_precio_id = idNegativo;
-      p.editar          = 1;
+    if(aux && aux.length == 0){
+      p.lista_precio_id = idNegativo; //para reconocerlo al quitar o guardar en la base
+      p.editar          = 1;          //para establecer un estado de edicion
       setListasPreciosCacheadas(prev => [...prev, p]);
       setIdNegativo(idNegativo - 1);
-    }
+    }else console.log("hay repetidos")
 
-    console.log("listas: ", listas)
+    //console.log("listas: ", listas)
   };
 
-  const quitar = (p:any) =>{ console.log("quitar") };
+  const quitar = (p:any) =>{ 
+    //console.log("quitar: ", p) 
+    setListasPreciosCacheadas(prev => 
+      prev.filter(item => item.lista_precio_id !== p.lista_precio_id ) 
+    );
+  };
+
+  const guardarGrabar = () => { 
+    console.log("llego al guardar: ", listaPrecioCopia)
+    if(listaPrecioCopia){
+      setConfirmar(false);
+      setLoading(true);
+
+      router.put(
+        route('listasPrecios.update',{lista: listaPrecioCopia.lista_precio_id}), 
+         JSON.parse(JSON.stringify(listaPrecioCopia)),
+        {
+          preserveScroll: true,
+          preserveState: true,
+          onSuccess:() => {
+            const mensaje = flash?.success || "Guardado correctamente";
+            setTitle('Lista de precio modificada');
+            setText(`${mensaje}`);
+            setColor('success');
+            setActivo(true);
+          },
+          onError: (errors) => { 
+            const mensaje = flash?.error || "Ocurrió un error"; 
+            setTitle('Error en Lista de precio');
+            setText(`${mensaje}`);
+            setColor('error');
+            setActivo(true);
+          },
+          onFinish: () => {
+            setLoading(false);
+            setListaPrecioCopia(listaVacia);
+          },
+        }
+      );
+    }
+  };
+
+  const cancelar = () => {
+    setConfirmar(false);
+  };
 
   //useEffect
   /*useEffect(() => {
@@ -505,33 +466,9 @@ export default function ListasPreciosProductos(){
   }, [listas, listasPreciosCacheadas]);*/
   useEffect(() => {
     if (listas && listas.length > 0) {
-      setListasPreciosCacheadas(listas);
+      setListasPreciosCacheadas(listas.map(e => ({...e, editar:0, cambiar: 0})));
     }
   }, [listas]);
-
-
-
-  useEffect(() => {
-    const cambioDetectado = timestamp && timestamp !== ultimoTimestamp;
-
-    if (cambioDetectado) {
-      setUltimoTimestamp(timestamp)
-
-      const esError = resultado === 0;
-      setTitle(esError ? 'Error' : modalMode === 'create' ? 'Lista de precio nueva' : 'Lista de precio modificada');
-      setText(esError ? mensaje ?? 'Error inesperado' : `${mensaje} (ID: ${lista_precio_id})`);
-      setColor(esError ? 'error' : 'success');
-      setActivo(true);
-
-      if (resultado === 1 && lista_precio_id) {
-        setModalOpen(false);
-        router.get(route('listasPrecios.index'),
-          { lista_precio_id, buscar: true },
-          { preserveScroll: true,	preserveState: true	}
-        )
-      }
-    }
-  }, [timestamp, ultimoTimestamp, resultado, mensaje, modalMode, lista_precio_id]);
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
@@ -566,21 +503,17 @@ export default function ListasPreciosProductos(){
               quitar={quitar} 
               abrirConfirmar={confirmar}
               setDatos={setListasPreciosCacheadas}
+              loading={loading}
+              setLoading={setLoading}
             />
           </div>
         </div>
       </div>
       <ModalConfirmar
-        open={confirmOpen}
-        text={textConfir}
-        onSubmit={accionar}
-        onCancel={cancelarConfirmacion}
-      />
-      <ModalConfirmar
         open={openConfirmar}
         text={textConfirmar}
-        onSubmit={inhabilitarHabilitar}
-        onCancel={cancelarInhabilitarHabilitar}
+        onSubmit={guardarGrabar}
+        onCancel={cancelar}
       />
       <ShowMessage
         open={activo}

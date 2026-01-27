@@ -3,24 +3,32 @@ import {
   ColumnDef,  ColumnFiltersState,  flexRender,  getCoreRowModel,  getFilteredRowModel,
   getPaginationRowModel,  getSortedRowModel,  SortingState,  useReactTable,  VisibilityState,
 } from "@tanstack/react-table"
-import { ArrowUpDown, ChevronDown, MoreHorizontal, Pen , Check, Ban,Search, Save, X } from "lucide-react"
+import { ArrowUpDown, ChevronDown, MoreHorizontal, Pen , Check, Ban,Search, Save, X, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {  Table,  TableBody,  TableCell,  TableHead,  TableHeader,  TableRow } from "@/components/ui/table"
 import { ListaPrecioProducto } from "@/types/typeCrud"
-import { convertirFechaGuionesBarras, formatDateTime, formatearCuilCompleto } from "@/utils"
+import { convertirFechaGuionesBarras, convertirNumberPlata, formatDateTime, formatearCuilCompleto } from "@/utils"
 import { Badge } from "../ui/badge"
 import { NumericFormat } from 'react-number-format';
-
+import { Checkbox } from "@/components/ui/checkbox"
 interface Props {
   datos: ListaPrecioProducto[];
   quitar: (data:ListaPrecioProducto) => void;
   abrirConfirmar: (data:ListaPrecioProducto) => void;
-  setDatos: React.Dispatch<React.SetStateAction<ListaPrecioProducto[]>>; 
+  setDatos: React.Dispatch<React.SetStateAction<ListaPrecioProducto[]>>;
+  loading: boolean;
+  setLoading: (p:boolean) => void;
 }
 
 //export const columns: ColumnDef<Project>[] = [
-export function getColumns(confirmar: (data: ListaPrecioProducto) => void, quitar: (data: ListaPrecioProducto) => void, setDatos: Props["setDatos"]): ColumnDef<ListaPrecioProducto>[] {
+export function getColumns(
+  confirmar: (data: ListaPrecioProducto) => void, 
+  quitar: (data: ListaPrecioProducto) => void, 
+  setDatos: Props["setDatos"],
+  loading: boolean,
+  setLoading: (p:boolean) => void,
+): ColumnDef<ListaPrecioProducto>[] {
   return [
     {
       accessorKey: "lista_precio_id",
@@ -77,12 +85,21 @@ export function getColumns(confirmar: (data: ListaPrecioProducto) => void, quita
               prefix="$" 
               className="text-right border rounded px-2 py-1" 
               onValueChange={(values) => {
-                fila.precio = values.floatValue || 0
+                fila.precio = values.floatValue || 0;
+              }}
+              onBlur={() => { 
+                // recalcula sugerido al salir del input 
+                const nuevoSugerido = fila.precio + (fila.precio * (fila.porcentaje / 100)); 
+                setDatos(prev => 
+                  prev.map(item => item.lista_precio_id === fila.lista_precio_id ? 
+                    { ...item, precio: fila.precio, precio_sugerido: nuevoSugerido } : item 
+                  ) 
+                );
               }}
             />
           ) : (
             <div className="text-right">
-              { row.getValue("precio") }
+              { convertirNumberPlata(String(fila.precio)) }
             </div>
           )
         )
@@ -105,12 +122,21 @@ export function getColumns(confirmar: (data: ListaPrecioProducto) => void, quita
               suffix="%" 
               className="text-right border rounded px-2 py-1" 
               onValueChange={(values) => {
-                fila.porcentaje = values.floatValue || 0
+                fila.porcentaje = values.floatValue || 0;
+              }}
+              onBlur={() => { 
+                // recalcula sugerido al salir del input 
+                const nuevoSugerido = fila.precio + (fila.precio * (fila.porcentaje / 100)); 
+                setDatos(prev => 
+                  prev.map(item => item.lista_precio_id === fila.lista_precio_id ? 
+                    { ...item, porcentaje: fila.porcentaje, precio_sugerido: nuevoSugerido } : item 
+                  ) 
+                );
               }}
             />
           ): (
             <div className="text-right">
-              { row.getValue("porcentaje") }
+              { fila.porcentaje }%
             </div>
           )
         )
@@ -119,11 +145,14 @@ export function getColumns(confirmar: (data: ListaPrecioProducto) => void, quita
     {
       accessorKey: "precio_sugerido",
       header:" Sugerido",
-      cell: ({ row }) => ( 
-        <div className="text-right">
-          { row.getValue("precio_sugerido") }
-        </div> 
-      ),
+      cell: ({ row }) => {
+        const sugerido = row.getValue("precio_sugerido") as string;
+        return (         
+          <div className="text-right">
+           { convertirNumberPlata(sugerido) }
+          </div> 
+        )
+      },
     },
     {
       id: "precio_final",
@@ -142,19 +171,19 @@ export function getColumns(confirmar: (data: ListaPrecioProducto) => void, quita
               prefix="$" 
               className="text-right border rounded px-2 py-1" 
               onValueChange={(values) => {
-                const nuevoPrecio = values.floatValue || 0;
-                setDatos(prev =>
-                  prev.map(item =>
-                    item.lista_precio_id === fila.lista_precio_id
-                      ? { ...item, precio: nuevoPrecio }
-                      : item
-                  )
+                fila.precio_final = values.floatValue || 0;
+              }}
+              onBlur={() => { 
+                setDatos(prev => 
+                  prev.map(item => item.lista_precio_id === fila.lista_precio_id ? 
+                    { ...item, precio_final: fila.precio_final } : item 
+                  ) 
                 );
               }}
             />
           ) : (
             <div className="text-right">
-              { row.getValue("precio_final") }
+              { convertirNumberPlata(String(fila.precio_final)) }
             </div>
           )
         )
@@ -173,6 +202,23 @@ export function getColumns(confirmar: (data: ListaPrecioProducto) => void, quita
             {
               Number(fila?.lista_precio_id) < 0 ? (
                 <>
+                  <div className="mr-2 mt-2">
+                    <Checkbox
+                      id={`cambiar-${fila.lista_precio_id}`}
+                      name="cambiar"
+                      title="Usar precio para producto"
+                      checked={fila.cambiar === 1} // 👈 si es 1 se marca, si es 0 no
+                      onCheckedChange={(checked) => {
+                        setDatos(prev =>
+                          prev.map(item =>
+                            item.lista_precio_id === fila.lista_precio_id
+                              ? { ...item, cambiar: checked ? 1 : 0 } // 👈 sincroniza el cambio
+                              : item
+                          )
+                        );
+                      }}
+                    />
+                  </div>
                   <Button 
                     className="p-0 hover:bg-transparent cursor-pointer"
                     title="Quitar" 
@@ -187,28 +233,71 @@ export function getColumns(confirmar: (data: ListaPrecioProducto) => void, quita
                     variant="ghost" 
                     size="icon"
                     onClick={ () => confirmar(fila) }>
-                    <Save size={20} className="text-indigo-500" />
-                  </Button>
+                      {loading  ? (
+                        <Loader2 size={20} className="animate-spin mr-2" />
+                      ) : (
+                        <Save size={20} className="text-indigo-500" />
+                      )}
+                  </Button>                  
                 </>
               ) : ( 
-                <> 
+                <>
+                  { fila.editar == 1 ? (
+                    <>
+                      <div className="mr-2 mt-2">
+                        <Checkbox
+                          id={`cambiar-${fila.lista_precio_id}`}
+                          name="cambiar"
+                          title="Usar precio para producto"
+                          checked={fila.cambiar === 1} // 👈 si es 1 se marca, si es 0 no
+                          onCheckedChange={(checked) => {
+                            setDatos(prev =>
+                              prev.map(item =>
+                                item.lista_precio_id === fila.lista_precio_id
+                                  ? { ...item, cambiar: checked ? 1 : 0 } // 👈 sincroniza el cambio
+                                  : item
+                              )
+                            );
+                          }}
+                        />
+                      </div>
+                      <Button 
+                        className="p-0 hover:bg-transparent cursor-pointer"
+                        title="Guardar Cambios" 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => confirmar(fila)}>
+                        {loading  ? (
+                          <Loader2 size={20} className="animate-spin mr-2" />
+                        ) : (
+                          <Save size={20} className="text-indigo-500" />
+                        )}
+                      </Button>
+                    </>
+                  ) : (<></>) }
                   <Button 
                     className="p-0 hover:bg-transparent cursor-pointer"
-                    title="Editar" 
+                    title={fila.editar == 1 ? 'Cancelar' : 'Editar'}
                     variant="ghost" 
                     size="icon"
-                    onClick={ () => fila.editar = 1 }>
-                    <Pen size={20} className="text-orange-500" />
+                    onClick={ () => {
+                      const nuevoEditar = fila.editar === 1 ? 0 : 1;
+                      setDatos(prev =>
+                        prev.map(item =>
+                          item.lista_precio_id === fila.lista_precio_id
+                            ? { ...item, editar: nuevoEditar }
+                            : item
+                        )
+                      );
+                    }}>
+                    {
+                      fila.editar == 1 ? (
+                        <X size={20} className="text-red-500" />
+                      ) : (
+                        <Pen size={20} className="text-orange-500" />
+                      )
+                    }
                   </Button>
-                  <Button 
-                    className="p-0 hover:bg-transparent cursor-pointer"
-                    title="Guardar Cambios" 
-                    variant="ghost" 
-                    size="icon" 
-                    onClick={() => confirmar(fila)}>
-                    <Save size={20} className="text-indigo-500" />
-                  </Button>
-                  
                 </> 
               )
             }
@@ -219,7 +308,7 @@ export function getColumns(confirmar: (data: ListaPrecioProducto) => void, quita
   ]
 //]
 }
-export default function DataTableListasPreciosProductos({datos, quitar, abrirConfirmar,setDatos}:Props) {
+export default function DataTableListasPreciosProductos({datos, quitar, abrirConfirmar, setDatos, loading, setLoading}:Props) {
   const [sorting, setSorting]                   = useState<SortingState>([])
   const [columnFilters, setColumnFilters]       = useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
@@ -240,7 +329,7 @@ export default function DataTableListasPreciosProductos({datos, quitar, abrirCon
   const confirmar = (data: ListaPrecioProducto) => {
     abrirConfirmar(data);
   };
-  const columns = getColumns(confirmar, quitar, setDatos); 
+  const columns = getColumns(confirmar, quitar, setDatos, loading, setLoading); 
 
   const table = useReactTable({
     data,

@@ -232,8 +232,10 @@ export function getColumns(
                     title="Guardar" 
                     variant="ghost" 
                     size="icon"
-                    onClick={ () => confirmar(fila) }>
-                      {loading  ? (
+                    onClick={ () => { 
+                      confirmar(fila)
+                    }}>
+                      {fila.load == 1  ? (
                         <Loader2 size={20} className="animate-spin mr-2" />
                       ) : (
                         <Save size={20} className="text-indigo-500" />
@@ -267,7 +269,7 @@ export function getColumns(
                         variant="ghost" 
                         size="icon" 
                         onClick={() => confirmar(fila)}>
-                        {loading  ? (
+                        {fila.load == 1 ? (
                           <Loader2 size={20} className="animate-spin mr-2" />
                         ) : (
                           <Save size={20} className="text-indigo-500" />

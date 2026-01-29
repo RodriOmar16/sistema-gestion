@@ -12,7 +12,7 @@ type GenericSelectProps = {
 export default function GenericSelect({ route, onChange, value, placeHolder }: GenericSelectProps) {
 
   const loadOptions = (inputValue: string, callback: any) => {
-    fetch(`/${route}/buscar?buscar=${inputValue}`)
+    fetch(`/${route}/habilitados?buscar=${inputValue}`)
       .then(res => res.json())
       .then(data => {
         callback(

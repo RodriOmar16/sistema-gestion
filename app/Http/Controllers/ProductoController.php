@@ -30,7 +30,7 @@ class ProductoController extends Controller
     return response()->json($productos);
   }
 
-  public function buscar(Request $request)
+  public function habilitados(Request $request)
   {
     try {
       $buscar = $request->get('buscar', '');
@@ -135,7 +135,7 @@ class ProductoController extends Controller
 
   public function getImages()
   {
-      \Log::info('Listando imágenes...');
+      //\Log::info('Listando imágenes...');
 
       try {
           $path = public_path('images/productos');

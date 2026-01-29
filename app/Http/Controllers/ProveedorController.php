@@ -21,7 +21,7 @@ class ProveedorController extends Controller
     return response()->json($proveedores);
   }
 
-  public function buscar(Request $request)
+  public function habilitados(Request $request)
   {
     try {
       $buscar = $request->get('buscar', '');

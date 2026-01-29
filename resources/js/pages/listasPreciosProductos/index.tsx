@@ -50,6 +50,7 @@ export function FiltrosForm({ setOpen, resetearListaPrecio }: propsForm){
     //dataCopia.fecha_inicio = convertirFechaBarrasGuiones(data.fecha_inicio);
     //dataCopia.fecha_fin = convertirFechaBarrasGuiones(data.fecha_fin);
     const payload = {      ...data/*Copia*/, buscar: true    }
+    console.log("payload: ", payload)
     router.get(route('listasPrecios.index'), payload, {
       preserveState: true,
       preserveScroll: true,
@@ -417,7 +418,14 @@ export default function ListasPreciosProductos(){
     console.log("llego al guardar: ", listaPrecioCopia)
     if(listaPrecioCopia){
       setConfirmar(false);
-      setLoading(true);
+      //setLoading(true);
+      setListasPreciosCacheadas(prev =>
+        prev.map(item =>
+          item.lista_precio_id === listaPrecioCopia.lista_precio_id
+            ? { ...item, load: 1 }
+            : item
+        )
+      )
 
       router.put(
         route('listasPrecios.update',{lista: listaPrecioCopia.lista_precio_id}), 
@@ -440,7 +448,14 @@ export default function ListasPreciosProductos(){
             setActivo(true);
           },
           onFinish: () => {
-            setLoading(false);
+            //setLoading(false);
+            setListasPreciosCacheadas(prev =>
+              prev.map(item =>
+                item.lista_precio_id === listaPrecioCopia.lista_precio_id
+                  ? { ...item, load: 0 }
+                  : item
+              )
+            )
             setListaPrecioCopia(listaVacia);
           },
         }
@@ -466,7 +481,7 @@ export default function ListasPreciosProductos(){
   }, [listas, listasPreciosCacheadas]);*/
   useEffect(() => {
     if (listas && listas.length > 0) {
-      setListasPreciosCacheadas(listas.map(e => ({...e, editar:0, cambiar: 0})));
+      setListasPreciosCacheadas(listas.map(e => ({...e, editar:0, cambiar: 0, load: 0})));
     }
   }, [listas]);
 

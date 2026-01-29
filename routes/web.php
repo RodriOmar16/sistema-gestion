@@ -98,8 +98,8 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
     Route::put('/categorias/{categoria}/estado', [CategoriaController::class, 'toggleEstado'])->name('categorias.toggleEstado');
 
     //Proveedores
-    Route::get('/proveedores/buscar', [ProveedorController::class, 'buscar'])->name('proveedores.buscar');
-    Route::get('/proveedores_habilitados', [ProveedorController::class, 'proveedoresHabilitados'])->name('proveedores.proveedoresHabilitados');
+    Route::get('/proveedores/habilitados', [ProveedorController::class, 'habilitados'])->name('proveedores.habilitados');
+    //Route::get('/proveedores_habilitados', [ProveedorController::class, 'proveedoresHabilitados'])->name('proveedores.proveedoresHabilitados');
     Route::get('/proveedores', [ProveedorController::class, 'index'])->name('proveedores.index');
     Route::post('/proveedores', [ProveedorController::class, 'store'])->name('proveedores.store');
     Route::put('/proveedores/{proveedor}', [ProveedorController::class, 'update'])->name('proveedores.update');
@@ -113,8 +113,8 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
     //Route::put('/listas-precios/{lista}/estado', [ListaPrecioController::class, 'toggleEstado'])->name('listasPrecios.toggleEstado');
 
     //Productos
-    Route::get('/productos/buscar', [ProductoController::class, 'buscar'])->name('productos.buscar');
-    Route::get('/productos_habilitados', [ProductoController::class, 'productosHabilitados'])->name('productos.productosHabilitados');
+    Route::get('/productos/habilitados', [ProductoController::class, 'habilitados'])->name('productos.habilitados');
+    //Route::get('/productos_habilitados', [ProductoController::class, 'productosHabilitados'])->name('productos.productosHabilitados');
     Route::get('/productos/excel', [ProductoController::class, 'exportarExcelManual'])->name('productos.excel');
     Route::get('/productos/pdf', [ProductoController::class, 'generarPDF'])->name('productos.pdf');
     Route::get('/productos', [ProductoController::class, 'index'])->name('productos.index');

@@ -120,7 +120,7 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
     Route::get('/productos/excel', [ProductoController::class, 'exportarExcelManual'])->name('productos.excel');
     Route::get('/productos/pdf', [ProductoController::class, 'generarPDF'])->name('productos.pdf');
     Route::get('/productos', [ProductoController::class, 'index'])->name('productos.index');
-    Route::get('producto/create', [ProductoController::class, 'create'])->name('productos.create');
+    Route::get('producto/nuevo', [ProductoController::class, 'create'])->name('productos.create');
     Route::post('/producto/producto-nuevo', [ProductoController::class, 'store'])->name('productos.store');
     Route::get('producto/ver/{producto}', [ProductoController::class, 'edit'])->name('productos.edit');
     Route::put('/producto/update/{producto}', [ProductoController::class, 'update'])->name('productos.update');

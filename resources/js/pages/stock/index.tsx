@@ -5,7 +5,7 @@ import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem } from '@/types';
-import { Stock, Multiple } from '@/types/typeCrud';
+import { Stock, Multiple, Autocomplete } from '@/types/typeCrud';
 import { Search, Brush, Loader2, CirclePlus, Filter } from 'lucide-react';
 import ModalConfirmar from '@/components/modalConfirmar';
 import ShowMessage from '@/components/utils/showMessage';
@@ -15,6 +15,7 @@ import { ordenarPorTexto } from '@/utils';
 import NewStock from '@/components/stock/newStock';
 import EditStock from '@/components/stock/editStock';
 import DataTableStock from '@/components/stock/dataTableStock';
+import GenericSelect from '@/components/utils/genericSelect';
 
 const breadcrumbs: BreadcrumbItem[] = [ { title: 'Stock', href: '', } ];
 
@@ -35,7 +36,8 @@ const stockVacio = {
 
 export function FiltrosForm({ openCreate, resetearStock, productos, data, set }: propsForm){
   //data
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading]             = useState(false);
+  const [optionProduct, setOptionProduct] = useState<Autocomplete|null>(null);
 
   //funciones
   const handleSubmit = (e: React.FormEvent) => {
@@ -52,6 +54,17 @@ export function FiltrosForm({ openCreate, resetearStock, productos, data, set }:
   };
   const handleReset = () => {
     set(stockVacio);
+    setOptionProduct(null);
+  };
+
+  const seleccionarProducto = (option : any) => {
+    if(option){
+      set({...data, producto_id: option.value, producto_nombre: option.label});
+      setOptionProduct(option);
+    }else{
+      set({...data, producto_id: '', producto_nombre: ''});
+      setOptionProduct(null);
+    }
   };
 
   return (
@@ -76,7 +89,13 @@ export function FiltrosForm({ openCreate, resetearStock, productos, data, set }:
         </div>
         <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3'>
           <label htmlFor="producto">Producto</label>
-            <Select
+            <GenericSelect
+                      route="productos"
+                      value={optionProduct}
+                      onChange={(option) => seleccionarProducto(option)}
+                      placeHolder="Selec. producto"
+                    />
+            {/*<Select
               value={String(data.producto_id)}
               onValueChange={(value) => set({...data, producto_id:  Number(value)}) }
             >
@@ -92,7 +111,7 @@ export function FiltrosForm({ openCreate, resetearStock, productos, data, set }:
                   ))}
                 </SelectGroup>
               </SelectContent>
-            </Select>
+            </Select>*/}
         </div>
         <div className="col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3">
           <label htmlFor="fechaInicio">Cantidad</label>
@@ -218,14 +237,14 @@ export default function Productos(){
     };
 
   //effect
-  useEffect(() => {
+  /*useEffect(() => {
     //optengo los datos del formulario
     fetch('/productos_habilitados')
     .then(res => res.json())
     .then(data => {
       setProductosHab(ordenarPorTexto(data, 'nombre'));
     });
-  }, []);
+  }, []);*/
   useEffect(() => {
     if (!activo && propsActuales.resultado !== undefined) {
       setPropsActuales({

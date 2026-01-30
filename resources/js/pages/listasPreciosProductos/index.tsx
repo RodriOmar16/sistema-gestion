@@ -173,7 +173,7 @@ function AgregarPrecioProducto({setOpen, data, setData, controlarAgregar, activa
     }
   };
   function validar() : any{
-    let obj = { text   : 'Se agregó correctamente a la lista!',  title  : 'Nuevo elemento',  color  : 'success',  activo : true, res    : 1 };
+    let obj = { text: '',  title  : '',  color  : '',  activo : true, res    : 1 };
     
     if(!data.producto_id){
       obj.title  = 'Producto faltante';
@@ -224,17 +224,18 @@ function AgregarPrecioProducto({setOpen, data, setData, controlarAgregar, activa
 
     setProcessing(true);
     //procesar en la BD y agregar por front al array
-    if(res !== 0){
-      controlarAgregar(data);
-      setData(listaVacia);
-      setOptionProduct(null);
-      setOptionProv(null);
+    if(res === 0){
+      activarMsj(activo);
+      titleNuevo(title);
+      textNuevo(text);
+      colorNuevo(color);
+      return ;
     }
-
-    activarMsj(activo);
-    titleNuevo(title);
-    textNuevo(text);
-    colorNuevo(color);
+    controlarAgregar(data);
+    setData(listaVacia);
+    setOptionProduct(null);
+    setOptionProv(null);
+   
    
     setProcessing(false);
 
@@ -395,7 +396,17 @@ export default function ListasPreciosProductos(){
       p.editar          = 1;          //para establecer un estado de edicion
       setListasPreciosCacheadas(prev => [...prev, p]);
       setIdNegativo(idNegativo - 1);
-    }//else console.log("hay repetidos")
+      setActivo(true);
+      setTitle("Agregado correctamente");
+      setText('Elemento agregado correctamente a la lista de precio');
+      setColor('success');
+    }else {
+      console.log("hay repetidos")
+      setActivo(true);
+      setTitle("Repetidos en la lista");
+      setText('No es posible agregar este elemento porque ya se encuentra en el listado.');
+      setColor('warning');
+    }
   };
 
   const quitar = (p:any) =>{ 

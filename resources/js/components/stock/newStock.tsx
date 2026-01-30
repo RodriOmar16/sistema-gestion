@@ -13,10 +13,8 @@ import React, { useState, useEffect } from "react"
 import { Loader2, Pen, Save, X } from 'lucide-react';
 import ShowMessage from "@/components/utils/showMessage";
 import { Stock } from "@/types/typeCrud";
-import { Multiple } from "@/types/typeCrud";
-import { DatePicker } from "../utils/date-picker";
-import { convertirFechaBarrasGuiones, convertirFechaGuionesBarras } from "@/utils";
-
+import { Multiple, Autocomplete } from "@/types/typeCrud";
+import GenericSelectDialog from "../utils/genericSelectDialog"
 interface Props{
   open: boolean;
   onOpenChange: (open:boolean) => void;
@@ -38,6 +36,7 @@ export default function NewStock({ open, onOpenChange, onSubmit, loading, produc
   const [activo, setActivo] = useState(false);
   const [text, setText]     = useState('');
   const [title, setTitle]   = useState('');
+  const [optionProduct, setOptionProduct] = useState<Autocomplete|null>(null);
 
   const { data, setData, get, processing, errors } = useForm<{
     producto_id:      number,
@@ -116,6 +115,16 @@ export default function NewStock({ open, onOpenChange, onSubmit, loading, produc
     onSubmit(productos);
   }
 
+  const seleccionarProducto = (option : any) => {
+    if(option){
+      setData({...data, producto_id: option.value, producto_nombre: option.label});
+      setOptionProduct(option);
+    }else{
+      setData({...data, producto_id: 0, producto_nombre: ''});
+      setOptionProduct(null);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange} >
       <DialogContent className="max-h-[95vh] overflow-y-auto">
@@ -129,7 +138,13 @@ export default function NewStock({ open, onOpenChange, onSubmit, loading, produc
         <form className="grid grid-cols-12 gap-4 pt-1 pb-4">
           <div className="col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12">
             <label htmlFor="proveedor_id">Productos</label>
-            <Select
+            <GenericSelectDialog
+              route="productos"
+              value={optionProduct}
+              onChange={(option) => seleccionarProducto(option)}
+              placeHolder="Seleccionar ruta"
+            />
+            {/*<Select
               value={String(data.producto_id)}
               onValueChange={(value) => controlarProducto(Number(value)) }
             >
@@ -145,7 +160,7 @@ export default function NewStock({ open, onOpenChange, onSubmit, loading, produc
                   ))}
                 </SelectGroup>
               </SelectContent>
-            </Select>
+            </Select>*/}
           </div>
           <div className="col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-6">
             <label htmlFor="nombre">Cantidad</label>

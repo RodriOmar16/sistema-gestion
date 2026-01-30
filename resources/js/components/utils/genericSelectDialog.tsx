@@ -9,12 +9,7 @@ type GenericSelectProps = {
   placeHolder?: string;
 };
 
-export default function GenericSelect({ route, onChange, value, placeHolder }: GenericSelectProps) {
-
-  /*
-      
-  */
-
+export default function GenericSelectDialog({ route, onChange, value, placeHolder }: GenericSelectProps) {
   const loadOptions = (inputValue: string, callback: any) => {
     fetch(`/${route}/habilitados?buscar=${inputValue}`)
       .then(res => res.json())
@@ -31,11 +26,6 @@ export default function GenericSelect({ route, onChange, value, placeHolder }: G
 
   return (
     <AsyncSelect
-      menuPortalTarget={document.body}
-      styles={{
-        menuPortal: base => ({ ...base, zIndex: 9999 }),
-        menu: base => ({ ...base, maxHeight: 200, overflowY: "auto" })
-      }}
       cacheOptions
       loadOptions={loadOptions}
       defaultOptions

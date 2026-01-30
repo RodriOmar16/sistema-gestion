@@ -49,9 +49,7 @@ class ProductoController extends Controller
       return response()->json(['error' => $e->getMessage()], 500);
     }
   }
-
-
-
+  
   public function generarPDF(Request $request){
 
     $query = Producto::query()->with(['categorias', 'productosLista.listaPrecio']);

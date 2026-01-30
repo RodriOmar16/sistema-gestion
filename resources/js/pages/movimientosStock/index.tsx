@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem } from '@/types';
-import { MovimientoStock } from '@/types/typeCrud';
+import { Autocomplete, MovimientoStock } from '@/types/typeCrud';
 import { Search, Brush, Loader2, CirclePlus, Filter } from 'lucide-react';
 import { Select,  SelectContent, SelectGroup,  SelectItem,  SelectTrigger,  SelectValue } from "@/components/ui/select"
 import { route } from 'ziggy-js';
@@ -12,12 +12,12 @@ import { Multiple } from '@/types/typeCrud';
 import { convertirFechaBarrasGuiones, ordenarPorTexto } from '@/utils';
 import { DatePicker } from '@/components/utils/date-picker';
 import DataTableMovimientos from '@/components/movimientosStock/dataTableMovimientos';
+import GenericSelect from '@/components/utils/genericSelect';
 
 const breadcrumbs: BreadcrumbItem[] = [ { title: 'Movimientos Stock', href: '', } ];
 
 type propsForm = {
   resetearMovimiento: (data:MovimientoStock[]) => void;
-  productos:  Multiple[];
   origenes:   Multiple[];
   tipos:      Multiple[];
   data:       MovimientoStock;
@@ -32,13 +32,14 @@ const movVacio = {
   tipo_nombre:       '',
   origen_id:         '',
   origen_nombre:     '',
-  fecha_inicio:      (new Date()).toLocaleDateString(),
-  fecha_fin:         (new Date()).toLocaleDateString(),
+  fecha_inicio:      '',//(new Date()).toLocaleDateString(),
+  fecha_fin:         '',//(new Date()).toLocaleDateString(),
   cantidad:          '',
 }
 
-export function FiltrosForm({ resetearMovimiento, productos, origenes, tipos, data, set }: propsForm){
+export function FiltrosForm({ resetearMovimiento, origenes, tipos, data, set }: propsForm){
   const [esperandoRespuesta, setEsperandoRespuesta] = useState(false)
+  const [optionProduct, setOptionProduct]           = useState<Autocomplete|null>(null);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -60,7 +61,18 @@ export function FiltrosForm({ resetearMovimiento, productos, origenes, tipos, da
   };
   const handleReset = () => {
     set(movVacio);
+    setOptionProduct(null);
   }; 
+
+  const seleccionarProducto = (option : any) => {
+    if(option){
+      set({...data, producto_id: option.value, producto_nombre: option.label});
+      setOptionProduct(option);
+    }else{
+      set({...data, producto_id: '', producto_nombre: ''});
+      setOptionProduct(null);
+    }
+  };
 
   return (
     <div>
@@ -74,23 +86,12 @@ export function FiltrosForm({ resetearMovimiento, productos, origenes, tipos, da
         </div>
         <div className='col-span-12 sm:col-span-8 md:col-span-8 lg:col-span-4'>
           <label htmlFor="productos">Productos</label>
-          <Select
-            value={String(data.producto_id)}
-            onValueChange={(value) => set({...data, producto_id: Number(value)}) }
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                {productos.map((e: any) => (
-                  <SelectItem key={e.id} value={String(e.id)}>
-                    {e.nombre}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
+          <GenericSelect
+            route="productos"
+            value={optionProduct}
+            onChange={(option) => seleccionarProducto(option)}
+            placeHolder="Selec. producto"
+          />
         </div>
         <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3'>
           <label htmlFor="tipos">Tipos</label>
@@ -169,7 +170,7 @@ export default function MovimientosStock(){
   const movs:MovimientoStock[] = [];
   const { movimientos } = usePage().props as { movimientos?: MovimientoStock[] }; //necesito los props de inertia
 
-  const [productoHab, setProductosHab] = useState<Multiple[]>([]);
+  //const [productoHab, setProductosHab] = useState<Multiple[]>([]);
   const [tiposHab, setTiposHab]        = useState<Multiple[]>([]);
   const [origenesHab, setOrigenesHab]  = useState<Multiple[]>([]);
 
@@ -177,17 +178,17 @@ export default function MovimientosStock(){
   useEffect(() => {
     const cargarDatos = async () => {
       try {
-        const [resProductos, resTipos, resOrigins] = await Promise.all([
-          fetch(route('productos.productosHabilitados')),
+        const [/*resProductos,*/ resTipos, resOrigins] = await Promise.all([
+          //fetch(route('productos.productosHabilitados')),
           fetch(route('tiposMov.habilitados')),
           fetch(route('origenesMov.habilitados'))
         ]);
 
-        const productos = await resProductos.json();
+        //const productos = await resProductos.json();
         const tipos     = await resTipos.json();
         const origenes  = await resOrigins.json();
 
-        setProductosHab(ordenarPorTexto(productos, 'nombre'));
+        //setProductosHab(ordenarPorTexto(productos, 'nombre'));
         setTiposHab(ordenarPorTexto(tipos, 'nombre'));
         setOrigenesHab(ordenarPorTexto(origenes, 'nombre'));
       } catch (error) {
@@ -207,7 +208,6 @@ export default function MovimientosStock(){
             data={data}
             set={setData}
             resetearMovimiento={(e:any[]) => { } }
-            productos={productoHab}
             tipos={tiposHab}
             origenes={origenesHab}/>
         </div>

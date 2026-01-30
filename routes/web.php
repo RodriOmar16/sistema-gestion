@@ -69,7 +69,8 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
     Route::put('/menu/{menu}/estado', [MenuWebController::class, 'toggleEstado'])->name('menu.toggleEstado');
 
     //Rutas
-    Route::get('/rutas_habilitadas', [RutaController::class, 'rutasHabilitadas'])->name('rutas.habilitadas');
+    //Route::get('/rutas_habilitadas', [RutaController::class, 'rutasHabilitadas'])->name('rutas.habilitadas');
+    Route::get('/rutas/habilitados', [RutaController::class, 'habilitadas'])->name('rutas.habilitadas');
     Route::get('/rutas', [RutaController::class, 'index'])->name('rutas.index');
     Route::post('/rutas', [RutaController::class, 'store'])->name('rutas.store');
     Route::put('/rutas/{ruta}', [RutaController::class, 'update'])->name('rutas.update');
@@ -92,6 +93,7 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
     
     //Categorías
     Route::get('/categorias_habilitadas', [CategoriaController::class, 'categoriasHabilitadas'])->name('categorias.habilitadas');
+    Route::get('/categorias/habilitados', [CategoriaController::class, 'habilitadas'])->name('categorias.habilitadasSelect');
     Route::get('/categorias', [CategoriaController::class, 'index'])->name('categorias.index');
     Route::post('/categorias', [CategoriaController::class, 'store'])->name('categorias.store');
     Route::put('/categorias/{categoria}', [CategoriaController::class, 'update'])->name('categorias.update');
@@ -195,7 +197,8 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
     Route::get('/dashboard', [GraficosController::class, 'index'])->name('graficos.index');
 
     //Marcas
-    Route::get('/marcas_habilitadas', [MarcaController::class, 'marcasHabilitadas'])->name('marcas.marcasHabilitadas');
+    //Route::get('/marcas_habilitadas', [MarcaController::class, 'marcasHabilitadas'])->name('marcas.marcasHabilitadas');
+    Route::get('/marcas/habilitados', [MarcaController::class, 'habilitadas'])->name('marcas.habilitadas');
     Route::get('/marcas', [MarcaController::class, 'index'])->name('marcas.index');
     Route::get('marca/create', [MarcaController::class, 'create'])->name('marcas.create');
     Route::post('/marcas/marca-nueva', [MarcaController::class, 'store'])->name('marcas.store');

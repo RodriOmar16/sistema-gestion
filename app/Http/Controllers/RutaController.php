@@ -18,7 +18,24 @@ class RutaController extends Controller
     });
     return response()->json($rutas);
   }
+  public function habilitadas(Request $request){
+    try {
+      $buscar = $request->get('buscar', '');
 
+      $rutas = Ruta::query()
+        ->where('inhabilitada',0)
+        ->when($buscar, fn($q) => $q->where('url', 'LIKE', "%{$buscar}%"))
+        ->select('ruta_id as id', 'url as nombre')
+        ->paginate(20);
+
+      return response()->json([
+          'elementos' => $rutas
+      ]);
+    } catch (\Throwable $e) {
+      //Log::error('Error en buscar rutas: ' . $e->getMessage());
+      return response()->json(['error' => $e->getMessage()], 500);
+    }
+  }
   public function index(Request $request)
   {
     if(!$request->has('buscar')){

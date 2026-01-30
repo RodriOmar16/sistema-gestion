@@ -6,6 +6,12 @@ export interface Project {
   created_at?: string;
   updated_at?: string;
 }
+
+export interface Autocomplete{
+  value:number;
+  label: string;
+};
+
 export interface Banner {
   id: number | string;
   url: string;

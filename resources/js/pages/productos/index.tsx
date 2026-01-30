@@ -5,7 +5,7 @@ import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem } from '@/types';
-import { Producto } from '@/types/typeCrud';
+import { Autocomplete, Producto } from '@/types/typeCrud';
 import { Search, Brush, Loader2, CirclePlus, Filter } from 'lucide-react';
 import ModalConfirmar from '@/components/modalConfirmar';
 import PdfButton from '@/components/utils/pdf-button';
@@ -17,6 +17,7 @@ import { Multiple } from '@/types/typeCrud';
 import { ordenarPorTexto } from '@/utils';
 import DataTableProductos from '@/components/productos/dataTableProductos';
 import { DatePicker } from '@/components/utils/date-picker';
+import GenericSelect from '@/components/utils/genericSelect';
 
 const breadcrumbs: BreadcrumbItem[] = [ { title: 'Productos', href: '', } ];
 
@@ -45,7 +46,9 @@ const productoVacio = {
 
 export function FiltrosForm({ resetearProducto, marcas, categorias, data, set }: propsForm){
   const [esperandoRespuesta, setEsperandoRespuesta] = useState(false)
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading]                       = useState(false);
+  const [optionMarca, setOptionMarca]               = useState<Autocomplete|null>(null);
+  const [optionCateg, setOptionCateg]               = useState<Autocomplete|null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,7 +66,28 @@ export function FiltrosForm({ resetearProducto, marcas, categorias, data, set }:
   };
   const handleReset = () => {
     set(productoVacio);
+    setOptionMarca(null);
+    setOptionCateg(null);
   }; 
+
+  const seleccionarMarca = (option : any) => {
+    if(option){
+      set({...data, marca_id: option.value, marca_nombre: option.label});
+      setOptionMarca(option);
+    }else{
+      set({...data, marca_id: '', marca_nombre: ''});
+      setOptionMarca(null);
+    }
+  };
+  const seleccionarCategoria = (option : any) => {
+    if(option){
+      set({...data, marca_id: option.value, marca_nombre: option.label});
+      setOptionMarca(option);
+    }else{
+      set({...data, marca_id: '', marca_nombre: ''});
+      setOptionMarca(null);
+    }
+  };
 
   return (
     <div>
@@ -92,43 +116,21 @@ export function FiltrosForm({ resetearProducto, marcas, categorias, data, set }:
         </div>
         <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3'>
           <label htmlFor="cliente">Marcas</label>
-            <Select
-              value={String(data.marca_id)}
-              onValueChange={(value) => set({...data, marca_id: Number(value)})}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  {marcas.map((e: any) => (
-                    <SelectItem key={e.id} value={String(e.id)}>
-                      {e.nombre}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
+            <GenericSelect
+              route="marcas"
+              value={optionMarca}
+              onChange={(option) => seleccionarMarca(option)}
+              placeHolder='Selec. marca'
+            />
         </div>
         <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3'>
           <label htmlFor="categorias">Categorías</label>
-            <Select
-              value={String(data.categoria_id)}
-              onValueChange={(value) => set({...data, categoria_id: Number(value)}) }
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  {categorias.map((e: any) => (
-                    <SelectItem key={e.id} value={String(e.id)}>
-                      {e.nombre}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
+            <GenericSelect
+              route="categorias"
+              value={optionCateg}
+              onChange={(option) => seleccionarCategoria(option)}
+              placeHolder='Selec. categoría'
+            />
         </div>
         <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-4'>
           <label htmlFor="codigoBarras">Código de Barras</label>

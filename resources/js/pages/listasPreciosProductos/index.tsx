@@ -1,4 +1,4 @@
-import { ListaPrecioProducto, Multiple, Producto } from "@/types/typeCrud";
+import { Autocomplete, ListaPrecioProducto, Multiple, Producto } from "@/types/typeCrud";
 import { BreadcrumbItem } from '@/types';
 import AppLayout from '@/layouts/app-layout';
 import ShowMessage from "@/components/utils/showMessage";
@@ -37,20 +37,15 @@ type propsForm = {
 export function FiltrosForm({ setOpen, resetearListaPrecio }: propsForm){
   //data
   const [esperandoRespuesta, setEsperandoRespuesta] = useState(false);
-  const { data, setData, errors, processing } = useForm<ListaPrecioProducto>(listaVacia);
-  const [optionProduct, setOptionProduct] = useState<{value:number, label: string}|null>(null);
-  const [optionProv, setOptionProv] = useState<{value:number, label: string}|null>(null);
+  const { data, setData, errors, processing }       = useForm<ListaPrecioProducto>(listaVacia);
+  const [optionProduct, setOptionProduct]           = useState<Autocomplete|null>(null);
+  const [optionProv, setOptionProv]                 = useState<Autocomplete|null>(null);
 
   //funciones
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    //console.log("data: ", data)
     resetearListaPrecio([]);
-    //const dataCopia = JSON.parse(JSON.stringify(data));
-    //dataCopia.fecha_inicio = convertirFechaBarrasGuiones(data.fecha_inicio);
-    //dataCopia.fecha_fin = convertirFechaBarrasGuiones(data.fecha_fin);
     const payload = {      ...data/*Copia*/, buscar: true    }
-    console.log("payload: ", payload)
     router.get(route('listasPrecios.index'), payload, {
       preserveState: true,
       preserveScroll: true,
@@ -155,8 +150,8 @@ type PropAgregar = {
 };
 
 function AgregarPrecioProducto({setOpen, data, setData, controlarAgregar, activarMsj, textNuevo, titleNuevo, colorNuevo}:PropAgregar){
-  const [optionProduct, setOptionProduct] = useState<{value:number, label: string}|null>(null);
-  const [optionProv, setOptionProv]       = useState<{value:number, label: string}|null>(null);
+  const [optionProduct, setOptionProduct] = useState<Autocomplete|null>(null);
+  const [optionProv, setOptionProv]       = useState<Autocomplete|null>(null);
   const [processing,setProcessing]        = useState(false);
 
   const seleccionarProducto = (option : any) => {
@@ -224,7 +219,6 @@ function AgregarPrecioProducto({setOpen, data, setData, controlarAgregar, activa
   }
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("data: ", data)
     //
     const {activo, title, text, color, res} = validar();
 
@@ -389,7 +383,6 @@ export default function ListasPreciosProductos(){
   //funciones
   const confirmar = (data: ListaPrecioProducto) => {
     if(data){
-      //return console.log("data: ", data)
       setListaPrecioCopia( JSON.parse(JSON.stringify(data)) );
       setTextConfirmar('Estás seguro de querer grabar este producto a la lista de precio?');
       setConfirmar(true);
@@ -402,20 +395,16 @@ export default function ListasPreciosProductos(){
       p.editar          = 1;          //para establecer un estado de edicion
       setListasPreciosCacheadas(prev => [...prev, p]);
       setIdNegativo(idNegativo - 1);
-    }else console.log("hay repetidos")
-
-    //console.log("listas: ", listas)
+    }//else console.log("hay repetidos")
   };
 
   const quitar = (p:any) =>{ 
-    //console.log("quitar: ", p) 
     setListasPreciosCacheadas(prev => 
       prev.filter(item => item.lista_precio_id !== p.lista_precio_id ) 
     );
   };
 
   const guardarGrabar = () => { 
-    console.log("llego al guardar: ", listaPrecioCopia)
     if(listaPrecioCopia){
       setConfirmar(false);
       //setLoading(true);
@@ -509,6 +498,7 @@ export default function ListasPreciosProductos(){
                   colorNuevo={setColor}
                   textNuevo={setText}
                 />
+                <hr className="my-2"/>
               </div>
             )
           }

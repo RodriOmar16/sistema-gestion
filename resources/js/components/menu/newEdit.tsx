@@ -12,13 +12,14 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Checkbox } from "../ui/checkbox";
 import React, { use, useState, useEffect } from "react"
 import { usePage, useForm, router } from '@inertiajs/react';
-import { Menu, Multiple } from "@/types/typeCrud"
+import { Autocomplete, Menu, Multiple } from "@/types/typeCrud"
 import { Loader2 } from 'lucide-react';
 import { AlertCircleIcon, CheckCircle2Icon, PopcornIcon } from "lucide-react"
 import Swal from 'sweetalert2';
 import ShowMessage from "@/components/utils/showMessage"
 import { route } from 'ziggy-js';
 import { ordenarPorTexto } from "@/utils";
+import GenericSelectDialog from "../utils/genericSelectDialog";
 
 interface Props {
   open: boolean;
@@ -42,12 +43,14 @@ export default function NewEditDialog({ open, onOpenChange, mode, menu, onSubmit
     inhabilitado: false,
     ruta_id:      '',
   };
-  const [ activo, setActivo ] = useState(false);
-  const [ text, setText ]     = useState('');
-  const [ title, setTitle ]   = useState('');
+  const [ activo, setActivo ]       = useState(false);
+  const [ text, setText ]           = useState('');
+  const [ title, setTitle ]         = useState('');
   const { data, setData, post, put, processing, errors } = useForm<Menu>(menuVacio);
-  const [rutas, setRutas]     = useState<Multiple[]>([]);
-  const [sinRuta, setSinRuta] = useState(false);
+  const [rutas, setRutas]           = useState<Multiple[]>([]);
+  const [sinRuta, setSinRuta]       = useState(false);
+
+  const [optionRuta, setOptionRuta] = useState<Autocomplete|null>(null);
 
   //funciones
   const handleSubmit = (e: React.FormEvent) => {
@@ -66,6 +69,16 @@ export default function NewEditDialog({ open, onOpenChange, mode, menu, onSubmit
     }
     onSubmit(data);
   }
+
+  const seleccionarRuta = (option : any) => {
+    if(option){
+      setData({...data, ruta_id: option.value});
+      setOptionRuta(option);
+    }else{
+      setData({...data, ruta_id: ''});
+      setOptionRuta(null);
+    }
+  };
   
   //useEffect
   useEffect(() => {
@@ -93,19 +106,9 @@ export default function NewEditDialog({ open, onOpenChange, mode, menu, onSubmit
     }
   }, [open, menu]);
 
-
-  useEffect(() => {
-    //optengo los datos del formulario
-    fetch(route('rutas.habilitadas'))//('/rutas_habilitadas')
-    .then(res => res.json())
-    .then(data => {
-      setRutas(ordenarPorTexto(data, 'nombre'));
-    });
-  }, []);
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[95vh] overflow-y-auto">
+      <DialogContent className="max-h-[95vh] overflow-y-auto ">
         <DialogHeader>
           <DialogTitle>{mode === 'create' ? 'Nuevo Menú' : 'Editar Menú'}</DialogTitle>
           <DialogDescription>
@@ -157,6 +160,26 @@ export default function NewEditDialog({ open, onOpenChange, mode, menu, onSubmit
             </Select>
           </div>
           <div className="col-span-12 mb-0">
+            <label htmlFor="padre">Rutas</label>
+            <GenericSelectDialog
+              route="rutas"
+              value={optionRuta}
+              onChange={(option) => seleccionarRuta(option)}
+              placeHolder="Seleccionar ruta"
+            />
+            <div className="mt-1 flex justify-end">
+              <Checkbox id="controlRuta" className="me-2 mt-1" checked={sinRuta} 
+                onCheckedChange={(value) => {
+                  const checked = value as boolean; 
+                  setSinRuta(checked); 
+                  if (checked) { setData('ruta_id', null); // ruta vacía 
+                  } 
+                }} 
+              />
+              <label htmlFor="">Sin Ruta</label>
+            </div>
+          </div>
+          {/*<div className="col-span-12 mb-0">
             <label htmlFor="padre">Selecionar Ruta</label>
             <Select
               value={String(data.ruta_id ?? '')}
@@ -189,7 +212,7 @@ export default function NewEditDialog({ open, onOpenChange, mode, menu, onSubmit
               />
               <label htmlFor="">Sin Ruta</label>
             </div>
-          </div>
+          </div>*/}
           <div className="col-span-12">
             <label htmlFor="icono">Icono</label>
             <Input

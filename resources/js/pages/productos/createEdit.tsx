@@ -1,5 +1,5 @@
 import AppLayout from '@/layouts/app-layout';
-import { Producto } from "@/types/typeCrud";
+import { Autocomplete, Producto } from "@/types/typeCrud";
 import { useState, useEffect } from 'react';
 import { Head, useForm, router, usePage } from '@inertiajs/react';
 import { BreadcrumbItem } from '@/types';
@@ -19,6 +19,7 @@ import ModalConfirmar from '@/components/modalConfirmar';
 import { route } from 'ziggy-js';
 import { DatePicker } from '@/components/utils/date-picker';
 import SubirImagen from '@/components/utils/subir-imagen';
+import GenericSelect from '@/components/utils/genericSelect';
 
 const breadcrumbs: BreadcrumbItem[] = [ { title: '', href: '', } ];
 const productoVacio = {
@@ -40,11 +41,12 @@ interface Props{
   data: Producto;
   set: (e:any) => void;
   modo: string;
-  marcas: Multiple[];
+  //marcas: Multiple[];
 }
 
-export function DetallesProducto({modo, data, set, marcas}:Props){
-  const [load , setLoad] = useState(false);
+export function DetallesProducto({modo, data, set, /*marcas*/}:Props){
+  const [load , setLoad]              = useState(false);
+  const [optionMarca, setOptionMarca] = useState<Autocomplete|null>(null);
   
   const generarCodigo = async () => {
     try {
@@ -58,8 +60,26 @@ export function DetallesProducto({modo, data, set, marcas}:Props){
     } finally{
       setLoad(false);
     }
-
   };
+
+  const seleccionarMarca = (option : any) => {
+    if(option){
+      set({...data, marca_id: option.value, marca_nombre: option.label});
+      setOptionMarca(option);
+    }else{
+      set({...data, marca_id: '', marca_nombre: ''});
+      setOptionMarca(null);
+    }
+  };
+
+  useEffect(() => {
+    if (data.marca_id && data.marca_nombre) {
+      setOptionMarca({ value: Number(data.marca_id), label: data.marca_nombre });
+    } else {
+      setOptionMarca(null);
+    }
+  }, [data.marca_id, data.marca_nombre]);
+
 
   return (
     <div className='px-4'>
@@ -84,29 +104,12 @@ export function DetallesProducto({modo, data, set, marcas}:Props){
         </div>
         <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3'>
           <label htmlFor="cliente">Marcas</label>
-            {marcas.length > 0 ? (
-                <Select
-                  value={String(data.marca_id ?? '')}
-                  onValueChange={(value) => set({ ...data, marca_id: Number(value) })}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      {marcas.map((e: any) => (
-                        <SelectItem key={e.id} value={String(e.id)}>
-                          {e.nombre}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              ):(
-                <>
-                </>
-              )
-            }
+            <GenericSelect
+              route="marcas"
+              value={optionMarca}
+              onChange={(option) => seleccionarMarca(option)}
+              placeHolder='Selec. marca'
+            />
         </div>
         <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-6'>
           <label htmlFor="codigoBarras">Código de barras</label>
@@ -206,7 +209,7 @@ export default function NewEditProductos(){
   breadcrumbs[0].title = (mode=='create'? 'Nuevo' : 'Editar')+' producto'+(mode!='create'? ` ${producto?.producto_id}` : '')//(mode=='create'? 'Nuevo' : 'Editar')+' producto';
   const [ultimoTimestamp, setUltimoTimestamp] = useState<number | null>(null);
   const { data, setData, errors, processing } = useForm<Producto>(productoVacio);
-  const [marcasHab, setMarcasHab]             = useState<Multiple[]>([]);
+  //const [marcasHab, setMarcasHab]             = useState<Multiple[]>([]);
   const [categoriaHab, setCatHab]             = useState<Multiple[]>([]);
   const [catSelected, setCatSelected]         = useState<Multiple[]>(categorias??[]);
 
@@ -306,7 +309,6 @@ export default function NewEditProductos(){
 
     //const formData = toFormData(payload);
 
-    console.log("payload: ", payload );
     if (mode === 'create') {
       router.post(
         route('productos.store'),payload,
@@ -346,15 +348,15 @@ export default function NewEditProductos(){
   useEffect(() => {
     const cargarDatos = async() => {
       try {
-        const [resCategorias, resMarcas] = await Promise.all([
+        const [resCategorias, /*resMarcas*/] = await Promise.all([
           fetch(route('categorias.habilitadas')),
-          fetch(route('marcas.marcasHabilitadas'))
+          //fetch(route('marcas.marcasHabilitadas'))
         ]);
         const categorias = await resCategorias.json();
-        const marcas = await resMarcas.json();
+        //const marcas = await resMarcas.json();
 
         setCatHab(ordenarPorTexto(categorias, 'nombre'));
-        setMarcasHab(ordenarPorTexto(marcas, 'nombre'));
+        //setMarcasHab(ordenarPorTexto(marcas, 'nombre'));
 
       } catch (error) {
         console.error("Error al cargar los datos: ", error);
@@ -415,8 +417,7 @@ export default function NewEditProductos(){
               <DetallesProducto 
                 modo={mode??'create'}
                 data={data}
-                set={setData}
-                marcas={marcasHab}/>
+                set={setData}/>
             </div>
             <div className='px-4 pb-1 col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>
               <div className='py-4'>

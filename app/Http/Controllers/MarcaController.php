@@ -18,6 +18,24 @@ class MarcaController extends Controller
     });
     return response()->json($marcas);
   }
+  public function habilitadas(Request $request){
+    try {
+      $buscar = $request->get('buscar', '');
+
+      $marcas = Marca::query()
+        ->where('inhabilitada',0)
+        ->when($buscar, fn($q) => $q->where('nombre', 'LIKE', "%{$buscar}%"))
+        ->select('marca_id as id', 'nombre')
+        ->paginate(20);
+
+      return response()->json([
+          'elementos' => $marcas
+      ]);
+    } catch (\Throwable $e) {
+      //Log::error('Error en buscar marcas: ' . $e->getMessage());
+      return response()->json(['error' => $e->getMessage()], 500);
+    }
+  }
 
 	public function index(Request $request){
 		if(!$request->has('buscar')){

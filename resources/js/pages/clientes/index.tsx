@@ -144,18 +144,20 @@ export default function Clientes(){
   const [color, setColor]   = useState('');
 
   const { clientes } = usePage().props as { clientes?: Cliente[] }; //necesito los props de inertia
-  const { resultado, mensaje, cliente_id } = usePage().props as {
+  const { resultado, mensaje, cliente_id, timestamp } = usePage().props as {
     resultado?: number;
     mensaje?: string;
     cliente_id?: number;
+    timestamp?: number;
   };
   
-  const [propsActuales, setPropsActuales] = useState<{
+  /*const [propsActuales, setPropsActuales] = useState<{
     resultado: number | undefined | null;
     mensaje: string | undefined | null | '';
     cliente_id: number | undefined | null;
-  }>({ resultado: undefined, mensaje: undefined, cliente_id: undefined });
+  }>({ resultado: undefined, mensaje: undefined, cliente_id: undefined });*/
   const [clientesCacheados, setClientesCacheados] = useState<Cliente[]>([]);
+  const [ultimoTimestamp, setUltimoTimestamp] = useState<number | null>(null);
 
   //funciones
   const confirmar = (data: Cliente) => {
@@ -171,7 +173,7 @@ export default function Clientes(){
     if (!clienteCopia || !clienteCopia.cliente_id) return;
     setLoading(true);
     router.put(
-      route('clientes.toggleEstado', { fp: clienteCopia.cliente_id }),{},
+      route('clientes.toggleEstado', { cliente: clienteCopia.cliente_id }),{},
       {
         preserveScroll: true,
         preserveState: true,
@@ -250,16 +252,6 @@ export default function Clientes(){
 
   //effect
   useEffect(() => {
-    if (!activo && propsActuales.resultado !== undefined) {
-      setPropsActuales({
-        resultado: undefined,
-        mensaje: undefined,
-        cliente_id: undefined
-      });
-    }
-  }, [activo]);
-
-  useEffect(() => {
     if (
       clientes &&
       clientes.length > 0 &&
@@ -271,12 +263,10 @@ export default function Clientes(){
 
 
   useEffect(() => {
-    const cambioDetectado =
-      (resultado && resultado !== propsActuales.resultado)  ||
-      (mensaje && mensaje !== propsActuales.mensaje)
+    const cambioDetectado = timestamp && timestamp !== ultimoTimestamp;
 
     if (cambioDetectado) {
-      setPropsActuales({ resultado, mensaje, cliente_id });
+      setUltimoTimestamp(timestamp);
 
       const esError = resultado === 0;
       setTitle(esError ? 'Error' : modalMode === 'create' ? 'Cliente nuevo' : 'Cliente modificado');
@@ -292,7 +282,7 @@ export default function Clientes(){
         )
       }
     }
-  }, [resultado, mensaje, cliente_id]);
+  }, [resultado, mensaje, cliente_id, timestamp, ultimoTimestamp]);
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>

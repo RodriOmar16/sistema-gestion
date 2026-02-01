@@ -7,9 +7,10 @@ type GenericSelectProps = {
   onChange?: (option: { value: number; label: string } | null) => void;
   value?: { value: number; label: string } | null
   placeHolder?: string;
+  isDisabled?: boolean;
 };
 
-export default function GenericSelect({ route, onChange, value, placeHolder }: GenericSelectProps) {
+export default function GenericSelect({ route, onChange, value, placeHolder, isDisabled = false }: GenericSelectProps) {
 
   /*
       
@@ -43,6 +44,7 @@ export default function GenericSelect({ route, onChange, value, placeHolder }: G
       isClearable
       value={value} // usa directamente el valor del padre
       onChange={onChange} // notifica al padre
+      isDisabled={isDisabled}
     />
   );
 }

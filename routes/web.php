@@ -150,19 +150,21 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
     //Route::put('/movimientos-stock/update/{mov}', [MovimientoStockController::class, 'update'])->name('stock.update');
 
     //Formas de Pago
-    Route::get('/formas_pago_habilitadas', [FormaPagoController::class, 'formasPagoHabilitadas'])->name('formasPago.habilitadas');
+    //Route::get('/formas_pago_habilitadas', [FormaPagoController::class, 'formasPagoHabilitadas'])->name('formasPago.habilitadas');
+    Route::get('/formas-pago/habilitados', [FormaPagoController::class, 'habilitadas'])->name('formasPago.habilitadas');
     Route::get('/formas-pago', [FormaPagoController::class, 'index'])->name('formasPago.index');
     Route::post('/forma-pago/nueva', [FormaPagoController::class, 'store'])->name('formasPago.store');
     Route::put('/forma-pago/update/{fp}', [FormaPagoController::class, 'update'])->name('formasPago.update');
     Route::put('/forma-pago/cambio-estado/{fp}', [FormaPagoController::class, 'toggleEstado'])->name('formasPago.toggleEstado');
 
     //Clientes
-    Route::get('/clientes_habilitados', [ClienteController::class, 'clientesHabilitados'])->name('clientes.habilitados');
+    //Route::get('/clientes_habilitados', [ClienteController::class, 'clientesHabilitados'])->name('clientes.habilitados');
+    Route::get('/clientes/habilitados', [ClienteController::class, 'habilitados'])->name('clientes.habilitados');
     Route::get('/clientes_habilitados-ventas', [ClienteController::class, 'clientesPorDni'])->name('clientes.porDni');
     Route::get('/clientes', [ClienteController::class, 'index'])->name('clientes.index');
     Route::post('/cliente/nuevo', [ClienteController::class, 'store'])->name('clientes.store');
     Route::put('/cliente/update/{cliente}', [ClienteController::class, 'update'])->name('clientes.update');
-    Route::put('/cliente/cambio-estado/{cliente}', [ClienteController::class, 'toggleEstado'])->name('clientes.toggleEstado');
+    Route::put('/cliente/cambio-estado/{cliente}', [ClienteController::class, 'destroy'])->name('clientes.toggleEstado');
 
     //Ventas
     Route::get('/ventas/excel', [VentaController::class, 'exportarExcelManual'])->name('ventas.excel');

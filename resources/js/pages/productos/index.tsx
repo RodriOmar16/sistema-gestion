@@ -23,8 +23,8 @@ const breadcrumbs: BreadcrumbItem[] = [ { title: 'Productos', href: '', } ];
 
 type propsForm = {
   resetearProducto: (data:Producto[]) => void;
-  marcas: Multiple[];
-  categorias: Multiple[];
+  /*marcas: Multiple[];
+  categorias: Multiple[];*/
   data: Producto;
   set: (e:any) => void;
 }
@@ -44,7 +44,7 @@ const productoVacio = {
   inhabilitado:        false,
 }
 
-export function FiltrosForm({ resetearProducto, marcas, categorias, data, set }: propsForm){
+export function FiltrosForm({ resetearProducto, /*marcas, categorias,*/ data, set }: propsForm){
   const [esperandoRespuesta, setEsperandoRespuesta] = useState(false)
   const [loading, setLoading]                       = useState(false);
   const [optionMarca, setOptionMarca]               = useState<Autocomplete|null>(null);
@@ -81,11 +81,11 @@ export function FiltrosForm({ resetearProducto, marcas, categorias, data, set }:
   };
   const seleccionarCategoria = (option : any) => {
     if(option){
-      set({...data, marca_id: option.value, marca_nombre: option.label});
-      setOptionMarca(option);
+      set({...data, categoria_id: option.value, categoria_nombre: option.label});
+      setOptionCateg(option);
     }else{
-      set({...data, marca_id: '', marca_nombre: ''});
-      setOptionMarca(null);
+      set({...data, categoria_id: '', categoria_nombre: ''});
+      setOptionCateg(null);
     }
   };
 
@@ -238,7 +238,7 @@ export default function Productos(){
   };
 
   //effect
-  useEffect(() => {
+  /*useEffect(() => {
     const cargarDatos = async () => {
       try {
         const [resMarcas, resCategorias] = await Promise.all([
@@ -256,7 +256,7 @@ export default function Productos(){
       }
     };
     cargarDatos();
-  }, []); 
+  }, []); */
 
   useEffect(() => {
     if (
@@ -300,8 +300,10 @@ export default function Productos(){
             data={data}
             set={setData}
             resetearProducto={setProductosCacheados}
+            /*
             marcas={marcas}
-            categorias={categorias}/>
+            categorias={categorias}
+            *//>
         </div>
         <div className="p-4 relative flex-1 overflow-auto rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
           <DataTableProductos

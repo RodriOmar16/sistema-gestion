@@ -104,6 +104,17 @@ class ListaPrecioProductoController extends Controller
       ]);
       // si $id < 0 significa que era un registro nuevo
       if ($id < 0) {
+        $existe = ListaPrecioProducto::where('proveedor_id', $request->proveedor_id)
+                  ->where('producto_id', $request->producto_id)
+                  ->exists();
+        if($existe){
+          //redirect()->back()->with('error', 'Ya existe un registro con este producto para este proveedor. Revisar.');
+          return inertia('listasPreciosProductos/index',[
+            'resultado'       => 0,
+            'mensaje'         => 'Ya existe un registro con este producto para este proveedor. Revisar',
+            'timestamp'       => now()->timestamp,
+          ]);
+        }
         $lista = ListaPrecioProducto::create([
           'proveedor_id'    => $validated['proveedor_id'],
           'producto_id'     => $validated['producto_id'],

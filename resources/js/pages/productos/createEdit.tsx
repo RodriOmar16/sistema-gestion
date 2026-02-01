@@ -439,8 +439,13 @@ export default function NewEditProductos(){
                 set={(e)=> setFile(e)}
               />*/}
               { data.imagen && (
-                <div className='flex justify-center'>
-                  <img src={`/${data.imagen}`} className="w-50 h-50 object-cover rounded-md border mb-4" alt="Imagen" width="50"/>
+                <div className='flex justify-center mb-3'>
+                  <figure className='flex flex-col items-center text-center'>
+                    <img src={`/${data.imagen}`} className="w-50 h-50 object-cover rounded-md border mb-1" alt="Imagen" width="50"/>
+                    <figcaption className="text-sm text-gray-600">
+                      {`/${data.imagen}`}
+                    </figcaption>
+                  </figure>
                 </div>
               ) }
               <Input placeholder='Ingresa la dirección de tu imagen' value={urlImg} onChange={(e) => setUrlImg(e.target.value)}/>

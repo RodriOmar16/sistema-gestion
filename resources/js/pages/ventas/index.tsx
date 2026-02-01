@@ -5,7 +5,7 @@ import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem } from '@/types';
-import { Venta } from '@/types/typeCrud';
+import { Autocomplete, Venta } from '@/types/typeCrud';
 import { Search, Brush, Loader2, CirclePlus, Filter } from 'lucide-react';
 import ModalConfirmar from '@/components/modalConfirmar';
 import ShowMessage from '@/components/utils/showMessage';
@@ -15,6 +15,7 @@ import { Multiple } from '@/types/typeCrud';
 import { ordenarPorTexto } from '@/utils';
 import DataTableVentas from '@/components/ventas/dataTableVentas';
 import { DatePicker } from '@/components/utils/date-picker';
+import GenericSelect from '@/components/utils/genericSelect';
 
 const breadcrumbs: BreadcrumbItem[] = [ { title: 'Ventas', href: '', } ];
 
@@ -37,6 +38,7 @@ const ventaVacia = {
 }
 
 export function FiltrosForm({ clientes, data, set }: propsForm){
+  const [optionCliente, setOptionCliente] = useState<Autocomplete|null>(null);
   const [esperandoRespuesta, setEsperandoRespuesta] = useState(false)
   const [loading, setLoading] = useState(false);
 
@@ -55,7 +57,18 @@ export function FiltrosForm({ clientes, data, set }: propsForm){
   };
   const handleReset = () => {
     set(ventaVacia);
+    setOptionCliente(null);
   }; 
+
+  const seleccionarCliente = (option : any) => {
+    if(option){
+      set({...data, cliente_id: option.value, cliente_nombre: option.label});
+      setOptionCliente(option);
+    }else{
+      set({...data, cliente_id: '', cliente_nombre: ''});
+      setOptionCliente(null);
+    }
+  };
 
   return (
     <div>
@@ -88,7 +101,13 @@ export function FiltrosForm({ clientes, data, set }: propsForm){
         </div>
         <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3'>
           <label htmlFor="cliente">Cliente</label>
-          <Select
+          <GenericSelect
+            route="clientes"
+            value={optionCliente}
+            onChange={(option) => seleccionarCliente(option)}
+            placeHolder="Selec. cliente"
+          />
+          {/*<Select
             value={String(data.cliente_id)}
             onValueChange={(value) => set({...data, cliente_id: Number(value)}) }
           >
@@ -104,7 +123,7 @@ export function FiltrosForm({ clientes, data, set }: propsForm){
                 ))}
               </SelectGroup>
             </SelectContent>
-          </Select>
+          </Select>*/}
         </div>
         <div className="col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3">
           <label htmlFor="fechaAnulacion">Anulación</label>
@@ -165,93 +184,12 @@ export default function Ventas(){
   const [clientes, setClientes] = useState<Multiple[]>([]);
 
   //funciones
-  /*const confirmar = (data: Venta) => {
-    if(data){
-      setProductoCopia( JSON.parse(JSON.stringify(data)) );
-      const texto : string = data.anulada === 0 ? 'inhabilitar': 'habilitar';
-      setTextConfirmar('Estás seguro de querer '+texto+' este producto?');
-      setConfirmar(true);
-    }
-  };
-  const inhabilitarHabilitar = () => {
-    if (!productoCopia || !productoCopia.producto_id) return;
-    router.put(
-      route('productos.toggleEstado', { producto: productoCopia.producto_id }),{},
-      {
-        preserveScroll: true,
-        preserveState: true,
-        onFinish: () => {
-          setTextConfirmar('');
-          setConfirmar(false);
-          setProductoCopia(productoVacio);
-        }
-      }
-    );
-  };
-
-  const cancelarInhabilitarHabilitar = () => { 
-    setConfirmar(false);
-  };*/
-
   const openEdit = (data: Venta) => {
     router.get(route('ventas.view', { venta: data.venta_id }));
   };
 
   //effect
-  useEffect(() => {
-    //optengo los datos del formulario
-    const cargarDatos = async () => {
-      const res  = await fetch(route('clientes.habilitados'));
-      const data = await res.json();
-      setClientes(ordenarPorTexto(data, 'nombre'));
-    };
-    cargarDatos();
-  }, []);
-
-  /*useEffect(() => {
-    if (!activo && propsActuales.resultado !== undefined) {
-      setPropsActuales({
-        resultado: undefined,
-        mensaje: undefined,
-        venta_id: undefined
-      });
-    }
-  }, [activo]);
-
-  useEffect(() => {
-    if (
-      ventas &&
-      ventas.length > 0 &&
-      JSON.stringify(ventas) !== JSON.stringify(ventasCacheadas)
-    ) {
-      setVentasCacheadas(ventas);
-    }
-  }, [ventas]);*/
-
-
-  /*useEffect(() => {
-    const cambioDetectado =
-      (resultado && resultado  !== propsActuales.resultado)  ||
-      (mensaje && mensaje    !== propsActuales.mensaje)
-
-    if (cambioDetectado) {
-      setPropsActuales({ resultado, mensaje, ventas });
-
-      const esError = resultado === 0;
-      setTitle(esError ? 'Error' : 'Producto modificado');
-      setText(esError ? mensaje ?? 'Error inesperado' : `${mensaje} (ID: ${ventas})`);
-      setColor(esError ? 'error' : 'success');
-      setActivo(true);
-
-      if (resultado === 1 && producto_id) {
-        router.get(route('productos.index'),
-          { producto_id, buscar: true },
-          { preserveScroll: true,	preserveState: true	}
-        )
-      }
-    }
-  }, [resultado, mensaje, producto_id]);*/
-
+  
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Ventas" />
@@ -270,19 +208,6 @@ export default function Ventas(){
             />
         </div>
       </div>
-      {/*<ModalConfirmar
-        open={openConfirmar}
-        text={textConfirmar}
-        onSubmit={inhabilitarHabilitar}
-        onCancel={cancelarInhabilitarHabilitar}
-      />
-      <ShowMessage 
-        open={activo}
-        title={title}
-        text={text}
-        color={color}
-        onClose={() => setActivo(false)}
-      />*/}
     </AppLayout>
   );
 }

@@ -19,6 +19,26 @@ class ClienteController extends Controller
     return response()->json($clientes);
   }
 
+  public function habilitados(Request $request)
+  {
+    try {
+      $buscar = $request->get('buscar', '');
+
+      $clientes = Cliente::query()
+        ->where('inhabilitado',0)
+        ->when($buscar, fn($q) => $q->where('nombre', 'LIKE', "%{$buscar}%"))
+        ->select('cliente_id as id', 'nombre')
+        ->paginate(20);
+
+      return response()->json([
+          'elementos' => $clientes
+      ]);
+    } catch (\Throwable $e) {
+      //Log::error('Error en buscar clientes: ' . $e->getMessage());
+      return response()->json(['error' => $e->getMessage()], 500);
+    }
+  }
+
   public function clientesPorDni(Request $request){
     $cliente = Cliente::where('inhabilitado', false)->where('dni',$request->dni)->get();
     return response()->json($cliente);
@@ -169,9 +189,12 @@ class ClienteController extends Controller
   {
     $cliente->update(['inhabilitado' => !$cliente->inhabilitado]);
     return inertia('clientes/index',[
-      'resultado' => 1,
-      'mensaje'   => 'El estado se actualizó correctamente',
-      'timestamp' => now()->timestamp,
+      'resultado'  => 1,
+      'mensaje'    => 'El estado se actualizó correctamente',
+      'timestamp'  => now()->timestamp,
+      'cliente_id' => $cliente->cliente_id
     ]);
+    
+    //return redirect()->back()->with('success', 'El estado se actualizó correctamente.');
   }
 }

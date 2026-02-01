@@ -18,6 +18,27 @@ class FormaPagoController extends Controller
     });
     return response()->json($formasPago);
   }
+  
+  public function habilitadas(Request $request)
+  {
+    try {
+      $buscar = $request->get('buscar', '');
+
+      $fp = FormaPago::query()
+        ->where('inhabilitada',0)
+        ->when($buscar, fn($q) => $q->where('nombre', 'LIKE', "%{$buscar}%"))
+        ->select('forma_pago_id as id', 'nombre')
+        ->paginate(20);
+
+      return response()->json([
+          'elementos' => $fp
+      ]);
+    } catch (\Throwable $e) {
+      //Log::error('Error en buscar formas de pago: ' . $e->getMessage());
+      return response()->json(['error' => $e->getMessage()], 500);
+    }
+  }
+
   public function index(Request $request)
   {
     if(!$request->has('buscar')){

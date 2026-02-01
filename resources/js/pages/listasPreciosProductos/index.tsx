@@ -440,7 +440,7 @@ export default function ListasPreciosProductos(){
             setColor('success');
             setActivo(true);
           },
-          onError: (errors) => { 
+          onError: () => { 
             const mensaje = flash?.error || "Ocurrió un error"; 
             setTitle('Error en Lista de precio');
             setText(`${mensaje}`);
@@ -484,6 +484,28 @@ export default function ListasPreciosProductos(){
       setListasPreciosCacheadas(listas.map(e => ({...e, editar:0, cambiar: 0, load: 0})));
     }
   }, [listas]);
+
+  useEffect(() => {
+    const cambioDetectado = timestamp && timestamp !== ultimoTimestamp;
+
+    if (cambioDetectado) {
+      setUltimoTimestamp(timestamp);
+
+      const esError = resultado === 0;
+      setTitle(esError ? 'Error' : 'Lista modificada');
+      setText(esError ? mensaje ?? 'Error inesperado' : `${mensaje} `);
+      setColor(esError ? 'error' : 'success');
+      setActivo(true);
+
+      /*if (resultado === 1 && cliente_id) {
+        setModalOpen(false);
+        router.get(route('clientes.index'),
+          { cliente_id, buscar: true },
+          { preserveScroll: true,	preserveState: true	}
+        )
+      }*/
+    }
+  }, [resultado, mensaje, timestamp, ultimoTimestamp]);
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>

@@ -12,16 +12,16 @@ import {  Table,  TableBody,  TableCaption,  TableCell,  TableHead,  TableHeader
 } from "@/components/ui/table"
 import { Select,  SelectContent,  SelectGroup,  SelectItem,  SelectLabel,  SelectTrigger,  SelectValue } from "@/components/ui/select"
 import SelectMultiple from '@/components/utils/select-multiple';
-import { Multiple } from '@/types/typeCrud';
+import { Multiple, Autocomplete } from '@/types/typeCrud';
 import { convertirFechaBarrasGuiones, convertirFechaGuionesBarras, convertirNumberPlata, ordenarPorTexto, redondear } from '@/utils';
 import ShowMessage from '@/components/utils/showMessage';
 import ModalConfirmar from '@/components/modalConfirmar';
 import { route } from 'ziggy-js';
 import { DatePicker } from '@/components/utils/date-picker';
 import TableDetalles from '@/components/ventas/tableDetalles';
-import Autocomplete from '@/components/utils/autocomplete';
 import InputDni from '@/components/utils/input-dni';
 import TableFormasPago from '@/components/ventas/tableFormasPago';
+import GenericSelect from '@/components/utils/genericSelect';
 
 const breadcrumbs: BreadcrumbItem[] = [ { title: '', href: '', } ];
 const ventaVacia = {
@@ -69,6 +69,7 @@ interface PropsDet{
 export function DetallesVenta({modo, data, set, productosHab, productos,setProd}:PropsDet){
   const [totalAux, setTotalAux] = useState(0); 
   const [productoId, setProdId] = useState(0);
+  const [optionProduct, setOptionProduct] = useState<Autocomplete|null>(null);
   
   const controlarTotal = (e:number) => {
     setTotalAux(e);
@@ -114,11 +115,24 @@ export function DetallesVenta({modo, data, set, productosHab, productos,setProd}
       }
     }
     setProdId(0);
+    setOptionProduct(null);
   };
 
   const quitarProducto = (id:number) => {
     const aux = productos.filter(e => e.id !== id);
     setProd(aux);
+  };
+
+  const seleccionarProducto = (option : any) => {
+    if(option){
+      //set({...data, producto_id: option.value, producto_nombre: option.label});
+      setProdId(option.value);
+      setOptionProduct(option);
+    }else{
+      //set({...data, producto_id: '', producto_nombre: ''});
+      setProdId(0);
+      setOptionProduct(null);
+    }
   };
 
   return (
@@ -146,7 +160,14 @@ export function DetallesVenta({modo, data, set, productosHab, productos,setProd}
         <div className='col-span-12 grid grid-cols-12 gap-4'>
           <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3'>
             <label htmlFor="cliente">Productos en Stock</label>
-              <Select
+              <GenericSelect
+                route="productos"
+                value={optionProduct}
+                onChange={(option) => seleccionarProducto(option)}
+                placeHolder="Selec. producto"
+                isDisabled={modo!='create'}
+              />
+              {/*<Select
                 disabled={modo!='create'}
                 value={String(productoId)}
                 onValueChange={(value) => setProdId(Number(value))}
@@ -163,7 +184,7 @@ export function DetallesVenta({modo, data, set, productosHab, productos,setProd}
                     ))}
                   </SelectGroup>
                 </SelectContent>
-              </Select>
+              </Select>*/}
           </div>
           <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3 flex items-center'>
             <Button disabled={modo!='create'} type="button" onClick={agregarProducto}>
@@ -200,20 +221,25 @@ interface PropsCli{
 }
 
 export function DatosCliente({modo, data, set, setActivo, setTitle, setText, setColor}:PropsCli){
-  const [dni, setDni] = useState('');
+  const [dni, setDni]           = useState('');
   const [bloquear, setBloquear] = useState(false);
-  const [found, setFound] = useState(0);
+  const [found, setFound]       = useState(0);
+  const [load, setLoad]         = useState(false);
 
   const buscarCliente = async () => {
+    setLoad(true);
     if(!dni){
       setFound(0)
       setBloquear(false);
       set(clienteVacio);
+      setLoad(false);
       return;
     }
+    
     const res = await fetch(route('clientes.porDni',{dni: dni}));
     const cli = await res.json();
-    
+    setLoad(false);
+
     if(cli && cli.length > 0){
       setBloquear(true);
       set({...cli[0], fecha_nacimiento: convertirFechaGuionesBarras(cli[0].fecha_nacimiento)});
@@ -239,11 +265,17 @@ export function DatosCliente({modo, data, set, setActivo, setTitle, setText, set
         <div className="col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-12 grid grid-cols-12 gap-4">
           <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3'>
             <label htmlFor="dni">Documento</label>
-            <InputDni disabled={modo!='create'} placeholder='Buscar por documento' data={String(dni)} setData={(nro) => setDni(nro) }/>
+            <InputDni 
+              disabled={modo!='create'} 
+              placeholder='Buscar por documento' 
+              data={String(dni)} 
+              setData={(nro) => setDni(nro) } 
+              onChange={buscarCliente}/>
           </div>
           <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-2 flex items-center'>
             <Button disabled={modo!='create'} type="button" onClick={buscarCliente}>
-              <Search size={20}/> Buscar         
+              { load ? (<Loader2 size={20} className="animate-spin mr-2" />) :  (<Search size={20}/>) }
+              Buscar         
             </Button>
           </div>
           {
@@ -295,9 +327,9 @@ interface PropsFp{
   setTotalFp:            (e:number) => void;   
 }
 export function FormasPagosForm({modo, formasPagoHab, formasPagoSelected, setFormaPagoSelected, totalVenta, totalFp, setTotalFp}:PropsFp){
-  const [fpId, setFpId]       = useState(0);
-  const [monto, setMonto]     = useState(0);
-  
+  const [fpId, setFpId]         = useState(0);
+  const [monto, setMonto]       = useState(0);
+  const [optionFp, setOptionFp] = useState<Autocomplete|null>(null);
 
   const agregaFp = () => {
     if(!fpId || !monto){
@@ -315,6 +347,7 @@ export function FormasPagosForm({modo, formasPagoHab, formasPagoSelected, setFor
     ]); 
     
     setFpId(0);
+    setOptionFp(null);
     setMonto(0);
   };
 
@@ -323,6 +356,16 @@ export function FormasPagosForm({modo, formasPagoHab, formasPagoSelected, setFor
     const aux:FormPago[] = formasPagoSelected.filter(e => e.id !== id);
     setFormaPagoSelected(aux);
   }
+
+  const seleccionarFp = (option : any) => {
+    if(option){
+      setFpId(option.value);
+      setOptionFp(option);
+    }else{
+      setFpId(0);
+      setOptionFp(null);
+    }
+  };
 
   useEffect(() => { //calcula el total
     setTotalFp(formasPagoSelected.reduce((acc, fp) => acc + fp.monto, 0));
@@ -333,7 +376,14 @@ export function FormasPagosForm({modo, formasPagoHab, formasPagoSelected, setFor
       <div className='grid grid-cols-12 gap-4'>
         <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3'>
           <label htmlFor="cliente">Forma de pago</label>
-          <Select
+          <GenericSelect
+            route="formas-pago"
+            value={optionFp}
+            onChange={(option) => seleccionarFp(option)}
+            placeHolder='Selec. Forma de pago'
+            isDisabled={modo!='create'}
+          />
+          {/*<Select
             disabled={modo!='create'}
             value={String(fpId)}
             onValueChange={(value) => setFpId(Number(value)) }
@@ -350,7 +400,7 @@ export function FormasPagosForm({modo, formasPagoHab, formasPagoSelected, setFor
                 ))}
               </SelectGroup>
             </SelectContent>
-          </Select>
+          </Select>*/}
         </div>
         <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
           <label htmlFor="monto">Monto</label>
@@ -518,7 +568,7 @@ export default function NewViewVenta(){
   };
 
   //Effect
-  useEffect(() => {
+  /*useEffect(() => {
     const cargarDatos = async () => {
       try {
         const [resProductos, resFp] = await Promise.all([
@@ -535,9 +585,9 @@ export default function NewViewVenta(){
         console.error('Error al cargar datos:', error);
       }
     };
-
     cargarDatos();
-  }, []);
+  }, []);*/
+
   useEffect(() => {
 		const cambioDetectado = (resultado && resultado  !== propsActuales.resultado) || (mensaje && mensaje    !== propsActuales.mensaje) 
 
@@ -569,7 +619,7 @@ export default function NewViewVenta(){
       setDataCli({
         cliente_id:       cliente?.cliente_id,
         nombre:           cliente?.nombre,
-        fecha_nacimiento: cliente?.fecha_nacimiento,
+        fecha_nacimiento: cliente?.fecha_nacimiento ? convertirFechaGuionesBarras(cliente?.fecha_nacimiento) : cliente?.fecha_nacimiento,
         domicilio:        cliente?.domicilio,
         email:            cliente?.email,
         dni:              cliente?.dni,

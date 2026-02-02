@@ -49,7 +49,7 @@ class ProductoController extends Controller
       return response()->json(['error' => $e->getMessage()], 500);
     }
   }
-  
+
   public function generarPDF(Request $request){
 
     $query = Producto::query()->with(['categorias', 'productosLista.listaPrecio']);
@@ -241,11 +241,11 @@ class ProductoController extends Controller
         'categorias'      => 'required|array|min:1',
         'codigo_barra'    => 'required|string|max:255',
         'imagen'          => 'required|string|max:255',
-        'vencimiento'     => 'string|max:255'
+        'vencimiento'     => 'nullable|string|max:255'
       ]);
       //controlar que no se repita
       $codigoBarras = strtolower(trim($validated['codigo_barra']));
-      $existe = Producto::whereRaw('LOWER(TRIM(codigo_barra)) = ?', [$codigo_barra])
+      $existe = Producto::whereRaw('LOWER(TRIM(codigo_barra)) = ?', [$codigoBarras])
                         //->where('precio', $validated['precio'])
                         ->exists();
       if($existe){

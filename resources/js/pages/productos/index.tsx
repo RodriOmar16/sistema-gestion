@@ -115,22 +115,22 @@ export function FiltrosForm({ resetearProducto, /*marcas, categorias,*/ data, se
           <Input value={data.producto_nombre} onChange={(e)=>set({...data, producto_nombre:e.target.value})}/>	
         </div>
         <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3'>
-          <label htmlFor="cliente">Marcas</label>
-            <GenericSelect
-              route="marcas"
-              value={optionMarca}
-              onChange={(option) => seleccionarMarca(option)}
-              placeHolder='Selec. marca'
-            />
+          <label htmlFor="marcas">Marcas</label>
+          <GenericSelect
+            route="marcas"
+            value={optionMarca}
+            onChange={(option) => seleccionarMarca(option)}
+            placeHolder='Selec. marca'
+          />
         </div>
         <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3'>
           <label htmlFor="categorias">Categorías</label>
-            <GenericSelect
-              route="categorias"
-              value={optionCateg}
-              onChange={(option) => seleccionarCategoria(option)}
-              placeHolder='Selec. categoría'
-            />
+          <GenericSelect
+            route="categorias"
+            value={optionCateg}
+            onChange={(option) => seleccionarCategoria(option)}
+            placeHolder='Selec. categoría'
+          />
         </div>
         <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-4'>
           <label htmlFor="codigoBarras">Código de Barras</label>
@@ -295,7 +295,7 @@ export default function Productos(){
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Productos" />
       <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
-        <div className="relative flex-none flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
+        <div className="relative flex-none flex-1 rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
           <FiltrosForm
             data={data}
             set={setData}

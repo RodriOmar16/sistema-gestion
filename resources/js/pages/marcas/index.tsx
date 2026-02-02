@@ -128,9 +128,6 @@ export default function Marcas(){
   };
   const [ultimoTimestamp, setUltimoTimestamp] = useState<number | null>(null);
   const [marcasCacheadas, setMarcasCacheadas] = useState<Marca[]>([]);
-  console.log("ultimoTimeStamp: ", ultimoTimestamp);
-  console.log("timestamp: ", timestamp);
-
   //funciones
   const confirmar = (data: Marca) => {
     if(data){

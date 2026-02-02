@@ -511,7 +511,7 @@ export default function ListasPreciosProductos(){
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Listas de Precios" />
       <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
-        <div className="relative flex-none flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
+        <div className="relative flex-none flex-1 rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
           <FiltrosForm 
             setOpen={() => setOpen(true)} 
             resetearListaPrecio={setListasPreciosCacheadas}

@@ -11,7 +11,7 @@ class DetVenta extends Model
 {
     protected $primaryKey = 'det_venta_id';
     protected $table      = 'det_ventas';
-    protected $fillable   = ['venta_id', 'producto_id', 'cantidad', 'descuento', 'subtotal'];
+    protected $fillable   = ['venta_id', 'producto_id', 'precio_unitario','cantidad', 'descuento', 'subtotal'];
 
     public function venta()
     {

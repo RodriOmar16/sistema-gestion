@@ -137,14 +137,26 @@ class VentaController extends Controller
         }
         //actualizo el stock
         $stock->update(['cantidad' => $stock->cantidad - $det['cantidad']]);
+        
         //creo el detalle
+        $producto = Producto::where('producto_id', $det['id'])->first();
+        if(!$producto){
+          DB::rollback();
+          return inertia('ventas/createView', [
+            'resultado' => 0,
+            'mensaje'   => 'No se pudo encontrar información del producto a ventas: '.$det['id'],
+            'mode'      => 'create'
+          ]);
+        }
         DetVenta::create([
-          'venta_id'    => $venta->venta_id,
-          'producto_id' => $det['id'],
-          'cantidad'    => $det['cantidad'],
-          'descuento'   => 0,
-          'subtotal'    => ($det['cantidad'] * $det['precio']) - 0, 
+          'venta_id'        => $venta->venta_id,
+          'producto_id'     => $det['id'],
+          'precio_unitario' => $producto->precio,
+          'cantidad'        => $det['cantidad'],
+          'descuento'       => 0,
+          'subtotal'        => ($det['cantidad'] * $det['precio']) - 0, 
         ]);
+
         //registro el movimiento de stock
         MovimientoStock::create([
           'producto_id' => $det['id'],
@@ -155,6 +167,7 @@ class VentaController extends Controller
           'cantidad'     => $det['cantidad']
         ]);
       }
+
       //registrar los métodos de pago
       $formasPagos = $validated['formasPagos'];
       foreach ($formasPagos as $fp) {
@@ -165,6 +178,7 @@ class VentaController extends Controller
           'monto'         => $fp['monto']
         ]);
       }
+
       //exito
       DB::commit();
       return inertia('ventas/createView',[
@@ -172,6 +186,7 @@ class VentaController extends Controller
         'mensaje'   => 'Venta grabado correctamente',
         'venta_id'  => $venta->venta_id
       ]);
+
     } catch (\Throwable $e) {
       DB::rollback();
       return inertia('ventas/createView',[
@@ -204,7 +219,7 @@ class VentaController extends Controller
           return [
             'id'       => $dv->producto_id,
             'nombre'   => optional($dv->producto)->nombre,
-            'precio'   => optional($dv->producto)->precio,
+            'precio'   => $dv->precio_unitario,
             'cantidad' => $dv->cantidad
           ];
         });

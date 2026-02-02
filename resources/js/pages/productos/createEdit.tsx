@@ -20,6 +20,7 @@ import { route } from 'ziggy-js';
 import { DatePicker } from '@/components/utils/date-picker';
 import SubirImagen from '@/components/utils/subir-imagen';
 import GenericSelect from '@/components/utils/genericSelect';
+import { NumericFormat } from 'react-number-format';
 
 const breadcrumbs: BreadcrumbItem[] = [ { title: '', href: '', } ];
 const productoVacio = {
@@ -100,7 +101,17 @@ export function DetallesProducto({modo, data, set, /*marcas*/}:Props){
         </div>
         <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
           <label htmlFor="precio">Precio</label>
-          <Input type='number' className='text-right' value={data.precio} onChange={(e)=>set({...data, precio:Number(e.target.value)})}/>	
+          <NumericFormat 
+            value={data.precio} 
+            thousandSeparator="." 
+            decimalSeparator="," 
+            prefix="$" 
+            className="text-right border rounded px-2 py-1" 
+            onValueChange={(values) => {
+              set({...data, precio: values.floatValue || 0});
+            }}
+          />
+          {/*<Input type='number' className='text-right' value={data.precio} onChange={(e)=>set({...data, precio:Number(e.target.value)})}/>	*/}
         </div>
         <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3'>
           <label htmlFor="cliente">Marcas</label>
@@ -448,11 +459,8 @@ export default function NewEditProductos(){
                   </figure>
                 </div>
               ) }
-              <Input placeholder='Ingresa la dirección de tu imagen' value={urlImg} onChange={(e) => setUrlImg(e.target.value)}/>
+              <Input placeholder='Ingresa la dirección de tu imagen sin /' value={urlImg} onChange={(e) => { setUrlImg(e.target.value) }}/>
             </div>
-            {/*<div>
-              <SelectorImagen/>
-            </div>*/}
           </form>
         </div>
         <div  className='flex justify-end px-4 pb-4 col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>

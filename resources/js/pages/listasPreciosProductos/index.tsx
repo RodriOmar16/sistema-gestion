@@ -468,17 +468,6 @@ export default function ListasPreciosProductos(){
   };
 
   //useEffect
-  /*useEffect(() => {
-    //esto se hace porque inertia me destruia muy rapido el array principal en este caso listas y por eso tuve que guardardo en una variable temporal
-    //es solo para que no sea tan feo
-    if (
-      listas &&
-      listas.length > 0 &&
-      JSON.stringify(listas) !== JSON.stringify(listasPreciosCacheadas)
-    ) {
-      setListasPreciosCacheadas(listas);
-    }
-  }, [listas, listasPreciosCacheadas]);*/
   useEffect(() => {
     if (listas && listas.length > 0) {
       setListasPreciosCacheadas(listas.map(e => ({...e, editar:0, cambiar: 0, load: 0})));

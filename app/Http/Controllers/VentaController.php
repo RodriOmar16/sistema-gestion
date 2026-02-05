@@ -12,6 +12,7 @@ use App\Models\Cliente;
 use App\Models\MovimientoStock;
 use App\Models\Stock;
 use App\Models\VentaPago;
+use App\Models\Producto;
 
 class VentaController extends Controller
 {
@@ -132,7 +133,8 @@ class VentaController extends Controller
           return inertia('ventas/createView', [
             'resultado' => 0,
             'mensaje'   => 'Stock insuficiente para el producto ID: '.$det['id'],
-            'mode'      => 'create'
+            'mode'      => 'create',
+            'timestamp' => now(),
           ]);
         }
         //actualizo el stock
@@ -145,7 +147,8 @@ class VentaController extends Controller
           return inertia('ventas/createView', [
             'resultado' => 0,
             'mensaje'   => 'No se pudo encontrar información del producto a ventas: '.$det['id'],
-            'mode'      => 'create'
+            'mode'      => 'create',
+            'timestamp' => now(),
           ]);
         }
         DetVenta::create([
@@ -184,7 +187,8 @@ class VentaController extends Controller
       return inertia('ventas/createView',[
         'resultado' => 1,
         'mensaje'   => 'Venta grabado correctamente',
-        'venta_id'  => $venta->venta_id
+        'venta_id'  => $venta->venta_id,
+        'timestamp' => now(),
       ]);
 
     } catch (\Throwable $e) {
@@ -192,7 +196,8 @@ class VentaController extends Controller
       return inertia('ventas/createView',[
         'resultado' => 0,
         'mensaje'   => 'Ocurrió un error al grabar la venta: '.$e->getMessage(),
-        'mode'      => 'create'
+        'mode'      => 'create',
+        'timestamp' => now(),
       ]);
     }
   }
@@ -217,10 +222,10 @@ class VentaController extends Controller
         ->get()
         ->map(function($dv){
           return [
-            'id'       => $dv->producto_id,
+            'id'       => (int)$dv->producto_id,
             'nombre'   => optional($dv->producto)->nombre,
-            'precio'   => $dv->precio_unitario,
-            'cantidad' => $dv->cantidad
+            'precio'   => (float)$dv->precio_unitario,
+            'cantidad' => (int)$dv->cantidad
           ];
         });
 
@@ -234,13 +239,14 @@ class VentaController extends Controller
     ->get()
     ->map(function($fp){
       return [
-        'id'     => $fp->forma_pago_id,
+        'id'     => (int)$fp->forma_pago_id,
         'nombre' => optional($fp->formaPago)->nombre,
-        'monto'  => $fp->monto,
+        'monto'  => (float)$fp->monto,
         'fecha'  => $fp->fecha
       ];
     });
-    //preparo ventas sobre todo por las fechas que recibe el front
+
+    //preparo ventaAux sobre todo por las fechas que recibe el front
     $ventaAux = [
       'venta_id'        => $venta->venta_id,
       'fecha_grabacion' => $venta->fecha_grabacion->format('Y-m-d'),

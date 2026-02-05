@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table,  TableBody,  TableCell,  TableHead,  TableHeader,  TableRow } from "@/components/ui/table"
 import { MovimientoStock } from "@/types/typeCrud"
-import { convertirNumberPlata, formatDateTime } from "@/utils"
+import { convertirFechaGuionesBarras, convertirNumberPlata, formatDateTime } from "@/utils"
 import { Badge } from "../ui/badge"
 import PdfButton from "../utils/pdf-button"
 import ExcelButton from "../utils/excel-button"
@@ -46,7 +46,7 @@ export function getColumns(): ColumnDef<MovimientoStock>[] {
         )
       }
       ,
-      cell: ({ row }) => ( <div className="">{formatDateTime(row.getValue("fecha"))}</div> ),
+      cell: ({ row }) => ( <div className="">{convertirFechaGuionesBarras(row.getValue("fecha"))}</div> ),
     },
     {
       accessorKey: "producto_nombre",

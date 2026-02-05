@@ -19,6 +19,30 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class ProductoController extends Controller
 {
+  public function getProducto($id)
+  {
+    try {
+      $producto = Producto::where('producto_id', $id)->first();
+
+      if (!$producto) {
+        return response()->json([
+          'resultado' => 0,
+          'mensaje'   => "Ocurrió un error. No se encontró el producto con ID: $id"
+        ], 404);
+      }
+
+      return response()->json([
+        'resultado' => 1,
+        'producto'  => $producto
+      ]);
+    } catch (\Throwable $th) {
+      return response()->json([
+        'resultado' => 0,
+        'mensaje'   => $th->getMessage()
+      ], 500);
+    }
+  }
+
   public function productosHabilitados(){
     $productos = Producto::where('inhabilitado',false)->get()->map(function($prod){
       return [

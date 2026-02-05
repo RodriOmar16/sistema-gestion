@@ -22,6 +22,7 @@ import TableDetalles from '@/components/ventas/tableDetalles';
 import InputDni from '@/components/utils/input-dni';
 import TableFormasPago from '@/components/ventas/tableFormasPago';
 import GenericSelect from '@/components/utils/genericSelect';
+import { NumericFormat } from 'react-number-format';
 
 const breadcrumbs: BreadcrumbItem[] = [ { title: '', href: '', } ];
 const ventaVacia = {
@@ -52,44 +53,54 @@ const formaPagoVacia = {
 }
 type Detalle  = {id: number, nombre:string, precio:number , cantidad: number };
 type FormPago = {id: number, nombre: string, monto: number, fecha: string};
+
 //-----------------------------------------------------------------------------------
-type ProductoHab = {
+/*type ProductoHab = {
   id: number; 
   nombre: string, 
   precio: number, 
-};
+};*/
 interface PropsDet{
   data: Venta;
   set: (e:any) => void;
   modo: string;
   productos: Detalle[];
   setProd: (e:any) => void;
-  productosHab: ProductoHab[];
+  setTitle: (p:string) => void;
+  setText: (p:string) => void;
+  setColor: (p:string) => void;
+  setActivo: (p:boolean) => void;
 };
-export function DetallesVenta({modo, data, set, productosHab, productos,setProd}:PropsDet){
-  const [totalAux, setTotalAux] = useState(0); 
-  const [productoId, setProdId] = useState(0);
+export function DetallesVenta({modo, data, set, productos, setProd, setTitle, setText, setColor, setActivo }:PropsDet){
+  const [totalAux, setTotalAux]           = useState(0); 
+  const [productoId, setProdId]           = useState(0);
   const [optionProduct, setOptionProduct] = useState<Autocomplete|null>(null);
+  const [load, setLoad]                   = useState(false);
   
   const controlarTotal = (e:number) => {
     setTotalAux(e);
     set({...data, total:Number(e)})
   };
 
-  const agregarProducto = () => {
+  const agregarProducto = async () => {
     if(productoId===0){ //si no seleccionas nada 
       return;
     }
-    if(productos.length == 0){ //si la lista está vacía
-      setProd((prev:any) => [...prev, {
-        id: productoId, 
-        nombre: productosHab.find(e => e.id === productoId)?.nombre, 
-        precio: productosHab.find(e => e.id === productoId)?.precio, 
-        cantidad: 1
-      }]);
-      setProdId(0);
+    setLoad(true);
+    const res  = await fetch(route('productos.getProducto', productoId));
+    const data = await res.json();
+    setLoad(false);
+    
+    if(data.resultado == 0){
+      setTitle("Problemas al agregar");
+      setText(data?.mensaje);
+      setColor("error");
+      setActivo(true);
       return 
     }
+
+    const producto = data.producto;    
+
     //si ya existe al menos 1
     const obj = productos.find(e => e.id === productoId)
     if(obj){
@@ -101,19 +112,20 @@ export function DetallesVenta({modo, data, set, productosHab, productos,setProd}
       );
     } else {
       //si no está, lo agrego con cantidad 1
-      const producto = productosHab.find(e => e.id === productoId);
+      //const producto = productosHab.find(e => e.id === productoId);
       if (producto) {
         setProd((prev:any) => [
           ...prev,
           {
-            id: producto.id,
+            id: producto.producto_id,
             nombre: producto.nombre,
-            precio: producto.precio,
+            precio: Number(producto.precio),
             cantidad: 1,
           },
         ]);
       }
     }
+
     setProdId(0);
     setOptionProduct(null);
   };
@@ -167,29 +179,15 @@ export function DetallesVenta({modo, data, set, productosHab, productos,setProd}
                 placeHolder="Selec. producto"
                 isDisabled={modo!='create'}
               />
-              {/*<Select
-                disabled={modo!='create'}
-                value={String(productoId)}
-                onValueChange={(value) => setProdId(Number(value))}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    {productosHab.map((e: any) => (
-                      <SelectItem key={e.id} value={String(e.id)}>
-                        {e.nombre}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>*/}
           </div>
           <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3 flex items-center'>
             <Button disabled={modo!='create'} type="button" onClick={agregarProducto}>
-                <Plus size={20}/> Agregar
-              </Button>
+              {load? (
+                <Loader2 size={20} className="animate-spin mr-2" />
+              ) : (
+                <Plus size={20}/>
+              )} Agregar
+            </Button>
           </div>
         </div>
       </div>
@@ -319,34 +317,48 @@ export function DatosCliente({modo, data, set, setActivo, setTitle, setText, set
 //-------------------------------------------------------------------------------
 interface PropsFp{
   modo:                  string;
-  formasPagoHab:         Multiple[];
+  //formasPagoHab:         Multiple[];
   formasPagoSelected:    FormPago[];
-  setFormaPagoSelected:  (array:any[]) => void;
+  //setFormaPagoSelected:  (array:any[]) => void;
+  setFormaPagoSelected: React.Dispatch<React.SetStateAction<FormPago[]>>;
   totalVenta:            number;
   totalFp:               number;
   setTotalFp:            (e:number) => void;   
 }
-export function FormasPagosForm({modo, formasPagoHab, formasPagoSelected, setFormaPagoSelected, totalVenta, totalFp, setTotalFp}:PropsFp){
-  const [fpId, setFpId]         = useState(0);
+export function FormasPagosForm({modo, /*formasPagoHab,*/ formasPagoSelected, setFormaPagoSelected, totalVenta, totalFp, setTotalFp}:PropsFp){
+  const fpVacio = { id: 0, nombre: '' }
+  //const [fpId, setFpId]         = useState(0);
   const [monto, setMonto]       = useState(0);
+  const [fp ,setFp]             = useState<{id: number, nombre: string}>(fpVacio);
   const [optionFp, setOptionFp] = useState<Autocomplete|null>(null);
 
-  const agregaFp = () => {
-    if(!fpId || !monto){
+  const agregarFp = () => {
+    //controlo que el formulario se haya completado
+    if(!fp.id || !monto){
       return
     }
-    //agregar
-    setFormaPagoSelected([
-      ...formasPagoSelected,
-      {
-        id: fpId, 
-        nombre: formasPagoHab.find(e=>e.id===fpId)?.nombre, 
-        monto: monto, 
-        fecha: (new Date()).toLocaleDateString(),
-      }
-    ]); 
     
-    setFpId(0);
+    const estaEnArray = formasPagoSelected.find(e => e.id === fp.id);
+    if(estaEnArray){
+      setFormaPagoSelected((prev:any) => 
+        prev.map((d:any) => 
+          d.id === fp.id ? { ...d, monto: Number(d.monto) + Number(monto) } : d
+        )
+      );
+    }else{
+      setFormaPagoSelected([
+        ...formasPagoSelected,
+        {
+          id: fp.id, 
+          nombre: fp.nombre, 
+          monto: monto, 
+          fecha: (new Date()).toLocaleDateString(),
+        }
+      ]); 
+    }
+    
+    //setFpId(0);
+    setFp(fpVacio);
     setOptionFp(null);
     setMonto(0);
   };
@@ -359,58 +371,58 @@ export function FormasPagosForm({modo, formasPagoHab, formasPagoSelected, setFor
 
   const seleccionarFp = (option : any) => {
     if(option){
-      setFpId(option.value);
+      //setFpId(option.value);
+      setFp({id: option.value, nombre: option.label});
       setOptionFp(option);
     }else{
-      setFpId(0);
+      //setFpId(0);
+      setFp(fpVacio);
       setOptionFp(null);
     }
   };
 
   useEffect(() => { //calcula el total
-    setTotalFp(formasPagoSelected.reduce((acc, fp) => acc + fp.monto, 0));
+    setTotalFp(formasPagoSelected.reduce((acc, fp) => acc + Number(fp.monto), 0));
   }, [formasPagoSelected]);
 
   return(
     <div className='px-4'>
       <div className='grid grid-cols-12 gap-4'>
-        <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3'>
-          <label htmlFor="cliente">Forma de pago</label>
-          <GenericSelect
-            route="formas-pago"
-            value={optionFp}
-            onChange={(option) => seleccionarFp(option)}
-            placeHolder='Selec. Forma de pago'
-            isDisabled={modo!='create'}
-          />
-          {/*<Select
-            disabled={modo!='create'}
-            value={String(fpId)}
-            onValueChange={(value) => setFpId(Number(value)) }
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                {formasPagoHab.map((e: any) => (
-                  <SelectItem key={e.id} value={String(e.id)}>
-                    {e.nombre}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>*/}
-        </div>
-        <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
-          <label htmlFor="monto">Monto</label>
-          <Input disabled={modo!='create'} className='text-right' type='number' value={monto} onChange={(e)=> setMonto(Number(e.target.value))}/>	
-        </div>
-        <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3 flex items-center'>
-          <Button type="button" onClick={agregaFp} disabled={totalVenta==0 || modo!='create'}>
-            <Plus size={20}/> Agregar         
-          </Button>
-        </div>
+        <form className="col-span-12" onSubmit={(e) => { e.preventDefault(); agregarFp(); }}>
+          <div className='grid grid-cols-12 gap-4'>
+            <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3'>
+              <label htmlFor="cliente">Forma de pago</label>
+              <GenericSelect
+                route="formas-pago"
+                value={optionFp}
+                onChange={(option) => seleccionarFp(option)}
+                placeHolder='Selec. Forma de pago'
+                isDisabled={modo!='create'}
+              />
+            </div>
+            <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
+              <label htmlFor="monto">Monto</label>
+              {/*<Input disabled={modo!='create'} className='text-right' type='number' value={monto} onChange={(e)=> setMonto(Number(e.target.value))}/>*/}
+              <NumericFormat 
+                value={monto} 
+                thousandSeparator="." 
+                decimalSeparator="," 
+                prefix="$" 
+                className="text-right border rounded px-2 py-1" 
+                onValueChange={(values) => { setMonto(values.floatValue || 0) }}
+                onKeyDown={(e) => { if (e.key === "Enter") { 
+                  e.preventDefault(); // 👈 evita el submit 
+                  agregarFp(); 
+                } }}
+              />	
+            </div>
+            <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3 flex items-center'>
+              <Button type="button" onClick={agregarFp} disabled={totalVenta==0 || modo!='create'}>
+                <Plus size={20}/> Agregar         
+              </Button>
+            </div>
+          </div>
+        </form>
         <div className="col-span-12">
           <TableFormasPago 
             modo={modo}
@@ -418,7 +430,7 @@ export function FormasPagosForm({modo, formasPagoHab, formasPagoSelected, setFor
             quitar={quitarFp}
           />
         </div>
-        <div className="col-span-12 flex justify-end mb-2">
+        <div className="col-span-12 flex justify-center mb-2">
           <div className="p-2 rounded border">
             <span className="text-sm text-muted-foreground">Total</span><br />
             <span className="font-bold text-lg">${redondear(totalVenta, 2)}</span>
@@ -444,7 +456,7 @@ export function FormasPagosForm({modo, formasPagoHab, formasPagoSelected, setFor
 
 export default function NewViewVenta(){
   //data
-  const { mode, venta, detalles, cliente, formasPago, resultado, mensaje, venta_id } = usePage().props as { 
+  const { mode, venta, detalles, cliente, formasPago, resultado, mensaje, venta_id, timestamp } = usePage().props as { 
     mode?:       string | 'create' | 'view';
     venta?:      Venta | undefined;
     detalles?:   Detalle[] | undefined;
@@ -453,22 +465,24 @@ export default function NewViewVenta(){
     resultado?:  number;
     mensaje?:    string;
     venta_id?:   number;
+    timestamp?:  number;
   };
   breadcrumbs[0].title = (mode=='create'? 'Nueva' : 'Ver')+' venta';
-  const [propsActuales, setPropsActuales] = useState<{
+  /*const [propsActuales, setPropsActuales] = useState<{
     resultado: number | undefined | null;
     mensaje: string | undefined | null | '';
     venta_id: number | undefined | null;
-  }>({ resultado: undefined, mensaje: undefined, venta_id: undefined });
+  }>({ resultado: undefined, mensaje: undefined, venta_id: undefined });*/
+  const [ultimoTimestamp, setUltimoTimestamp] = useState<Number | null>(null);
 
   const [ load, setLoad ] = useState(false);
   const { data, setData }                          = useForm<Venta>(ventaVacia);
   const {data: dataCli, setData: setDataCli }      = useForm<Cliente>(cliente??clienteVacio);
   //const {data: dataFp, setData: setDataFp }        = useForm<FormPago>(formaPagoVacia);
   const [totalFp, setTotalFp] = useState(0);
-  const [productosHab, setProductosHab]            = useState<ProductoHab[]>([]);
+  //const [productosHab, setProductosHab]            = useState<ProductoHab[]>([]);
   const [productosDet, setProductosDet]            = useState<Detalle[]>(detalles??[]);
-  const [formasPagoHab, setFormasPagoHab]          = useState<Multiple[]>([]);
+  //const [formasPagoHab, setFormasPagoHab]          = useState<Multiple[]>([]);
   const [formasPagoSelected,setFormasPagoSelected] = useState<FormPago[]>(formasPago??[]);
 
   const [confirmOpen, setConfirOpen]  = useState(false); //modal para confirmar acciones para cuado se crea
@@ -568,31 +582,13 @@ export default function NewViewVenta(){
   };
 
   //Effect
-  /*useEffect(() => {
-    const cargarDatos = async () => {
-      try {
-        const [resProductos, resFp] = await Promise.all([
-          fetch(route('stock.disponible')),
-          fetch(route('formasPago.habilitadas'))
-        ]);
-
-        const productos = await resProductos.json();
-        const fps       = await resFp.json();
-
-        setProductosHab(ordenarPorTexto(productos,'nombre'));
-        setFormasPagoHab(ordenarPorTexto(fps,'nombre'));
-      } catch (error) {
-        console.error('Error al cargar datos:', error);
-      }
-    };
-    cargarDatos();
-  }, []);*/
-
   useEffect(() => {
-		const cambioDetectado = (resultado && resultado  !== propsActuales.resultado) || (mensaje && mensaje    !== propsActuales.mensaje) 
+		//const cambioDetectado = (resultado && resultado  !== propsActuales.resultado) || (mensaje && mensaje    !== propsActuales.mensaje) 
+    const cambioDetectado = timestamp && timestamp !== ultimoTimestamp;
 
 		if (cambioDetectado) {
-      setPropsActuales({ resultado, mensaje, venta_id});
+      //setPropsActuales({ resultado, mensaje, venta_id});
+      setUltimoTimestamp(timestamp);
 
       const esError = resultado === 0;
       setTitle(esError ? 'Error' : mode === 'create' ? 'Venta nueva' : 'Venta Anulada');
@@ -600,7 +596,7 @@ export default function NewViewVenta(){
       setColor(esError ? 'error' : 'success');
       setActivo(true); 
     }
-	}, [resultado, mensaje, venta_id]);
+	}, [resultado, mensaje, venta_id, timestamp, ultimoTimestamp]);
 
   useEffect(() => {
     if(venta && mode === 'view'){
@@ -631,8 +627,10 @@ export default function NewViewVenta(){
       setDataCli(clienteVacio);
     }
     setProductosDet(JSON.parse(JSON.stringify(detalles??[])));
+    console.log("formasPago: ", formasPago)
     setFormasPagoSelected(JSON.parse(JSON.stringify(formasPago??[])));
   }, []);
+
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title={(mode=='create'? 'Nueva' : 'Ver')+' venta'} />
@@ -650,9 +648,12 @@ export default function NewViewVenta(){
                 modo={mode??'create'}
                 data={data}
                 set={setData}
-                productosHab={productosHab}
                 productos={productosDet} //trabajo con una copia de los detalles
                 setProd={setProductosDet}
+                setTitle={setTitle}
+                setText={setText}
+                setColor={setColor}
+                setActivo={setActivo}
               />
             </div>
             <div className='pb-4 col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>
@@ -676,7 +677,7 @@ export default function NewViewVenta(){
               </div>
               <FormasPagosForm
                 modo={mode??'create'}
-                formasPagoHab={formasPagoHab}
+                //formasPagoHab={formasPagoHab}
                 formasPagoSelected={formasPagoSelected}
                 setFormaPagoSelected={setFormasPagoSelected}
                 totalVenta={data.total}

@@ -13,7 +13,7 @@ interface PageProps extends SharedData {
   carouselImages: string[];
 }
 
-export default function Dashboard() {
+export default function Inicio() {
   const { carouselImages } = usePage<PageProps>().props;
 
     return (

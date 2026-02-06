@@ -1,5 +1,6 @@
 <?php
 use Inertia\Inertia;
+use Illuminate\Http\Request;
 
 use App\Models\Carousel;
 
@@ -45,6 +46,31 @@ Route::get('/', function () {
 
 //Menú
 Route::middleware(['auth'])->get('/menu-usuario', [MenuWebController::class, 'menuPorUsuario']);
+
+//vuelve a traer los roles y permisos del user
+Route::middleware(['auth'])->get('/sync-auth', function (Request $request) {
+    $user = $request->user();
+
+    $roles = $user->roles()->where('inhabilitado',0)->pluck('nombre');
+    $permisosPorRol = $user->roles()
+        ->where('inhabilitado',0)
+        ->with(['permisos' => fn($q) => $q->where('inhabilitado',0)])
+        ->get()
+        ->pluck('permisos.*.clave')
+        ->flatten();
+    $permisosDirectos = $user->permisos()->where('inhabilitado',0)->pluck('clave');
+    $permisos = $permisosPorRol->merge($permisosDirectos)->unique();
+
+    // actualizar sesión
+    $request->session()->put('roles', $roles);
+    $request->session()->put('permisos', $permisos);
+
+    return response()->json([
+        'user' => $user,
+        'roles' => $roles,
+        'permisos' => $permisos,
+    ]);
+});
 
 /*Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {

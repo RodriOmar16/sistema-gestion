@@ -10,6 +10,7 @@ use App\Models\MenuWeb;
 use App\Models\MenuRol;
 use App\Models\Ruta;
 use App\Models\RutaRol;
+use App\Models\Permiso;
 
 class Rol extends Model
 {
@@ -44,4 +45,8 @@ class Rol extends Model
         return $this->belongsToMany(Ruta::class, 'ruta_roles', 'rol_id', 'ruta_id');
     }
     
+    //permisos
+    public function permisos(){
+        return $this->belongsToMany(Permiso::class, 'rol_permisos', 'rol_id', 'permiso_id');
+    }
 }

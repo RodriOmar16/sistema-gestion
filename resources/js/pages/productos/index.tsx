@@ -190,11 +190,9 @@ export default function Productos(){
     producto_id?: number;
     timestamp?: number;
   };
-  /*const [propsActuales, setPropsActuales] = useState<{
-    resultado: number | undefined | null;
-    mensaje: string | undefined | null | '';
-    producto_id: number | undefined | null;
-  }>({ resultado: undefined, mensaje: undefined, producto_id: undefined });*/
+  
+  const { auth } = usePage().props;
+  console.log("auth: ", auth);
   const [productosCacheados, setProductosCacheados] = useState<Producto[]>([]);
   const [ultimoTimestamp, setUltimoTimestamp] = useState<number | null>(null);
 

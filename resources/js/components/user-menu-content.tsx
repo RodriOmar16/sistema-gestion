@@ -25,6 +25,22 @@ export function UserMenuContent({ user }: UserMenuContentProps) {
         router.flushAll();
     };
 
+    const handleSyncAuth = async () => {
+        try {
+            const res = await fetch('/sync-auth');
+            const data = await res.json();
+
+            localStorage.setItem('user', JSON.stringify(data.user));
+            localStorage.setItem('roles', JSON.stringify(data.roles));
+            localStorage.setItem('permisos', JSON.stringify(data.permisos));
+
+            location.reload(); // fuerza que Inertia vuelva a montar con datos actualizados
+        } catch (error) {
+            console.error('Error al sincronizar roles/permisos:', error);
+        }
+    };
+
+
     const handleSyncMenu = async () => {
         localStorage.removeItem('menu');
         localStorage.removeItem('menu-data');
@@ -36,7 +52,7 @@ export function UserMenuContent({ user }: UserMenuContentProps) {
             localStorage.setItem('menu-data', JSON.stringify(data));
             localStorage.setItem('menu', JSON.stringify(data)); // opcional si querés guardar jerárquico
 
-            location.reload(); // recarga forzada
+            //location.reload(); // recarga forzada
         } catch (error) {
             console.error('Error al sincronizar menú:', error);
         }
@@ -68,7 +84,7 @@ export function UserMenuContent({ user }: UserMenuContentProps) {
             <DropdownMenuItem asChild>
                 <button
                     className="block w-full text-left px-2 py-1"
-                    onClick={handleSyncMenu}
+                    onClick={() => { handleSyncMenu(); handleSyncAuth(); }}
                 >
                     <RefreshCcw className='mr-2'/>Sincronizar
                 </button>

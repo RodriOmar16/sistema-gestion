@@ -9,6 +9,7 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use App\Models\Rol;
 use App\Models\UsuarioRol;
+use App\Models\Permiso;
 
 class User extends Authenticatable
 {
@@ -53,8 +54,15 @@ class User extends Authenticatable
     public function usuariosRoles(){
         return $this->belongsToMany(UsuarioRol::class, 'id');
     }
+    
     public function roles()
     {
         return $this->belongsToMany(Rol::class, 'usuarios_roles', 'user_id', 'rol_id');
     }
+
+    public function permisos()
+    {
+        return $this->belongsToMany(Permiso::class, 'user_permisos', 'user_id', 'permiso_id');
+    }
+
 }

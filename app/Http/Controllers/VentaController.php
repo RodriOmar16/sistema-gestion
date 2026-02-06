@@ -156,7 +156,7 @@ class VentaController extends Controller
 
         //aviso si hay poco stock
         if($stock->cantidad <= $producto->stock_minimo){
-          Mail::to('rodrigoomarmiranda1@gmail.com') ->send(new StockMinimoAlcanzadoMail($producto, $stock));
+          Mail::to(env('OWNER_EMAIL')) ->send(new StockMinimoAlcanzadoMail($producto, $stock));
         }
         
         //creo el detalle
@@ -192,12 +192,10 @@ class VentaController extends Controller
       }
 
       //mando mail al cliente
-      Mail::to($cliente->email)
-      ->send(new VentaRegistradaMail($venta));
+      Mail::to($cliente->email)->send(new VentaRegistradaMail($venta));
 
       //mando mail al dueño
-      Mail::to('rodrigoomarmiranda1@gmail.com')
-      ->send(new VentaRegistradaMail($venta));
+      Mail::to(env('OWNER_EMAIL'))->send(new VentaRegistradaMail($venta));
 
       //exito
       DB::commit();

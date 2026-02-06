@@ -14,6 +14,8 @@ use App\Models\Stock;
 use App\Models\VentaPago;
 use App\Models\Producto;
 
+use App\Mail\VentaRegistradaMail;
+
 class VentaController extends Controller
 {
   public function index(Request $request)
@@ -126,6 +128,18 @@ class VentaController extends Controller
       //registrar detalles, el movimiento de stock para cada detalle, update en el stock también
       $detalles = $validated['detalles'];
       foreach($detalles as $det){
+        //obtengo el producto
+        $producto = Producto::where('producto_id', $det['id'])->first();
+        if(!$producto){
+          DB::rollback();
+          return inertia('ventas/createView', [
+            'resultado' => 0,
+            'mensaje'   => 'No se pudo encontrar información del producto a ventas: '.$det['id'],
+            'mode'      => 'create',
+            'timestamp' => now(),
+          ]);
+        }
+
         //controlo el stock
         $stock = Stock::where('producto_id', $det['id'])->first();
         if (!$stock || $stock->cantidad < $det['cantidad']) {
@@ -139,18 +153,13 @@ class VentaController extends Controller
         }
         //actualizo el stock
         $stock->update(['cantidad' => $stock->cantidad - $det['cantidad']]);
+
+        //aviso si hay poco stock
+        if($stock->cantidad <= $producto->stock_minimo){
+          Mail::to('rodrigoomarmiranda1@gmail.com') ->send(new StockMinimoAlcanzadoMail($producto, $stock));
+        }
         
         //creo el detalle
-        $producto = Producto::where('producto_id', $det['id'])->first();
-        if(!$producto){
-          DB::rollback();
-          return inertia('ventas/createView', [
-            'resultado' => 0,
-            'mensaje'   => 'No se pudo encontrar información del producto a ventas: '.$det['id'],
-            'mode'      => 'create',
-            'timestamp' => now(),
-          ]);
-        }
         DetVenta::create([
           'venta_id'        => $venta->venta_id,
           'producto_id'     => $det['id'],
@@ -181,6 +190,14 @@ class VentaController extends Controller
           'monto'         => $fp['monto']
         ]);
       }
+
+      //mando mail al cliente
+      Mail::to($cliente->email)
+      ->send(new VentaRegistradaMail($venta));
+
+      //mando mail al dueño
+      Mail::to('rodrigoomarmiranda1@gmail.com')
+      ->send(new VentaRegistradaMail($venta));
 
       //exito
       DB::commit();
@@ -307,13 +324,15 @@ class VentaController extends Controller
       DB::commit();
       return inertia('ventas/createView', [
         'resultado' => 1,
-        'mensaje'   => 'La venta se anuló correctamente y el stock fue revertido.'
+        'mensaje'   => 'La venta se anuló correctamente y el stock fue revertido.',
+        'timestamp' => now()->timestamp
       ]);
     } catch (\Throwable $e) {
       DB::rollback();
       return inertia('ventas/createView', [
         'resultado' => 0,
-        'mensaje'   => 'Error al anular la venta: '.$e->getMessage()
+        'mensaje'   => 'Error al anular la venta: '.$e->getMessage(),
+        'timestamp' => now()->timestamp
       ]);
     }
   }

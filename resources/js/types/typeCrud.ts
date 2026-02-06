@@ -7,6 +7,10 @@ export interface Project {
   updated_at?: string;
 }
 
+export interface AuthProps {
+  user: any; roles: string[]; permisos: string[];
+}
+
 export interface Autocomplete{
   value:number;
   label: string;

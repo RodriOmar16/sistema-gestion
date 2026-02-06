@@ -5,7 +5,7 @@ import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem } from '@/types';
-import { User } from '@/types/typeCrud';
+import { User, AuthProps } from '@/types/typeCrud';
 import { Pen, Ban, Search, Brush, Loader2, CirclePlus, Filter, Check } from 'lucide-react';
 import DataTableUsers from '@/components/users/dataTableUsers';
 import NewEditUser from '../../components/users/newEditUser';
@@ -20,6 +20,7 @@ const breadcrumbs: BreadcrumbItem[] = [ { title: 'Usuarios', href: '', } ];
 type propsForm = {
   openCreate: () => void;
   resetearUser: (ruta:User[]) => void;
+  permiso: boolean;
 }
 
 const userVacio = {
@@ -29,7 +30,7 @@ const userVacio = {
   inhabilitado: false,
 }
 
-export function FiltrosForm({ openCreate, resetearUser }: propsForm){
+export function FiltrosForm({ openCreate, resetearUser, permiso }: propsForm){
   const [esperandoRespuesta, setEsperandoRespuesta] = useState(false);
   const { data, setData, errors, processing } = useForm(userVacio);
 
@@ -51,16 +52,19 @@ export function FiltrosForm({ openCreate, resetearUser }: propsForm){
     <div>
       <div className='flex items-center justify-between px-3 pt-3'>
         <div className='flex'> <Filter size={20} />  Filtros</div>
-        <Button 
-          className="p-0 hover:bg-transparent cursor-pointer"
-          type="button"
-          title="Nuevo" 
-          variant="ghost" 
-          size="icon" 
-          onClick={openCreate}
-        >
-          <CirclePlus size={30} className="text-green-600 scale-200" />
-        </Button>
+        { permiso && (
+            <Button 
+              className="p-0 hover:bg-transparent cursor-pointer"
+              type="button"
+              title="Nuevo" 
+              variant="ghost" 
+              size="icon" 
+              onClick={openCreate}
+            >
+              <CirclePlus size={30} className="text-green-600 scale-200" />
+            </Button>
+          )
+        }
       </div>
       <form className='grid grid-cols-12 gap-4 px-4 pt-1 pb-4' onSubmit={handleSubmit}>
         <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-2'>
@@ -127,18 +131,24 @@ export default function Usuarios(){
   const [title, setTitle]   = useState('');
   const [color, setColor]   = useState('');
 
+  const { auth } = usePage<{auth: AuthProps}>().props;
   const { users } = usePage().props as { users?: User[] }; //necesito los props de inertia
-  const { resultado, mensaje, id } = usePage().props as {
+  const { resultado, mensaje, id, timestamp } = usePage().props as {
     resultado?: number;
     mensaje?: string;
     id?: number;
+    timestamp?: number;
   };
-  const [propsActuales, setPropsActuales] = useState<{
+  console.log("auth: ", auth);
+  /*const [propsActuales, setPropsActuales] = useState<{
     resultado: number | undefined | null;
     mensaje: string | undefined | null | '';
     id: number | undefined | null;
-  }>({ resultado: undefined, mensaje: undefined, id: undefined });
+  }>({ resultado: undefined, mensaje: undefined, id: undefined });*/
+  const [ultimoTimestamp, setUltimoTimestamp] = useState<number | null>(null);
   const [usersCacheados, setUsersCacheados] = useState<User[]>([]);
+  const [permisoGestionar, setPermisoGestionar] = useState(false);
+
 
   //funciones
   const confirmar = (data: User) => {
@@ -234,7 +244,7 @@ export default function Usuarios(){
   };
 
   //effect
-  useEffect(() => {
+  /*useEffect(() => {
     if (!activo && propsActuales.resultado !== undefined) {
       setPropsActuales({
         resultado: undefined,
@@ -242,7 +252,7 @@ export default function Usuarios(){
         id: undefined
       });
     }
-  }, [activo]);
+  }, [activo]);*/
 
   useEffect(() => {
     if (
@@ -256,12 +266,14 @@ export default function Usuarios(){
 
 
   useEffect(() => {
-    const cambioDetectado =
+    /*const cambioDetectado =
       (resultado && resultado  !== propsActuales.resultado)  ||
-      (mensaje && mensaje    !== propsActuales.mensaje)
+      (mensaje && mensaje    !== propsActuales.mensaje)*/
+      const cambioDetectado = timestamp && timestamp !== ultimoTimestamp;
 
     if (cambioDetectado) {
-      setPropsActuales({ resultado, mensaje, id });
+      //setPropsActuales({ resultado, mensaje, id });
+      setUltimoTimestamp(timestamp)
 
       const esError = resultado === 0;
       setTitle(esError ? 'Error' : modalMode === 'create' ? 'Usuario nuevo' : 'Usuario modificado');
@@ -277,20 +289,29 @@ export default function Usuarios(){
         )
       }
     }
-  }, [resultado, mensaje, id]);
+  }, [resultado, mensaje, id, timestamp, ultimoTimestamp, modalMode]);
+
+  useEffect(() => {
+    const aux = auth?.permisos.filter((e:any) => e === 'gestionar_usuarios');
+    setPermisoGestionar(aux.length != 0);
+  } , [auth]);
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Usuarios" />
       <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
         <div className="relative flex-none flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
-          <FiltrosForm openCreate={openCreate} resetearUser={setUsersCacheados}/>
+          <FiltrosForm 
+            openCreate={openCreate} 
+            resetearUser={setUsersCacheados}
+            permiso={permisoGestionar}/>
         </div>
         <div className="p-4 relative flex-1 overflow-auto rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
           <DataTableUsers
             datos={usersCacheados?? []} 
             openEdit={openEdit} 
             abrirConfirmar={confirmar}
+            permiso={permisoGestionar}
             />
         </div>
       </div>
@@ -301,6 +322,7 @@ export default function Usuarios(){
         user={selectedUser}
         onSubmit={handleSave}
         loading={loading}
+        permiso={permisoGestionar}
       />
       <ModalConfirmar
         open={confirmOpen}

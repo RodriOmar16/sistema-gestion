@@ -128,7 +128,8 @@ class UserController extends Controller
       return inertia('users/index',[
         'resultado' => 1,
         'mensaje'   => 'Usuario creado exitosamente',
-        'id'   => $id
+        'id'        => $id,
+        'timestamp' => now()->timestamp
       ]);
 
       //envio de mail al email recibido para avisar que se creo el user
@@ -137,7 +138,8 @@ class UserController extends Controller
       DB::rollback();
       return inertia('users/index',[
         'resultado' => 0,
-        'mensaje'   => 'Ocurrió un error: '.$e->getMessage()
+        'mensaje'   => 'Ocurrió un error: '.$e->getMessage(),
+        'timestamp' => now()->timestamp
       ]);
     }
   }
@@ -166,6 +168,7 @@ class UserController extends Controller
         return inertia('users/index',[
           'resultado' => 0,
           'mensaje'   => 'Ya existe un usuario con ese nombre.',
+          'timestamp' => now()->timestamp
         ]);
       }
       //actualizo los valores del rol
@@ -183,13 +186,15 @@ class UserController extends Controller
       return inertia('users/index',[
         'resultado' => 1,
         'mensaje'   => 'El usuario fue editado existosamente ',
-        'id'        => $user->id
+        'id'        => $user->id,
+        'timestamp' => now()->timestamp
       ]);
     } catch (\Throwable $e) {
       DB::rollback();
       return inertia('users/index',[
         'resultado' => 0,
-        'mensaje'   => 'Error inerperado: '.e->getMessage()
+        'mensaje'   => 'Error inerperado: '.e->getMessage(),
+        'timestamp' => now()->timestamp
       ]);
     }
   }
@@ -201,7 +206,8 @@ class UserController extends Controller
     return inertia('users/index',[
         'id' => $user->id,
         'resultado'  => 1,
-        'mensaje'		 => 'Estado actualizado correctamente.'
+        'mensaje'		 => 'Estado actualizado correctamente.',
+        'timestamp' => now()->timestamp
       ]);
   }
 

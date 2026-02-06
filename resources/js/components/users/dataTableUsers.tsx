@@ -17,10 +17,15 @@ interface Props {
   datos: User[];
   openEdit: (data:User) => void;
   abrirConfirmar: (data:User) => void;
+  permiso: boolean;
 }
 
 //export const columns: ColumnDef<Project>[] = [
-export function getColumns(confirmar: (data: User) => void, openEdit: (data: User) => void): ColumnDef<User>[] {
+export function getColumns(
+  confirmar: (data: User) => void, 
+  openEdit: (data: User) => void,
+  permiso: boolean
+): ColumnDef<User>[] {
   return [
     {
       accessorKey: "id",
@@ -137,26 +142,30 @@ export function getColumns(confirmar: (data: User) => void, openEdit: (data: Use
                     onClick={() => openEdit(rol)}>
                     <Pen size={20} className="text-orange-500" />
                   </Button>
-                  <Button 
-                    className="p-0 hover:bg-transparent cursor-pointer"
-                    title="Inhabilitar" 
-                    variant="ghost" 
-                    size="icon"
-                    onClick={ () => confirmar(rol) }>
-                    <Ban size={20} className="text-red-500" />
-                  </Button>
+                  {permiso && (
+                    <Button 
+                      className="p-0 hover:bg-transparent cursor-pointer"
+                      title="Inhabilitar" 
+                      variant="ghost" 
+                      size="icon"
+                      onClick={ () => confirmar(rol) }>
+                      <Ban size={20} className="text-red-500" />
+                    </Button>
+                  )}
                 </>
               ) : (
                 <>
-                  <Button 
-                    className="p-0 hover:bg-transparent cursor-pointer"
-                    title="Habilitar" 
-                    variant="ghost" 
-                    size="icon"
-                    onClick={ () => confirmar(rol) }
-                  >
-                    <Check size={20} className='text-green-600'/>
-                  </Button>
+                  {permiso && (
+                    <Button 
+                      className="p-0 hover:bg-transparent cursor-pointer"
+                      title="Habilitar" 
+                      variant="ghost" 
+                      size="icon"
+                      onClick={ () => confirmar(rol) }
+                    >
+                      <Check size={20} className='text-green-600'/>
+                    </Button>
+                  )}
                 </>
               )
             }
@@ -167,7 +176,7 @@ export function getColumns(confirmar: (data: User) => void, openEdit: (data: Use
   ]
 //]
 }
-export default function DataTableUsers({datos, openEdit, abrirConfirmar}:Props) {
+export default function DataTableUsers({datos, openEdit, abrirConfirmar, permiso}:Props) {
   const [sorting, setSorting]                   = useState<SortingState>([])
   const [columnFilters, setColumnFilters]       = useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
@@ -189,7 +198,7 @@ export default function DataTableUsers({datos, openEdit, abrirConfirmar}:Props) 
   const confirmar = (user: User) => {
     abrirConfirmar(user);
   };
-  const columns = getColumns(confirmar, openEdit); 
+  const columns = getColumns(confirmar, openEdit, permiso); 
 
   const table = useReactTable({
     data,

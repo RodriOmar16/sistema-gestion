@@ -96,8 +96,8 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
     Route::put('/menu/{menu}/estado', [MenuWebController::class, 'toggleEstado'])->name('menu.toggleEstado');
 
     //Rutas
-    //Route::get('/rutas_habilitadas', [RutaController::class, 'rutasHabilitadas'])->name('rutas.habilitadas');
-    Route::get('/rutas/habilitados', [RutaController::class, 'habilitadas'])->name('rutas.habilitadas');
+    Route::get('/rutas_habilitadas', [RutaController::class, 'rutasHabilitadas'])->name('rutas.habilitadas');
+    Route::get('/rutas/habilitados', [RutaController::class, 'habilitadas'])->name('rutas.habilitadasRutas');
     Route::get('/rutas', [RutaController::class, 'index'])->name('rutas.index');
     Route::post('/rutas', [RutaController::class, 'store'])->name('rutas.store');
     Route::put('/rutas/{ruta}', [RutaController::class, 'update'])->name('rutas.update');

@@ -24,6 +24,7 @@ interface Props{
   user?: User;
   onSubmit: (data:any) => void;
   loading: boolean;
+  permiso: boolean;
 }
 
 const userVacio = {
@@ -33,7 +34,7 @@ const userVacio = {
   inhabilitado: false,
 }
 
-export default function NewEditUser({ open, onOpenChange, mode, user, onSubmit, loading }: Props){
+export default function NewEditUser({ open, onOpenChange, mode, user, onSubmit, loading, permiso }: Props){
   //data
   const [activo, setActivo] = useState(false);
   const [text, setText]     = useState('');
@@ -53,40 +54,41 @@ export default function NewEditUser({ open, onOpenChange, mode, user, onSubmit, 
       setRoles(ordenarPorTexto(data, 'nombre'));
     });
   }, []);
-  useEffect(() => {
+ /* useEffect(() => {
     if (!open && mode === 'create') {
       setData(userVacio);
       setSelectedRoles([]);
     }
-  }, [open, mode]);
+  }, [open, mode]);*/
 
   useEffect(() => {
-    if (user && mode === 'edit') {
-      setData({
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        inhabilitado: user.inhabilitado,
-      });
-
-      // Consulta de menús y rutas asignados al rol
-      fetch(`/user/${user.id}/roles_user`)
-        .then(res => res.json())
-        .then(({ roles_asignados }) => {
-          console.log("roles_asignados: ", roles_asignados)
-          if(roles_asignados && roles_asignados.length == 0){
-            // Asegurarse que vengan en formato Multiple[]
-            setSelectedRoles([]);
-          }else{
-            setSelectedRoles(ordenarPorTexto(roles_asignados, 'nombre'));
-          }
-        });
-    } else {
+    if(!open){
       setData(userVacio);
       setSelectedRoles([]);
-    }
-  }, [user, mode]);
+    }else{
+      if (user && mode === 'edit') {
+        setData({
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          inhabilitado: user.inhabilitado,
+        });
 
+        // Consulta de menús y rutas asignados al rol
+        fetch(`/user/${user.id}/roles_user`)
+          .then(res => res.json())
+          .then(({ roles_asignados }) => {
+            //console.log("roles_asignados: ", roles_asignados)
+            if(roles_asignados && roles_asignados.length == 0){
+              // Asegurarse que vengan en formato Multiple[]
+              setSelectedRoles([]);
+            }else{
+              setSelectedRoles(ordenarPorTexto(roles_asignados, 'nombre'));
+            }
+          });
+      }
+    }
+  }, [open, user, mode]);
 
   //funciones
   const handleSubmit = (e: React.FormEvent) => {
@@ -163,19 +165,21 @@ export default function NewEditUser({ open, onOpenChange, mode, user, onSubmit, 
             />
           </div>
         </form>
-        <DialogFooter>
-          <DialogClose asChild>
-            <Button type="button" variant="outline">Cancelar</Button>
-          </DialogClose>
-          <Button 
-            onClick={handleSubmit} 
-            type="button" 
-          >
-            { processing ? ( <Loader2 size={20} className="animate-spin mr-2"/> ) :
-                        ( mode === 'create' ? 'Grabar' : 'Actualizar')  
-            }          
-          </Button>
-        </DialogFooter>
+        {permiso && (
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button type="button" variant="outline">Cancelar</Button>
+            </DialogClose>
+            <Button 
+              onClick={handleSubmit} 
+              type="button" 
+            >
+              { processing ? ( <Loader2 size={20} className="animate-spin mr-2"/> ) :
+                          ( mode === 'create' ? 'Grabar' : 'Actualizar')  
+              }          
+            </Button>
+          </DialogFooter>
+        )}
       </DialogContent>
       <ShowMessage 
         open={activo}

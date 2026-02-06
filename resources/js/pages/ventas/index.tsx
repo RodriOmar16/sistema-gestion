@@ -20,7 +20,7 @@ import GenericSelect from '@/components/utils/genericSelect';
 const breadcrumbs: BreadcrumbItem[] = [ { title: 'Ventas', href: '', } ];
 
 type propsForm = {
-  clientes: Multiple[];
+  //clientes: Multiple[];
   data: Venta;
   set: (e:any) => void;
 }
@@ -37,7 +37,7 @@ const ventaVacia = {
   anulada:         false,
 }
 
-export function FiltrosForm({ clientes, data, set }: propsForm){
+export function FiltrosForm({ /*clientes,*/ data, set }: propsForm){
   const [optionCliente, setOptionCliente] = useState<Autocomplete|null>(null);
   const [esperandoRespuesta, setEsperandoRespuesta] = useState(false)
   const [loading, setLoading] = useState(false);
@@ -174,14 +174,14 @@ export default function Ventas(){
     mensaje?: string;
     venta_id?: number;
   };
-  const [propsActuales, setPropsActuales] = useState<{
+  /*const [propsActuales, setPropsActuales] = useState<{
     resultado: number | undefined | null;
     mensaje: string | undefined | null | '';
     venta_id: number | undefined | null;
-  }>({ resultado: undefined, mensaje: undefined, venta_id: undefined });
+  }>({ resultado: undefined, mensaje: undefined, venta_id: undefined });*/
   //const [ventasCacheadas, setVentasCacheadas] = useState<Venta[]>([]);
 
-  const [clientes, setClientes] = useState<Multiple[]>([]);
+  //const [clientes, setClientes] = useState<Multiple[]>([]);
 
   //funciones
   const openEdit = (data: Venta) => {
@@ -198,7 +198,7 @@ export default function Ventas(){
           <FiltrosForm
             data={data}
             set={setData}
-            clientes={clientes}/>
+            /*clientes={clientes}*//>
         </div>
         <div className="p-4 relative flex-1 overflow-auto rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
           <DataTableVentas

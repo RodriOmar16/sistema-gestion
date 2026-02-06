@@ -1,5 +1,5 @@
 import AppLayout from '@/layouts/app-layout';
-import { Venta, Cliente } from "@/types/typeCrud";
+import { Venta, Cliente, AuthProps } from "@/types/typeCrud";
 import { useState, useEffect } from 'react';
 import { Head, useForm, router, usePage } from '@inertiajs/react';
 import { BreadcrumbItem } from '@/types';
@@ -467,6 +467,8 @@ export default function NewViewVenta(){
     venta_id?:   number;
     timestamp?:  number;
   };
+  const { auth } = usePage<{auth: AuthProps}>().props;
+  const [permiso, setPermiso] = useState(false);
   breadcrumbs[0].title = (mode=='create'? 'Nueva' : 'Ver')+' venta';
   /*const [propsActuales, setPropsActuales] = useState<{
     resultado: number | undefined | null;
@@ -627,9 +629,12 @@ export default function NewViewVenta(){
       setDataCli(clienteVacio);
     }
     setProductosDet(JSON.parse(JSON.stringify(detalles??[])));
-    console.log("formasPago: ", formasPago)
     setFormasPagoSelected(JSON.parse(JSON.stringify(formasPago??[])));
-  }, []);
+
+    //verifico el permiso
+    const aux = auth.permisos.filter(e => e === 'anular_venta');
+    setPermiso(aux.length > 0);
+  }, [venta, mode, detalles, formasPago, permiso]);
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
@@ -688,11 +693,32 @@ export default function NewViewVenta(){
             {
               !data.anulada ? (
                 <div  className='flex justify-end px-4 pb-4 col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>
-                  <Button type="button" onClick={handleSubmit} className={mode!='create'? 'bg-red-600 hover:bg-red-700 text-white' : ''}>
-                    { load ? ( <Loader2 size={20} className="animate-spin"/> ) : 
-                            ( mode === 'create'? (<Save size={20} className=""/>) : (<Ban size={20} className=""/>) )}
-                    { ( mode === 'create' ? 'Grabar' : 'Anular')  }          
-                  </Button>
+                  {/*permiso && (
+                    <Button type="button" onClick={handleSubmit} className={mode!='create'? 'bg-red-600 hover:bg-red-700 text-white' : ''}>
+                      { load ? ( <Loader2 size={20} className="animate-spin"/> ) : 
+                              ( mode === 'create'? (<Save size={20} className=""/>) : (<Ban size={20} className=""/>) )}
+                      { ( mode === 'create' ? 'Grabar' : 'Anular')  }          
+                    </Button>
+                  )*/}
+                  {
+                    mode === 'create' ? (
+                      <Button type="button" onClick={handleSubmit}>
+                        { load ? ( <Loader2 size={20} className="animate-spin"/> ) : 
+                                ( <Save size={20} className=""/> )}
+                        Grabar
+                      </Button>
+                    ) : (
+                      <>
+                        {permiso && (
+                          <Button type="button" onClick={handleSubmit} className='bg-red-600 hover:bg-red-700 text-white'>
+                            { load ? ( <Loader2 size={20} className="animate-spin"/> ) : 
+                                    (<Ban size={20} className=""/>) }
+                            Anular       
+                          </Button>
+                        )}
+                      </>
+                    )
+                  }
                 </div>
               ): (<></>)
             }

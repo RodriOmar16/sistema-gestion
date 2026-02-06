@@ -5,7 +5,7 @@ import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem } from '@/types';
-import { Autocomplete, Producto } from '@/types/typeCrud';
+import { AuthProps, Autocomplete, Producto } from '@/types/typeCrud';
 import { Search, Brush, Loader2, CirclePlus, Filter } from 'lucide-react';
 import ModalConfirmar from '@/components/modalConfirmar';
 import PdfButton from '@/components/utils/pdf-button';
@@ -191,8 +191,7 @@ export default function Productos(){
     timestamp?: number;
   };
   
-  const { auth } = usePage().props;
-  console.log("auth: ", auth);
+  const { auth } = usePage<{auth: AuthProps}>().props;
   const [productosCacheados, setProductosCacheados] = useState<Producto[]>([]);
   const [ultimoTimestamp, setUltimoTimestamp] = useState<number | null>(null);
 

@@ -30,6 +30,7 @@ use App\Http\Controllers\ProjectController;
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 
 
 Route::get('/login', function () {
@@ -208,7 +209,19 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
     Route::get('marcas/ver/{marca}', [MarcaController::class, 'edit'])->name('marcas.edit');
     Route::put('/marcas/update/{marca}', [MarcaController::class, 'update'])->name('marcas.update');
     Route::put('/marcas/cambio-estado/{marca}', [MarcaController::class, 'toggleEstado'])->name('marcas.toggleEstado');
-    
+
+    //----
+
+    /*Route::get('/test-sendgrid', function () {
+        Mail::raw('Este es un correo de prueba enviado con SendGrid.', function ($message) {
+            $message->to('rodrigoomarmiranda1@gmail.com')
+                    ->subject('Prueba de SendGrid');
+        });
+
+        return 'Correo enviado!';
+    });*/
+
+
     //Proyectos
     Route::get('/projects/pdf', [ProjectController::class, 'generarPDF'])->name('projects.pdf');
     Route::get('/projects', [ProjectController::class, 'index'])->name('projects.index');

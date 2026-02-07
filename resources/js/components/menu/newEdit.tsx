@@ -179,40 +179,6 @@ export default function NewEditDialog({ open, onOpenChange, mode, menu, onSubmit
               <label htmlFor="">Sin Ruta</label>
             </div>
           </div>
-          {/*<div className="col-span-12 mb-0">
-            <label htmlFor="padre">Selecionar Ruta</label>
-            <Select
-              value={String(data.ruta_id ?? '')}
-              onValueChange={(value) => {
-                setData('ruta_id', Number(value));
-                setSinRuta(false);
-              }}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  {rutas.map((e: any) => (
-                    <SelectItem key={e.id} value={String(e.id)}>
-                      {e.nombre}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-            <div className="mt-1 flex justify-end">
-              <Checkbox id="controlRuta" className="me-2 mt-1" checked={sinRuta} 
-                onCheckedChange={(value) => {
-                  const checked = value as boolean; 
-                  setSinRuta(checked); 
-                  if (checked) { setData('ruta_id', null); // ruta vacía 
-                  } 
-                }} 
-              />
-              <label htmlFor="">Sin Ruta</label>
-            </div>
-          </div>*/}
           <div className="col-span-12">
             <label htmlFor="icono">Icono</label>
             <Input

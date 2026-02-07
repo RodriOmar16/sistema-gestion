@@ -122,7 +122,7 @@ export function getColumns(openEdit: (data: Venta) => void): ColumnDef<Venta>[] 
         return (
           <div className='flex'>
             <Button 
-              className="p-0 hover:bg-transparent cursor-pointer"
+              className="p-0 hover:bg-transparent dark:hover:bg-transparent cursor-pointer"
               title="Ver" 
               variant="ghost" 
               size="icon" 

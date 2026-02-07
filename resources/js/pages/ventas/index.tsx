@@ -76,7 +76,7 @@ export function FiltrosForm({ /*clientes,*/ data, set }: propsForm){
         <div className='flex'> <Filter size={20} />  Filtros</div>
         <a href={route('ventas.create')} target='_blank'>
           <Button 
-            className="p-0 hover:bg-transparent cursor-pointer"
+            className="p-0 hover:bg-transparent dark:hover:bg-transparent cursor-pointer"
             type="button"
             title="Nueva Venta" 
             variant="ghost" 
@@ -135,7 +135,7 @@ export function FiltrosForm({ /*clientes,*/ data, set }: propsForm){
         </div>
         <div className='col-span-6 sm:col-span-6 md:col-span-6 lg:col-span-6 flex justify-end items-center'>
           <Button 
-            className="p-0 hover:bg-transparent cursor-pointer"
+            className="p-0 hover:bg-transparen dark:hover:bg-transparent cursor-pointer"
             type="button"
             title="Limpiar" 
             variant="ghost" 

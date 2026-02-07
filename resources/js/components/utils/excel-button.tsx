@@ -16,7 +16,7 @@ export default function ExcelButton({ deshabilitado, url, payload }:Props) {
   };
   return (
     <Button 
-      className="p-0 bg-green-700 text-white cursor-pointer hover:outline"
+      className="p-0 bg-green-700 hover:bg-green-800 dark:hover:bg-green-800 text-white dark:hover:text-white cursor-pointer "
       title="Generar Excel" 
       variant="ghost" 
       disabled={deshabilitado}

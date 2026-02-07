@@ -7,7 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { Loader2, Save, Plus, Search, Ban } from 'lucide-react';
+import { Loader2, Save, Plus, Search, Ban, AlertCircleIcon } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import {  Table,  TableBody,  TableCaption,  TableCell,  TableHead,  TableHeader,  TableRow,
 } from "@/components/ui/table"
 import { Select,  SelectContent,  SelectGroup,  SelectItem,  SelectLabel,  SelectTrigger,  SelectValue } from "@/components/ui/select"
@@ -252,7 +253,7 @@ export function DatosCliente({modo, data, set, setActivo, setTitle, setText, set
       set(clienteVacio);
       setTitle('Cliente no encontrado');
       setText('Ingresa los datos del cliente manualmente.');
-      setColor('error');
+      setColor('warning');
       setActivo(true);
     }
     setDni('');
@@ -279,7 +280,14 @@ export function DatosCliente({modo, data, set, setActivo, setTitle, setText, set
           {
             found==-1?(
               <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-6 flex items-center'>
-                El cliente no se encuentra registrado, ingresa sus datos.
+                 <Alert >
+                  <AlertCircleIcon color="red"/>
+                  <AlertTitle>Aviso!</AlertTitle>
+                  <AlertDescription>
+                    El cliente no se encuentra registrado, ingresa sus datos en el formulario.
+                  </AlertDescription>
+                </Alert>
+                
               </div>
             ):(<></>)
           }
@@ -441,8 +449,8 @@ export function FormasPagosForm({modo, /*formasPagoHab,*/ formasPagoSelected, se
           </div>
           <div className={`p-2 rounded border ${
               parseFloat(redondear(totalVenta - totalFp, 2)) > 0
-                ? 'bg-red-100 text-red-700 border-red-300'
-                : 'bg-green-100 text-green-700 border-green-300'
+                ? 'bg-red-100 text-red-700 border-red-300 dark:bg-red-700 dark:text-red-100 dark:border-red-700'
+                : 'text-green-700 border-green-500 dark:bg-green-800 dark:text-green-100 dark:border-green-800'
             }`}>
             <span className="text-sm">Pendiente</span><br />
             <span className="font-bold text-lg">$ {redondear(totalVenta - totalFp, 2)}</span>
@@ -645,50 +653,52 @@ export default function NewViewVenta(){
             className='grid grid-cols-12 gap-1'
             onSubmit={handleSubmit}>
             <div className='pb-1 col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>
-              <div className='py-4 px-4'>
-                Detalles de la venta
-                <hr />
+              <div className='pb-4 col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>
+                <div className='py-4 px-4'>
+                  Datos del cliente
+                  <hr />
+                </div>
+                <DatosCliente 
+                  modo={mode??'create'}
+                  data={dataCli}
+                  set={setDataCli}
+                  setActivo={setActivo}
+                  setTitle={setTitle}
+                  setText={setText}
+                  setColor={setColor}/>
               </div>
-              <DetallesVenta
-                modo={mode??'create'}
-                data={data}
-                set={setData}
-                productos={productosDet} //trabajo con una copia de los detalles
-                setProd={setProductosDet}
-                setTitle={setTitle}
-                setText={setText}
-                setColor={setColor}
-                setActivo={setActivo}
-              />
-            </div>
-            <div className='pb-4 col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>
-              <div className='py-4 px-4'>
-                Datos del cliente
-                <hr />
+              <div className='pb-4 col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12 bg-gray-100 dark:bg-neutral-900'>
+                <div className='py-4 px-4'>
+                  Detalles de la venta
+                  <hr />
+                </div>
+                <DetallesVenta
+                  modo={mode??'create'}
+                  data={data}
+                  set={setData}
+                  productos={productosDet} //trabajo con una copia de los detalles
+                  setProd={setProductosDet}
+                  setTitle={setTitle}
+                  setText={setText}
+                  setColor={setColor}
+                  setActivo={setActivo}
+                />
               </div>
-              <DatosCliente 
-                modo={mode??'create'}
-                data={dataCli}
-                set={setDataCli}
-                setActivo={setActivo}
-                setTitle={setTitle}
-                setText={setText}
-                setColor={setColor}/>
-            </div>
-            <div className='pb-1 col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>
-              <div className='py-4 px-4'>
-                Formas de pago
-                <hr />
+              <div className='pb-1 col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>
+                <div className='py-4 px-4'>
+                  Formas de pago
+                  <hr />
+                </div>
+                <FormasPagosForm
+                  modo={mode??'create'}
+                  //formasPagoHab={formasPagoHab}
+                  formasPagoSelected={formasPagoSelected}
+                  setFormaPagoSelected={setFormasPagoSelected}
+                  totalVenta={data.total}
+                  totalFp={totalFp}
+                  setTotalFp={(x) => setTotalFp(x)}
+                />
               </div>
-              <FormasPagosForm
-                modo={mode??'create'}
-                //formasPagoHab={formasPagoHab}
-                formasPagoSelected={formasPagoSelected}
-                setFormaPagoSelected={setFormasPagoSelected}
-                totalVenta={data.total}
-                totalFp={totalFp}
-                setTotalFp={(x) => setTotalFp(x)}
-              />
             </div>
             {
               !data.anulada ? (

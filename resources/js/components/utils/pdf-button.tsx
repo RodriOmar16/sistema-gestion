@@ -15,7 +15,7 @@ export default function PdfButton({ deshabilitado, url, payload }:Props) {
   };
   return (
     <Button 
-      className="p-0 bg-red-700 text-white cursor-pointer hover:outline"
+      className="p-0 bg-red-700 text-white hover:text-white hover:bg-red-800 dark:hover:bg-red-800 cursor-pointer"
       title="Generar PDF" 
       variant="ghost" 
       disabled={deshabilitado}

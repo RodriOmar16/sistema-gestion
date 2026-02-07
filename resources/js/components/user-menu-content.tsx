@@ -66,27 +66,28 @@ export function UserMenuContent({ user }: UserMenuContentProps) {
                 </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            {/*<DropdownMenuGroup>
+            <DropdownMenuGroup>
                 <DropdownMenuItem asChild>
                     <Link
-                        className="block w-full"
                         href={edit()}
                         as="button"
                         prefetch
                         onClick={cleanup}
-                    >
-                        <Settings className="mr-2" />
+                        className="block w-full px-2 py-1 group hover:bg-gray-100 rounded-md"
+                        >
+                        <Settings className="mr-2 group-hover:text-white dark:group-hover:text-black" />
                         Ajustes
                     </Link>
+
                 </DropdownMenuItem>
             </DropdownMenuGroup>
-            <DropdownMenuSeparator />*/}
+            {/*<DropdownMenuSeparator />*/}
             <DropdownMenuItem asChild>
                 <button
                     className="block w-full text-left px-2 py-1"
                     onClick={() => { handleSyncMenu(); handleSyncAuth(); }}
                 >
-                    <RefreshCcw className='mr-2'/>Sincronizar
+                    <RefreshCcw className='mr-2 group-hover:text-white dark:group-hover:text-black'/>Sincronizar
                 </button>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
@@ -97,7 +98,7 @@ export function UserMenuContent({ user }: UserMenuContentProps) {
                     onClick={handleLogout}
                     data-test="logout-button"
                 >
-                    <LogOut className="mr-2" />
+                    <LogOut className="mr-2 group-hover:text-white dark:group-hover:text-black" />
                     Salir
                 </Link>
             </DropdownMenuItem>

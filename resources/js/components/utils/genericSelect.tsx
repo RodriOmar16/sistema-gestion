@@ -27,18 +27,66 @@ export default function GenericSelect({ route, onChange, value, placeHolder, isD
   }; 
 
   return (
-    <AsyncSelect
-      styles={{
-        menu: base => ({ ...base, maxHeight: 'auto'})
-      }}
-      cacheOptions
-      loadOptions={loadOptions}
-      defaultOptions
-      placeholder={placeHolder}
-      isClearable
-      value={value} // usa directamente el valor del padre
-      onChange={onChange} // notifica al padre
-      isDisabled={isDisabled}
-    />
+    <>
+      {/*<AsyncSelect
+        styles={{
+          menu: base => ({ ...base, maxHeight: 'auto'})
+        }}
+        cacheOptions
+        loadOptions={loadOptions}
+        defaultOptions
+        placeholder={placeHolder}
+        isClearable
+        value={value} // usa directamente el valor del padre
+        onChange={onChange} // notifica al padre
+        isDisabled={isDisabled}
+      />*/}
+      <AsyncSelect
+        styles={{
+          control: (base, state) => ({
+            ...base,
+            backgroundColor: 'var(--background)',
+            color: 'var(--foreground)',
+            borderColor: state.isFocused ? 'var(--primary)' : 'var(--border)',
+            boxShadow: state.isFocused ? '0 0 0 1px var(--primary)' : 'none',
+            '&:hover': {
+              borderColor: 'var(--primary)',
+            },
+          }),
+          menu: (base) => ({
+            ...base,
+            backgroundColor: 'var(--background)',
+            color: 'var(--foreground)',
+          }),
+          option: (base, state) => ({
+            ...base,
+            backgroundColor: state.isFocused
+              ? 'var(--primary)'
+              : 'var(--background)',
+            color: state.isFocused
+              ? 'var(--primary-foreground)'
+              : 'var(--foreground)',
+            cursor: 'pointer',
+          }),
+          singleValue: (base) => ({
+            ...base,
+            color: 'var(--foreground)',
+          }),
+          placeholder: (base) => ({
+            ...base,
+            color: 'var(--muted-foreground)',
+          }),
+        }}
+        cacheOptions
+        loadOptions={loadOptions}
+        defaultOptions
+        placeholder={placeHolder}
+        isClearable
+        value={value}
+        onChange={onChange}
+        isDisabled={isDisabled}
+      />
+    </>
+
   );
 }

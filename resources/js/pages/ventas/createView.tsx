@@ -252,7 +252,7 @@ export function DatosCliente({modo, data, set, setActivo, setTitle, setText, set
       set(clienteVacio);
       setTitle('Cliente no encontrado');
       setText('Ingresa los datos del cliente manualmente.');
-      setColor('warning');
+      setColor('error');
       setActivo(true);
     }
     setDni('');

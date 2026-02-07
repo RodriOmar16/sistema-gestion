@@ -26,7 +26,7 @@ function construirMenuJerarquico(items: any[]): NavItem[] {
   items.forEach(item => {
     const nodo: NavItem = {
       title: item.nombre,
-      href: item.nombre === 'Configuraciones' ? edit() : item.ruta_url || '#',
+      href: /*item.nombre === 'Configuraciones' ? edit() :*/ item.ruta_url || '#',
       icon: iconMap[item.icono] || LayoutGrid,
       children: [],
     };

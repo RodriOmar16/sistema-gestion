@@ -51,7 +51,6 @@ class Producto extends Model
         return $this->hasMany(ListaPrecioProducto::class, 'producto_id', 'producto_id');
     }
 
-
     //Stock
     public function stock()
     {

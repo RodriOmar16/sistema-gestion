@@ -235,26 +235,6 @@ export default function Productos(){
   };
 
   //effect
-  /*useEffect(() => {
-    const cargarDatos = async () => {
-      try {
-        const [resMarcas, resCategorias] = await Promise.all([
-          fetch(route('marcas.marcasHabilitadas')),
-          fetch(route('categorias.habilitadas'))
-        ]);
-
-        const marcas     = await resMarcas.json();
-        const categorias = await resCategorias.json();
-
-        setMarcas(ordenarPorTexto(marcas, 'nombre'));
-        setCategorias(ordenarPorTexto(categorias, 'nombre'));
-      } catch (error) {
-        console.warn("Ocurrió un error al buscar los datos: ", error);
-      }
-    };
-    cargarDatos();
-  }, []); */
-
   useEffect(() => {
     if (
       productos &&
@@ -297,10 +277,7 @@ export default function Productos(){
             data={data}
             set={setData}
             resetearProducto={setProductosCacheados}
-            /*
-            marcas={marcas}
-            categorias={categorias}
-            *//>
+          />
         </div>
         <div className="p-4 relative flex-1 overflow-auto rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
           <DataTableProductos

@@ -11,7 +11,7 @@ interface Props{
 
 export default function ExcelButton({ deshabilitado, url, payload }:Props) {
   const handleClick = () => {
-    console.log("payload: ", payload)
+    //console.log("payload: ", payload)
     window.open(route(url,{...payload}), '_blank');
   };
   return (

@@ -16,8 +16,155 @@ use App\Models\Producto;
 
 use App\Mail\VentaRegistradaMail;
 
+use Barryvdh\DomPDF\Facade\Pdf;
+
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+
 class VentaController extends Controller
 {
+  public function generarPDF(Request $request){
+    $query = Venta::query()->with(['cliente', 'detalles', 'pagos', 'anulacion']);
+
+    if($request->filled('venta_id')){
+      $query->where('venta_id', $request->venta_id);
+    }
+    if ($request->filled('fecha_desde')) {
+      $query->where('fecha_grabacion', '>=', $request->fecha_desde);
+    }
+    if ($request->filled('fecha_hasta')) {
+      $query->where('fecha_grabacion', '<=', $request->fecha_hasta);
+    }
+    if($request->filled('cliente_id')){
+      $query->where('cliente_id', $request->cliente_id);
+    }
+    if($request->filled('fecha_anulacion')){
+      $query->where('fecha_anulacion', $request->fecha_anulacion);
+    }
+    if($request->has('anulada')){
+      $estado = filter_var($request->anulada, FILTER_VALIDATE_BOOLEAN);
+      $query->where('anulada', $estado);
+    }
+
+    $ventas = $query->get();
+
+    $pdf = Pdf::loadView('pdf.ventas', compact('ventas'));
+    return $pdf->download('ventas.pdf');
+  }
+
+  public function exportarExcelManual(Request $request){
+    $query = Venta::query()->with(['cliente', 'detalles.producto', 'pagos.formaPago', 'anulacion']);
+
+    // filtros
+    if($request->filled('venta_id')){
+      $query->where('venta_id', $request->venta_id);
+    }
+    if ($request->filled('fecha_desde')) {
+      $query->where('fecha_grabacion', '>=', $request->fecha_desde);
+    }
+    if ($request->filled('fecha_hasta')) {
+      $query->where('fecha_grabacion', '<=', $request->fecha_hasta);
+    }
+    if($request->filled('cliente_id')){
+      $query->where('cliente_id', $request->cliente_id);
+    }
+    if($request->filled('fecha_anulacion')){
+      $query->where('fecha_anulacion', $request->fecha_anulacion);
+    }
+    if($request->has('anulada')){
+      $estado = filter_var($request->anulada, FILTER_VALIDATE_BOOLEAN);
+      $query->where('anulada', $estado);
+    }
+
+    $ventas = $query->get();
+
+    $spreadsheet = new Spreadsheet();
+    $sheet = $spreadsheet->getActiveSheet();
+
+    $row = 1;
+
+    foreach ($ventas as $venta) {
+      // --- Datos generales de la venta ---
+      $sheet->setCellValue("A{$row}", 'ID');
+      $sheet->setCellValue("B{$row}", 'Fecha');
+      $sheet->setCellValue("C{$row}", 'Cliente');
+      $sheet->setCellValue("D{$row}", 'Total');
+      $sheet->setCellValue("E{$row}", 'Estado');
+      $sheet->setCellValue("F{$row}", 'Fecha Anulación');
+      $sheet->getStyle("A{$row}:F{$row}")->getFont()->setBold(true);
+      $row++;
+
+      $sheet->setCellValue("A{$row}", $venta->venta_id);
+      $sheet->setCellValue("B{$row}", $venta->fecha_grabacion->format('d/m/Y H:i'));
+      $sheet->setCellValue("C{$row}", $venta->cliente->nombre ?? 'Sin cliente');
+      $sheet->setCellValue("D{$row}", $venta->total);
+      $sheet->setCellValue("E{$row}", $venta->anulada ? 'Anulada' : 'Aprobada');
+      $sheet->setCellValue("F{$row}", $venta->fecha_anulacion ? $venta->fecha_anulacion->format('d/m/Y') : '-');
+      $row += 2; // dejar una fila en blanco
+
+      // --- Detalles de productos ---
+      $sheet->setCellValue("A{$row}", 'Producto');
+      $sheet->setCellValue("B{$row}", 'Precio');
+      $sheet->setCellValue("C{$row}", 'Cantidad');
+      $sheet->getStyle("A{$row}:C{$row}")->getFont()->setBold(true);
+      $row++;
+
+      foreach ($venta->detalles as $det) {
+          $sheet->setCellValue("A{$row}", $det->producto->nombre ?? 'Sin producto');
+          $sheet->setCellValue("B{$row}", $det->precio_unitario);
+          $sheet->setCellValue("C{$row}", $det->cantidad);
+          $row++;
+      }
+      $row++; // fila en blanco
+
+      // --- Pagos ---
+      $sheet->setCellValue("A{$row}", 'Forma de Pago');
+      $sheet->setCellValue("B{$row}", 'Monto');
+      $sheet->setCellValue("C{$row}", 'Fecha');
+      $sheet->getStyle("A{$row}:C{$row}")->getFont()->setBold(true);
+      $row++;
+
+      foreach ($venta->pagos as $pago) {
+          $sheet->setCellValue("A{$row}", $pago->formaPago->nombre ?? 'Sin tipo');
+          $sheet->setCellValue("B{$row}", $pago->monto);
+          $sheet->setCellValue("C{$row}", $pago->fecha_pago ? \Carbon\Carbon::parse($pago->fecha_pago)->format('d/m/Y') : '-');
+          $row++;
+      }
+
+      $row += 2; // dejar espacio antes de la siguiente venta
+
+      // aplicar una línea negra como división
+      $sheet->getStyle("A{$row}:F{$row}")
+            ->getBorders()
+            ->getTop()
+            ->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THICK)
+            ->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('000000'));
+
+      $row += 2; // dejar espacio antes de la siguiente venta
+    }
+
+    // aplicar formato de moneda a totales y precios
+    $sheet->getStyle("D1:D{$row}")
+          ->getNumberFormat()
+          ->setFormatCode('"$"#,##0.00_-');
+    $sheet->getStyle("B1:B{$row}")
+          ->getNumberFormat()
+          ->setFormatCode('"$"#,##0.00_-');
+
+    // autoajustar columnas
+    foreach (range('A', 'F') as $col) {
+        $sheet->getColumnDimension($col)->setAutoSize(true);
+    }
+
+    $writer = new Xlsx($spreadsheet);
+    $filename = 'ventas.xlsx';
+    $tempFile = tempnam(sys_get_temp_dir(), $filename);
+    $writer->save($tempFile);
+
+    return response()->download($tempFile, $filename)->deleteFileAfterSend(true);
+  }
+
+
   public function index(Request $request)
   {
     if(!$request->has('buscar')){

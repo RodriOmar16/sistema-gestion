@@ -76,20 +76,25 @@ class ProductoController extends Controller
 
   public function generarPDF(Request $request){
 
-    $query = Producto::query()->with(['categorias', 'productosLista.listaPrecio']);
+    $query = Producto::with(['categorias', 'marca']);
 
-    // Campos propios
     if ($request->filled('producto_id')) {
       $query->where('producto_id', $request->producto_id);
+    }
+    if ($request->filled('marca_id')) {
+      $query->where('marca_id', $request->marca_id);
     }
     if ($request->filled('producto_nombre')) {
       $query->where('nombre', 'like', '%' . $request->producto_nombre . '%');
     }
-    if ($request->filled('descripcion')) {
-      $query->where('descripcion', 'like', '%' . $request->descripcion . '%');
+    if ($request->filled('codigo_barra')) {
+      $query->where('codigo_barra', 'like', '%' . $request->codigo_barra . '%');
     }
     if ($request->filled('precio') && $request->precio >= 0) {
       $query->where('precio', $request->precio);
+    }
+    if($request->filled('vencimiento')){
+      $query->where('vencimiento', $request->vencimiento);
     }
     if ($request->filled('inhabilitado')) {
       $estado = filter_var($request->inhabilitado, FILTER_VALIDATE_BOOLEAN);
@@ -103,13 +108,6 @@ class ProductoController extends Controller
       );
     }
 
-    if ($request->filled('lista_precio_id') && $request->lista_precio_id !== '') {
-      $query->whereHas('productosLista', fn($q) =>
-        $q->where('lista_precio_id', $request->lista_precio_id)
-          ->where('precio_lista', '>', 0)
-      );
-    }
-
     $productos = $query->get();
 
     $pdf = Pdf::loadView('pdf.productos', compact('productos'));
@@ -117,7 +115,40 @@ class ProductoController extends Controller
   }
 
   public function exportarExcelManual(Request $request){
-    $productos = Producto::with(['categorias', 'productosLista.listaPrecio'])->get();
+    //$productos = Producto::with(['categorias', 'productosLista.listaPrecio'])->get();
+    $query = Producto::with(['categorias', 'marca']);
+
+    if ($request->filled('producto_id')) {
+      $query->where('producto_id', $request->producto_id);
+    }
+    if ($request->filled('marca_id')) {
+      $query->where('marca_id', $request->marca_id);
+    }
+    if ($request->filled('producto_nombre')) {
+      $query->where('nombre', 'like', '%' . $request->producto_nombre . '%');
+    }
+    if ($request->filled('codigo_barra')) {
+      $query->where('codigo_barra', 'like', '%' . $request->codigo_barra . '%');
+    }
+    if ($request->filled('precio') && $request->precio >= 0) {
+      $query->where('precio', $request->precio);
+    }
+    if($request->filled('vencimiento')){
+      $query->where('vencimiento', $request->vencimiento);
+    }
+    if ($request->filled('inhabilitado')) {
+      $estado = filter_var($request->inhabilitado, FILTER_VALIDATE_BOOLEAN);
+      $query->where('inhabilitado', $estado);
+    }
+
+    // Relaciones intermedias
+    if ($request->filled('categoria_id') && $request->categoria_id !== '') {
+      $query->whereHas('categorias', fn($q) =>
+        $q->where('categorias.categoria_id', $request->categoria_id)
+      );
+    }
+
+    $productos = $query->get();
 
     $spreadsheet = new Spreadsheet();
     $sheet = $spreadsheet->getActiveSheet();
@@ -125,26 +156,48 @@ class ProductoController extends Controller
     // Encabezados
     $sheet->setCellValue('A1', 'ID');
     $sheet->setCellValue('B1', 'Nombre');
-    $sheet->setCellValue('C1', 'Precio');
-    $sheet->setCellValue('D1', 'Inhabilitado');
-    $sheet->setCellValue('E1', 'Categorías');
-    $sheet->setCellValue('F1', 'Listas');
+    $sheet->setCellValue('C1', 'Descripción');
+    $sheet->setCellValue('D1', 'Precio');
+    $sheet->setCellValue('E1', 'Cód. Barras');
+    $sheet->setCellValue('F1', 'Stock Mín.');
+    $sheet->setCellValue('G1', 'Inhabilitado');
+    $sheet->setCellValue('H1', 'Marca');
+    $sheet->setCellValue('I1', 'Categorías');
 
     // Filas
     foreach ($productos as $i => $p) {
       $row = $i + 2;
+      
+      //obtengo las categorias
       $categorias = $p->categorias->pluck('nombre')->implode(', ');
-      $listas = $p->productosLista->map(fn($l) =>
-        ($l->listaPrecio->nombre ?? 'Sin nombre') . ' ($' . $l->precio_lista . ')'
-      )->implode(', ');
+
+      //obtengo la marca
+      $marca = $p->marca && !$p->marca->inhabilitada ? $p->marca->nombre : 'Sin marca';
 
       $sheet->setCellValue("A{$row}", $p->producto_id);
       $sheet->setCellValue("B{$row}", $p->nombre);
-      $sheet->setCellValue("C{$row}", $p->precio);
-      $sheet->setCellValue("D{$row}", $p->inhabilitado ? 'Sí' : 'No');
-      $sheet->setCellValue("E{$row}", $categorias);
-      $sheet->setCellValue("F{$row}", $listas);
+      $sheet->setCellValue("C{$row}", $p->descripcion ?? '');
+      $sheet->setCellValue("D{$row}", $p->precio ?? 0);
+      $sheet->setCellValue("E{$row}", $p->codigo_barra ?? '');
+      $sheet->setCellValue("F{$row}", $p->stock_minimo ?? 0);
+      $sheet->setCellValue("G{$row}", $p->inhabilitado ? 'Sí' : 'No');
+      $sheet->setCellValue("H{$row}", $marca);
+      $sheet->setCellValue("I{$row}", $categorias);
     }
+
+    // aplicar formato de moneda a toda la columna D (precio) 
+    $lastRow = count($productos) + 1; // +1 porque la fila 1 es encabezado 
+    $sheet->getStyle("D2:D{$lastRow}") 
+          ->getNumberFormat() 
+          ->setFormatCode('"$"#,##0.00_-');
+
+    //controla la redimension del ancho
+    foreach (range('A', 'I') as $col) {
+      $sheet->getColumnDimension($col)->setAutoSize(true);
+    }
+
+    //marca el encabezado
+    $sheet->getStyle('A1:I1')->getFont()->setBold(true);
 
     // Guardar en archivo temporal
     $writer = new Xlsx($spreadsheet);

@@ -103,8 +103,27 @@ class MovimientoStockController extends Controller
   }
 
   public function exportarExcelManual(Request $request){
-    
-    $movs = MovimientoStock::query()->with(['producto', 'tipoMovimiento', 'origenMovimiento'])->get();
+    $query = MovimientoStock::query()->with(['producto', 'tipoMovimiento', 'origenMovimiento']);
+    if($request->filled('movimiento_id')){
+      $query->where('movimiento_id',$request->movimiento_id);
+    }
+    if($request->filled('producto_id')){
+      $query->where('producto_id',$request->producto_id);
+    }
+    if($request->filled('tipo_id')){
+      $query->where('tipo_id',$request->tipo_id);
+    }
+    if($request->filled('origen_id')){
+      $query->where('origen_id',$request->origen_id);
+    }
+    if ($request->filled('fecha_inicio') || $request->filled('fecha_fin')) {
+      $inicio = $request->fecha_inicio ?? now()->toDateString();
+      $fin    = $request->fecha_fin    ?? now()->toDateString();
+      $query->whereBetween('fecha', [$inicio, $fin]);
+    }
+
+    //$movs = MovimientoStock::query()->with(['producto', 'tipoMovimiento', 'origenMovimiento'])->get();
+    $movs = $query->get();
 
     $spreadsheet = new Spreadsheet();
     $sheet = $spreadsheet->getActiveSheet();

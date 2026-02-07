@@ -13,6 +13,11 @@ use App\Models\OrigenMovimiento;
 use App\Http\Requests\StoreStockRequest;
 use App\Http\Requests\UpdateStockRequest;
 
+use Barryvdh\DomPDF\Facade\Pdf;
+
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+
 class StockController extends Controller
 {
   public function stockDisponible() {
@@ -32,6 +37,83 @@ class StockController extends Controller
       });
 
     return response()->json($stock);
+  }
+
+  public function exportarExcelManual(Request $request){
+    $query = Stock::query()->with('producto');
+
+    if($request->filled('stock_id')){
+      $query->where('stock_id', $request->stock_id);
+    }
+    if($request->filled('producto_id')){
+      $query->where('producto_id', $request->producto_id);
+    }
+    if($request->filled('cantidad')){
+      $query->where('cantidad', $request->cantidad);
+    }
+    //solo productos habilitados
+    $query->whereHas('producto', function ($q) {
+      $q->where('inhabilitado', false);
+    });
+
+    $stocks = $query->get();
+
+    $spreadsheet = new Spreadsheet();
+    $sheet = $spreadsheet->getActiveSheet();
+
+    // Encabezados
+    $sheet->setCellValue('A1', 'ID');
+    $sheet->setCellValue('B1', 'Producto');
+    $sheet->setCellValue('C1', 'Cantidad');
+
+    // Filas
+    foreach ($stocks as $i => $p) {
+      $row = $i + 2;
+
+      $sheet->setCellValue("A{$row}", $p->producto_id);
+      $sheet->setCellValue("B{$row}", $p->producto->nombre);
+      $sheet->setCellValue("C{$row}", $p->cantidad ?? 0);
+
+    }
+
+    //controla la redimension del ancho
+    foreach (range('A', 'C') as $col) {
+      $sheet->getColumnDimension($col)->setAutoSize(true);
+    }
+
+    //marca el encabezado
+    $sheet->getStyle('A1:C1')->getFont()->setBold(true);
+
+    // Guardar en archivo temporal
+    $writer = new Xlsx($spreadsheet);
+    $filename = 'stockDisponible.xlsx';
+    $tempFile = tempnam(sys_get_temp_dir(), $filename);
+    $writer->save($tempFile);
+
+    return response()->download($tempFile, $filename)->deleteFileAfterSend(true);
+  }
+
+  public function generarPDF(Request $request){
+    $query = Stock::query()->with('producto');
+
+    if($request->filled('stock_id')){
+      $query->where('stock_id', $request->stock_id);
+    }
+    if($request->filled('producto_id')){
+      $query->where('producto_id', $request->producto_id);
+    }
+    if($request->filled('cantidad')){
+      $query->where('cantidad', $request->cantidad);
+    }
+    //solo productos habilitados
+    $query->whereHas('producto', function ($q) {
+      $q->where('inhabilitado', false);
+    });
+
+    $stocks = $query->get();
+
+    $pdf = Pdf::loadView('pdf.stockDisponible', compact('stocks'));
+    return $pdf->download('stockDisponible.pdf');
   }
 
   public function index(Request $request)
@@ -64,8 +146,7 @@ class StockController extends Controller
         'producto_nombre' => optional($s->producto)->nombre,
         'cantidad'        => $s->cantidad,
       ];
-    }
-    );
+    });
 
     return inertia('stock/index',[
       'stock' => $stock,

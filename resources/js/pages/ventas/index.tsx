@@ -12,7 +12,7 @@ import ShowMessage from '@/components/utils/showMessage';
 import { Select,  SelectContent, SelectGroup,  SelectItem,  SelectTrigger,  SelectValue } from "@/components/ui/select"
 import { route } from 'ziggy-js';
 import { Multiple } from '@/types/typeCrud';
-import { ordenarPorTexto } from '@/utils';
+import { convertirFechaBarrasGuiones, ordenarPorTexto } from '@/utils';
 import DataTableVentas from '@/components/ventas/dataTableVentas';
 import { DatePicker } from '@/components/utils/date-picker';
 import GenericSelect from '@/components/utils/genericSelect';
@@ -45,7 +45,12 @@ export function FiltrosForm({ /*clientes,*/ data, set }: propsForm){
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const payload = {      ...data, buscar: true    }
+    const payload = {
+      ...data,
+      fecha_desde: convertirFechaBarrasGuiones(data.fecha_desde??''), 
+      fecha_hasta: convertirFechaBarrasGuiones(data.fecha_hasta??''),
+      buscar: true    
+    };
     router.get(route('ventas.index'), payload, {
       preserveState: true,
       preserveScroll: true,

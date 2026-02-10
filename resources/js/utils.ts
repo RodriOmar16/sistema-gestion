@@ -1,3 +1,11 @@
+// Función para formatear fecha en dd/mm/yyyy
+export const formatDate = (date: Date) => {
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0'); // meses empiezan en 0
+  const year = date.getFullYear();
+  return `${day}/${month}/${year}`;
+};
+
 export function formatDateTime(dateString: string): string {
     const date = new Date(dateString)
     const day = date.getDate().toString().padStart(2, '0');

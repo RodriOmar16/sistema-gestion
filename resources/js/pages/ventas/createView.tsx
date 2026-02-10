@@ -396,41 +396,37 @@ export function FormasPagosForm({modo, /*formasPagoHab,*/ formasPagoSelected, se
   return(
     <div className='px-4'>
       <div className='grid grid-cols-12 gap-4'>
-        <form className="col-span-12" onSubmit={(e) => { e.preventDefault(); agregarFp(); }}>
-          <div className='grid grid-cols-12 gap-4'>
-            <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3'>
-              <label htmlFor="cliente">Forma de pago</label>
-              <GenericSelect
-                route="formas-pago"
-                value={optionFp}
-                onChange={(option) => seleccionarFp(option)}
-                placeHolder='Selec. Forma de pago'
-                isDisabled={modo!='create'}
-              />
-            </div>
-            <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
-              <label htmlFor="monto">Monto</label>
-              {/*<Input disabled={modo!='create'} className='text-right' type='number' value={monto} onChange={(e)=> setMonto(Number(e.target.value))}/>*/}
-              <NumericFormat 
-                value={monto} 
-                thousandSeparator="." 
-                decimalSeparator="," 
-                prefix="$" 
-                className="text-right border rounded px-2 py-1" 
-                onValueChange={(values) => { setMonto(values.floatValue || 0) }}
-                onKeyDown={(e) => { if (e.key === "Enter") { 
-                  e.preventDefault(); // 👈 evita el submit 
-                  agregarFp(); 
-                } }}
-              />	
-            </div>
-            <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3 flex items-center'>
-              <Button type="button" onClick={agregarFp} disabled={totalVenta==0 || modo!='create'}>
-                <Plus size={20}/> Agregar         
-              </Button>
-            </div>
-          </div>
-        </form>
+        <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3'>
+          <label htmlFor="cliente">Forma de pago</label>
+          <GenericSelect
+            route="formas-pago"
+            value={optionFp}
+            onChange={(option) => seleccionarFp(option)}
+            placeHolder='Selec. Forma de pago'
+            isDisabled={modo!='create'}
+          />
+        </div>
+        <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
+          <label htmlFor="monto">Monto</label>
+          {/*<Input disabled={modo!='create'} className='text-right' type='number' value={monto} onChange={(e)=> setMonto(Number(e.target.value))}/>*/}
+          <NumericFormat 
+            value={monto} 
+            thousandSeparator="." 
+            decimalSeparator="," 
+            prefix="$" 
+            className="text-right border rounded px-2 py-1" 
+            onValueChange={(values) => { setMonto(values.floatValue || 0) }}
+            onKeyDown={(e) => { if (e.key === "Enter") { 
+              e.preventDefault(); // 👈 evita el submit 
+              agregarFp(); 
+            } }}
+          />	
+        </div>
+        <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3 flex items-center'>
+          <Button type="button" onClick={agregarFp} disabled={totalVenta==0 || modo!='create'}>
+            <Plus size={20}/> Agregar         
+          </Button>
+        </div>
         <div className="col-span-12">
           <TableFormasPago 
             modo={modo}

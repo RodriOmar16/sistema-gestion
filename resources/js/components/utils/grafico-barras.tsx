@@ -10,16 +10,17 @@ interface Props{
   data: any[];
   ejeX: string;
   ejeY: string;
+  color: string;
 }
 
-export default function GraficoBarras({ejeX, ejeY, data}:Props) {
+export default function GraficoBarras({ejeX, ejeY, data, color}:Props) {
   return (
     <ResponsiveContainer width="100%" height={300}>
       <BarChart data={data}>
         <XAxis dataKey={ejeX} />
         <YAxis />
         <Tooltip />
-        <Bar dataKey={ejeY} fill="#8884d8" />
+        <Bar dataKey={ejeY} fill={color} />
       </BarChart>
     </ResponsiveContainer>
   );

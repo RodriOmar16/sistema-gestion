@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 use App\Models\Venta;
 use App\Models\DetVenta;
@@ -15,6 +16,8 @@ use App\Models\VentaPago;
 use App\Models\Producto;
 
 use App\Mail\VentaRegistradaMail;
+use App\Mail\VentaRegistradaDuenioMail;
+use App\Mail\StockMinimoAlcanzadoMail;
 
 use Barryvdh\DomPDF\Facade\Pdf;
 
@@ -240,10 +243,10 @@ class VentaController extends Controller
         'detalles.*.id'       => 'required|integer',
         'detalles.*.precio'   => 'required|numeric',
         'detalles.*.cantidad' => 'required|integer|min:1',
+        'formasPagos' => 'required|array|min:1',
         'formasPagos.*.id'    => 'required|integer',
         'formasPagos.*.fecha' => 'required|date',
         'formasPagos.*.monto' => 'required|numeric|min:1',
-        'formasPagos' => 'required|array|min:1',
       ]);
 
       //controlo si existe o no el cliente, si no lo registro
@@ -260,6 +263,7 @@ class VentaController extends Controller
           'email'            => $validated['email'],
           'dni'              => $validated['dni'],
           'inhabilitado'     => 0,
+          'created_at'       => now(),
         ]);
       }
       $cliente_id = $cliente->cliente_id;
@@ -270,6 +274,7 @@ class VentaController extends Controller
         'cliente_id'      => $cliente_id,
         'total'           => $validated['total'],
         'anulada'         => $validated['anulada'] ? 1 : 0,
+        'created_at'      => now(),
       ]);
 
       //registrar detalles, el movimiento de stock para cada detalle, update en el stock también
@@ -303,7 +308,7 @@ class VentaController extends Controller
 
         //aviso si hay poco stock
         if($stock->cantidad <= $producto->stock_minimo){
-          Mail::to(env('OWNER_EMAIL')) ->send(new StockMinimoAlcanzadoMail($producto, $stock));
+          Mail::to('rodrigoomarmiranda1@gmail.com') ->send(new StockMinimoAlcanzadoMail($producto, $stock));
         }
         
         //creo el detalle
@@ -314,6 +319,7 @@ class VentaController extends Controller
           'cantidad'        => $det['cantidad'],
           'descuento'       => 0,
           'subtotal'        => ($det['cantidad'] * $det['precio']) - 0, 
+          'created_at'      => now(),
         ]);
 
         //registro el movimiento de stock
@@ -323,7 +329,8 @@ class VentaController extends Controller
           'tipo_id'      => 2, //egreso
           'origen_id'    => 1, //venta
           'fecha'        => now(),
-          'cantidad'     => $det['cantidad']
+          'cantidad'     => $det['cantidad'],
+          'created_at'      => now(),
         ]);
       }
 
@@ -334,7 +341,8 @@ class VentaController extends Controller
           'venta_id'      => $venta->venta_id,
           'forma_pago_id' => $fp['id'],
           'fecha_pago'    => now() /*$fp['fecha']*/,
-          'monto'         => $fp['monto']
+          'monto'         => $fp['monto'],
+          'created_at'      => now(),
         ]);
       }
 
@@ -342,7 +350,7 @@ class VentaController extends Controller
       Mail::to($cliente->email)->send(new VentaRegistradaMail($venta));
 
       //mando mail al dueño
-      Mail::to(env('OWNER_EMAIL'))->send(new VentaRegistradaMail($venta));
+      Mail::to('rodrigoomarmiranda1@gmail.com')->send(new VentaRegistradaDuenioMail($venta));
 
       //exito
       DB::commit();
@@ -481,5 +489,92 @@ class VentaController extends Controller
       ]);
     }
   }
+
+  public function getAnios(){
+    $anios = DB::table('ventas')
+      ->selectRaw('YEAR(fecha_grabacion) as anio')
+      ->distinct()
+      ->orderBy('anio')
+      ->get()
+      ->map(function ($row, $index) {
+          return [
+              'id' => $index + 1,
+              'anio' => $row->anio,
+          ];
+      });
+    return response()->json($anios);
+  }
+  public function getDatos(Request $request)
+  {
+      $tipo = $request->input('tipo');
+      $anio = $request->input('anio');
+      $mes  = $request->input('mes');
+      $dia  = $request->input('dia');
+
+      $arr = [];
+
+      if ($tipo == 1) {
+          // Por día → ventas por hora
+          $ventas = DB::table('ventas')
+              ->selectRaw('HOUR(fecha_grabacion) as hora, COUNT(*) as valor')
+              ->where('anulada', 0)
+              ->whereDate('fecha_grabacion', $dia)
+              ->groupBy(DB::raw('HOUR(fecha_grabacion)'))
+              ->orderBy('hora')
+              ->get();
+
+          foreach ($ventas as $v) {
+              $arr[] = [
+                  'name'  => str_pad($v->hora, 2, '0', STR_PAD_LEFT).":00",
+                  'valor' => $v->valor,
+              ];
+          }
+      }
+
+      if ($tipo == 2) {
+          // Por mes → ventas por día del mes
+          $ventas = DB::table('ventas')
+              ->selectRaw('DAY(fecha_grabacion) as dia, COUNT(*) as valor')
+              ->where('anulada', 0)
+              ->whereYear('fecha_grabacion', $anio)
+              ->whereMonth('fecha_grabacion', $mes)
+              ->groupBy(DB::raw('DAY(fecha_grabacion)'))
+              ->orderBy('dia')
+              ->get();
+
+          foreach ($ventas as $v) {
+              $arr[] = [
+                  'name'  => $v->dia, // número del día
+                  'valor' => $v->valor,
+              ];
+          }
+      }
+
+      if ($tipo == 3) {
+          // Por año → ventas por mes
+          $ventas = DB::table('ventas')
+              ->selectRaw('MONTH(fecha_grabacion) as mes, COUNT(*) as valor')
+              ->where('anulada', 0)
+              ->whereYear('fecha_grabacion', $anio)
+              ->groupBy(DB::raw('MONTH(fecha_grabacion)'))
+              ->orderBy('mes')
+              ->get();
+
+          $nombresMeses = [
+              1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
+              7=>'Julio',8=>'Agosto',9=>'Septiembre',10=>'Octubre',11=>'Noviembre',12=>'Diciembre'
+          ];
+
+          foreach ($ventas as $v) {
+              $arr[] = [
+                  'name'  => $nombresMeses[$v->mes],
+                  'valor' => $v->valor,
+              ];
+          }
+      }
+
+      return response()->json($arr);
+  }
+
 
 }

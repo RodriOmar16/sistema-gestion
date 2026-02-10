@@ -188,7 +188,7 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
     //Clientes
     //Route::get('/clientes_habilitados', [ClienteController::class, 'clientesHabilitados'])->name('clientes.habilitados');
     Route::get('/clientes/habilitados', [ClienteController::class, 'habilitados'])->name('clientes.habilitados');
-    Route::get('/clientes_habilitados-ventas', [ClienteController::class, 'clientesPorDni'])->name('clientes.porDni');
+    Route::get('/clientes-habilitados-ventas', [ClienteController::class, 'clientesPorDni'])->name('clientes.porDni');
     Route::get('/clientes', [ClienteController::class, 'index'])->name('clientes.index');
     Route::post('/cliente/nuevo', [ClienteController::class, 'store'])->name('clientes.store');
     Route::put('/cliente/update/{cliente}', [ClienteController::class, 'update'])->name('clientes.update');
@@ -203,7 +203,9 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
     Route::get('venta/ver/{venta}', [VentaController::class, 'view'])->name('ventas.view');
     Route::put('/ventas/update/{venta}', [VentaController::class, 'update'])->name('ventas.update');
     Route::put('/ventas/anular/{venta}', [VentaController::class, 'destroy'])->name('ventas.destroy');
-
+    Route::get('/ventas/obtener-anios', [VentaController::class, 'getAnios'])->name('ventas.getAnios');
+    Route::get('/ventas/obtener-datos', [VentaController::class, 'getDatos'])->name('ventas.getDatos');
+    
     //Turnos
     Route::get('/turnos_habilitados', [TurnoController::class, 'turnosHabilitados'])->name('turnos.habilitados');
     Route::get('/turnos', [TurnoController::class, 'index'])->name('turnos.index');

@@ -346,6 +346,9 @@ class VentaController extends Controller
         ]);
       }
 
+      // al final del store, antes de enviar el mail
+      $venta->load(['cliente', 'detalles.producto']);
+
       //mando mail al cliente
       Mail::to($cliente->email)->send(new VentaRegistradaMail($venta));
 

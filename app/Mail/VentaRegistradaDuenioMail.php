@@ -9,7 +9,7 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class VentaRegistradaMail extends Mailable
+class VentaRegistradaDuenioMail extends Mailable
 {
     use Queueable, SerializesModels;
 
@@ -27,34 +27,4 @@ class VentaRegistradaMail extends Mailable
         return $this->subject('Se registró una nueva venta')
                     ->view('emails.venta_registrada_duenio');
     }
-
-    /**
-     * Get the message envelope.
-     */
-    /*public function envelope(): Envelope
-    {
-        return new Envelope(
-            subject: 'Venta Registrada Mail',
-        );
-    }*/
-
-    /**
-     * Get the message content definition.
-     */
-    /*public function content(): Content
-    {
-        return new Content(
-            view: 'view.name',
-        );
-    }*/
-
-    /**
-     * Get the attachments for the message.
-     *
-     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
-     */
-    /*public function attachments(): array
-    {
-        return [];
-    }*/
 }

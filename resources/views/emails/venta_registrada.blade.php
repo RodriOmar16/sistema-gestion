@@ -21,6 +21,28 @@
                             </p>
                             <p style="font-size: 16px; color: #333;">Gracias por tu compra 🎉</p>
                             <hr style="margin: 20px 0;">
+                            <h2 style="color: #2c3e50; text-align: center;">Detalle de la compra</h2>
+                            <table width="100%" cellpadding="8" cellspacing="0" style="border-collapse: collapse; font-size: 14px; color: #333;">
+                                <thead>
+                                    <tr style="background-color: #f4f4f4;">
+                                        <th align="left" style="border-bottom: 1px solid #ddd;">Artículo</th>
+                                        <th align="right" style="border-bottom: 1px solid #ddd;">Precio</th>
+                                        <th align="center" style="border-bottom: 1px solid #ddd;">Cantidad</th>
+                                        <th align="right" style="border-bottom: 1px solid #ddd;">Subtotal</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($venta->detalles as $det)
+                                    <tr>
+                                        <td>{{ $det->producto->nombre }}</td>
+                                        <td align="right">${{ number_format($det->precio_unitario, 2, ',', '.') }}</td>
+                                        <td align="center">{{ $det->cantidad }}</td>
+                                        <td align="right">${{ number_format($det->subtotal, 2, ',', '.') }}</td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                            <hr style="margin: 20px 0;">
                             <p style="font-size: 12px; color: #888; text-align: center;">
                                 Este es un correo automático, por favor no responder.
                             </p>

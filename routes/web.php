@@ -143,6 +143,7 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
 
     //Productos
     Route::get('/productos/habilitados', [ProductoController::class, 'habilitados'])->name('productos.habilitados');
+    Route::get('/productos-stock/habilitados', [ProductoController::class, 'productosStockHabilitados'])->name('productos.StockHabilitados');
     Route::get('/productos/getProducto/{id}', [ProductoController::class, 'getProducto'])->name('productos.getProducto');
     //Route::get('/productos_habilitados', [ProductoController::class, 'productosHabilitados'])->name('productos.productosHabilitados');
     Route::get('/productos/excel', [ProductoController::class, 'exportarExcelManual'])->name('productos.excel');

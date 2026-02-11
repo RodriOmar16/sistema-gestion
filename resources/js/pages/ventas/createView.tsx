@@ -174,7 +174,7 @@ export function DetallesVenta({modo, data, set, productos, setProd, setTitle, se
           <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3'>
             <label htmlFor="cliente">Productos en Stock</label>
               <GenericSelect
-                route="productos"
+                route="productos-stock"
                 value={optionProduct}
                 onChange={(option) => seleccionarProducto(option)}
                 placeHolder="Selec. producto"

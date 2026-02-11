@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\File;
 
 
 use App\Models\Producto;
+use App\Models\Stock;
 use App\Models\ProductoCategoria;
 use App\Models\ProductoLista;
 
@@ -63,6 +64,29 @@ class ProductoController extends Controller
         ->where('inhabilitado',0)
         ->when($buscar, fn($q) => $q->where('nombre', 'LIKE', "%{$buscar}%"))
         ->select('producto_id as id', 'nombre')
+        ->paginate(20);
+
+      return response()->json([
+          'elementos' => $productos
+      ]);
+    } catch (\Throwable $e) {
+      //Log::error('Error en buscar productos: ' . $e->getMessage());
+      return response()->json(['error' => $e->getMessage()], 500);
+    }
+  }
+
+  public function productosStockHabilitados(Request $request){
+    try {
+      $buscar = $request->get('buscar', '');
+
+      $productos = Producto::query()
+        ->with('stock')
+        ->where('inhabilitado',0)
+        ->when($buscar, fn($q) => $q->where('nombre', 'LIKE', "%{$buscar}%"))
+        ->select('producto_id as id', 'nombre')
+        ->whereHas('stock', function($q){ 
+          $q->where('cantidad', '>', 0); 
+        })
         ->paginate(20);
 
       return response()->json([

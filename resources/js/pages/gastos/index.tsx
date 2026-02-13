@@ -16,6 +16,7 @@ import { DatePicker } from '@/components/utils/date-picker';
 import { NumericFormat } from 'react-number-format';
 import DataTableGastos from '@/components/gastos/dataTableGastos';
 import NewEditGasto from '@/components/gastos/newEditGasto';
+import { convertirFechaBarrasGuiones } from '@/utils';
 
 const breadcrumbs: BreadcrumbItem[] = [ { title: 'Gastos', href: '', } ];
 
@@ -28,7 +29,7 @@ const gastoVacio = {
   fecha:            '',
   fecha_desde:      '',
   fecha_hasta:      '',
-  caja_id:          0,
+  caja_id:          '',
   proveedor_id:     0,
   proveedor_nombre: '',
   forma_pago_id:    0,
@@ -36,7 +37,7 @@ const gastoVacio = {
   monto:            0,
   descripcion:      '',
   inhabilitado:     0
-}
+};
 
 export function FiltrosForm({ openCreate }: propsForm){
   const { data, setData, errors, processing } = useForm<Gasto>(gastoVacio);
@@ -271,6 +272,7 @@ export default function Gastos(){
     setLoading(true);
 
     const payload = JSON.parse(JSON.stringify(pendingData));
+    payload.fecha = convertirFechaBarrasGuiones(payload.fecha);
     if (modalMode === 'create') {
       router.post(
         route('gastos.store'), payload,
@@ -358,7 +360,7 @@ export default function Gastos(){
         open={modalOpen}
         onOpenChange={setModalOpen}
         mode={modalMode}
-        turno={selectedGasto}
+        gasto={selectedGasto}
         onSubmit={handleSave}
       />
       <ModalConfirmar

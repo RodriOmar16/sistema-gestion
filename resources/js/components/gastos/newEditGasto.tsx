@@ -3,6 +3,7 @@ import {
   Dialog,  DialogClose,  DialogContent,  DialogDescription,  DialogFooter,  DialogHeader,
   DialogTitle,  DialogTrigger
 } from "@/components/ui/dialog"
+import { Select,  SelectContent,  SelectGroup,  SelectItem,  SelectLabel,  SelectTrigger,  SelectValue } from "@/components/ui/select"
 import { Textarea } from "../ui/textarea";
 import { Input } from "@/components/ui/input"
 import { Switch } from '@/components/ui/switch';
@@ -10,70 +11,90 @@ import { useForm } from "@inertiajs/react"
 import React, { useState, useEffect } from "react"
 import { Loader2 } from 'lucide-react';
 import ShowMessage from "@/components/utils/showMessage";
-import { Turno } from "@/types/typeCrud";
+import { Gasto } from "@/types/typeCrud";
+import { convertirFechaGuionesBarras } from "@/utils";
+import { DatePicker } from "../utils/date-picker";
 
 interface Props{
   open: boolean;
   onOpenChange: (open:boolean) => void;
   mode: 'create' | 'edit';
-  turno?: Turno;
+  gasto?: Gasto;
   onSubmit: (data:any) => void;
 }
 
-const turnoVacio = {
-  turno_id:     '',
-  nombre:       '',
-  apertura:     '',
-  cierre:       '',
-  inhabilitado: false 
-}
+const gastoVacio = {
+  gasto_id:         0,
+  fecha:            (new Date()).toDateString(),
+  fecha_desde:      '',
+  fecha_hasta:      '',
+  caja_id:          '',
+  proveedor_id:     0,
+  proveedor_nombre: '',
+  forma_pago_id:    0,
+  forma_pago_nombre:'',
+  monto:            0,
+  descripcion:      '',
+  inhabilitado:     0
+};
 
-export default function NewEditGasto({ open, onOpenChange, mode, turno, onSubmit }: Props){
+export default function NewEditGasto({ open, onOpenChange, mode, gasto, onSubmit }: Props){
   //data
   const [activo, setActivo] = useState(false);
   const [text, setText]     = useState('');
   const [title, setTitle]   = useState('');
-  const { data, setData, get, processing, errors } = useForm<Turno>(turnoVacio);
+  const { data, setData, get, processing, errors } = useForm<Gasto>(gastoVacio);
+
+  const tipoCajas = [ {id:0, nombre: 'Sin caja'}, {id:1, nombre: 'Principal'} ];
 
   //useEffect
   useEffect(() => {
-    if (!open && mode === 'create') {
-      setData(turnoVacio);
+    if (!open) {
+      setData(gastoVacio);
+    }else{
+      if(gasto && mode === 'edit'){
+        setData({
+          gasto_id:         gasto.gasto_id,
+          fecha:            convertirFechaGuionesBarras(gasto.fecha??''),
+          fecha_desde:      '',
+          fecha_hasta:      '',
+          caja_id:          gasto.caja_id,
+          proveedor_id:     gasto.proveedor_id,
+          proveedor_nombre: gasto.proveedor_nombre,
+          forma_pago_id:    gasto.forma_pago_id,
+          forma_pago_nombre:gasto.forma_pago_nombre,
+          monto:            gasto.monto,
+          descripcion:      gasto.descripcion,
+          inhabilitado:     gasto.inhabilitado
+        });        
+      }
     }
-  }, [open, mode]);
-
-  useEffect(() => {
-    if (turno && mode === 'edit') {
-      setData({
-        turno_id:     turno.turno_id,
-        nombre:       turno.nombre,
-        apertura:     turno.apertura,
-        cierre:       turno.cierre,
-        inhabilitado: turno.inhabilitado,
-      });
-    } else {
-      setData(turnoVacio);
-    }
-  }, [turno, mode]);
+  }, [open, mode, gasto]);
 
   //funciones
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if(!data.nombre){
+    if(!data.proveedor_id){
       setTitle('¡Campo faltante!');
-      setText('Se requiere que ingreses un nombre válido');
+      setText('Se requiere que selecciones un proveedor');
       setActivo(true);
       return 
     }
-    if(!data.apertura || data.apertura.length < 5){
+    if(!data.forma_pago_id){
       setTitle('¡Campo faltante!');
-      setText('Se requiere que ingreses un horario de apertura válido');
+      setText('Se requiere que selecciones una forma de pago');
       setActivo(true);
       return 
     }
-    if(!data.cierre || data.cierre.length < 5){
+    if(!data.monto || (data.monto && data.monto <= 0)){
       setTitle('¡Campo faltante!');
-      setText('Se requiere que ingreses un horario de cierre válido');
+      setText('Se requiere que ingreses un monto');
+      setActivo(true);
+      return 
+    }
+    if(!data.descripcion){
+      setTitle('¡Campo faltante!');
+      setText('Se requiere que ingreses una descripcion');
       setActivo(true);
       return 
     }
@@ -84,60 +105,76 @@ export default function NewEditGasto({ open, onOpenChange, mode, turno, onSubmit
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[95vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{mode === 'create' ? 'Nuevo' : 'Editar'} turno</DialogTitle>
+          <DialogTitle>{mode === 'create' ? 'Nuevo' : 'Editar'} gasto</DialogTitle>
           <DialogDescription>
-            { mode === 'create' ? 'Completa los campos para crear un turno' : 
-                                  `Editando turno: ${turno?.turno_id}` }
+            { mode === 'create' ? 'Completa los campos para crear un gasto' : 
+                                  `Editando gasto: ${gasto?.gasto_id}` }
           </DialogDescription>
           <hr />
         </DialogHeader>
         <form className="grid grid-cols-12 gap-4 px-4 pt-1 pb-4">
           { mode !== 'create' ? 
             (
-              <div className="col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12">
-                <label htmlFor="id">Id</label>
-                <Input
-                  disabled
-                  value={data.turno_id}
-                  onChange={(e) => setData({ ...data, turno_id: e.target.value })}
-                  placeholder="Id"
-                />
-              </div>
+              <>
+                <div className="col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12">
+                  <label htmlFor="id">Id</label>
+                  <Input
+                    disabled
+                    value={data.gasto_id}
+                    onChange={(e) => setData({ ...data, gasto_id: e.target.value })}
+                    placeholder="Id"
+                  />
+                </div>
+                <div className="col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12">
+                  <label htmlFor="fecha">Fecha</label>
+                  <div className="col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3">
+                    <label htmlFor="fecha">Fecha</label>
+                    <DatePicker fecha={(data.fecha)} setFecha={ (fecha:string) => {setData({...data, fecha})} }/>
+                  </div>
+                </div>
+              </>
             ) : <></>
           }
           <div className="col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12">
-            <label htmlFor="nombre">Nombre</label>
-            <Input
-              value={data.nombre}
-              onChange={(e) => setData({ ...data, nombre: e.target.value })}
-              placeholder="Ingresar nombre"
-            />
+            <label htmlFor="proveedor">Proveedor</label>
+            {
+              mode === 'create' ? (
+                <><p>autocomplete</p></>
+              ) :(
+                <><p>input disabled</p></>
+              )
+            }
           </div>
           <div className="col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-4">
-            <label htmlFor="apertura" className='mr-2'>Hora apertura</label>
-            <Input
-              type="time"
-              value={data.apertura}
-              onChange={(e) => setData('apertura',e.target.value)}
-              step="1"
-              className="bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
-            />
+            <label htmlFor="fp">Forma de Pago</label>
+            {
+              mode === 'create' ? (
+                <><p>autocomplete</p></>
+              ) :(
+                <><p>input disabled</p></>
+              )
+            }
           </div>
-          <div className="col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-4">
-            <label htmlFor="cierre" className='mr-2'>Hora cierre</label>
-            <Input
-              type="time"
-              value={data.cierre}
-              onChange={(e) => setData('cierre',e.target.value)}
-              step="1"
-              className="bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
-            />
+          <div className="col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-2 lg:col-span-2">
+            <label htmlFor="padre">Caja</label>
+            <Select
+              value={String(data.caja_id)}
+              onValueChange={(value) => setData('caja_id', Number(value))}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {tipoCajas.map((e: any) => (
+                    <SelectItem key={e.id} value={String(e.id)}>
+                      {e.nombre}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
           </div>
-          <div className="col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-6 flex flex-col">
-            <label htmlFor="inhabilitado" className='mr-2'>Inhabilitado</label>
-            <Switch checked={data.inhabilitado?true:false} onCheckedChange={(val) => setData('inhabilitado', val)} />
-          </div>
-            
         </form>
         <DialogFooter>
           <DialogClose asChild>

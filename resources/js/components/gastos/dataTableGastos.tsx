@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table,  TableBody,  TableCell,  TableHead,  TableHeader,  TableRow } from "@/components/ui/table"
 import { Gasto } from "@/types/typeCrud"
-import { convertirFechaGuionesBarras, formatDateTime, formatearNroCompleto } from "@/utils"
+import { convertirFechaGuionesBarras, convertirNumberPlata, formatDateTime, formatearNroCompleto } from "@/utils"
 import { Badge } from "../ui/badge"
 
 interface Props {
@@ -22,7 +22,7 @@ interface Props {
 export function getColumns(confirmar: (data: Gasto) => void, openEdit: (data: Gasto) => void): ColumnDef<Gasto>[] {
   return [
     {
-      accessorKey: "turno_id",
+      accessorKey: "gasto_id",
       header: ({column}) => {
         return (
           <div className="flex">
@@ -32,45 +32,69 @@ export function getColumns(confirmar: (data: Gasto) => void, openEdit: (data: Ga
         )
       },
       cell: ({ row }) => (
-        <div className="text-right">{row.getValue("turno_id")}</div>
+        <div className="text-right">{row.getValue("gasto_id")}</div>
       ),
     },
     {
-      accessorKey: "nombre",
+      accessorKey: "caja_id",
       header: ({column}) => {
         return (
           <div className="flex">
-            Nombre
+            Caja
             <ArrowUpDown className="ml-1" size={17} onClick={() => column.toggleSorting(column.getIsSorted() === "asc")} />
           </div>
         )
       }
       ,
-      cell: ({ row }) => ( <div className="">{row.getValue("nombre")}</div> ),
+      cell: ({ row }) => ( <div className="">{row.getValue("caja_id")}</div> ),
     },
     {
-      accessorKey: "apertura",
+      accessorKey: "proveedor_nombre",
       header: ({column}) => {
         return (
           <div className="flex">
-            Apertura
+            Proveedor
           </div>
         )
       }
       ,
-      cell: ({ row }) => ( <div className="">{row.getValue("apertura")}</div> ),
+      cell: ({ row }) => ( <div className="">{row.getValue("proveedor_nombre")}</div> ),
     },
     {
-      accessorKey: "cierre",
+      accessorKey: "forma_pago_nombre",
       header: ({column}) => {
         return (
           <div className="flex">
-            Cierre
+            Forma Pago
           </div>
         )
       }
       ,
-      cell: ({ row }) => ( <div className="">{row.getValue("cierre")}</div> ),
+      cell: ({ row }) => ( <div className="">{row.getValue("forma_pago_nombre")}</div> ),
+    },
+    {
+      accessorKey: "fecha",
+      header: ({column}) => {
+        return (
+          <div className="flex">
+            Fecha
+          </div>
+        )
+      }
+      ,
+      cell: ({ row }) => ( <div className="">{convertirFechaGuionesBarras(row.getValue("fecha"))}</div> ),
+    },
+    {
+      accessorKey: "monto",
+      header: ({column}) => {
+        return (
+          <div className="flex">
+            Monto
+          </div>
+        )
+      }
+      ,
+      cell: ({ row }) => ( <div className="">{convertirNumberPlata(row.getValue("monto"))}</div> ),
     },
     {
       accessorKey: "inhabilitado",

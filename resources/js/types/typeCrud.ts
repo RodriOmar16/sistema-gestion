@@ -209,8 +209,11 @@ export interface Gasto{
   caja_id:          string|number;
   proveedor_id:     number|string;
   proveedor_nombre: string;
+  forma_pago_id:    number|string;
+  forma_pago_nombre:string;
   monto:            number;
   descripcion:      string;
+  inhabilitado:     number;
   created_at?:      string;
   updated_at?:      string;
 }

@@ -30,6 +30,9 @@ class GastoController extends Controller
     if($request->filled('proveedor_id')){
       $query->where('proveedor_id', $request->proveedor_id);
     }
+    if($request->filled('forma_pago_id')){
+      $query->where('forma_pago_id', $request->forma_pago_id);
+    }
     if ($request->filled('fecha_desde')) {
       $query->where('fecha', '>=', $request->fecha_desde);
     }

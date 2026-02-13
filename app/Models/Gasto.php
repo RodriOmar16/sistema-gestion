@@ -15,7 +15,7 @@ class Gasto extends Model
 
     protected $table      = 'gastos';
     protected $primaryKey = 'gasto_id';
-    protected $fillable   = ['caja_id', 'proveedor_id', 'fecha', 'monto', 'descripcion'];
+    protected $fillable   = ['caja_id', 'proveedor_id', 'forma_pago_id', 'fecha', 'monto', 'descripcion', 'inhabilitado'];
 
     public function caja(){
         return $this->belongsTo(Caja::class, 'caja_id');
@@ -24,4 +24,9 @@ class Gasto extends Model
     public function proveedor(){
         return $this->belongsTo(Proveedor::class, 'proveedor_id');
     }
+    public function formaPago()
+    {
+        return $this->belongsTo(FormaPago::class, 'forma_pago_id', 'forma_pago_id');
+    }
+
 }

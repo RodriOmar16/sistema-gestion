@@ -217,8 +217,9 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
     //Gastos
     //Route::get('/turnos_habilitados', [GastoController::class, 'turnosHabilitados'])->name('turnos.habilitados');
     Route::get('/gastos', [GastoController::class, 'index'])->name('gastos.index');
-    Route::post('/gasto/nuevo', [GastoController::class, 'store'])->name('gasto.store');
+    Route::post('/gasto/nuevo', [GastoController::class, 'store'])->name('gastos.store');
     Route::put('/gasto/update/{gasto}', [GastoController::class, 'update'])->name('gasto.update');
+    Route::put('/gasto/eliminar/{gasto}', [GastoController::class, 'toggleEstado'])->name('gasto.toggleEstado');
 
     //banners
     Route::get('/banners', [CarouselController::class, 'index'])->name('banners.index');

@@ -20,4 +20,9 @@ class FormaPago extends Model
     public function ventas(){
         return $this->belongsToMany(Venta::class, 'ventas_pagos', 'forma_pago_id', 'venta_id');
     }
+    public function gastos()
+    {
+        return $this->hasMany(Gasto::class, 'forma_pago_id', 'forma_pago_id');
+    }
+
 }

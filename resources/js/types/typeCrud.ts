@@ -221,9 +221,26 @@ export interface Marca{
   marca_id:     string|number;
   nombre:       string;
   inhabilitada: boolean | 1 | 0 | 'true' | 'false';
+  created_at?:  string;
+  updated_at?:  string;
+};
+
+export interface Caja {
+  caja_id:          string|number;
+  turno_id:         string|number;
+  turno_nombre:     string;
+  fecha:            string;
+  monto_inicial:    number;
+  descripcion:      string;
+  efectivo:         number;
+  debito:           number;
+  transferencia:    number;
+  total_sistema:    number;
+  total_user:       number;
+  diferencia:       number;
   created_at?:      string;
   updated_at?:      string;
-};
+}
 
 //para componente selec multiple
 export type Multiple = { 

@@ -26,6 +26,7 @@ use App\Http\Controllers\GraficosController;
 use App\Http\Controllers\StockController;
 use App\Http\Controllers\CarouselController;
 use App\Http\Controllers\MarcaController;
+use App\Http\Controllers\CajaController;
 
 use App\Http\Controllers\ProjectController;
 
@@ -221,14 +222,8 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
     Route::put('/gasto/update/{gasto}', [GastoController::class, 'update'])->name('gasto.update');
     Route::put('/gasto/eliminar/{gasto}', [GastoController::class, 'toggleEstado'])->name('gasto.toggleEstado');
 
-    //banners
-    Route::get('/banners', [CarouselController::class, 'index'])->name('banners.index');
-    Route::post('/banner/nuevo', [CarouselController::class, 'store'])->name('banners.store');
-    Route::put('/banner/update/{carousel}', [CarouselController::class, 'update'])->name('banners.update');
-    Route::put('/banner/cambiar-estado/{carousel}', [CarouselController::class, 'toggleEstado'])->name('banners.toggleEstado');
-
-    //Gráficos
-    Route::get('/dashboard', [GraficosController::class, 'index'])->name('graficos.index');
+    //Marcas
+    Route::get('/cajas', [CajaController::class, 'index'])->name('cajas.index');
 
     //Marcas
     //Route::get('/marcas_habilitadas', [MarcaController::class, 'marcasHabilitadas'])->name('marcas.marcasHabilitadas');
@@ -240,17 +235,17 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
     Route::put('/marcas/update/{marca}', [MarcaController::class, 'update'])->name('marcas.update');
     Route::put('/marcas/cambio-estado/{marca}', [MarcaController::class, 'toggleEstado'])->name('marcas.toggleEstado');
 
-    //----
+    //banners
+    Route::get('/banners', [CarouselController::class, 'index'])->name('banners.index');
+    Route::post('/banner/nuevo', [CarouselController::class, 'store'])->name('banners.store');
+    Route::put('/banner/update/{carousel}', [CarouselController::class, 'update'])->name('banners.update');
+    Route::put('/banner/cambiar-estado/{carousel}', [CarouselController::class, 'toggleEstado'])->name('banners.toggleEstado');
 
-    /*Route::get('/test-sendgrid', function () {
-        Mail::raw('Este es un correo de prueba enviado con SendGrid.', function ($message) {
-            $message->to('rodrigoomarmiranda1@gmail.com')
-                    ->subject('Prueba de SendGrid');
-        });
+    //Gráficos
+    Route::get('/dashboard', [GraficosController::class, 'index'])->name('graficos.index');
 
-        return 'Correo enviado!';
-    });*/
 
+    //---
 
     //Proyectos
     Route::get('/projects/pdf', [ProjectController::class, 'generarPDF'])->name('projects.pdf');

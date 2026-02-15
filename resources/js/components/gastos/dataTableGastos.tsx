@@ -4,7 +4,7 @@ import {
   ColumnDef,  ColumnFiltersState,  flexRender,  getCoreRowModel,  getFilteredRowModel,
   getPaginationRowModel,  getSortedRowModel,  SortingState,  useReactTable,  VisibilityState,
 } from "@tanstack/react-table"
-import { ArrowUpDown, ChevronDown, MoreHorizontal, Pen , Check, Ban,Search } from "lucide-react"
+import { ArrowUpDown, ChevronDown, MoreHorizontal, Pen , Check, Ban,Search, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table,  TableBody,  TableCell,  TableHead,  TableHeader,  TableRow } from "@/components/ui/table"
@@ -36,6 +36,33 @@ export function getColumns(confirmar: (data: Gasto) => void, openEdit: (data: Ga
       ),
     },
     {
+      accessorKey: "fecha",
+      header: ({column}) => {
+        return (
+          <div className="flex">
+            Registro
+          </div>
+        )
+      }
+      ,
+      cell: ({ row }) => ( <div className="">{convertirFechaGuionesBarras(row.getValue("fecha"))}</div> ),
+    },
+    {
+      accessorKey: "created_at",
+      header: ({column}) => {
+        return (
+          <div className="flex">
+            Grabación
+          </div>
+        )
+      }
+      ,
+      cell: ({ row }) => {
+        const fechaString = row.getValue("created_at") as string;
+        return <div>{ formatDateTime(fechaString) }</div> 
+      },
+    },
+    {
       accessorKey: "caja_id",
       header: ({column}) => {
         return (
@@ -46,7 +73,12 @@ export function getColumns(confirmar: (data: Gasto) => void, openEdit: (data: Ga
         )
       }
       ,
-      cell: ({ row }) => ( <div className="">{row.getValue("caja_id")}</div> ),
+      cell: ({ row }) => {
+        const fila = row.original;
+        return (
+          <div className="">{fila.caja_id === -1 ? 'actual' : (fila.caja_id === 0 ? 'Sin caja' : fila.caja_id)}</div>
+        );
+      },
     },
     {
       accessorKey: "proveedor_nombre",
@@ -71,18 +103,6 @@ export function getColumns(confirmar: (data: Gasto) => void, openEdit: (data: Ga
       }
       ,
       cell: ({ row }) => ( <div className="">{row.getValue("forma_pago_nombre")}</div> ),
-    },
-    {
-      accessorKey: "fecha",
-      header: ({column}) => {
-        return (
-          <div className="flex">
-            Fecha
-          </div>
-        )
-      }
-      ,
-      cell: ({ row }) => ( <div className="">{convertirFechaGuionesBarras(row.getValue("fecha"))}</div> ),
     },
     {
       accessorKey: "monto",
@@ -145,12 +165,12 @@ export function getColumns(confirmar: (data: Gasto) => void, openEdit: (data: Ga
                     variant="ghost" 
                     size="icon"
                     onClick={ () => confirmar(fila) }>
-                    <Ban size={20} className="text-red-500" />
+                    <X size={20} className="text-red-500" />
                   </Button>
                 </>
               ) : (
                 <>
-                  <Button 
+                  {/*<Button 
                     className="p-0 hover:bg-transparent cursor-pointer"
                     title="Habilitar" 
                     variant="ghost" 
@@ -158,7 +178,7 @@ export function getColumns(confirmar: (data: Gasto) => void, openEdit: (data: Ga
                     onClick={ () => confirmar(fila) }
                   >
                     <Check size={20} className='text-green-600'/>
-                  </Button>
+                  </Button>*/}
                 </>
               )
             }

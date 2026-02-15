@@ -20,7 +20,7 @@ class GastoController extends Controller
       ]);
     }
 
-    $query = Gasto::query();
+    $query = Gasto::query()->with(['proveedor', 'formaPago']);
     if($request->filled('gasto_id')){
       $query->where('gasto_id', $request->gasto_id);
     }
@@ -39,11 +39,25 @@ class GastoController extends Controller
     if ($request->filled('fecha_hasta')) {
       $query->where('fecha', '<=', $request->fecha_hasta);
     }
-    if($request->filled('descripcion')){
-      $query->where('descripcion', 'like', '%'.$request->descripcion.'%');
+    if($request->filled('monto')){
+      $query->where('monto', $request->monto);
     }
 
-    $gastos = $query->latest()->get();
+    $gastos = $query->latest()->get()->map(function ($g) { 
+      return [
+        'gasto_id'         => $g->gasto_id,
+        'fecha'            => $g->fecha,
+        'caja_id'          => $g->caja_id,
+        'proveedor_id'     => $g->proveedor_id,
+        'proveedor_nombre' => optional($g->proveedor)->nombre,
+        'forma_pago_id'    => $g->forma_pago_id,
+        'forma_pago_nombre'=> optional($g->formaPago)->nombre,
+        'monto'            => $g->monto,
+        'descripcion'      => $g->descripcion,
+        'inhabilitado'     => $g->inhabilitado,
+        'created_at'       => $g->created_at,
+      ];
+    });
 
     return inertia('gastos/index',[
       'gastos' => $gastos

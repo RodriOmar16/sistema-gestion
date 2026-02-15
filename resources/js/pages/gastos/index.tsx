@@ -43,9 +43,9 @@ export function FiltrosForm({ openCreate }: propsForm){
   const { data, setData, errors, processing } = useForm<Gasto>(gastoVacio);
   const [load, setLoad]                       = useState(false);
   const [optionProv, setOptionProv]           = useState<Autocomplete|null>(null);
-  const [optionFp, setOptionFp] = useState<Autocomplete|null>(null);
+  const [optionFp, setOptionFp]               = useState<Autocomplete|null>(null);
 
-  const tipoCajas = [ {id:0, nombre: 'Sin caja'}, {id:1, nombre: 'Principal'} ];
+  const tipoCajas = [ {id:0, nombre: 'Sin caja'}, {id: -1, nombre: 'Principal'} ];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -107,13 +107,22 @@ export function FiltrosForm({ openCreate }: propsForm){
           <Input className='text-right' value={data.gasto_id} onChange={(e)=>setData('gasto_id',Number(e.target.value))}/>	
           { errors.gasto_id && <p className='text-red-500	'>{ errors.gasto_id }</p> }
         </div>
-        <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3'>
+        <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-4'>
           Proveedores
           <GenericSelect
             route="proveedores"
             value={optionProv}
             onChange={(option) => seleccionarProveedor(option)}
             placeHolder='Selec. proveedor'
+          />
+        </div>
+        <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-4'>
+          <label htmlFor="forma_pago">Forma de pago</label>
+          <GenericSelect
+            route="formas-pago"
+            value={optionFp}
+            onChange={(option) => seleccionarFp(option)}
+            placeHolder='Selec. Forma de pago'
           />
         </div>
         <div className="col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-2 lg:col-span-2">
@@ -136,20 +145,11 @@ export function FiltrosForm({ openCreate }: propsForm){
             </SelectContent>
           </Select>
         </div>
-        <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3'>
-          <label htmlFor="forma_pago">Forma de pago</label>
-          <GenericSelect
-            route="formas-pago"
-            value={optionFp}
-            onChange={(option) => seleccionarFp(option)}
-            placeHolder='Selec. Forma de pago'
-          />
-        </div>
-        <div className="col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3">
+        <div className="col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-2">
           <label htmlFor="fechaDesde">Fecha Desde</label>
           <DatePicker fecha={(data.fecha_desde)} setFecha={ (fecha:string) => {setData({...data,fecha_desde: fecha})} }/>
         </div>
-        <div className="col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3">
+        <div className="col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-2">
           <label htmlFor="fechaHasta">Fecha Hasta</label>
           <DatePicker fecha={(data.fecha_hasta)} setFecha={ (fecha:string) => {setData({...data,fecha_hasta: fecha})} }/>
         </div>        
@@ -164,7 +164,7 @@ export function FiltrosForm({ openCreate }: propsForm){
             onValueChange={(values) => { setData({...data,monto: values.floatValue || 0}) }}
           />	
         </div>
-        <div className='col-span-6 sm:col-span-2 md:col-span-2 lg:col-span-2 flex justify-end items-center'>
+        <div className='col-span-6 sm:col-span-2 md:col-span-2 lg:col-span-5 flex justify-end items-center'>
           <Button 
             className="p-0 hover:bg-transparent cursor-pointer"
             type="button"

@@ -209,7 +209,8 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
     Route::get('/ventas/obtener-datos', [VentaController::class, 'getDatos'])->name('ventas.getDatos');
     
     //Turnos
-    Route::get('/turnos_habilitados', [TurnoController::class, 'turnosHabilitados'])->name('turnos.habilitados');
+    Route::get('/turnos_habilitados', [TurnoController::class, 'turnosHabilitados'])->name('turnos.turnosHabilitados');
+    Route::get('/turnos/habilitados', [TurnoController::class, 'habilitados'])->name('turnos.habilitados');
     Route::get('/turnos', [TurnoController::class, 'index'])->name('turnos.index');
     Route::post('/turno/nuevo', [TurnoController::class, 'store'])->name('turnos.store');
     Route::put('/turno/update/{turno}', [TurnoController::class, 'update'])->name('turnos.update');
@@ -222,9 +223,14 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
     Route::put('/gasto/update/{gasto}', [GastoController::class, 'update'])->name('gasto.update');
     Route::put('/gasto/eliminar/{gasto}', [GastoController::class, 'toggleEstado'])->name('gasto.toggleEstado');
 
-    //Marcas
+    //Cajas
     Route::get('/cajas', [CajaController::class, 'index'])->name('cajas.index');
-
+    Route::post('/caja/abrir', [CajaController::class, 'openCaja'])->name('caja.open');
+    Route::get('caja/nueva', [CajaController::class, 'create'])->name('caja.create');
+    Route::post('/caja/grabar-nueva', [CajaController::class, 'store'])->name('caja.store');
+    Route::put('/caja/update/{caja}', [CajaController::class, 'update'])->name('caja.update');
+    Route::put('/caja/eliminar/{caja}', [CajaController::class, 'destroy'])->name('caja.toggleEstado');
+    
     //Marcas
     //Route::get('/marcas_habilitadas', [MarcaController::class, 'marcasHabilitadas'])->name('marcas.marcasHabilitadas');
     Route::get('/marcas/habilitados', [MarcaController::class, 'habilitadas'])->name('marcas.habilitadas');

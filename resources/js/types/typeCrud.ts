@@ -230,6 +230,8 @@ export interface Caja {
   turno_id:         string|number;
   turno_nombre:     string;
   fecha:            string;
+  fecha_desde:      string;
+  fecha_hasta:      string;
   monto_inicial:    number;
   descripcion:      string;
   efectivo:         number;

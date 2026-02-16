@@ -15,7 +15,23 @@ class Caja extends Model
     use HasFactory;
     protected $table = 'cajas';
     protected $primaryKey = 'caja_id';
-    protected $fillable = ['turno_id', 'fecha', 'monto_inicial', 'descripcion', 'efectivo', 'debito', 'transferencia'];
+    protected $fillable = [
+        'turno_id',
+        'fecha',
+        'monto_inicial',
+        'descripcion',
+        'efectivo',
+        'debito',
+        'transferencia',
+        'efectivo_user',
+        'debito_user',
+        'transferencia_user',
+        'total_sistema',
+        'total_user',
+        'diferencia',
+        'user_grabacion',
+        'inhabilitado'
+    ];
 
     public function turno()
     {

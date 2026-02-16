@@ -21,6 +21,24 @@ class TurnoController extends Controller
     });
     return response()->json($turnos);
   }
+  public function habilitados(Request $request){
+    try {
+      $buscar = $request->get('buscar', '');
+
+      $turnos = Turno::query()
+        ->where('inhabilitado',0)
+        ->when($buscar, fn($q) => $q->where('nombre', 'LIKE', "%{$buscar}%"))
+        ->select('turno_id as id', 'nombre')
+        ->paginate(20);
+
+      return response()->json([
+          'elementos' => $turnos
+      ]);
+    } catch (\Throwable $e) {
+      //Log::error('Error en buscar turnos: ' . $e->getMessage());
+      return response()->json(['error' => $e->getMessage()], 500);
+    }
+  }
   /**
    * Display a listing of the resource.
    */

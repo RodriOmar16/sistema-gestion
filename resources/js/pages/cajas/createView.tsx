@@ -13,7 +13,7 @@ import {  Table,  TableBody,  TableCaption,  TableCell,  TableHead,  TableHeader
 import { Select,  SelectContent, SelectGroup,  SelectItem,  SelectTrigger,  SelectValue } from "@/components/ui/select"
 import SelectMultiple from '@/components/utils/select-multiple';
 import { Multiple } from '@/types/typeCrud';
-import { convertirFechaBarrasGuiones, convertirFechaGuionesBarras, ordenarPorTexto } from '@/utils';
+import { convertirFechaBarrasGuiones, convertirFechaGuionesBarras, convertirNumberPlata, ordenarPorTexto } from '@/utils';
 import ShowMessage from '@/components/utils/showMessage';
 import ModalConfirmar from '@/components/modalConfirmar';
 import { route } from 'ziggy-js';
@@ -27,7 +27,7 @@ const cajaVacia = {
   caja_id:            0,
   turno_id:           0,
   turno_nombre:       '',
-  fecha:              '',
+  fecha:              (new Date()).toLocaleDateString(),
   fecha_desde:        '',
   fecha_hasta:        '',
   monto_inicial:      0,
@@ -43,225 +43,20 @@ const cajaVacia = {
   diferencia:         0,
 };
 
-interface Props{
-  data: Caja;
-  set: (e:any) => void;
-  modo: string;
-}
-
-export function AbrirCaja({modo, data, set}:Props){
-  const [load , setLoad]              = useState(false);
-  const [optionTur, setOptionTurn]    = useState<Autocomplete|null>(null);
-
-  const selectTurnos = (option : any) => {
-    if(option){
-      set({...data, turno_id: option.value, turno_nombre: option.label});
-      setOptionTurn(option);
-    }else{
-      set({...data, turno_id: 0, turno_nombre: ''});
-      setOptionTurn(null);
-    }
-  };
-
-  useEffect(() => {
-    if (data.turno_id && data.turno_nombre) {
-      setOptionTurn({ value: Number(data.turno_id), label: data.turno_nombre });
-    } else {
-      setOptionTurn(null);
-    }
-  }, [data.turno_id, data.turno_nombre]);
-
-  const iniciarCaja = () => {
-    
-  };
-
-  return (
-    <div className='px-4'>
-      <div className='grid grid-cols-12 gap-4'>
-        {modo !== 'edit' ? (
-          <>
-            <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3'>
-              Turnos
-              <GenericSelect
-                route="turnos"
-                value={optionTur}
-                onChange={(option) => selectTurnos(option)}
-                placeHolder='Seleccionar'
-              />
-            </div>
-            <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
-              <label htmlFor="monto">Monto inicial</label>
-              {/*<Input disabled={modo!='create'} className='text-right' type='number' value={monto} onChange={(e)=> setMonto(Number(e.target.value))}/>*/}
-              <NumericFormat 
-                value={data.monto_inicial} 
-                thousandSeparator="." 
-                decimalSeparator="," 
-                prefix="$" 
-                className="text-right border rounded px-2 py-1" 
-                onValueChange={(values) => { set({...data, monto_inicial: values.floatValue || 0}) }}
-                onKeyDown={(e) => { if (e.key === "Enter") { 
-                  e.preventDefault(); // 👈 evita el submit 
-                  iniciarCaja(); 
-                } }}
-              />	
-            </div>
-          </>
-        ): (
-          <>
-            <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-12'>
-              <label htmlFor="id">Id</label>
-              <Input disabled value={data.caja_id} onChange={(e)=>set({...data, caja_id:e.target.value})}/>	
-            </div>
-            <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-12'>
-              <label htmlFor="turno_nombre">Turno</label>
-              <Input disabled value={data.turno_nombre}/>	
-            </div>
-            <div className="col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-2">
-              <label htmlFor="fecha">Fecha</label>
-              <DatePicker disable fecha={(data.fecha)} setFecha={ (fecha:string) => {set({...data,fecha: fecha})} }/>
-            </div>
-            <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
-              <label htmlFor="monto">Monto inicial</label>
-              <NumericFormat 
-                value={data.monto_inicial} 
-                thousandSeparator="." 
-                decimalSeparator="," 
-                prefix="$" 
-                className="text-right border rounded px-2 py-1" 
-                disabled
-                onValueChange={(values) => { set({...data, monto_inicial: values.floatValue || 0}) }}
-                onKeyDown={(e) => { if (e.key === "Enter") { 
-                  e.preventDefault(); // 👈 evita el submit 
-                  iniciarCaja(); 
-                } }}
-              />	
-            </div>
-          </>
-        )}
-        <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
-          <label htmlFor="nombre">Nombre</label>
-          <Input value={data.producto_nombre} onChange={(e)=>set({...data, producto_nombre:e.target.value})}/>	
-        </div>
-        <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-9'>
-          <label htmlFor="descripcion">Descripcion</label>
-          <Input value={data.descripcion} onChange={(e)=>set({...data, descripcion:e.target.value})}/>	
-        </div>
-        <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
-          <label htmlFor="precio">Precio</label>
-          <NumericFormat 
-            value={data.precio} 
-            thousandSeparator="." 
-            decimalSeparator="," 
-            prefix="$" 
-            className="text-right border rounded px-2 py-1" 
-            onValueChange={(values) => {
-              set({...data, precio: values.floatValue || 0});
-            }}
-          />
-          {/*<Input type='number' className='text-right' value={data.precio} onChange={(e)=>set({...data, precio:Number(e.target.value)})}/>	*/}
-        </div>
-        <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3'>
-          <label htmlFor="cliente">Marcas</label>
-            <GenericSelect
-              route="marcas"
-              value={optionMarca}
-              onChange={(option) => seleccionarMarca(option)}
-              placeHolder='Selec. marca'
-            />
-        </div>
-        <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-6'>
-          <label htmlFor="codigoBarras">Código de barras</label>
-          <div className='flex items-center'>
-            <Input className='' value={data.codigo_barra} onChange={(e)=>set({...data, codigo_barra:e.target.value})}/>	
-            <Button 
-              className="p-0 hover:bg-transparent cursor-pointer"
-              type="button"
-              title="Generar código" 
-              variant="ghost" 
-              size="icon"
-              onClick={() => generarCodigo()}
-            >
-              { load ? ( <Loader2 size={20} className="animate-spin"/> ) : 
-                         (<Barcode size={20} color="blue"/>)  }
-            </Button>
-          </div>
-        </div>
-        <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
-          <label htmlFor="stockMinimo">Stock Mínimo</label>
-          <Input type='number' className='text-right' value={data.stock_minimo} onChange={(e)=>set({...data, stock_minimo:Number(e.target.value)})}/>	
-        </div>
-        <div className="col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3">
-          <label htmlFor="vencimiento">Vencimiento</label>
-          <DatePicker fecha={(data.vencimiento??'')} setFecha={ (fecha:string) => {set({...data, vencimiento: fecha})} }/>
-        </div>  
-        <div className='col-span-6 sm:col-span-4 md:col-span-4 lg:col-span-2 flex flex-col'>
-          <label className='mr-2'>Inhabilitado</label>
-          <Switch checked={data.inhabilitado==0 ? false: true} onCheckedChange={(val) => set({...data, inhabilitado: Boolean(val)})} />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-//import { useEffect, useState } from "react";
-
-/*function SelectorImagen() {
-  const [images, setImages] = useState<string[]>([]);
-  const [selectedImage, setSelectedImage] = useState("");
-
-  useEffect(() => {
-    fetch('/productos/images') //fetch(route('productos.getImages'))
-      .then(res => res.json())
-      .then(data => setImages(data))
-      .catch(err => console.error("Error cargando imágenes:", err));
-  }, []);
-
-  return (
-    <div>
-      <label>Seleccionar imagen existente:</label>
-      <select
-        value={selectedImage}
-        onChange={(e) => setSelectedImage(e.target.value)}
-      >
-        <option value="">-- Elegir --</option>
-        {images.length>0 && images.map(img => (
-          <option key={img} value={img}>{img}</option>
-        ))}
-      </select>
-
-      {selectedImage && (
-        <img
-          src={`/${selectedImage}`}
-          alt="Preview"
-          className="w-24 h-24 mt-2 object-cover"
-        />
-      )}
-    </div>
-  );
-}*/
-
-interface PropsImage{
-  url: string | undefined;
-}
-
-function SelectImagen( { url } : PropsImage){
-  return (
-    <>
-      
-    </>
-  );
-}
+type ConcepValor = {concepto: string, valor: number}
 
 export default function CreateViewCajas(){
   //data
   const [ load, setLoad ] = useState(false);
-  const { mode, caja, resultado, mensaje, caja_id, timestamp } = usePage().props as { 
+  const { mode, caja, resultado, mensaje, caja_id, timestamp, ingresos, egresos } = usePage().props as { 
     mode?:      string | 'create' | 'edit';
     caja?:      Caja;
     resultado?: number;
     mensaje?:   string;
     caja_id?:   number;
     timestamp?: number;
+    ingresos?:  ConcepValor[];
+    egresos?:   ConcepValor[];
   };
   breadcrumbs[0].title = (mode=='create'? 'Nueva' : 'Detalles de la')+' caja'+(mode!='create'? ` ${caja?.caja_id}` : '')//(mode=='create'? 'Nuevo' : 'Editar')+' producto';
   const [ultimoTimestamp, setUltimoTimestamp] = useState<number | null>(null);
@@ -275,10 +70,58 @@ export default function CreateViewCajas(){
   const [text, setText]     = useState('');
   const [color, setColor]   = useState('success');
 
+  const [optionTur, setOptionTurn]      = useState<Autocomplete|null>(null);
+
+  //Effect
+
+  useEffect(() => {
+    const cambioDetectado = timestamp && timestamp !== ultimoTimestamp;
+    //const cambioDetectado = (resultado && resultado  !== propsActuales.resultado) || (mensaje && mensaje    !== propsActuales.mensaje) 
+
+    if (cambioDetectado) {
+      //setPropsActuales({ resultado, mensaje, producto_id });
+      setUltimoTimestamp(timestamp);
+
+      const esError = resultado === 0;
+      setTitle(esError ? 'Error' : mode === 'create' ? 'Caja nueva' : 'Caja modificada');
+      setText(esError ? mensaje ?? 'Error inesperado' : `${mensaje} (ID: ${caja_id})`);
+      setColor(esError ? 'error' : 'success');
+      setActivo(true); 
+    }
+  }, [resultado, mensaje, caja_id, timestamp, ultimoTimestamp, mode]);
+
+  /*useEffect(() => {
+    if(producto && mode === 'edit'){
+      setData({
+        producto_id:         producto.producto_id,
+        producto_nombre:     producto.producto_nombre,
+        descripcion:         producto.descripcion,
+        categoria_id:        '',
+        categoria_nombre:    '',
+        precio:              producto.precio,
+        inhabilitado:        producto.inhabilitado,
+        imagen:              producto.imagen,
+        marca_id:            producto.marca_id,
+        marca_nombre:        producto.marca_nombre, 
+        codigo_barra:        producto.codigo_barra,
+        stock_minimo:        producto.stock_minimo,
+        vencimiento:         producto.vencimiento? convertirFechaGuionesBarras(producto.vencimiento) : '',
+      });
+    }
+  }, [mode, producto]);*/
+
+  useEffect(() => {
+    if (data.turno_id && data.turno_nombre) {
+      setOptionTurn({ value: Number(data.turno_id), label: data.turno_nombre });
+    } else {
+      setOptionTurn(null);
+    }
+  }, [data.turno_id, data.turno_nombre]);
+
   //funciones
   const handleSubmit = (e:React.FormEvent) => {
     e.preventDefault();
-    if(!data.producto_nombre){
+    /*if(!data.producto_nombre){
       setTitle('Campo requerido!');
       setText('Se requiere ingresar un nombre para el producto.');
       setColor('warning');
@@ -321,11 +164,11 @@ export default function CreateViewCajas(){
       return 
     }
     setTextConfirm("Estás seguro de "+(mode==='create'?'crear':'actualizar')+' este producto?');
-    setConfirOpen(true);
+    setConfirOpen(true);*/
   };
 
   const grabarGuardar = () => {
-    //reseteo el confirmar    
+    /*//reseteo el confirmar    
     setConfirOpen(false);
     setTextConfirm('');
 
@@ -340,25 +183,6 @@ export default function CreateViewCajas(){
       //file: file,
       //nombre: data.producto_nombre
     };
-    /*const payload = {
-      producto_id: String(data.producto_id),
-      producto_nombre: String(data.producto_nombre),
-      descripcion: String(data.descripcion),
-      precio: String(data.precio),
-      codigo_barra: String(data.codigo_barra),
-      marca_id: String(data.marca_id),
-      stock_minimo: String(data.stock_minimo),
-      inhabilitado: String(data.inhabilitado),
-      vencimiento: String(data.vencimiento || ''),
-      categorias: catSelected.map(cat => ({
-        id: String(cat.id),
-        nombre: String(cat.nombre),
-      })),
-      file,
-    };*/
-
-
-    //const formData = toFormData(payload);
 
     if (mode === 'create') {
       router.post(
@@ -388,127 +212,236 @@ export default function CreateViewCajas(){
     }
     setTitle('');
     setText('');
-    setActivo(false);
+    setActivo(false);*/
   };
   
   const cancelar = () => {
     setConfirOpen(false);
   };
 
-  //Effect
-  useEffect(() => {
-    const cargarDatos = async() => {
-      try {
-        const [resCategorias, /*resMarcas*/] = await Promise.all([
-          fetch(route('categorias.habilitadas')),
-          //fetch(route('marcas.marcasHabilitadas'))
-        ]);
-        const categorias = await resCategorias.json();
-        //const marcas = await resMarcas.json();
-
-        setCatHab(ordenarPorTexto(categorias, 'nombre'));
-        //setMarcasHab(ordenarPorTexto(marcas, 'nombre'));
-
-      } catch (error) {
-        console.error("Error al cargar los datos: ", error);
-      }
-    };
-    cargarDatos();
-  },[]);
-
-  useEffect(() => {
-    const cambioDetectado = timestamp && timestamp !== ultimoTimestamp;
-    //const cambioDetectado = (resultado && resultado  !== propsActuales.resultado) || (mensaje && mensaje    !== propsActuales.mensaje) 
-
-    if (cambioDetectado) {
-      //setPropsActuales({ resultado, mensaje, producto_id });
-      setUltimoTimestamp(timestamp);
-
-      const esError = resultado === 0;
-      setTitle(esError ? 'Error' : mode === 'create' ? 'Producto nuevo' : 'Producto modificado');
-      setText(esError ? mensaje ?? 'Error inesperado' : `${mensaje} (ID: ${producto_id})`);
-      setColor(esError ? 'error' : 'success');
-      setActivo(true); 
+  const selectTurnos = (option : any) => {
+    if(option){
+      setData({...data, turno_id: option.value, turno_nombre: option.label});
+      setOptionTurn(option);
+    }else{
+      setData({...data, turno_id: 0, turno_nombre: ''});
+      setOptionTurn(null);
     }
-  }, [resultado, mensaje, producto_id, timestamp, ultimoTimestamp, mode]);
+  };
 
-  useEffect(() => {
-    if(producto && mode === 'edit'){
-      setData({
-        producto_id:         producto.producto_id,
-        producto_nombre:     producto.producto_nombre,
-        descripcion:         producto.descripcion,
-        categoria_id:        '',
-        categoria_nombre:    '',
-        precio:              producto.precio,
-        inhabilitado:        producto.inhabilitado,
-        imagen:              producto.imagen,
-        marca_id:            producto.marca_id,
-        marca_nombre:        producto.marca_nombre, 
-        codigo_barra:        producto.codigo_barra,
-        stock_minimo:        producto.stock_minimo,
-        vencimiento:         producto.vencimiento? convertirFechaGuionesBarras(producto.vencimiento) : '',
-      });
+  const iniciarCaja = () => {
+    //llamar al back, creat la caja_id, guardar monto_inicial, turno_id, generar los valores de efectivo, debito 
+    //transferencia de ingresos y egresos y devolverlos
+    if(!data.turno_id){
+      setTitle('Campo requerido!');
+      setText('Se requiere seleccionar un turno para empezar.');
+      setColor('warning');
+      setActivo(true);
+      return 
     }
-  }, [mode, producto]);
+    if(!data.monto_inicial || data.monto_inicial === 0){
+      setTitle('Campo requerido!');
+      setText('Se requiere ingresar un monto para empezar');
+      setColor('warning');
+      setActivo(true);
+      return 
+    }
+
+    //cambiar fecha a fechas con guiones antes de mandar
+    data.fecha = convertirFechaBarrasGuiones(data.fecha);
+    setLoad(true);
+    console.log("abriendo caja")
+
+    //aquí quiero hacer la consulta y llamar a laravel para que me haga los procesos y volver aquí con los valores correctos
+    //para seguir el flujo, o debo hacerlos a todos un useState????
+    const payload = {...data};
+    router.post(route('caja.open'), payload, {
+      onError: (errors) => {
+        setTitle('Error');
+        setText('No se pudo abrir la caja');
+        setColor('danger');
+        setActivo(true);
+      },
+      onFinish: () => setLoad(false),
+    });
+  };
+
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title={(mode=='create'? 'Nueva' : 'Detalles de la')+' caja'} />
       <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
-        <div className="pb-3 relative flex-none flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
+        <div className="pb-3 relative flex-none flex-1  rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
           <form 
-            className='grid grid-cols-12 gap-1'
-            onSubmit={handleSubmit}>
-            <div className='pb-1 col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>
-              <div className='py-4 px-4'>
-                Detalles del producto
-                <hr />
-              </div>
-              <DetallesProducto 
-                modo={mode??'create'}
-                data={data}
-                set={setData}/>
-            </div>
-            <div className='px-4 pb-1 col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>
-              <div className='py-4'>
-                Categorías
-                <hr />
-              </div>
-              <SelectMultiple
-                opciones={categoriaHab}
-                seleccionados={catSelected}
-                setSeleccionados={setCatSelected}
-              />
-            </div>
-            <div className='px-4 pb-1 col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>
-              <div className='py-4'>
-                Imagen
-                <hr />
-              </div>
-              {/*<SubirImagen
-                set={(e)=> setFile(e)}
-              />*/}
-              { data.imagen && (
-                <div className='flex justify-center mb-3'>
-                  <figure className='flex flex-col items-center text-center'>
-                    <img src={`/${data.imagen}`} className="w-50 h-50 object-cover rounded-md border mb-1" alt="Imagen" width="50"/>
-                    <figcaption className="text-sm text-gray-600">
-                      {`/${data.imagen}`}
-                    </figcaption>
-                  </figure>
+            className='grid grid-cols-12 gap-4 p-4'
+            onSubmit={handleSubmit}
+          >
+            {!caja ? (
+              <> 
+                <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3'>
+                  Turnos
+                  <GenericSelect
+                    route="turnos"
+                    value={optionTur}
+                    onChange={(option) => selectTurnos(option)}
+                    placeHolder='Seleccionar'
+                  />
                 </div>
-              ) }
-              <Input placeholder='Ingresa la dirección de tu imagen sin /' value={urlImg} onChange={(e) => { setUrlImg(e.target.value) }}/>
-            </div>
+                <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
+                  <label htmlFor="monto">Monto inicial</label>
+                  <NumericFormat 
+                    value={data.monto_inicial} 
+                    thousandSeparator="." 
+                    decimalSeparator="," 
+                    prefix="$" 
+                    className="text-right border rounded px-2 py-1" 
+                    onValueChange={(values) => { setData({...data, monto_inicial: values.floatValue || 0}) }}
+                    onKeyDown={(e) => { if (e.key === "Enter") { 
+                      e.preventDefault(); // 👈 evita el submit 
+                      iniciarCaja(); 
+                    } }}
+                  />	
+                </div>
+                <div  className='flex items-center  justify-end px-4 pb-4 col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-3'>
+                  <Button type="button" onClick={iniciarCaja}>
+                    { load ? ( <Loader2 size={20} className="animate-spin"/> ) : 
+                              (<Save size={20} className=""/>)  }
+                    Abrir caja
+                  </Button>
+                </div>
+              </>
+            ): (
+              <>
+                <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-12'>
+                  <label htmlFor="id">Id</label>
+                  <Input disabled value={data.caja_id} onChange={(e)=>setData({...data, caja_id:e.target.value})}/>	
+                </div>
+                <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-12'>
+                  <label htmlFor="turno_nombre">Turno</label>
+                  <Input disabled value={data.turno_nombre}/>	
+                </div>
+                <div className="col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-2">
+                  <label htmlFor="fecha">Fecha</label>
+                  <DatePicker disable fecha={(data.fecha)} setFecha={ (fecha:string) => {setData({...data,fecha: fecha})} }/>
+                </div>
+                <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
+                  <label htmlFor="monto">Monto inicial</label>
+                  <NumericFormat 
+                    value={data.monto_inicial} 
+                    thousandSeparator="." 
+                    decimalSeparator="," 
+                    prefix="$" 
+                    className="text-right border rounded px-2 py-1" 
+                    disabled
+                    onValueChange={(values) => { setData({...data, monto_inicial: values.floatValue || 0}) }}
+                    onKeyDown={(e) => { if (e.key === "Enter") { 
+                      e.preventDefault(); // 👈 evita el submit 
+                      iniciarCaja(); 
+                    } }}
+                  />	
+                </div>
+                <div className='pb-1 col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>
+                  <hr />
+                  <div className='py-4 px-4'>
+                    Según el sistema
+                    <hr />
+                  </div>
+                  <p className=''>* INGRESOS</p>
+                  <div className='grid grid-cols-12 gap-4 '>
+                    { (ingresos??[]).map((e:any) => (
+                        <>
+                          <div className='col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-6 text-left' >
+                          - {e.concepto}: 
+                          </div>
+                          <div className='col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-6' >
+                            $ {e.valor}
+                          </div>
+                        </>
+                      ))
+                    }
+                  </div>
+                  <p className=''>* EGRESOS</p>
+                  <div className='grid grid-cols-12 gap-4 '>
+                    { (egresos??[]).map((e:any) => (
+                        <>
+                          <div className='col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-6 text-left' >
+                          - {e.concepto}: 
+                          </div>
+                          <div className='col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-6' >
+                            $ {e.valor}
+                          </div>
+                        </>
+                      ))
+                    }
+                  </div>
+                  <div className='flex justify-center bg-gray'>
+                    <p>Total: </p>
+                    <p>{convertirNumberPlata(String(data.total_sistema))}</p>
+                  </div>
+                </div>
+                <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
+                  <hr />
+                  <div className='py-4 px-4'>
+                    Según el usuario
+                    <hr />
+                  </div>
+                  <p className=''>* INGRESOS</p>
+                  <div className='grid grid-cols-12 gap-4 '>
+                    <div className='col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-6 text-left' >
+                    - Efectivo: 
+                    </div>
+                    <div className='col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-6' >
+                      <NumericFormat 
+                        value={data.efectivo_user} prefix="$" 
+                        thousandSeparator="." decimalSeparator="," 
+                        className="text-right border rounded px-2 py-1" 
+                        onValueChange={(values) => { setData({...data, efectivo_user: values.floatValue || 0}) }}
+                      />	
+                    </div>
+                    <div className='col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-6 text-left' >
+                    - Débito: 
+                    </div>
+                    <div className='col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-6' >
+                      <NumericFormat 
+                        value={data.debito_user} prefix="$" 
+                        thousandSeparator="." decimalSeparator="," 
+                        className="text-right border rounded px-2 py-1" 
+                        onValueChange={(values) => { setData({...data, debito_user: values.floatValue || 0}) }}
+                      />
+                    </div>
+                    <div className='col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-6 text-left' >
+                    - Transferencia: 
+                    </div>
+                    <div className='col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-6' >
+                      <NumericFormat 
+                        value={data.transferencia_user} prefix="$" 
+                        thousandSeparator="." decimalSeparator="," 
+                        className="text-right border rounded px-2 py-1" 
+                        onValueChange={(values) => { setData({...data, transferencia_user: values.floatValue || 0}) }}
+                      />
+                    </div>
+                  </div>
+                  <div className='flex justify-center bg-gray'>
+                    <p>Total: </p>
+                    <p>{convertirNumberPlata(String(data.total_user))}</p>
+                  </div>
+                </div>
+                <div  className='flex justify-end px-4 pb-4 col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>
+                  <div className={`flex justify-center bg-${data.total_sistema - data.total_user > 0 ? 'red' : 'green'}`}>
+                    <p>Diferencia: </p>
+                    <p>{convertirNumberPlata(String(data.total_sistema - data.total_user))}</p>
+                  </div>
+                </div>
+                <div  className='flex justify-end px-4 pb-4 col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>
+                  <Button type="button" onClick={handleSubmit}>
+                    { load ? ( <Loader2 size={20} className="animate-spin"/> ) : 
+                              (<Save size={20} className=""/>)  }
+                    Grabar
+                  </Button>
+                </div>
+              </>
+            )}
           </form>
-        </div>
-        <div  className='flex justify-end px-4 pb-4 col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>
-          <Button type="button" onClick={handleSubmit}>
-            { load ? ( <Loader2 size={20} className="animate-spin"/> ) : 
-                      (<Save size={20} className=""/>)  }
-            { ( mode === 'create' ? 'Grabar' : 'Actualizar')  }          
-          </Button>
         </div>
       </div>
       <ModalConfirmar
@@ -524,8 +457,8 @@ export default function CreateViewCajas(){
         color={color}
         onClose={() => {
             setActivo(false);
-            if (resultado === 1 && producto_id){
-              router.get(route('productos.edit', { producto: producto_id }));
+            if (resultado === 1 && caja_id){
+              router.get(route('caja.edit', { caja: caja_id }));
             }
           }
         }

@@ -225,9 +225,10 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
 
     //Cajas
     Route::get('/cajas', [CajaController::class, 'index'])->name('cajas.index');
-    Route::post('/caja/abrir', [CajaController::class, 'openCaja'])->name('caja.open');
     Route::get('caja/nueva', [CajaController::class, 'create'])->name('caja.create');
+    Route::post('/caja/abrir', [CajaController::class, 'openCaja'])->name('caja.open');
     Route::post('/caja/grabar-nueva', [CajaController::class, 'store'])->name('caja.store');
+    Route::get('caja/ver/{caja}', [CajaController::class, 'show'])->name('caja.show');
     Route::put('/caja/update/{caja}', [CajaController::class, 'update'])->name('caja.update');
     Route::put('/caja/eliminar/{caja}', [CajaController::class, 'destroy'])->name('caja.toggleEstado');
     
@@ -249,7 +250,6 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
 
     //Gráficos
     Route::get('/dashboard', [GraficosController::class, 'index'])->name('graficos.index');
-
 
     //---
 

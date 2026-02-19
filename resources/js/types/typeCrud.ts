@@ -226,22 +226,25 @@ export interface Marca{
 };
 
 export interface Caja {
-  caja_id:          string|number;
-  turno_id:         string|number;
-  turno_nombre:     string;
-  fecha:            string;
-  fecha_desde:      string;
-  fecha_hasta:      string;
-  monto_inicial:    number;
-  descripcion:      string;
-  efectivo:         number;
-  debito:           number;
-  transferencia:    number;
-  total_sistema:    number;
-  total_user:       number;
-  diferencia:       number;
-  created_at?:      string;
-  updated_at?:      string;
+  caja_id:            string|number;
+  turno_id:           string|number;
+  turno_nombre:       string;
+  fecha:              string;
+  fecha_desde:        string;
+  fecha_hasta:        string;
+  monto_inicial:      number;
+  descripcion:        string;
+  efectivo:           number;
+  efectivo_user:      number;
+  debito:             number;
+  debito_user:        number;
+  transferencia:      number;
+  transferencia_user: number;
+  total_sistema:      number;
+  total_user:         number;
+  diferencia:         number;
+  created_at?:        string;
+  updated_at?:        string;
 }
 
 //para componente selec multiple

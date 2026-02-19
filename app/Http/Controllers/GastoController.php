@@ -69,10 +69,15 @@ class GastoController extends Controller
     DB::beginTransaction();
     try {
       //controlo los datos
+      if($request->caja_id === ''){
+        $request->caja_id = null;
+      }
+
       $validated = $request->validate([
         'fecha'            => 'required|date',
-        'caja_id'          => 'integer',
-        'proveedor_id'     => 'integer',
+        'caja_id'          => 'nullable|integer',
+        'proveedor_id'     => 'required|integer',
+        'forma_pago_id'    => 'required|integer',
         'monto'            => 'required|numeric',
         'descripcion'      => 'string|max:255',
       ]);
@@ -82,6 +87,7 @@ class GastoController extends Controller
         'fecha'            => $validated['fecha'],
         'caja_id'          => $request->caja_id ?? null,
         'proveedor_id'     => $validated['proveedor_id'],
+        'forma_pago_id'    => $validated['forma_pago_id'],
         'monto'            => $validated['monto'],
         'descripcion'      => $validated['descripcion'],
         'created_at'       => now(),

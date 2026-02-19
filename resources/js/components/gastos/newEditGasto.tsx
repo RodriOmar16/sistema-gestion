@@ -55,6 +55,8 @@ export default function NewEditGasto({ open, onOpenChange, mode, gasto, onSubmit
   useEffect(() => {
     if (!open) {
       setData(gastoVacio);
+      setOptionProv(null);
+      setOptionFp(null);
     }else{
       if(gasto && mode === 'edit'){
         setData({
@@ -102,7 +104,12 @@ export default function NewEditGasto({ open, onOpenChange, mode, gasto, onSubmit
       setActivo(true);
       return 
     }
-    onSubmit(data);
+    const payload = { ...data }
+    if(data.caja_id === -1){
+      payload.caja_id = '';
+    }
+    //return console.log(payload);
+    onSubmit(payload);
   }
 
   const seleccionarProveedor = (option : any) => {

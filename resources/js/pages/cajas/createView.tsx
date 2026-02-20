@@ -41,6 +41,7 @@ const cajaVacia = {
   total_sistema:      0,
   total_user:         0,
   diferencia:         0,
+  inhabilitado:       0,
 };
 
 type ConcepValor = {concepto: string, valor: number}

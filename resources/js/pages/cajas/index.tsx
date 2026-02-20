@@ -14,7 +14,7 @@ import ShowMessage from '@/components/utils/showMessage';
 import GenericSelect from '@/components/utils/genericSelect';
 import { DatePicker } from '@/components/utils/date-picker';
 import { NumericFormat } from 'react-number-format';
-//import DataTableGastos from '@/components/gastos/dataTableGastos';
+import DataTableCajas from '@/components/cajas/dataTableCajas';
 //import NewEditGasto from '@/components/gastos/newEditGasto';
 import { convertirFechaBarrasGuiones } from '@/utils';
 
@@ -42,6 +42,7 @@ const cajaVacia = {
   total_sistema:      0,
   total_user:         0,
   diferencia:         0,
+  inhabilitado:       0,
 };
 
 export function FiltrosForm({ openCreate }: propsForm){
@@ -54,7 +55,14 @@ export function FiltrosForm({ openCreate }: propsForm){
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setLoad(true);
-    const payload = {      ...data, buscar: true    }
+    const payload = { 
+      ...data,
+      caja_id: data.caja_id == 0 ? null : Number(data.caja_id),
+      turno_id: data.turno_id == 0 ? null : Number(data.turno_id),
+      fecha_desde: convertirFechaBarrasGuiones(data.fecha_desde??''),
+      fecha_hasta: convertirFechaBarrasGuiones(data.fecha_hasta??''),
+      buscar: true    
+    }
     
     router.get(route('cajas.index'), payload, {
       preserveState: true,
@@ -262,14 +270,13 @@ export default function Cajas(){
 
   //effect
   useEffect(() => {
-    if (
-      cajas &&
-      cajas.length > 0 &&
-      JSON.stringify(cajas) !== JSON.stringify(cacheados)
-    ) {
+    if (cajas && cajas.length > 0) {
       setCacheados(cajas);
+    } else {
+      setCacheados([]);
     }
   }, [cajas]);
+
 
 
   useEffect(() => {
@@ -302,11 +309,11 @@ export default function Cajas(){
           <FiltrosForm openCreate={openCreate}/>
         </div>
         <div className="p-4 relative flex-1 overflow-auto rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
-          {/*<DataTableGastos
+          <DataTableCajas
             datos={cacheados?? []} 
             openEdit={openEdit} 
             abrirConfirmar={confirmar}
-          />*/}
+          />
         </div>
       </div>
       {/*<NewEditGasto

@@ -243,6 +243,7 @@ export interface Caja {
   total_sistema:      number;
   total_user:         number;
   diferencia:         number;
+  inhabilitado:       number;
   created_at?:        string;
   updated_at?:        string;
 }

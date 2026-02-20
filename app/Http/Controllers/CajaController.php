@@ -27,6 +27,7 @@ class CajaController extends Controller
     if (!$request->has('buscar')) {
       return inertia('cajas/index', ['cajas' => []]);
     }
+    //dd($request->all());
 
     $query = Caja::query()->with(['turno']);
 
@@ -49,7 +50,7 @@ class CajaController extends Controller
         'fecha'            => $c->fecha,
         'created_at'       => $c->created_at,
         'turno_id'         => $c->turno_id,
-        'turno_nombre'     => optional($g->turno)->nombre,
+        'turno_nombre'     => optional($c->turno)->nombre,
         'total_sistema'    => $c->total_sistema,
         'total_user'       => $c->total_user,
         'diferencia'       => $c->diferencia,

@@ -30,8 +30,12 @@ class Caja extends Model
         'total_user',
         'diferencia',
         'user_grabacion',
-        'inhabilitado'
+        'inhabilitado',
+        'abierta'
     ];
+    /*protected $casts = [
+        'fecha' => 'date',
+    ];*/
 
     public function turno()
     {

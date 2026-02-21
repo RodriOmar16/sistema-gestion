@@ -7,12 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { Loader2, Save, Barcode } from 'lucide-react';
+import { Loader2, Save, Barcode, Ban } from 'lucide-react';
 import {  Table,  TableBody,  TableCaption,  TableCell,  TableHead,  TableHeader,  TableRow,
 } from "@/components/ui/table";
-import { Select,  SelectContent, SelectGroup,  SelectItem,  SelectTrigger,  SelectValue } from "@/components/ui/select"
-import SelectMultiple from '@/components/utils/select-multiple';
-import { Multiple } from '@/types/typeCrud';
 import { convertirFechaBarrasGuiones, convertirFechaGuionesBarras, convertirNumberPlata, ordenarPorTexto } from '@/utils';
 import ShowMessage from '@/components/utils/showMessage';
 import ModalConfirmar from '@/components/modalConfirmar';
@@ -42,6 +39,7 @@ const cajaVacia = {
   total_user:         0,
   diferencia:         0,
   inhabilitado:       0,
+  abierta:            0,
 };
 
 type ConcepValor = {concepto: string, valor: number}
@@ -91,25 +89,17 @@ export default function CreateViewCajas(){
     }
   }, [resultado, mensaje, caja_id, timestamp, ultimoTimestamp, mode]);
 
-  /*useEffect(() => {
-    if(producto && mode === 'edit'){
+  useEffect(() => {
+    if(caja && mode === 'edit'){
+      console.log("caja recibida: ", caja)
+      console.log("egresos: ", egresos )
+      console.log("ingresos: ", ingresos )
       setData({
-        producto_id:         producto.producto_id,
-        producto_nombre:     producto.producto_nombre,
-        descripcion:         producto.descripcion,
-        categoria_id:        '',
-        categoria_nombre:    '',
-        precio:              producto.precio,
-        inhabilitado:        producto.inhabilitado,
-        imagen:              producto.imagen,
-        marca_id:            producto.marca_id,
-        marca_nombre:        producto.marca_nombre, 
-        codigo_barra:        producto.codigo_barra,
-        stock_minimo:        producto.stock_minimo,
-        vencimiento:         producto.vencimiento? convertirFechaGuionesBarras(producto.vencimiento) : '',
+        ...caja,
+        fecha: convertirFechaGuionesBarras(caja.fecha),
       });
     }
-  }, [mode, producto]);*/
+  }, [mode, caja]);
 
   useEffect(() => {
     if (data.turno_id && data.turno_nombre) {
@@ -122,54 +112,15 @@ export default function CreateViewCajas(){
   //funciones
   const handleSubmit = (e:React.FormEvent) => {
     e.preventDefault();
-    /*if(!data.producto_nombre){
-      setTitle('Campo requerido!');
-      setText('Se requiere ingresar un nombre para el producto.');
-      setColor('warning');
-      setActivo(true);
-      return 
-    }
-    if(!data.codigo_barra){
-      setTitle('Campo requerido!');
-      setText('Se requiere ingresar un código de barras para el producto.');
-      setColor('warning');
-      setActivo(true);
-      return 
-    }
-    if(!data.precio || data.precio === 0){
-      setTitle('Campo requerido!');
-      setText('Se requiere ingresar un precio para el producto.');
-      setColor('warning');
-      setActivo(true);
-      return 
-    }
-    if(!data.stock_minimo || data.stock_minimo === 0){
-      setTitle('Campo requerido!');
-      setText('Se requiere ingresar un valor de stock mínimo para el producto.');
-      setColor('warning');
-      setActivo(true);
-      return 
-    }
-    if(!data.marca_id){
-      setTitle('Campo requerido!');
-      setText('Se requiere ingresar una marca para el producto.');
-      setColor('warning');
-      setActivo(true);
-      return 
-    }
-    if(catSelected.length === 0){
-      setTitle('Categoría requerida!');
-      setText('Se requiere seleccionar al menos una categoría.');
-      setColor('warning');
-      setActivo(true);
-      return 
-    }
-    setTextConfirm("Estás seguro de "+(mode==='create'?'crear':'actualizar')+' este producto?');
-    setConfirOpen(true);*/
+    
+    data.diferencia = Number(data.total_sistema) - Number(data.total_user);
+    console.log("data al final: ", data)
+    setTextConfirm("Estás seguro de finalizar la caja?");
+    setConfirOpen(true);
   };
 
   const grabarGuardar = () => {
-    /*//reseteo el confirmar    
+    //reseteo el confirmar    
     setConfirOpen(false);
     setTextConfirm('');
 
@@ -178,15 +129,10 @@ export default function CreateViewCajas(){
     
     const payload = {
       ...data,
-      categorias: catSelected,
-      vencimiento: data.vencimiento?convertirFechaBarrasGuiones(data.vencimiento) : '',
-      imagen: urlImg && data.imagen !== urlImg ? urlImg: data.imagen
-      //file: file,
-      //nombre: data.producto_nombre
     };
 
     if (mode === 'create') {
-      router.post(
+      /*router.post(
         route('productos.store'),payload,
         {
           //forceFormData: true,
@@ -196,10 +142,11 @@ export default function CreateViewCajas(){
             setLoad(false);
           }
         }
-      );
+      );*/
+      console.log("entro por error")
     } else {
       router.put(
-        route('productos.update',{producto: data.producto_id}),
+        route('caja.update',{caja: data.caja_id}),
         payload,
         {
           //forceFormData: true,
@@ -213,7 +160,7 @@ export default function CreateViewCajas(){
     }
     setTitle('');
     setText('');
-    setActivo(false);*/
+    setActivo(false);
   };
   
   const cancelar = () => {
@@ -231,8 +178,6 @@ export default function CreateViewCajas(){
   };
 
   const iniciarCaja = () => {
-    //llamar al back, creat la caja_id, guardar monto_inicial, turno_id, generar los valores de efectivo, debito 
-    //transferencia de ingresos y egresos y devolverlos
     if(!data.turno_id){
       setTitle('Campo requerido!');
       setText('Se requiere seleccionar un turno para empezar.');
@@ -251,10 +196,7 @@ export default function CreateViewCajas(){
     //cambiar fecha a fechas con guiones antes de mandar
     data.fecha = convertirFechaBarrasGuiones(data.fecha);
     setLoad(true);
-    console.log("abriendo caja")
 
-    //aquí quiero hacer la consulta y llamar a laravel para que me haga los procesos y volver aquí con los valores correctos
-    //para seguir el flujo, o debo hacerlos a todos un useState????
     const payload = {...data};
     router.post(route('caja.open'), payload, {
       onError: (errors) => {
@@ -266,7 +208,6 @@ export default function CreateViewCajas(){
       onFinish: () => setLoad(false),
     });
   };
-
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
@@ -295,7 +236,7 @@ export default function CreateViewCajas(){
                     thousandSeparator="." 
                     decimalSeparator="," 
                     prefix="$" 
-                    className="text-right border rounded px-2 py-1" 
+                    className="text-right border rounded-md px-2 py-1" 
                     onValueChange={(values) => { setData({...data, monto_inicial: values.floatValue || 0}) }}
                     onKeyDown={(e) => { if (e.key === "Enter") { 
                       e.preventDefault(); // 👈 evita el submit 
@@ -313,15 +254,15 @@ export default function CreateViewCajas(){
               </>
             ): (
               <>
-                <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-12'>
+                <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-2'>
                   <label htmlFor="id">Id</label>
                   <Input disabled value={data.caja_id} onChange={(e)=>setData({...data, caja_id:e.target.value})}/>	
                 </div>
-                <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-12'>
+                <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
                   <label htmlFor="turno_nombre">Turno</label>
                   <Input disabled value={data.turno_nombre}/>	
                 </div>
-                <div className="col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-2">
+                <div className="col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3">
                   <label htmlFor="fecha">Fecha</label>
                   <DatePicker disable fecha={(data.fecha)} setFecha={ (fecha:string) => {setData({...data,fecha: fecha})} }/>
                 </div>
@@ -342,104 +283,142 @@ export default function CreateViewCajas(){
                   />	
                 </div>
                 <div className='pb-1 col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>
-                  <hr />
-                  <div className='py-4 px-4'>
+                  <div className='py-2 px-4 bg-sky-700 dark:bg-sky-900 text-white font-semibold rounded-t'>
                     Según el sistema
-                    <hr />
                   </div>
-                  <p className=''>* INGRESOS</p>
-                  <div className='grid grid-cols-12 gap-4 '>
-                    { (ingresos??[]).map((e:any) => (
-                        <>
-                          <div className='col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-6 text-left' >
-                          - {e.concepto}: 
-                          </div>
-                          <div className='col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-6' >
-                            $ {e.valor}
-                          </div>
-                        </>
-                      ))
-                    }
-                  </div>
-                  <p className=''>* EGRESOS</p>
-                  <div className='grid grid-cols-12 gap-4 '>
-                    { (egresos??[]).map((e:any) => (
-                        <>
-                          <div className='col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-6 text-left' >
-                          - {e.concepto}: 
-                          </div>
-                          <div className='col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-6' >
-                            $ {e.valor}
-                          </div>
-                        </>
-                      ))
-                    }
-                  </div>
-                  <div className='flex justify-center bg-gray'>
-                    <p>Total: </p>
-                    <p>{convertirNumberPlata(String(data.total_sistema))}</p>
-                  </div>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead></TableHead>
+                        <TableHead>Efectivo</TableHead>
+                        <TableHead>Débito</TableHead>
+                        <TableHead>Transferencia</TableHead>
+                        <TableHead className="text-right">Total</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      <TableRow>
+                        <TableCell className="font-medium">Ingresos</TableCell>
+                        <TableCell>{convertirNumberPlata(String(data.efectivo))}</TableCell>
+                        <TableCell>{convertirNumberPlata(String(data.debito))}</TableCell>
+                        <TableCell>{convertirNumberPlata(String(data.transferencia))}</TableCell>
+                        <TableCell className="text-right">{convertirNumberPlata(String( data.efectivo + data.debito + data.transferencia ))}</TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell className="font-medium">Egresos</TableCell>
+                        <TableCell>{convertirNumberPlata(String((egresos ? egresos[0].valor : '')))}</TableCell>
+                        <TableCell>{convertirNumberPlata(String((egresos ? egresos[1].valor : '')))}</TableCell>
+                        <TableCell>{convertirNumberPlata(String((egresos ? egresos[2].valor : '')))}</TableCell>
+                        <TableCell className="text-right">{convertirNumberPlata(String( 
+                          egresos ? egresos[0].valor + egresos[1].valor + egresos[2].valor : ''
+                        ))}</TableCell>
+                      </TableRow>
+                      <TableRow className='bg-gray-100 dark:bg-black'>
+                        <TableCell colSpan={4} className='font-medium text-right'> Total:</TableCell>
+                        <TableCell className="font-medium text-left" colSpan={1} > {convertirNumberPlata(String(data.total_sistema))} </TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
                 </div>
-                <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
-                  <hr />
-                  <div className='py-4 px-4'>
+                <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-12'>
+                  <div className="py-2 px-4 bg-blue-800 dark:bg-blue-900 text-white font-semibold rounded-t">
                     Según el usuario
-                    <hr />
                   </div>
-                  <p className=''>* INGRESOS</p>
-                  <div className='grid grid-cols-12 gap-4 '>
-                    <div className='col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-6 text-left' >
-                    - Efectivo: 
-                    </div>
-                    <div className='col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-6' >
-                      <NumericFormat 
-                        value={data.efectivo_user} prefix="$" 
-                        thousandSeparator="." decimalSeparator="," 
-                        className="text-right border rounded px-2 py-1" 
-                        onValueChange={(values) => { setData({...data, efectivo_user: values.floatValue || 0}) }}
-                      />	
-                    </div>
-                    <div className='col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-6 text-left' >
-                    - Débito: 
-                    </div>
-                    <div className='col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-6' >
-                      <NumericFormat 
-                        value={data.debito_user} prefix="$" 
-                        thousandSeparator="." decimalSeparator="," 
-                        className="text-right border rounded px-2 py-1" 
-                        onValueChange={(values) => { setData({...data, debito_user: values.floatValue || 0}) }}
-                      />
-                    </div>
-                    <div className='col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-6 text-left' >
-                    - Transferencia: 
-                    </div>
-                    <div className='col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-6' >
-                      <NumericFormat 
-                        value={data.transferencia_user} prefix="$" 
-                        thousandSeparator="." decimalSeparator="," 
-                        className="text-right border rounded px-2 py-1" 
-                        onValueChange={(values) => { setData({...data, transferencia_user: values.floatValue || 0}) }}
-                      />
-                    </div>
-                  </div>
-                  <div className='flex justify-center bg-gray'>
-                    <p>Total: </p>
-                    <p>{convertirNumberPlata(String(data.total_user))}</p>
-                  </div>
+                  <Table className="w-full border border-gray-300 dark:border-black">
+                    <TableBody>
+                      <TableRow className="">
+                        <TableCell className="font-medium">Efectivo</TableCell>
+                        <TableCell>
+                          {data.abierta === 1 ? (
+                            <NumericFormat 
+                              value={data.efectivo_user} prefix="$" 
+                              thousandSeparator="." decimalSeparator="," 
+                              className="text-right border border-gray-300 rounded-md px-2 py-1 focus:ring-2 focus:ring-gray-400 focus:outline-none"
+                              onValueChange={(values) => { 
+                                const nuevo = values.floatValue || 0;
+                                setData({...data, efectivo_user: nuevo});
+                                setData('total_user', (Number(nuevo) + Number(data.debito_user) + Number(data.transferencia_user))) 
+                              }}
+                            />	
+                          ) : (
+                            convertirNumberPlata(String(data.efectivo_user))
+                          )}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow className="">
+                        <TableCell className="font-medium">Débito</TableCell>
+                        <TableCell>
+                          {data.abierta === 1 ? (
+                            <NumericFormat 
+                              value={data.debito_user} prefix="$" 
+                              thousandSeparator="." decimalSeparator="," 
+                              className="text-right border border-gray-300 rounded-md px-2 py-1 focus:ring-2 focus:ring-gray-400 focus:outline-none"
+                              onValueChange={(values) => { 
+                                const nuevo = values.floatValue || 0;
+                                setData({...data, debito_user: nuevo});
+                                setData('total_user', (Number(nuevo) + Number(data.efectivo_user) + Number(data.transferencia_user))) 
+                              }}
+                            />
+                          ): ( convertirNumberPlata(String(data.debito_user)) )}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow className="">
+                        <TableCell className="font-medium">Transferencia</TableCell>
+                        <TableCell>
+                          {data.abierta === 1 ? (
+                            <NumericFormat 
+                              value={data.transferencia_user} prefix="$" 
+                              thousandSeparator="." decimalSeparator="," 
+                              className="text-right border border-gray-300 rounded-md px-2 py-1 focus:ring-2 focus:ring-gray-400 focus:outline-none"
+                              onValueChange={(values) => { 
+                                const nuevo = values.floatValue || 0;
+                                setData({...data, transferencia_user: nuevo});
+                                setData('total_user', (Number(nuevo) + Number(data.efectivo_user) + Number(data.debito_user)))
+                              }}
+                            />
+                          ): ( convertirNumberPlata(String(data.transferencia_user)) )}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow className="bg-gray-100 dark:bg-black">
+                        <TableCell className="font-semibold text-right">Total:</TableCell>
+                        <TableCell className="font-bold text-left">
+                          {convertirNumberPlata(String(data.total_user))}
+                        </TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
                 </div>
-                <div  className='flex justify-end px-4 pb-4 col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>
-                  <div className={`flex justify-center bg-${data.total_sistema - data.total_user > 0 ? 'red' : 'green'}`}>
-                    <p>Diferencia: </p>
-                    <p>{convertirNumberPlata(String(data.total_sistema - data.total_user))}</p>
+                <div  className={`py-2 pl-4 col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12 ${data.total_sistema - data.total_user > 0 ? 'bg-red-500 dark:bg-red-700' : 'bg-green-500 dark:bg-green-700'}`}>
+                    Diferencia:{convertirNumberPlata(String(data.total_sistema - data.total_user))}
+                </div>
+                <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-12'>
+                  Descripción
+                  <Textarea 
+                    id="descripcion" 
+                    placeholder="Escribe una comentario..." 
+                    value={data.descripcion}
+                    disabled={data.abierta === 0}
+                    onChange={(e) => setData({...data, descripcion: e.target.value})}
+                  />
+                </div>
+                {data.fecha === (new Date()).toLocaleDateString() && data.inhabilitado == 0 && (
+                  <div  className='flex justify-end px-4 col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>
+                    <Button type="button" className='bg-red-500 hover:bg-red-800 text-white' onClick={handleSubmit}>
+                      { load ? ( <Loader2 size={20} className="animate-spin"/> ) : 
+                                (<Ban size={20} className=""/>)  }
+                      Inhabilitar
+                    </Button>
                   </div>
-                </div>
-                <div  className='flex justify-end px-4 pb-4 col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>
-                  <Button type="button" onClick={handleSubmit}>
-                    { load ? ( <Loader2 size={20} className="animate-spin"/> ) : 
-                              (<Save size={20} className=""/>)  }
-                    Grabar
-                  </Button>
-                </div>
+                )}
+                {data.abierta === 1 && data.inhabilitado == 0 && (
+                  <div  className='flex justify-end px-4 col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>
+                    <Button type="button" onClick={handleSubmit}>
+                      { load ? ( <Loader2 size={20} className="animate-spin"/> ) : 
+                                (<Save size={20} className=""/>)  }
+                      Finalizar
+                    </Button>
+                  </div>
+                )}
               </>
             )}
           </form>
@@ -459,7 +438,7 @@ export default function CreateViewCajas(){
         onClose={() => {
             setActivo(false);
             if (resultado === 1 && caja_id){
-              router.get(route('caja.edit', { caja: caja_id }));
+              router.get(route('caja.show', { caja: caja_id }));
             }
           }
         }

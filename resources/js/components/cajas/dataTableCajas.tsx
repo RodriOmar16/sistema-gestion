@@ -14,14 +14,14 @@ import { Badge } from "../ui/badge"
 
 interface Props {
   datos: Caja[];
-  openEdit: (data:Caja) => void;
+  open: (data:Caja) => void;
   abrirConfirmar: (data:Caja) => void;
 }
 
 //export const columns: ColumnDef<Project>[] = [
-export function getColumns(confirmar: (data: Caja) => void, openEdit: (data: Caja) => void): ColumnDef<Caja>[] {
+export function getColumns(confirmar: (data: Caja) => void, open: (data: Caja) => void): ColumnDef<Caja>[] {
   return [
-    {
+    /*{
       accessorKey: "caja_id",
       header: ({column}) => {
         return (
@@ -34,7 +34,7 @@ export function getColumns(confirmar: (data: Caja) => void, openEdit: (data: Caj
       cell: ({ row }) => (
         <div className="text-right">{row.getValue("caja_id")}</div>
       ),
-    },
+    },*/
     {
       accessorKey: "fecha",
       header: ({column}) => {
@@ -115,7 +115,7 @@ export function getColumns(confirmar: (data: Caja) => void, openEdit: (data: Caj
       header: ({column}) => {
         return (
           <div className="flex">
-            Estado
+            Condición
             <ArrowUpDown className="ml-1" size={20} onClick={() => column.toggleSorting(column.getIsSorted() === "asc")} />
           </div>
         )
@@ -128,7 +128,30 @@ export function getColumns(confirmar: (data: Caja) => void, openEdit: (data: Caj
 
         return (
           <Badge variant="secondary" className={`flex items-center gap-1 ${colorClasses}`}>
-            {fila.inhabilitado === 0 ? 'Habilitado' : 'Inhabilitado'}
+            {fila.inhabilitado === 0 ? 'Habilitada' : 'Inhabilitada'}
+          </Badge>
+        );
+      },
+    },
+    {
+      accessorKey: "abierta",
+      header: ({column}) => {
+        return (
+          <div className="flex">
+            Estado
+            <ArrowUpDown className="ml-1" size={20} onClick={() => column.toggleSorting(column.getIsSorted() === "asc")} />
+          </div>
+        )
+      },
+      cell: ({ row }) => {
+        const fila = row.original;
+        const colorClasses = fila.abierta === 1
+          ? 'bg-green-500 text-white dark:bg-green-700'
+          : 'bg-gray-500 text-white dark:bg-gray-600';
+
+        return (
+          <Badge variant="secondary" className={`flex items-center gap-1 ${colorClasses}`}>
+            {fila.abierta === 1 ? 'Abierta' : 'Cerrada'}
           </Badge>
         );
       },
@@ -142,17 +165,17 @@ export function getColumns(confirmar: (data: Caja) => void, openEdit: (data: Caj
   
         return (
           <div className='flex'>
+            <Button 
+              className="p-0 hover:bg-transparent cursor-pointer"
+              title="Detalles" 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => open(fila)}>
+              <Eye size={20} className="text-blue-500" />
+            </Button>
             {
-              fila?.inhabilitado === 0 ? (
+              fila.fecha === (new Date()).toLocaleDateString() && fila?.inhabilitado === 0 ? (
                 <>
-                  <Button 
-                    className="p-0 hover:bg-transparent cursor-pointer"
-                    title="Detalles" 
-                    variant="ghost" 
-                    size="icon" 
-                    onClick={() => openEdit(fila)}>
-                    <Eye size={20} className="text-blue-500" />
-                  </Button>
                   <Button 
                     className="p-0 hover:bg-transparent cursor-pointer"
                     title="Eliminar" 
@@ -165,13 +188,13 @@ export function getColumns(confirmar: (data: Caja) => void, openEdit: (data: Caj
               ) : ( <> </> )
             }
           </div>
-        )
+        );
       },
     },
   ]
 //]
 }
-export default function DataTableCajas({datos, openEdit, abrirConfirmar}:Props) {
+export default function DataTableCajas({datos, open, abrirConfirmar}:Props) {
   const [sorting, setSorting]                   = useState<SortingState>([])
   const [columnFilters, setColumnFilters]       = useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
@@ -194,7 +217,7 @@ export default function DataTableCajas({datos, openEdit, abrirConfirmar}:Props) 
   const confirmar = (data: Caja) => {
     abrirConfirmar(data);
   };
-  const columns = getColumns(confirmar, openEdit); 
+  const columns = getColumns(confirmar, open); 
 
   const table = useReactTable({
     data,

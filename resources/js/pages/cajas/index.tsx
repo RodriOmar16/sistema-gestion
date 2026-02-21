@@ -43,6 +43,7 @@ const cajaVacia = {
   total_user:         0,
   diferencia:         0,
   inhabilitado:       0,
+  abierta:            0
 };
 
 export function FiltrosForm({ openCreate }: propsForm){
@@ -215,10 +216,19 @@ export default function Cajas(){
     setModalOpen(true);
   };
 
-  const openEdit = (data: Caja) => {
+  const openCaja = (data: Caja) => {
     setModalMode('edit');
     setSelectedCaja(data);
-    setModalOpen(true);
+    console.log("caja: ", data)
+    //setModalOpen(true);
+    //abro en otra ventana la caja
+    //'caja.show'
+
+    // construyo la URL con ziggy
+    const url = route('caja.show', data.caja_id);
+
+    // abro en nueva pestaña
+    window.open(url, '_blank');
   };
 
   const handleSave = (data: Caja) => {
@@ -311,18 +321,11 @@ export default function Cajas(){
         <div className="p-4 relative flex-1 overflow-auto rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
           <DataTableCajas
             datos={cacheados?? []} 
-            openEdit={openEdit} 
+            open={openCaja} 
             abrirConfirmar={confirmar}
           />
         </div>
       </div>
-      {/*<NewEditGasto
-        open={modalOpen}
-        onOpenChange={setModalOpen}
-        mode={modalMode}
-        gasto={selectedGasto}
-        onSubmit={handleSave}
-      />*/}
       <ModalConfirmar
         open={confirmOpen}
         text={textConfir}

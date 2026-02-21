@@ -48,16 +48,19 @@ export function convertirFechaGuionesBarras(fecha:string ){
   return fecha.split('-').reverse().join('/');
 }
 
-export function convertirNumberPlata(monto:string){
-  const amount = parseFloat(monto)
-  // Format the amount as a dollar amount
-  const formatted = new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(amount)
+export function convertirNumberPlata(monto: string) {
+  const amount = parseFloat(monto);
 
-  return formatted;
+  // Formato con punto como separador de miles y coma como decimal
+  const formatted = new Intl.NumberFormat("es-AR", {
+    style: "decimal",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount);
+
+  return `$ ${formatted}`;
 }
+
 
 export function formatearNro(valor: string){
   const limpio = valor.replace(/\D/g, '');

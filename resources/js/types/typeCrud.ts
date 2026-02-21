@@ -244,6 +244,7 @@ export interface Caja {
   total_user:         number;
   diferencia:         number;
   inhabilitado:       number;
+  abierta:            boolean|number;
   created_at?:        string;
   updated_at?:        string;
 }

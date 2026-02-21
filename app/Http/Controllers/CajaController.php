@@ -84,6 +84,12 @@ class CajaController extends Controller
   {
     DB::beginTransaction();
     try {
+      //controlo que no haya otra caja abierta
+      $existe = Caja::where('abierta',1)->exists();
+      if($existe){
+        throw new \Exception("Ya existe una caja abierta. No es posible continuar!");
+      }
+
       //controlo los datos
       $validated = $request->validate([
         'turno_id'      => 'integer',
@@ -117,7 +123,6 @@ class CajaController extends Controller
       $fp_debit_id    = $fp_debit->forma_pago_id;
       $fp_transfer_id = $fp_transf->forma_pago_id;
 
-
       //acumuladores
       $efectivo = $debito = $transferencia = 0;
 
@@ -146,12 +151,13 @@ class CajaController extends Controller
         'efectivo'           => $efectivo,
         'debito'             => $debito,
         'transferencia'      => $transferencia,
-        'total_sistema'      => $efectivo + $debito + $transferencia,
+        'total_sistema'      => ($efectivo + $debito + $transferencia) + $validated['monto_inicial'],
         //por calcular
         'efectivo_user'      => 0,
         'debito_user'        => 0,
         'transferencia_user' => 0,
         'total_user'         => 0,
+        'abierta'            => 1,
       ]);
 
       // - egresos
@@ -167,6 +173,8 @@ class CajaController extends Controller
         //actualizo este gasto para asignarle la caja a la cual pertenecerá ahora
         $g->update(['caja_id' => $caja->caja_id]);
       }
+      $gastosTotales = $gastoEfect + $gastoDebito + $gastoTransfer;
+      $caja->update(['total_sistema' => $caja->total_sistema - $gastosTotales]);
       
       //commit
       DB::commit();
@@ -181,7 +189,7 @@ class CajaController extends Controller
         'ingresos'  => [
           ['concepto' => 'Efectivo'     , 'valor' => $caja->efectivo ],
           ['concepto' => 'Débito'       , 'valor' => $caja->debito ],
-          ['concepto' => 'Transferencia', 'valor' => $caja->$transferencia ],
+          ['concepto' => 'Transferencia', 'valor' => $caja->transferencia ],
         ],
         'egresos'   => [
           ['concepto' => 'Efectivo'     , 'valor' => $gastoEfect] ,
@@ -216,6 +224,19 @@ class CajaController extends Controller
     $caja->load([
       'turno' => function ($q) { $q->select('turno_id', 'nombre'); }
     ]);
+
+    $fp_efec   = FormaPago::where('nombre', 'Efectivo')->first();
+    $fp_debit  = FormaPago::where('nombre', 'Débito')->first();
+    $fp_transf = FormaPago::where('nombre', 'Transferencias')->first();
+
+    if (!$fp_efec || !$fp_debit || !$fp_transf) {
+        throw new \Exception("No se encontraron todas las formas de pago requeridas");
+    }
+
+    $fp_efec_id     = $fp_efec->forma_pago_id;
+    $fp_debit_id    = $fp_debit->forma_pago_id;
+    $fp_transfer_id = $fp_transf->forma_pago_id;
+
     // - egresos
     $gastos = Gasto::where('caja_id',$caja->caja_id)->get();
     $gastoEfect = $gastoDebito = $gastoTransfer = 0; 
@@ -232,27 +253,32 @@ class CajaController extends Controller
       'caja' => [
         'caja_id'           => $caja->caja_id,
         'turno_id'          => $caja->turno->turno_id,
-        'turno_nombre'      => $caja->turno->turno_nombre,
-        'fecha'             => $caja->fecha->format('Y-m-d'),
+        'turno_nombre'      => $caja->turno->nombre,
+        'fecha'             => $caja->fecha/*->format('Y-m-d')*/,
         'monto_inicial'     => $caja->monto_inicial,
         'descripcion'       => $caja->descripcion,
         'efectivo'          => $caja->efectivo,
         'efectivo_user'     => $caja->efectivo_user,
-        'debito'            => $caja->$debito,
+        'debito'            => $caja->debito,
         'debito_user'       => $caja->debito_user,
         'transferencia'     => $caja->transferencia,
         'transferencia_user'=> $caja->transferencia_user,
         'total_user'        => $caja->total_user,
         'total_sistema'     => $caja->total_sistema,
         'diferencia'        => $caja->diferencia,
-        'created_at'        => $caja->created_at
+        'abierta'           => $caja->abierta,
+        'created_at'        => $caja->created_at,
+      ],
+      'ingresos'  => [
+        ['concepto' => 'Efectivo'     , 'valor' => (float)$caja->efectivo ],
+        ['concepto' => 'Débito'       , 'valor' => (float)$caja->debito ],
+        ['concepto' => 'Transferencia', 'valor' => (float)$caja->transferencia ],
       ],
       'egresos'   => [
         ['concepto' => 'Efectivo'     , 'valor' => $gastoEfect] ,
         ['concepto' => 'Débito'       , 'valor' => $gastoDebito] ,
         ['concepto' => 'Transferencia', 'valor' => $gastoTransfer] ,
       ],
-
     ]);
   }
 
@@ -267,9 +293,38 @@ class CajaController extends Controller
   /**
    * Update the specified resource in storage.
    */
-  public function update(UpdateCajaRequest $request, Caja $caja)
+  public function update(Request $request, Caja $caja)
   {
-      //
+    try {
+        DB::transaction(function () use ($request, $caja) {
+            $caja->update([
+                'abierta'            => 0,
+                'diferencia'         => $request->diferencia,
+                'efectivo_user'      => $request->efectivo_user,
+                'debito_user'        => $request->debito_user,
+                'transferencia_user' => $request->transferencia_user,
+                'total_user'         => $request->total_user,
+                'descripcion'        => $request->descripcion ?? '',
+            ]);
+
+            // acá podrías agregar otras operaciones relacionadas
+        });
+        DB::commit();
+        return inertia('cajas/createView', [
+            'mode'      => 'edit',
+            'resultado' => 1,
+            'mensaje'   => 'Caja cerrada correctamente',
+            'caja_id'   => $caja->caja_id, // ojo, antes tenías $caja_id sin definir
+            'timestamp' => now()->timestamp,
+        ]);
+    } catch (\Throwable $e) {
+      DB::rollback();
+        return inertia('cajas/createView', [
+            'mode'      => 'edit',
+            'resultado' => 0,
+            'mensaje'   => 'Error al cerrar la caja: ' . $e->getMessage(),
+        ]);
+    }
   }
 
   /**

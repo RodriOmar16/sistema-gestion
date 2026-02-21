@@ -230,7 +230,7 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
     Route::post('/caja/grabar-nueva', [CajaController::class, 'store'])->name('caja.store');
     Route::get('caja/ver/{caja}', [CajaController::class, 'show'])->name('caja.show');
     Route::put('/caja/update/{caja}', [CajaController::class, 'update'])->name('caja.update');
-    Route::put('/caja/eliminar/{caja}', [CajaController::class, 'destroy'])->name('caja.toggleEstado');
+    Route::put('/caja/eliminar/{caja}', [CajaController::class, 'destroy'])->name('caja.destroy');
     
     //Marcas
     //Route::get('/marcas_habilitadas', [MarcaController::class, 'marcasHabilitadas'])->name('marcas.marcasHabilitadas');

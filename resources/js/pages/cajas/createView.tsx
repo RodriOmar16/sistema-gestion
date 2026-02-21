@@ -64,15 +64,18 @@ export default function CreateViewCajas(){
   const [confirmOpen, setConfirOpen] = useState(false); //modal para confirmar acciones para cuado se crea o edita
   const [textConfir, setTextConfirm] = useState('');
 
+  const [openConfirmar, setOpenConfirmar]  = useState(false); //modal para confirmar acciones para cuado se inhabilita la caja
+  const [confirmarTexto, setConfirmarText] = useState('');
+
   const [activo, setActivo] = useState(false);
   const [title, setTitle]   = useState('');
   const [text, setText]     = useState('');
   const [color, setColor]   = useState('success');
 
-  const [optionTur, setOptionTurn]      = useState<Autocomplete|null>(null);
-
+  const [optionTur, setOptionTurn] = useState<Autocomplete|null>(null);
+  const [fechaCaja, setFechaCaja]  = useState<Date>();
+  
   //Effect
-
   useEffect(() => {
     const cambioDetectado = timestamp && timestamp !== ultimoTimestamp;
     //const cambioDetectado = (resultado && resultado  !== propsActuales.resultado) || (mensaje && mensaje    !== propsActuales.mensaje) 
@@ -91,13 +94,16 @@ export default function CreateViewCajas(){
 
   useEffect(() => {
     if(caja && mode === 'edit'){
-      console.log("caja recibida: ", caja)
-      console.log("egresos: ", egresos )
-      console.log("ingresos: ", ingresos )
       setData({
         ...caja,
         fecha: convertirFechaGuionesBarras(caja.fecha),
       });
+
+      const [year, month, day] = caja.fecha.split("-");
+      const fechaFila = new Date(Number(year), Number(month) - 1, Number(day));
+      setFechaCaja(new Date(Number(year), Number(month) - 1, Number(day)));
+      console.log("fechaFila: ", fechaFila)
+      console.log("fechaCaja: ", fechaCaja)
     }
   }, [mode, caja]);
 
@@ -110,11 +116,52 @@ export default function CreateViewCajas(){
   }, [data.turno_id, data.turno_nombre]);
 
   //funciones
+  const selectTurnos = (option : any) => {
+    if(option){
+      setData({...data, turno_id: option.value, turno_nombre: option.label});
+      setOptionTurn(option);
+    }else{
+      setData({...data, turno_id: 0, turno_nombre: ''});
+      setOptionTurn(null);
+    }
+  };
+
+  const iniciarCaja = () => {
+    if(!data.turno_id){
+      setTitle('Campo requerido!');
+      setText('Se requiere seleccionar un turno para empezar.');
+      setColor('warning');
+      setActivo(true);
+      return 
+    }
+    if(!data.monto_inicial || data.monto_inicial === 0){
+      setTitle('Campo requerido!');
+      setText('Se requiere ingresar un monto para empezar');
+      setColor('warning');
+      setActivo(true);
+      return 
+    }
+
+    //cambiar fecha a fechas con guiones antes de mandar
+    data.fecha = convertirFechaBarrasGuiones(data.fecha);
+    setLoad(true);
+
+    const payload = {...data};
+    router.post(route('caja.open'), payload, {
+      onError: (errors) => {
+        setTitle('Error');
+        setText('No se pudo abrir la caja');
+        setColor('error');
+        setActivo(true);
+      },
+      onFinish: () => setLoad(false),
+    });
+  };
+
   const handleSubmit = (e:React.FormEvent) => {
     e.preventDefault();
     
     data.diferencia = Number(data.total_sistema) - Number(data.total_user);
-    console.log("data al final: ", data)
     setTextConfirm("Estás seguro de finalizar la caja?");
     setConfirOpen(true);
   };
@@ -167,46 +214,37 @@ export default function CreateViewCajas(){
     setConfirOpen(false);
   };
 
-  const selectTurnos = (option : any) => {
-    if(option){
-      setData({...data, turno_id: option.value, turno_nombre: option.label});
-      setOptionTurn(option);
-    }else{
-      setData({...data, turno_id: 0, turno_nombre: ''});
-      setOptionTurn(null);
-    }
+  const eliminarCaja = () => {
+    setConfirmarText('Estás seguro de queres eliminar está caja? Esta accionar no es posible revertir.');
+    setOpenConfirmar(true);
   };
 
-  const iniciarCaja = () => {
-    if(!data.turno_id){
-      setTitle('Campo requerido!');
-      setText('Se requiere seleccionar un turno para empezar.');
-      setColor('warning');
-      setActivo(true);
-      return 
-    }
-    if(!data.monto_inicial || data.monto_inicial === 0){
-      setTitle('Campo requerido!');
-      setText('Se requiere ingresar un monto para empezar');
-      setColor('warning');
-      setActivo(true);
-      return 
-    }
-
-    //cambiar fecha a fechas con guiones antes de mandar
-    data.fecha = convertirFechaBarrasGuiones(data.fecha);
-    setLoad(true);
-
+  const inhabilitarCaja = () => {
+    //caja.destroy
+    console.log("llego")
     const payload = {...data};
-    router.post(route('caja.open'), payload, {
+    setLoad(true);
+    console.log("payload: ", payload)
+    
+    setConfirmarText('');
+    setOpenConfirmar(false);
+
+    router.put(
+      route('caja.destroy',{caja: data.caja_id}), 
+      payload, {
       onError: (errors) => {
         setTitle('Error');
-        setText('No se pudo abrir la caja');
-        setColor('danger');
+        setText('No fue posible anular esta caja. ('+data.caja_id+')');
+        setColor('error');
         setActivo(true);
       },
       onFinish: () => setLoad(false),
     });
+  };
+
+  const cancelarInhabilitar = () => {
+    setConfirmarText('');
+    setOpenConfirmar(false);
   };
 
   return (
@@ -401,24 +439,22 @@ export default function CreateViewCajas(){
                     onChange={(e) => setData({...data, descripcion: e.target.value})}
                   />
                 </div>
-                {data.fecha === (new Date()).toLocaleDateString() && data.inhabilitado == 0 && (
-                  <div  className='flex justify-end px-4 col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>
-                    <Button type="button" className='bg-red-500 hover:bg-red-800 text-white' onClick={handleSubmit}>
-                      { load ? ( <Loader2 size={20} className="animate-spin"/> ) : 
-                                (<Ban size={20} className=""/>)  }
-                      Inhabilitar
-                    </Button>
-                  </div>
-                )}
-                {data.abierta === 1 && data.inhabilitado == 0 && (
-                  <div  className='flex justify-end px-4 col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>
+                <div className='flex justify-end px-4 col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>
+                  {data.inhabilitado == 0 && (
+                    <Button type="button" className='bg-red-500 hover:bg-red-800 text-white mr-2' onClick={eliminarCaja}>
+                    { load ? ( <Loader2 size={20} className="animate-spin"/> ) : 
+                              (<Ban size={20} className=""/>)  }
+                    Inhabilitar
+                  </Button>
+                  )}
+                  {data.abierta === 1 && data.inhabilitado == 0 && (
                     <Button type="button" onClick={handleSubmit}>
                       { load ? ( <Loader2 size={20} className="animate-spin"/> ) : 
                                 (<Save size={20} className=""/>)  }
                       Finalizar
                     </Button>
-                  </div>
-                )}
+                  )}
+                </div>
               </>
             )}
           </form>
@@ -429,6 +465,12 @@ export default function CreateViewCajas(){
         text={textConfir}
         onSubmit={grabarGuardar}
         onCancel={cancelar}
+      />
+      <ModalConfirmar
+        open={openConfirmar}
+        text={confirmarTexto}
+        onSubmit={inhabilitarCaja}
+        onCancel={cancelarInhabilitar}
       />
       <ShowMessage 
         open={activo}

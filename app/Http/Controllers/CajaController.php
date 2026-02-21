@@ -267,6 +267,7 @@ class CajaController extends Controller
         'total_sistema'     => $caja->total_sistema,
         'diferencia'        => $caja->diferencia,
         'abierta'           => $caja->abierta,
+        'inhabilitado'      => $caja->inhabilitado,
         'created_at'        => $caja->created_at,
       ],
       'ingresos'  => [
@@ -295,20 +296,18 @@ class CajaController extends Controller
    */
   public function update(Request $request, Caja $caja)
   {
+    DB::beginTransaction();
     try {
-        DB::transaction(function () use ($request, $caja) {
-            $caja->update([
-                'abierta'            => 0,
-                'diferencia'         => $request->diferencia,
-                'efectivo_user'      => $request->efectivo_user,
-                'debito_user'        => $request->debito_user,
-                'transferencia_user' => $request->transferencia_user,
-                'total_user'         => $request->total_user,
-                'descripcion'        => $request->descripcion ?? '',
-            ]);
+        $caja->update([
+            'abierta'            => 0,
+            'diferencia'         => $request->diferencia,
+            'efectivo_user'      => $request->efectivo_user,
+            'debito_user'        => $request->debito_user,
+            'transferencia_user' => $request->transferencia_user,
+            'total_user'         => $request->total_user,
+            'descripcion'        => $request->descripcion ?? '',
+        ]);
 
-            // acá podrías agregar otras operaciones relacionadas
-        });
         DB::commit();
         return inertia('cajas/createView', [
             'mode'      => 'edit',
@@ -330,8 +329,32 @@ class CajaController extends Controller
   /**
    * Remove the specified resource from storage.
    */
-  public function destroy(Caja $caja)
+  public function destroy(Request $request, Caja $caja)
   {
-      //
+    DB::beginTransaction();
+     try {
+        $caja->update(['inhabilitado' => 1]);
+
+        // obtengo todos los gastos que estaban relacionados a la caja y los libero
+        $gastos = Gasto::where('caja_id', $caja->caja_id)->get();
+        foreach($gastos as $g){
+          $g->update(['caja_id' => null]);
+        }
+        DB::commit();
+        return inertia('cajas/createView', [
+            'mode'      => 'edit',
+            'resultado' => 1,
+            'mensaje'   => 'Caja inhabilitada correctamente',
+            'caja_id'   => $caja->caja_id, // ojo, antes tenías $caja_id sin definir
+            'timestamp' => now()->timestamp,
+        ]);
+    } catch (\Throwable $e) {
+      DB::rollback();
+        return inertia('cajas/createView', [
+            'mode'      => 'edit',
+            'resultado' => 0,
+            'mensaje'   => 'Error al bloquear la caja: ' . $e->getMessage(),
+        ]);
+    }
   }
 }

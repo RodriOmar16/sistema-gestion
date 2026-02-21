@@ -162,7 +162,10 @@ export function getColumns(confirmar: (data: Caja) => void, open: (data: Caja) =
       header: "Acciones",
       cell: ({ row }) => {
         const fila = row.original;
-  
+
+        const [year, month, day] = fila.fecha.split("-");
+        const fechaFila = new Date(Number(year), Number(month) - 1, Number(day)); // mes es base 0
+        
         return (
           <div className='flex'>
             <Button 
@@ -174,17 +177,15 @@ export function getColumns(confirmar: (data: Caja) => void, open: (data: Caja) =
               <Eye size={20} className="text-blue-500" />
             </Button>
             {
-              fila.fecha === (new Date()).toLocaleDateString() && fila?.inhabilitado === 0 ? (
-                <>
-                  <Button 
-                    className="p-0 hover:bg-transparent cursor-pointer"
-                    title="Eliminar" 
-                    variant="ghost" 
-                    size="icon"
-                    onClick={ () => confirmar(fila) }>
-                    <X size={20} className="text-red-500" />
-                  </Button>
-                </>
+              fila?.inhabilitado === 0 && (fechaFila.toLocaleDateString() === (new Date()).toLocaleDateString()) ? (
+                <Button 
+                  className="p-0 hover:bg-transparent cursor-pointer"
+                  title="Eliminar" 
+                  variant="ghost" 
+                  size="icon"
+                  onClick={ () => confirmar(fila) }>
+                  <X size={20} className="text-red-500" />
+                </Button>
               ) : ( <> </> )
             }
           </div>

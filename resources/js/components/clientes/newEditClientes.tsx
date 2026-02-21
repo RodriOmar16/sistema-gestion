@@ -13,7 +13,7 @@ import ShowMessage from "@/components/utils/showMessage";
 import { Cliente } from "@/types/typeCrud";
 import InputDni from "../utils/input-dni";
 import { DatePicker } from '@/components/utils/date-picker';
-import { convertirFechaBarrasGuiones } from "@/utils";
+import { convertirFechaBarrasGuiones, convertirFechaGuionesBarras } from "@/utils";
 
 interface Props{
   open: boolean;
@@ -52,7 +52,7 @@ export default function NewEditClientes({ open, onOpenChange, mode, cliente, onS
       setData({
         cliente_id:       cliente.cliente_id,
         nombre:           cliente.nombre,
-        fecha_nacimiento: cliente.fecha_nacimiento,
+        fecha_nacimiento: convertirFechaGuionesBarras(cliente.fecha_nacimiento??''),
         domicilio:        cliente.domicilio,
         email:            cliente.email,
         dni:              cliente.dni,

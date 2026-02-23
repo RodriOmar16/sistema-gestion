@@ -288,7 +288,7 @@ class VentaController extends Controller
             'resultado' => 0,
             'mensaje'   => 'No se pudo encontrar información del producto a ventas: '.$det['id'],
             'mode'      => 'create',
-            'timestamp' => now(),
+            'timestamp' => now()->timestamp,
           ]);
         }
 
@@ -296,11 +296,16 @@ class VentaController extends Controller
         $stock = Stock::where('producto_id', $det['id'])->first();
         if (!$stock || $stock->cantidad < $det['cantidad']) {
           DB::rollback();
-          return inertia('ventas/createView', [
+          /*return inertia('ventas/createView', [
             'resultado' => 0,
             'mensaje'   => 'Stock insuficiente para el producto ID: '.$det['id'],
             'mode'      => 'create',
-            'timestamp' => now(),
+            'timestamp' => now()->timestamp,
+          ]);*/
+          return response()->json([
+            'resultado' => 0,
+            'mensaje'   => 'Stock insuficiente para el producto ID: '.$det['id'],
+            'timestamp' => now()->timestamp,
           ]);
         }
         //actualizo el stock
@@ -357,20 +362,31 @@ class VentaController extends Controller
 
       //exito
       DB::commit();
-      return inertia('ventas/createView',[
+      /*return inertia('ventas/createView',[
         'resultado' => 1,
         'mensaje'   => 'Venta grabado correctamente',
         'venta_id'  => $venta->venta_id,
-        'timestamp' => now(),
+        'timestamp' => now()->timestamp,
+      ]);*/
+      return response()->json([
+        'resultado' => 1,
+        'mensaje'   => 'Venta grabado correctamente',
+        'venta_id'  => $venta->venta_id,
+        'timestamp' => now()->timestamp,
       ]);
 
     } catch (\Throwable $e) {
       DB::rollback();
-      return inertia('ventas/createView',[
+      /*return inertia('ventas/createView',[
         'resultado' => 0,
         'mensaje'   => 'Ocurrió un error al grabar la venta: '.$e->getMessage(),
         'mode'      => 'create',
-        'timestamp' => now(),
+        'timestamp' => now()->timestamp,
+      ]);*/
+      return response()->json([
+        'resultado' => 0,
+        'mensaje'   => 'Stock insuficiente para el producto ID: '.$det['id'],
+        'timestamp' => now()->timestamp,
       ]);
     }
   }
@@ -478,18 +494,28 @@ class VentaController extends Controller
       }
 
       DB::commit();
-      return inertia('ventas/createView', [
+      /*return inertia('ventas/createView', [
+        'resultado' => 1,
+        'mensaje'   => 'La venta se anuló correctamente y el stock fue revertido.',
+        'timestamp' => now()->timestamp
+      ]);*/
+      return response()->json([
         'resultado' => 1,
         'mensaje'   => 'La venta se anuló correctamente y el stock fue revertido.',
         'timestamp' => now()->timestamp
       ]);
     } catch (\Throwable $e) {
       DB::rollback();
-      return inertia('ventas/createView', [
+      return response()->json([
         'resultado' => 0,
         'mensaje'   => 'Error al anular la venta: '.$e->getMessage(),
         'timestamp' => now()->timestamp
       ]);
+      /*return inertia('ventas/createView', [
+        'resultado' => 0,
+        'mensaje'   => 'Error al anular la venta: '.$e->getMessage(),
+        'timestamp' => now()->timestamp
+      ]);*/
     }
   }
 

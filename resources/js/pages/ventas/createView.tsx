@@ -24,6 +24,7 @@ import InputDni from '@/components/utils/input-dni';
 import TableFormasPago from '@/components/ventas/tableFormasPago';
 import GenericSelect from '@/components/utils/genericSelect';
 import { NumericFormat } from 'react-number-format';
+import Loading from '@/components/utils/loadingDialog';
 
 const breadcrumbs: BreadcrumbItem[] = [ { title: '', href: '', } ];
 const ventaVacia = {
@@ -241,7 +242,8 @@ export function DatosCliente({modo, data, set, setActivo, setTitle, setText, set
 
     if(cli && cli.length > 0){
       setBloquear(true);
-      set({...cli[0], fecha_nacimiento: convertirFechaGuionesBarras(cli[0].fecha_nacimiento)});
+      cli[0].fecha_nacimiento = convertirFechaGuionesBarras(cli[0].fecha_nacimiento);
+      set({...cli[0]});
       setFound(1)
       setTitle('');
       setText('');
@@ -541,7 +543,7 @@ export default function NewViewVenta(){
     const aux = formasPagoSelected.map(e => ({...e, fecha:convertirFechaBarrasGuiones(e.fecha)}));
     setFormasPagoSelected(aux);
   };
-  const grabarGuardar = () => {
+  const grabarGuardar = async() => {
     const payload = {
       ...dataCli,
       venta_id:        '',
@@ -553,25 +555,59 @@ export default function NewViewVenta(){
       detalles:        productosDet,
       formasPagos:     formasPagoSelected
     } 
-    console.log("payload: ", payload)
+    //console.log("payload: ", payload)
     setConfirOpen(false);
     setTextConfirm('');
     setLoad(true);
     if(mode === 'create'){
-      router.post(route('ventas.store'),payload,
+      /*router.post(route('ventas.store'),payload,
         {
           preserveScroll: true,
           preserveState: true,
           onFinish: () => {
             setLoad(false);
+          },
+          onError: (errors) => {
+            setTitle('Error');
+            setText(errors.general ?? 'Error inesperado');
+            setColor('error');
+            setActivo(true);
           }
         }
-      );
+      );*/
+      const res  = await fetch(route('ventas.store'),{
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json', 
+          'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement).content,
+        },
+        body: JSON.stringify(payload),
+      });
+      const resp = await res.json();
+      setLoad(false);
+
+      if(resp.resultado === 0){
+        setTitle('Error');
+        setText(resp.mensaje ?? 'Error inesperado');
+        setColor('error');
+        setActivo(true);
+        return;
+      }
+
+      setTitle('Venta nueva'); 
+      setText(resp.mensaje); 
+      setColor('success'); 
+      setActivo(true); 
+
+      if (resp.resultado === 1 && resp.venta_id){
+        router.get(route('ventas.view', { venta: resp.venta_id }));
+      }
       /*setTitle('');
       setText('');
       setActivo(false);*/
     }else {
-      router.put(route('ventas.destroy',{venta: venta?.venta_id??0}),{motivo:'prueba'},
+      //setLoad(false);
+      /*router.put(route('ventas.destroy',{venta: venta?.venta_id??0}),{motivo:'prueba'},
         {
           preserveScroll: true,
           preserveState: true,
@@ -579,7 +615,39 @@ export default function NewViewVenta(){
             setLoad(false);
           }
         }
-      );
+      );*/
+      function getCsrfToken(): string {
+        const meta = document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement | null;
+        return meta?.content ?? '';
+      }
+
+      const res = await fetch(route('ventas.destroy', { venta: venta?.venta_id ?? 0 }), {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': getCsrfToken()//document.querySelector('meta[name="csrf-token"]')?.content ?? '',
+        },
+        body: JSON.stringify({ motivo: 'prueba' }),
+      });
+      const resp = await res.json();
+      setLoad(false);
+
+        if (resp.resultado === 0) {
+          setTitle('Error');
+          setText(resp.mensaje ?? 'Error inesperado');
+          setColor('error');
+          setActivo(true);
+          return;
+        }
+
+        setTitle('Venta anulada');
+        setText(resp.mensaje);
+        setColor('success');
+        setActivo(true);
+
+      if (resp.resultado === 1 && resp.venta_id){
+        router.get(route('ventas.view', { venta: resp.venta_id }));
+      }
     }
   };
   
@@ -744,11 +812,15 @@ export default function NewViewVenta(){
         color={color}
         onClose={() => {
             setActivo(false);
-            if (resultado === 1 && (venta_id||venta)){
+            /*if (resultado === 1 && (venta_id||venta)){
               router.get(route('ventas.view', { venta: venta_id??venta?.venta_id }));
-            }
+            }*/
           }
         }
+      />
+      <Loading
+        open={load}
+        onClose={() => {}}
       />
     </AppLayout>
   );

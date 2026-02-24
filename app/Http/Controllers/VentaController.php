@@ -284,7 +284,13 @@ class VentaController extends Controller
         $producto = Producto::where('producto_id', $det['id'])->first();
         if(!$producto){
           DB::rollback();
-          return inertia('ventas/createView', [
+          /*return inertia('ventas/createView', [
+            'resultado' => 0,
+            'mensaje'   => 'No se pudo encontrar información del producto a ventas: '.$det['id'],
+            'mode'      => 'create',
+            'timestamp' => now()->timestamp,
+          ]);*/
+          return response()->json([
             'resultado' => 0,
             'mensaje'   => 'No se pudo encontrar información del producto a ventas: '.$det['id'],
             'mode'      => 'create',

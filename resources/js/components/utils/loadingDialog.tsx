@@ -28,15 +28,17 @@ export default function Loading({ open,onClose }: Props) {
           onEscapeKeyDown={(e) => e.preventDefault()}   // evita cierre con Escape
         >
           <DialogHeader>
-            <DialogDescription className="text-gray-700 dark:text-gray-200">
-              <div className="flex items-center text-black">
-                <Loader2 size={30} className="animate-spin mr-2"/> Por favor, espere...
-              </div>
+            <DialogTitle>Procesando</DialogTitle>
+            <DialogDescription className="">
             </DialogDescription>
           </DialogHeader>
+
+          <div className="flex items-center text-black">
+            <Loader2 size={30} className="animate-spin mr-2" />
+            <span>Por favor, espere...</span>
+          </div>
         </DialogContent>
       </Dialog>
-
     </div>
   );
 }

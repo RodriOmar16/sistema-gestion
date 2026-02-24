@@ -73,7 +73,7 @@ export function getColumns(confirmar: (data: Producto) => void, openEdit: (data:
       } ,
       cell: ({ row }) => ( <div className="">{row.getValue("codigo_barra")}</div> ),
     },
-    {
+    /*{
       accessorKey: "categoria_nombre",
       header: ({column}) => {
         return (
@@ -86,7 +86,7 @@ export function getColumns(confirmar: (data: Producto) => void, openEdit: (data:
       cell: ({ row }) => {
         return <div>{ row.getValue("categoria_nombre") }</div> 
       },
-    },
+    },*/
     {
       accessorKey: "marca_nombre",
       header: ({column}) => {
@@ -128,6 +128,20 @@ export function getColumns(confirmar: (data: Producto) => void, openEdit: (data:
       },
       cell: ({ row }) => {
         return <div className="text-center">{ row.getValue("stock_minimo") }</div> 
+      },
+    },
+    {
+      accessorKey: "stock_actual",
+      header: ({column}) => {
+        return (
+          <div className="flex">
+            Stock Actual
+            <ArrowUpDown className="ml-1" size={20} onClick={() => column.toggleSorting(column.getIsSorted() === "asc")} />
+          </div>
+        )
+      },
+      cell: ({ row }) => {
+        return <div className="text-center">{ row.getValue("stock_actual") }</div> 
       },
     },
     {
@@ -218,7 +232,9 @@ export default function DataTableProductos({datos, openEdit, abrirConfirmar, dat
           campo.producto_nombre?.toLowerCase().includes(texto) ||
           campo.categoria_nombre?.toLowerCase().includes(texto) ||
           campo.precio?.toString().includes(texto) ||
-          campo.descripcion?.toString().includes(texto)
+          campo.descripcion?.toLowerCase().includes(texto) ||
+          campo.codigo_barra?.toString().includes(texto) ||
+          campo.marca_nombre?.toLowerCase().includes(texto)
         )
       : datos;
   }, [busqueda, datos]);

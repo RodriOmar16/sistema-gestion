@@ -125,7 +125,8 @@ export interface Producto{
   marca_id: number | string;
   marca_nombre: string;
   codigo_barra: string;
-  stock_minimo: number; 
+  stock_minimo: number;
+  stock_actual: number; 
   vencimiento?: string;
   inhabilitado: boolean | 1 | 0 | 'true' | 'false';
   imagen?: string;

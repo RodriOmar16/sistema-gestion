@@ -1,13 +1,13 @@
 import AppLayout from '@/layouts/app-layout';
 import { Autocomplete, Producto } from "@/types/typeCrud";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Head, useForm, router, usePage } from '@inertiajs/react';
 import { BreadcrumbItem } from '@/types';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { Loader2, Save, Barcode } from 'lucide-react';
+import { Loader2, Save, Barcode, File } from 'lucide-react';
 import {  Table,  TableBody,  TableCaption,  TableCell,  TableHead,  TableHeader,  TableRow,
 } from "@/components/ui/table";
 import { Select,  SelectContent, SelectGroup,  SelectItem,  SelectTrigger,  SelectValue } from "@/components/ui/select"
@@ -21,6 +21,7 @@ import { DatePicker } from '@/components/utils/date-picker';
 import SubirImagen from '@/components/utils/subir-imagen';
 import GenericSelect from '@/components/utils/genericSelect';
 import { NumericFormat } from 'react-number-format';
+import Loading from '@/components/utils/loadingDialog';
 
 const breadcrumbs: BreadcrumbItem[] = [ { title: '', href: '', } ];
 const productoVacio = {
@@ -33,6 +34,7 @@ const productoVacio = {
   marca_nombre:        '', 
   codigo_barra:        '',
   stock_minimo:        0,
+  stock_actual:        0,
   vencimiento:         '',
   precio:              '',
   inhabilitado:        false,
@@ -85,20 +87,14 @@ export function DetallesProducto({modo, data, set, /*marcas*/}:Props){
   return (
     <div className='px-4'>
       <div className='grid grid-cols-12 gap-4'>
-        {/*modo === 'edit' ? (
-          <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-12'>
-            <label htmlFor="id">Id</label>
-            <Input disabled value={data.producto_id} onChange={(e)=>set({...data, producto_id:e.target.value})}/>	
-          </div>
-        ): <></>*/}
         <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
           <label htmlFor="nombre">Nombre</label>
           <Input value={data.producto_nombre} onChange={(e)=>set({...data, producto_nombre:e.target.value})}/>	
         </div>
-        <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-9'>
+        {/*<div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-9'>
           <label htmlFor="descripcion">Descripcion</label>
           <Input value={data.descripcion} onChange={(e)=>set({...data, descripcion:e.target.value})}/>	
-        </div>
+        </div>*/}
         <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
           <label htmlFor="precio">Precio</label>
           <NumericFormat 
@@ -122,7 +118,7 @@ export function DetallesProducto({modo, data, set, /*marcas*/}:Props){
               placeHolder='Selec. marca'
             />
         </div>
-        <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-6'>
+        <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
           <label htmlFor="codigoBarras">Código de barras</label>
           <div className='flex items-center'>
             <Input className='' value={data.codigo_barra} onChange={(e)=>set({...data, codigo_barra:e.target.value})}/>	
@@ -151,57 +147,17 @@ export function DetallesProducto({modo, data, set, /*marcas*/}:Props){
           <label className='mr-2'>Inhabilitado</label>
           <Switch checked={data.inhabilitado==0 ? false: true} onCheckedChange={(val) => set({...data, inhabilitado: Boolean(val)})} />
         </div>
+        <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-12'>
+          Descripción
+          <Textarea 
+            id="descripcion" 
+            placeholder="Escribe una comentario..." 
+            value={data.descripcion}
+            onChange={(e) => set({...data, descripcion: e.target.value})}
+          />
+        </div>
       </div>
     </div>
-  );
-}
-
-//import { useEffect, useState } from "react";
-
-/*function SelectorImagen() {
-  const [images, setImages] = useState<string[]>([]);
-  const [selectedImage, setSelectedImage] = useState("");
-
-  useEffect(() => {
-    fetch('/productos/images') //fetch(route('productos.getImages'))
-      .then(res => res.json())
-      .then(data => setImages(data))
-      .catch(err => console.error("Error cargando imágenes:", err));
-  }, []);
-
-  return (
-    <div>
-      <label>Seleccionar imagen existente:</label>
-      <select
-        value={selectedImage}
-        onChange={(e) => setSelectedImage(e.target.value)}
-      >
-        <option value="">-- Elegir --</option>
-        {images.length>0 && images.map(img => (
-          <option key={img} value={img}>{img}</option>
-        ))}
-      </select>
-
-      {selectedImage && (
-        <img
-          src={`/${selectedImage}`}
-          alt="Preview"
-          className="w-24 h-24 mt-2 object-cover"
-        />
-      )}
-    </div>
-  );
-}*/
-
-interface PropsImage{
-  url: string | undefined;
-}
-
-function SelectImagen( { url } : PropsImage){
-  return (
-    <>
-      
-    </>
   );
 }
 
@@ -220,7 +176,6 @@ export default function NewEditProductos(){
   breadcrumbs[0].title = (mode=='create'? 'Nuevo' : 'Editar')+' producto'+(mode!='create'? ` ${producto?.producto_id}` : '')//(mode=='create'? 'Nuevo' : 'Editar')+' producto';
   const [ultimoTimestamp, setUltimoTimestamp] = useState<number | null>(null);
   const { data, setData, errors, processing } = useForm<Producto>(productoVacio);
-  //const [marcasHab, setMarcasHab]             = useState<Multiple[]>([]);
   const [categoriaHab, setCatHab]             = useState<Multiple[]>([]);
   const [catSelected, setCatSelected]         = useState<Multiple[]>(categorias??[]);
 
@@ -233,6 +188,7 @@ export default function NewEditProductos(){
   const [color, setColor]   = useState('success');
 
   const [file, setFile] = useState(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [urlImg, setUrlImg] = useState("");
 
   //funciones
@@ -284,44 +240,25 @@ export default function NewEditProductos(){
     setConfirOpen(true);
   };
 
-  const grabarGuardar = () => {
+  const grabarGuardar = async () => {
     //reseteo el confirmar    
     setConfirOpen(false);
     setTextConfirm('');
-
-    //muestro el cargando...
-    setLoad(true); 
     
     const payload = {
       ...data,
       categorias: catSelected,
       vencimiento: data.vencimiento?convertirFechaBarrasGuiones(data.vencimiento) : '',
-      imagen: urlImg && data.imagen !== urlImg ? urlImg: data.imagen
-      //file: file,
-      //nombre: data.producto_nombre
+      imagen: data.imagen ?? 'por definir'
     };
-    /*const payload = {
-      producto_id: String(data.producto_id),
-      producto_nombre: String(data.producto_nombre),
-      descripcion: String(data.descripcion),
-      precio: String(data.precio),
-      codigo_barra: String(data.codigo_barra),
-      marca_id: String(data.marca_id),
-      stock_minimo: String(data.stock_minimo),
-      inhabilitado: String(data.inhabilitado),
-      vencimiento: String(data.vencimiento || ''),
-      categorias: catSelected.map(cat => ({
-        id: String(cat.id),
-        nombre: String(cat.nombre),
-      })),
-      file,
-    };*/
 
-
-    //const formData = toFormData(payload);
+    //muestro el cargando...
+    setLoad(true); 
+    let resp;
+    let title = '';
 
     if (mode === 'create') {
-      router.post(
+      /*router.post(
         route('productos.store'),payload,
         {
           //forceFormData: true,
@@ -331,9 +268,35 @@ export default function NewEditProductos(){
             setLoad(false);
           }
         }
-      );
+      );*/
+      const res  = await fetch(route('productos.store'),{
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json', 
+          'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement).content,
+        },
+        body: JSON.stringify(payload),
+      });
+      resp = await res.json();
+      /*setLoad(false);
+
+      if(resp.resultado === 0){
+        setTitle('Error');
+        setText(resp.mensaje ?? 'Error inesperado');
+        setColor('error');
+        setActivo(true);
+        return;
+      }
+      
+      setTitle('Producto nuevo'); 
+      setText(resp.mensaje); 
+      setColor('success'); 
+      setActivo(true); */
+      title = 'Producto nuevo';
+      //color = 'success';
+
     } else {
-      router.put(
+      /*router.put(
         route('productos.update',{producto: data.producto_id}),
         payload,
         {
@@ -344,8 +307,42 @@ export default function NewEditProductos(){
             setLoad(false);
           }
         }
-      );
+      );*/
+      function getCsrfToken(): string {
+        const meta = document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement | null;
+        return meta?.content ?? '';
+      }
+
+      const res = await fetch(route('productos.update', {producto: data.producto_id}), {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': getCsrfToken(),
+        },
+        body: JSON.stringify(payload),
+      });
+      resp  = await res.json();
+      title = 'Producto modificado';
     }
+    setLoad(false);
+
+    if (resp.resultado === 0) {
+      setTitle('Error');
+      setText(resp.mensaje ?? 'Error inesperado');
+      setColor('error');
+      setActivo(true);
+      return;
+    }
+
+    setTitle(title);
+    setText(resp.mensaje);
+    setColor('success');
+    setActivo(true);
+
+    if (resp.resultado === 1 && resp.producto_id){
+      router.get(route('productos.edit', { producto: resp.producto_id }));
+    }
+
     setTitle('');
     setText('');
     setActivo(false);
@@ -353,6 +350,17 @@ export default function NewEditProductos(){
   
   const cancelar = () => {
     setConfirOpen(false);
+  };
+
+  const handleClick = () => {
+    fileInputRef.current?.click(); // dispara el input oculto
+  };
+
+  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setData({...data, imagen: `images/productos/${file.name}`})
+    }
   };
 
   //Effect
@@ -376,7 +384,7 @@ export default function NewEditProductos(){
     cargarDatos();
   },[]);
 
-  useEffect(() => {
+  /*useEffect(() => {
     const cambioDetectado = timestamp && timestamp !== ultimoTimestamp;
 		//const cambioDetectado = (resultado && resultado  !== propsActuales.resultado) || (mensaje && mensaje    !== propsActuales.mensaje) 
 
@@ -390,7 +398,7 @@ export default function NewEditProductos(){
       setColor(esError ? 'error' : 'success');
       setActivo(true); 
     }
-	}, [resultado, mensaje, producto_id, timestamp, ultimoTimestamp, mode]);
+	}, [resultado, mensaje, producto_id, timestamp, ultimoTimestamp, mode]);*/
 
   useEffect(() => {
     if(producto && mode === 'edit'){
@@ -452,14 +460,25 @@ export default function NewEditProductos(){
               { data.imagen && (
                 <div className='flex justify-center mb-3'>
                   <figure className='flex flex-col items-center text-center'>
-                    <img src={`/${data.imagen}`} className="w-50 h-50 object-cover rounded-md border mb-1" alt="Imagen" width="50"/>
+                    <img src={`/${data.imagen}`} className="w-70 h-70 object-cover rounded-md border mb-1" alt="Imagen" width="50"/>
                     <figcaption className="text-sm text-gray-600">
                       {`/${data.imagen}`}
                     </figcaption>
                   </figure>
                 </div>
               ) }
-              <Input placeholder='Ingresa la dirección de tu imagen sin /' value={urlImg} onChange={(e) => { setUrlImg(e.target.value) }}/>
+              {/*<Input placeholder='Ingresa la dirección de tu imagen sin /' value={urlImg} onChange={(e) => { setUrlImg(e.target.value) }}/>*/}
+              <div> 
+                <Button onClick={handleClick} type='button'>
+                  <File size={20} className=""/>  Seleccionar archivo
+                </Button> 
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  onChange={handleFile} 
+                  className="hidden" // oculta el input 
+                /> 
+              </div>
             </div>
           </form>
         </div>
@@ -484,11 +503,12 @@ export default function NewEditProductos(){
         color={color}
         onClose={() => {
             setActivo(false);
-            if (resultado === 1 && producto_id){
-              router.get(route('productos.edit', { producto: producto_id }));
-            }
           }
         }
+      />
+      <Loading
+        open={load}
+        onClose={() => {}}
       />
     </AppLayout>
   );

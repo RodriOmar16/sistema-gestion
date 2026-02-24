@@ -262,7 +262,7 @@ class ProductoController extends Controller
       return inertia('productos/index', ['productos' => []]);
     }
 
-    $query = Producto::query()->with(['categorias', 'marca']);
+    $query = Producto::query()->with(['categorias', 'marca', 'stock']);
 
     // Campos propios
     if ($request->filled('producto_id')) {
@@ -307,7 +307,8 @@ class ProductoController extends Controller
           'marca_id' => $producto->marca->marca_id ?? '', 
           'marca_nombre' => $producto->marca->nombre ?? '', 
           'codigo_barra' => $producto->codigo_barra, 
-          'stock_minimo' => $producto->stock_minimo, 
+          'stock_minimo' => $producto->stock_minimo,
+          'stock_actual' => $producto->stock->cantidad??0, 
           'vencimiento' => $producto->vencimiento, 
           'inhabilitado' => $producto->inhabilitado, 
           'imagen' => $producto->imagen, 
@@ -350,7 +351,12 @@ class ProductoController extends Controller
                         //->where('precio', $validated['precio'])
                         ->exists();
       if($existe){
-        return inertia('productos/createEdit',[
+        /*return inertia('productos/createEdit',[
+          'resultado' => 0,
+          'mensaje'   => 'El producto que intentas registrar ya existe',
+          'timestamp' => now()->timestamp,
+        ]);*/
+        return response()->json([
           'resultado' => 0,
           'mensaje'   => 'El producto que intentas registrar ya existe',
           'timestamp' => now()->timestamp,
@@ -369,23 +375,6 @@ class ProductoController extends Controller
         'vencimiento'     => $validated['vencimiento'],
       ]);
       $producto_id = $producto->producto_id;
-      
-      /*$listasProd = collect($request->input('listas'))
-      ->filter(fn($l) => $l['precio'] != 0)
-      ->map(fn($l) => (object)[
-        'id'     => $l['id'],
-        'nombre' => $l['nombre'],
-        'precio' => $l['precio']
-      ])
-      ->values();
-
-      foreach($listasProd as $lp){
-        ProductoLista::firstOrCreate([
-          'producto_id'     => $producto_id, 
-          'lista_precio_id' => $lp->id,
-          'precio_lista'    => $lp->precio
-        ]);
-      }*/
 
       $categorias = collect($request->input('categorias'))->pluck('id')->unique()->toArray();
       foreach($categorias as $cate_id){
@@ -396,7 +385,13 @@ class ProductoController extends Controller
       }
       //commit
       DB::commit();
-      return inertia('productos/createEdit',[
+      /*return inertia('productos/createEdit',[
+        'resultado'   => 1,
+        'mensaje'     => 'Producto create correctamente',
+        'producto_id' => $producto_id,
+        'timestamp'   => now()->timestamp,
+      ]);*/
+      return response()->json([
         'resultado'   => 1,
         'mensaje'     => 'Producto create correctamente',
         'producto_id' => $producto_id,
@@ -404,7 +399,12 @@ class ProductoController extends Controller
       ]);
     } catch (\Throwable $e) {
       DB::rollback();
-      return inertia('productos/createEdit',[
+      /*return inertia('productos/createEdit',[
+        'resultado' => 0,
+        'mensaje'   => 'Ocurrió un error al intentar crear el producto: '.$e->getMessage(),
+        'timestamp' => now()->timestamp,
+      ]);*/
+      return response()->json([
         'resultado' => 0,
         'mensaje'   => 'Ocurrió un error al intentar crear el producto: '.$e->getMessage(),
         'timestamp' => now()->timestamp,
@@ -446,7 +446,12 @@ class ProductoController extends Controller
                         //->where('precio', $validated['precio'])
                         ->exists();
       if($existe){
-        return inertia('productos/createEdit',[
+        /*return inertia('productos/createEdit',[
+          'resultado' => 0,
+          'mensaje'   => 'Ya existe un producto con esas especificaciones',
+          'timestamp' => now()->timestamp,
+        ]);*/
+        return response()->json([
           'resultado' => 0,
           'mensaje'   => 'Ya existe un producto con esas especificaciones',
           'timestamp' => now()->timestamp,
@@ -481,7 +486,13 @@ class ProductoController extends Controller
 
       //commit
       DB::commit();
-      return inertia('productos/createEdit',[
+      /*return inertia('productos/createEdit',[
+        'resultado'   => 1,
+        'mensaje'     => 'Se actualizó correctamente el producto',
+        'producto_id' => $producto->producto_id,
+        'timestamp' => now()->timestamp,
+      ]);*/
+      return response()->json([
         'resultado'   => 1,
         'mensaje'     => 'Se actualizó correctamente el producto',
         'producto_id' => $producto->producto_id,
@@ -489,7 +500,12 @@ class ProductoController extends Controller
       ]);
     } catch (\Throwable $e) {
       DB::rollback();
-      return inertia('productos/createEdit',[
+      /*return inertia('productos/createEdit',[
+        'resultado' => 0,
+        'mensaje'   => 'Ocurrió un problema al momento de actualizar el producto: '.$e->getMessage(),
+        'timestamp' => now()->timestamp,
+      ]);*/
+      return response()->json([
         'resultado' => 0,
         'mensaje'   => 'Ocurrió un problema al momento de actualizar el producto: '.$e->getMessage(),
         'timestamp' => now()->timestamp,

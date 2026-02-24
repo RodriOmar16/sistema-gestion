@@ -39,6 +39,7 @@ const productoVacio = {
   marca_nombre:        '', 
   codigo_barra:        '',
   stock_minimo:        0,
+  stock_actual:        0,
   vencimiento:         '',
   precio:              '',
   inhabilitado:        false,

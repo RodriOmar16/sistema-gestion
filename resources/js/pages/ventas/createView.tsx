@@ -641,18 +641,18 @@ export default function NewViewVenta(){
       const resp = await res.json();
       setLoad(false);
 
-        if (resp.resultado === 0) {
-          setTitle('Error');
-          setText(resp.mensaje ?? 'Error inesperado');
-          setColor('error');
-          setActivo(true);
-          return;
-        }
-
-        setTitle('Venta anulada');
-        setText(resp.mensaje);
-        setColor('success');
+      if (resp.resultado === 0) {
+        setTitle('Error');
+        setText(resp.mensaje ?? 'Error inesperado');
+        setColor('error');
         setActivo(true);
+        return;
+      }
+
+      setTitle('Venta anulada');
+      setText(resp.mensaje);
+      setColor('success');
+      setActivo(true);
 
       if (resp.resultado === 1 && resp.venta_id){
         router.get(route('ventas.view', { venta: resp.venta_id }));

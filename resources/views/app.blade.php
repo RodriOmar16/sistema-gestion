@@ -29,7 +29,6 @@
                 background-color: oklch(0.145 0 0);
             }
         </style>
-
         <title inertia>{{ config('app.name', 'Sistema de Gestión') }}</title>
 
         <link rel="icon" href="/images/logo/fav-icon.svg" sizes="any">

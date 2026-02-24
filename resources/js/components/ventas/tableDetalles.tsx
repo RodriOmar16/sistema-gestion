@@ -81,6 +81,7 @@ export function getColumns(
       cell: ({ row }) => {
         const fila = row.original;
         const cant = fila.cantidad;
+        const [cantInput, setCantInput] = useState(cant.toString());
         /*( 
         <div className="">{row.getValue("cliente_nombre")}</div> )*/
         return (
@@ -94,13 +95,30 @@ export function getColumns(
               >
                 <Minus size={20}/>
               </Button>
-              <Input
+              {/*<Input
                 className="mx-2 w-30 text-center"
                 value={cant}
                 disabled={modo!='create'}
                 onChange={(e) => cambiarCantidad(fila.id, e.target.value)}
                 inputMode="numeric"
               />
+              <Input
+                className="mx-2 w-30 text-center"
+                value={cant}
+                disabled={modo!='create'}
+                onChange={(e) => cambiarCantidad(fila.id, e.target.value)} // string
+                onBlur={(e) => cambiarCantidad(fila.id, parseInt(e.target.value) || 0)} // número final
+                inputMode="numeric"
+              />*/}
+              <Input
+                className="mx-2 w-30 text-center"
+                value={cantInput}
+                disabled={modo != 'create'}
+                onChange={(e) => setCantInput(e.target.value)} // solo string
+                onBlur={() => cambiarCantidad(fila.id, cantInput)} // al salir, parsea y guarda
+                inputMode="numeric"
+              />
+
               <Button
                 variant="outline"
                 size="sm"

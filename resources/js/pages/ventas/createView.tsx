@@ -506,13 +506,22 @@ export default function NewViewVenta(){
   const handleSubmit = (e:React.FormEvent) => {
     e.preventDefault();
     if(productosDet.length <= 0){
-      setTitle('Campo requerido!');
+      setTitle('Campo sin productos');
       setText('Es necesario agregar al menos un producto para la venta.');
       setColor('warning');
       setActivo(true);
-    
       return 
     }
+
+    const cantCero = productosDet.filter(e => e.cantidad <= 0);
+    if(cantCero.length > 0){
+      setTitle('Sin cantidad');
+      setText('Es necesario asignarle cantidad mayor a cero a los productos.');
+      setColor('warning');
+      setActivo(true);
+      return 
+    }
+
     if(!dataCli.nombre || !dataCli.dni || !dataCli.email || !dataCli.fecha_nacimiento || !dataCli.domicilio){
       setTitle('Campo requerido!');
       setText('Se requiere rellenar todos los campos del cliente');

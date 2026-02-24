@@ -49,6 +49,7 @@ export function FiltrosForm({ /*clientes,*/ data, set }: propsForm){
       ...data,
       fecha_desde: convertirFechaBarrasGuiones(data.fecha_desde??''), 
       fecha_hasta: convertirFechaBarrasGuiones(data.fecha_hasta??''),
+      fecha_anulacion: convertirFechaBarrasGuiones(data.fecha_anulacion??''),
       buscar: true    
     };
     router.get(route('ventas.index'), payload, {
@@ -112,23 +113,6 @@ export function FiltrosForm({ /*clientes,*/ data, set }: propsForm){
             onChange={(option) => seleccionarCliente(option)}
             placeHolder="Selec. cliente"
           />
-          {/*<Select
-            value={String(data.cliente_id)}
-            onValueChange={(value) => set({...data, cliente_id: Number(value)}) }
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                {clientes.map((e: any) => (
-                  <SelectItem key={e.id} value={String(e.id)}>
-                    {e.nombre}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>*/}
         </div>
         <div className="col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3">
           <label htmlFor="fechaAnulacion">Anulación</label>
@@ -168,25 +152,13 @@ export default function Ventas(){
   const [textConfirmar, setTextConfirmar] = useState(''); 
   const [ventaCopia, setVentaCopia]       = useState<Venta>(ventaVacia);
 
-  /*const [activo, setActivo] = useState(false);//ShowMessage
-  const [text, setText]     = useState('');
-  const [title, setTitle]   = useState('');
-  const [color, setColor]   = useState('');*/
-
   const { ventas } = usePage().props as { ventas?: Venta[] }; //necesito los props de inertia
   const { resultado, mensaje, venta_id } = usePage().props as {
     resultado?: number;
     mensaje?: string;
     venta_id?: number;
   };
-  /*const [propsActuales, setPropsActuales] = useState<{
-    resultado: number | undefined | null;
-    mensaje: string | undefined | null | '';
-    venta_id: number | undefined | null;
-  }>({ resultado: undefined, mensaje: undefined, venta_id: undefined });*/
-  //const [ventasCacheadas, setVentasCacheadas] = useState<Venta[]>([]);
-
-  //const [clientes, setClientes] = useState<Multiple[]>([]);
+  const [cacheados, setCacheados] = useState<Venta[]>([]);
 
   //funciones
   const openEdit = (data: Venta) => {
@@ -194,7 +166,14 @@ export default function Ventas(){
   };
 
   //effect
-  
+    useEffect(() => {
+    if (ventas && ventas.length > 0) {
+      setCacheados(ventas);
+    } else {
+      setCacheados([]);
+    }
+  }, [ventas]);
+
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Ventas" />
@@ -207,7 +186,7 @@ export default function Ventas(){
         </div>
         <div className="p-4 relative flex-1 overflow-auto rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
           <DataTableVentas
-            datos={ventas?? []} 
+            datos={cacheados?? []} 
             openEdit={openEdit}
             dataIndex={data}
             />

@@ -25,16 +25,16 @@ type propsForm = {
 }
 
 const gastoVacio = {
-  gasto_id:         0,
+  gasto_id:         '',
   fecha:            '',
   fecha_desde:      '',
   fecha_hasta:      '',
   caja_id:          '',
-  proveedor_id:     0,
+  proveedor_id:     '',
   proveedor_nombre: '',
-  forma_pago_id:    0,
+  forma_pago_id:    '',
   forma_pago_nombre:'',
-  monto:            0,
+  monto:            '',
   descripcion:      '',
   inhabilitado:     0
 };
@@ -50,7 +50,16 @@ export function FiltrosForm({ openCreate }: propsForm){
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setLoad(true);
-    const payload = {      ...data, buscar: true    }
+    const payload = {
+      ...data, 
+      fecha_desde: convertirFechaBarrasGuiones(data.fecha_desde??''),
+      fecha_hasta: convertirFechaBarrasGuiones(data.fecha_hasta??''),
+      /*gasto_id: Number(data.gasto_id),
+      proveedor_id: Number(data.proveedor_id),
+      forma_pago_id: Number(data.forma_pago_id),
+      monto: Number(data.monto),*/
+      buscar: true    
+    }
     
     router.get(route('gastos.index'), payload, {
       preserveState: true,
@@ -70,7 +79,7 @@ export function FiltrosForm({ openCreate }: propsForm){
       setData({...data, proveedor_id: option.value, proveedor_nombre: option.label});
       setOptionProv(option);
     }else{
-      setData({...data, proveedor_id: 0, proveedor_nombre: ''});
+      setData({...data, proveedor_id: '', proveedor_nombre: ''});
       setOptionProv(null);
     }
   };
@@ -81,7 +90,7 @@ export function FiltrosForm({ openCreate }: propsForm){
       setOptionFp(option);
     }else{
       //setFpId(0);
-      setData({...data, forma_pago_id: 0, forma_pago_nombre: ''});
+      setData({...data, forma_pago_id: '', forma_pago_nombre: ''});
       setOptionFp(null);
     }
   };
@@ -309,12 +318,10 @@ export default function Gastos(){
 
   //effect
   useEffect(() => {
-    if (
-      gastos &&
-      gastos.length > 0 &&
-      JSON.stringify(gastos) !== JSON.stringify(cacheados)
-    ) {
+    if (gastos && gastos.length > 0) {
       setCacheados(gastos);
+    } else {
+      setCacheados([]);
     }
   }, [gastos]);
 

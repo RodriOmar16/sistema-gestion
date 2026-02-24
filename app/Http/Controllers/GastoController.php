@@ -19,29 +19,41 @@ class GastoController extends Controller
         'gastos' => []
       ]);
     }
-
+    //dd($request->all());
     $query = Gasto::query()->with(['proveedor', 'formaPago']);
-    if($request->filled('gasto_id')){
+
+    if ($request->filled('gasto_id')) {
       $query->where('gasto_id', $request->gasto_id);
     }
-    if($request->filled('caja_id')){
-      $query->where('caja_id', $request->caja_id);
+    if ($request->filled('caja_id')) {
+      switch ((int)$request->caja_id){
+        case -1:
+          $query->whereNull('caja_id');
+          break;
+        case 0:
+          $query->where('caja_id', 0);
+          break;
+          default: $query->where('caja_id', $request->caja_id);
+      }
     }
-    if($request->filled('proveedor_id')){
+
+    if ($request->filled('proveedor_id')) {
       $query->where('proveedor_id', $request->proveedor_id);
     }
-    if($request->filled('forma_pago_id')){
+    if ($request->filled('forma_pago_id')) {
       $query->where('forma_pago_id', $request->forma_pago_id);
     }
+    if ($request->filled('monto') && $request->monto != "0") {
+      $query->where('monto', $request->monto);
+    }
+
     if ($request->filled('fecha_desde')) {
       $query->where('fecha', '>=', $request->fecha_desde);
     }
     if ($request->filled('fecha_hasta')) {
       $query->where('fecha', '<=', $request->fecha_hasta);
     }
-    if($request->filled('monto')){
-      $query->where('monto', $request->monto);
-    }
+
 
     $gastos = $query->latest()->get()->map(function ($g) { 
       return [
@@ -120,7 +132,7 @@ class GastoController extends Controller
         'descripcion' => 'string|max:255',
       ]);
       
-      //creo el gasto
+      //modifico el gasto
       $gasto->update([
         'descripcion' => $validated['descripcion'],
         'updated_at'  => now(),
@@ -139,6 +151,32 @@ class GastoController extends Controller
       return inertia('gastos/index',[
         'resultado' => 0,
         'mensaje'   => 'Ocurrió un error al intentar actualizar el gasto: '.$e->getMessage(),
+        'timestamp' => now()->timestamp
+      ]);
+    }
+  }
+  public function toggleEstado(Request $request, Gasto $gasto){
+     DB::beginTransaction();
+    try {      
+      //modifico el gasto
+      $gasto->update([
+        'inhabilitado' => 1,
+        'updated_at'  => now(),
+      ]);
+
+      //éxito
+      DB::commit();
+      return inertia('gastos/index',[
+        'resultado' => 1,
+        'mensaje'   => 'Se borró el gasto correctamente',
+        'gasto_id'  => $gasto->gasto_id,
+        'timestamp' => now()->timestamp
+      ]);
+    } catch (\Throwable $e) {
+      DB::rollback();
+      return inertia('gastos/index',[
+        'resultado' => 0,
+        'mensaje'   => 'Ocurrió un error al intentar actualizar estaqdo del gasto: '.$e->getMessage(),
         'timestamp' => now()->timestamp
       ]);
     }

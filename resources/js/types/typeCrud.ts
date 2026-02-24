@@ -212,7 +212,7 @@ export interface Gasto{
   proveedor_nombre: string;
   forma_pago_id:    number|string;
   forma_pago_nombre:string;
-  monto:            number;
+  monto:            string|number;
   descripcion:      string;
   inhabilitado:     number;
   created_at?:      string;

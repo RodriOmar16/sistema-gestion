@@ -31,11 +31,11 @@ const gastoVacio = {
   fecha_desde:      '',
   fecha_hasta:      '',
   caja_id:          '',
-  proveedor_id:     0,
+  proveedor_id:     '',
   proveedor_nombre: '',
-  forma_pago_id:    0,
+  forma_pago_id:    '',
   forma_pago_nombre:'',
-  monto:            0,
+  monto:            '',
   descripcion:      '',
   inhabilitado:     0
 };
@@ -92,7 +92,7 @@ export default function NewEditGasto({ open, onOpenChange, mode, gasto, onSubmit
       setActivo(true);
       return 
     }
-    if(!data.monto || (data.monto && data.monto <= 0)){
+    if(!data.monto || (Number(data.monto) && Number(data.monto) <= 0)){
       setTitle('¡Campo faltante!');
       setText('Se requiere que ingreses un monto');
       setActivo(true);
@@ -105,9 +105,9 @@ export default function NewEditGasto({ open, onOpenChange, mode, gasto, onSubmit
       return 
     }
     const payload = { ...data }
-    if(data.caja_id === -1){
+    /*if(data.caja_id === -1){
       payload.caja_id = '';
-    }
+    }*/
     //return console.log(payload);
     onSubmit(payload);
   }
@@ -117,7 +117,7 @@ export default function NewEditGasto({ open, onOpenChange, mode, gasto, onSubmit
       setData({...data, proveedor_id: option.value, proveedor_nombre: option.label});
       setOptionProv(option);
     }else{
-      setData({...data, proveedor_id: 0, proveedor_nombre: ''});
+      setData({...data, proveedor_id: '', proveedor_nombre: ''});
       setOptionProv(null);
     }
   };
@@ -128,7 +128,7 @@ export default function NewEditGasto({ open, onOpenChange, mode, gasto, onSubmit
       setOptionFp(option);
     }else{
       //setFpId(0);
-      setData({...data, forma_pago_id: 0, forma_pago_nombre: ''});
+      setData({...data, forma_pago_id: '', forma_pago_nombre: ''});
       setOptionFp(null);
     }
   };
@@ -179,7 +179,13 @@ export default function NewEditGasto({ open, onOpenChange, mode, gasto, onSubmit
                   placeHolder='Seleccionar'
                 />
               ) :(
-                <><p>input disabled</p></>
+                <>
+                  <Input
+                    disabled
+                    value={data.proveedor_nombre}
+                    placeholder="proveedor"
+                  />
+                </>
               )
             }
           </div>
@@ -194,7 +200,13 @@ export default function NewEditGasto({ open, onOpenChange, mode, gasto, onSubmit
                   placeHolder='Seleccionar'
                 />
               ) :(
-                <><p>input disabled</p></>
+                <>
+                  <Input
+                    disabled
+                    value={data.forma_pago_nombre}
+                    placeholder="fp_nombre"
+                  />
+                </>
               )
             }
           </div>

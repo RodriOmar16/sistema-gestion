@@ -189,7 +189,7 @@ class VentaController extends Controller
       $query->where('cliente_id', $request->cliente_id);
     }
     if($request->filled('fecha_anulacion')){
-      $query->where('fecha_anulacion', $request->fecha_anulacion);
+      $query->whereDate('fecha_anulacion', $request->fecha_anulacion);
     }
     if($request->has('anulada')){
       $estado = filter_var($request->anulada, FILTER_VALIDATE_BOOLEAN);

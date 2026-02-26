@@ -14,10 +14,11 @@ import { Select,  SelectContent, SelectGroup,  SelectItem,  SelectTrigger,  Sele
 import { route } from 'ziggy-js';
 import InputCuil from '@/components/utils/input-cuil';
 import { Multiple } from '@/types/typeCrud';
-import { ordenarPorTexto } from '@/utils';
+import { getCsrfToken, ordenarPorTexto } from '@/utils';
 import DataTableProductos from '@/components/productos/dataTableProductos';
 import { DatePicker } from '@/components/utils/date-picker';
 import GenericSelect from '@/components/utils/genericSelect';
+import Loading from '@/components/utils/loadingDialog';
 
 const breadcrumbs: BreadcrumbItem[] = [ { title: 'Productos', href: '', } ];
 
@@ -196,8 +197,8 @@ export default function Productos(){
   const [productosCacheados, setProductosCacheados] = useState<Producto[]>([]);
   const [ultimoTimestamp, setUltimoTimestamp] = useState<number | null>(null);
 
-  const [marcas, setMarcas]              = useState<Multiple[]>([]);
-  const [categorias, setCategorias]      = useState<Multiple[]>([]);
+  const [load, setLoad] = useState(false);
+  const [respuesta, setResp]= useState<{resultado: number, producto_id: number}>({resultado: 0, producto_id: 0});
 
   //funciones
   const confirmar = (data: Producto) => {
@@ -208,9 +209,9 @@ export default function Productos(){
       setConfirmar(true);
     }
   };
-  const inhabilitarHabilitar = () => {
+  const inhabilitarHabilitar = async () => {
     if (!productoCopia || !productoCopia.producto_id) return;
-    router.put(
+    /*router.put(
       route('productos.toggleEstado', { producto: productoCopia.producto_id }),{},
       {
         preserveScroll: true,
@@ -221,7 +222,35 @@ export default function Productos(){
           setProductoCopia(productoVacio);
         }
       }
-    );
+    );*/
+    setLoad(true);
+    const res = await fetch(route('productos.toggleEstado', { producto: productoCopia.producto_id }), {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': getCsrfToken(),
+      },
+    });
+    const resp  = await res.json();
+    setLoad(false);
+    setResp({resultado: resp.resultado, producto_id: resp.producto_id});
+    
+    if (resp.resultado === 0) {
+      setTitle('Error');
+      setText(resp.mensaje ?? 'Error inesperado');
+      setColor('error');
+      setActivo(true);
+      return;
+    }
+
+    setTitle('Estado modificado');
+    setText(resp.mensaje);
+    setColor('success');
+    setActivo(true);
+
+    setTextConfirmar('');
+    setConfirmar(false);
+    setProductoCopia(productoVacio)
   };
 
   const cancelarInhabilitarHabilitar = () => { 
@@ -247,7 +276,7 @@ export default function Productos(){
   }, [productos]);
 
 
-  useEffect(() => {
+  /*useEffect(() => {
     const cambioDetectado = timestamp && timestamp !== ultimoTimestamp;
 
     if (cambioDetectado) {
@@ -267,7 +296,7 @@ export default function Productos(){
         )
       }
     }
-  }, [resultado, mensaje, producto_id, timestamp, ultimoTimestamp]);
+  }, [resultado, mensaje, producto_id, timestamp, ultimoTimestamp]);*/
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
@@ -300,7 +329,19 @@ export default function Productos(){
         title={title}
         text={text}
         color={color}
-        onClose={() => setActivo(false)}
+        onClose={() => {
+          setActivo(false);
+          if (respuesta.resultado === 1 && respuesta.producto_id) {
+            router.get(route('productos.index'),
+              { producto_id: respuesta.producto_id, buscar: true },
+              { preserveScroll: true,	preserveState: true	}
+            )
+          }
+        }}
+      />
+      <Loading
+        open={load}
+        onClose={() => {}}
       />
     </AppLayout>
   );

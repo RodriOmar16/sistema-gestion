@@ -13,7 +13,7 @@ import {  Table,  TableBody,  TableCaption,  TableCell,  TableHead,  TableHeader
 import { Select,  SelectContent, SelectGroup,  SelectItem,  SelectTrigger,  SelectValue } from "@/components/ui/select"
 import SelectMultiple from '@/components/utils/select-multiple';
 import { Multiple } from '@/types/typeCrud';
-import { convertirFechaBarrasGuiones, convertirFechaGuionesBarras, ordenarPorTexto } from '@/utils';
+import { convertirFechaBarrasGuiones, convertirFechaGuionesBarras, getCsrfToken, ordenarPorTexto } from '@/utils';
 import ShowMessage from '@/components/utils/showMessage';
 import ModalConfirmar from '@/components/modalConfirmar';
 import { route } from 'ziggy-js';
@@ -308,11 +308,6 @@ export default function NewEditProductos(){
           }
         }
       );*/
-      function getCsrfToken(): string {
-        const meta = document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement | null;
-        return meta?.content ?? '';
-      }
-
       const res = await fetch(route('productos.update', {producto: data.producto_id}), {
         method: 'PUT',
         headers: {
@@ -325,6 +320,8 @@ export default function NewEditProductos(){
       title = 'Producto modificado';
     }
     setLoad(false);
+
+    setResp({resultado: resp.resultado, producto_id: resp.producto_id});
 
     if (resp.resultado === 0) {
       setTitle('Error');
@@ -339,7 +336,7 @@ export default function NewEditProductos(){
     setColor('success');
     setActivo(true);
 
-    setResp({resultado: resp.resultado, producto_id: resp.producto_id});
+    
 
   };
   

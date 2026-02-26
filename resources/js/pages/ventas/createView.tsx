@@ -14,7 +14,7 @@ import {  Table,  TableBody,  TableCaption,  TableCell,  TableHead,  TableHeader
 import { Select,  SelectContent,  SelectGroup,  SelectItem,  SelectLabel,  SelectTrigger,  SelectValue } from "@/components/ui/select"
 import SelectMultiple from '@/components/utils/select-multiple';
 import { Multiple, Autocomplete } from '@/types/typeCrud';
-import { convertirFechaBarrasGuiones, convertirFechaGuionesBarras, convertirNumberPlata, ordenarPorTexto, redondear } from '@/utils';
+import { convertirFechaBarrasGuiones, convertirFechaGuionesBarras, convertirNumberPlata, getCsrfToken, ordenarPorTexto, redondear } from '@/utils';
 import ShowMessage from '@/components/utils/showMessage';
 import ModalConfirmar from '@/components/modalConfirmar';
 import { route } from 'ziggy-js';
@@ -571,6 +571,8 @@ export default function NewViewVenta(){
     setConfirOpen(false);
     setTextConfirm('');
     setLoad(true);
+
+    let resp; let titulo='';
     if(mode === 'create'){
       /*router.post(route('ventas.store'),payload,
         {
@@ -596,28 +598,8 @@ export default function NewViewVenta(){
         body: JSON.stringify(payload),
       });
       const resp = await res.json();
-      setLoad(false);
+      titulo='Venta registrada';
 
-      if(resp.resultado === 0){
-        setTitle('Error');
-        setText(resp.mensaje ?? 'Error inesperado');
-        setColor('error');
-        setActivo(true);
-        return;
-      }
-
-      setTitle('Venta nueva'); 
-      setText(resp.mensaje); 
-      setColor('success'); 
-      setActivo(true); 
-
-      setResp({resultado: resp.resultado, venta_id: resp.venta_id});
-      /*if (resp.resultado === 1 && resp.venta_id){
-        router.get(route('ventas.view', { venta: resp.venta_id }));
-      }*/
-      /*setTitle('');
-      setText('');
-      setActivo(false);*/
     }else {
       //setLoad(false);
       /*router.put(route('ventas.destroy',{venta: venta?.venta_id??0}),{motivo:'prueba'},
@@ -629,11 +611,6 @@ export default function NewViewVenta(){
           }
         }
       );*/
-      function getCsrfToken(): string {
-        const meta = document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement | null;
-        return meta?.content ?? '';
-      }
-
       const res = await fetch(route('ventas.destroy', { venta: venta?.venta_id ?? 0 }), {
         method: 'PUT',
         headers: {
@@ -642,27 +619,25 @@ export default function NewViewVenta(){
         },
         body: JSON.stringify({ motivo: 'prueba' }),
       });
-      const resp = await res.json();
-      setLoad(false);
-
-      if (resp.resultado === 0) {
-        setTitle('Error');
-        setText(resp.mensaje ?? 'Error inesperado');
-        setColor('error');
-        setActivo(true);
-        return;
-      }
-
-      setTitle('Venta anulada');
-      setText(resp.mensaje);
-      setColor('success');
-      setActivo(true);
-
-      /*if (resp.resultado === 1 && resp.venta_id){
-        router.get(route('ventas.view', { venta: resp.venta_id }));
-      }*/
-      setResp({resultado: resp.resultado, venta_id: resp.venta_id});
+      resp = await res.json();
+      titulo='Venta anulada';
     }
+    setLoad(false);
+
+    setResp({resultado: resp.resultado, venta_id: resp.venta_id});
+
+    if(resp.resultado === 0){
+      setTitle('Error');
+      setText(resp.mensaje ?? 'Error inesperado');
+      setColor('error');
+      setActivo(true);
+      return;
+    }
+
+    setTitle(titulo); 
+    setText(resp.mensaje); 
+    setColor('success'); 
+    setActivo(true); 
   };
   
   const cancelar = () => {

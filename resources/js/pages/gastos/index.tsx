@@ -16,7 +16,8 @@ import { DatePicker } from '@/components/utils/date-picker';
 import { NumericFormat } from 'react-number-format';
 import DataTableGastos from '@/components/gastos/dataTableGastos';
 import NewEditGasto from '@/components/gastos/newEditGasto';
-import { convertirFechaBarrasGuiones } from '@/utils';
+import { convertirFechaBarrasGuiones, getCsrfToken } from '@/utils';
+import Loading from '@/components/utils/loadingDialog';
 
 const breadcrumbs: BreadcrumbItem[] = [ { title: 'Gastos', href: '', } ];
 
@@ -195,6 +196,14 @@ export function FiltrosForm({ openCreate }: propsForm){
   );
 };
 
+interface PageProps {
+  flash: {
+    success?: string;
+    error?: string;
+  };
+  [key: string]: any;
+}
+
 export default function Gastos(){
   //data
   const [confirmOpen, setConfirOpen] = useState(false); //modal para confirmar acciones para cuado se crea o edita
@@ -224,6 +233,9 @@ export default function Gastos(){
   };
   const [ultimoTimestamp, setUltimoTimestamp] = useState<number | null>(null);
   const [cacheados, setCacheados] = useState<Gasto[]>([]);
+
+  const [respuesta, setResp]= useState<{resultado: number, gasto_id: number}>({resultado: 0, gasto_id: 0});
+
 
   //funciones
   const confirmar = (data: Gasto) => {
@@ -276,14 +288,18 @@ export default function Gastos(){
     setConfirOpen(true);
   };
 
-  const accionar = () => {
+  const accionar = async () => {
     if (!pendingData) return;
+    setConfirOpen(false);
     setLoading(true);
 
     const payload = JSON.parse(JSON.stringify(pendingData));
     payload.fecha = convertirFechaBarrasGuiones(payload.fecha);
+    
+    let resp;
+    let titulo = '';
     if (modalMode === 'create') {
-      router.post(
+      /*router.post(
         route('gastos.store'), payload,
         {
           preserveScroll: true,
@@ -295,10 +311,21 @@ export default function Gastos(){
             setGastoCopia(gastoVacio);
           }
         }
-      );
+      );*/
+      const res  = await fetch(route('gastos.store'),{
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json', 
+          'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement).content,
+        },
+        body: JSON.stringify(payload),
+      });
+      resp = await res.json();
+      titulo = 'Gasto nuevo';
+
     } else {
-      router.put(
-        route('gasto.update',{turno: pendingData.gasto_id}), payload,
+      /*router.put(
+        route('gasto.update',{gasto: pendingData.gasto_id}), payload,
         {
           preserveScroll: true,
           preserveState: true,
@@ -307,9 +334,34 @@ export default function Gastos(){
             setPendingData(undefined);
           }
         }
-      );
+      );*/
+      const res = await fetch(route('gasto.update', {gasto: pendingData.gasto_id}), {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': getCsrfToken(),
+        },
+        body: JSON.stringify(payload),
+      });
+      resp  = await res.json();
+      titulo = 'Gasto modificado';
     }
-    setConfirOpen(false);
+    setLoading(false);
+    
+    setResp({resultado: resp.resultado, gasto_id: resp.gasto_id});
+
+    if(resp.resultado === 0){
+      setTitle('Error');
+      setText(resp.mensaje ?? 'Error inesperado');
+      setColor('error');
+      setActivo(true);
+      return;
+    }
+
+    setTitle(titulo); 
+    setText(resp.mensaje + ' ('+ resp.gasto_id +')'); 
+    setColor('success'); 
+    setActivo(true); 
   };
 
   const cancelarConfirmacion = () => {
@@ -387,7 +439,20 @@ export default function Gastos(){
         title={title}
         text={text}
         color={color}
-        onClose={() => setActivo(false)}
+        onClose={() => {
+          setActivo(false);
+          if (respuesta.resultado === 1 && respuesta.gasto_id) {
+            setModalOpen(false);
+            router.get(route('gastos.index'),
+              { gasto_id:respuesta.gasto_id, buscar: true },
+              { preserveScroll: true,	preserveState: true	}
+            )
+          }
+        }}
+      />
+      <Loading
+        open={loading}
+        onClose={() => {}}
       />
     </AppLayout>
   );

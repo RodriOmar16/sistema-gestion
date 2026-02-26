@@ -552,13 +552,20 @@ class ProductoController extends Controller
   public function toggleEstado(Producto $producto)
   {
     $producto->update(['inhabilitado' => !$producto->inhabilitado]);
-    return inertia('productos/index',[
+    /*return inertia('productos/index',[
       'resultado'   => 1,
       'mensaje'     => 'Estado modificado exitosamente',
       'producto_id' => $producto->producto_id,
       'timestamp' => now()->timestamp,
-    ]);
+    ]);*/
+  return response()->json([
+    'resultado'   => 1,
+    'mensaje'     => 'Estado modificado exitosamente',
+    'producto_id' => $producto->producto_id,
+    'timestamp' => now()->timestamp,
+  ]);
   }
+
   public function generarCodigo()
   {
     // genero el codigo

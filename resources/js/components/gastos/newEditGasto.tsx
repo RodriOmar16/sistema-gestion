@@ -16,6 +16,8 @@ import { convertirFechaGuionesBarras } from "@/utils";
 import { DatePicker } from "../utils/date-picker";
 import GenericSelect from "../utils/genericSelect";
 import { NumericFormat } from "react-number-format";
+import ModalConfirmar from "../modalConfirmar";
+import { route } from "ziggy-js";
 
 interface Props{
   open: boolean;
@@ -45,7 +47,7 @@ export default function NewEditGasto({ open, onOpenChange, mode, gasto, onSubmit
   const [activo, setActivo] = useState(false);
   const [text, setText]     = useState('');
   const [title, setTitle]   = useState('');
-  const { data, setData, get, processing, errors } = useForm<Gasto>(gastoVacio);
+  const { data, setData, get, post, processing, errors } = useForm<Gasto>(gastoVacio);
   const [optionProv, setOptionProv]           = useState<Autocomplete|null>(null);
   const [optionFp, setOptionFp]               = useState<Autocomplete|null>(null);
 
@@ -104,12 +106,13 @@ export default function NewEditGasto({ open, onOpenChange, mode, gasto, onSubmit
       setActivo(true);
       return 
     }
-    const payload = { ...data }
-    /*if(data.caja_id === -1){
-      payload.caja_id = '';
-    }*/
-    //return console.log(payload);
-    onSubmit(payload);
+    if(data.caja_id === ''){
+      setTitle('¡Campo faltante!');
+      setText('Se requiere que selecciones la caja');
+      setActivo(true);
+      return 
+    }
+    onSubmit(data);
   }
 
   const seleccionarProveedor = (option : any) => {
@@ -157,17 +160,16 @@ export default function NewEditGasto({ open, onOpenChange, mode, gasto, onSubmit
                     placeholder="Id"
                   />
                 </div>
-                <div className="col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12">
-                  <label htmlFor="fecha">Fecha</label>
-                  <DatePicker 
-                    fecha={(data.fecha)} 
-                    disable
-                    setFecha={ (fecha:string) => {setData({...data, fecha})} }
-                  />
-                </div>
               </>
             ) : <></>
           }
+          <div className="col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12">
+            <label htmlFor="fecha">Fecha</label>
+            <DatePicker 
+              fecha={(data.fecha)} 
+              setFecha={ (fecha:string) => {setData({...data, fecha})} }
+            />
+          </div>
           <div className="col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-6">
             <label htmlFor="proveedor">Proveedor</label>
             {
@@ -239,7 +241,7 @@ export default function NewEditGasto({ open, onOpenChange, mode, gasto, onSubmit
               prefix="$" 
               className="text-right border rounded px-2 py-1" 
               onValueChange={(values) => { setData({...data,monto: values.floatValue || 0}) }}
-            />	
+            />
           </div>
           <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-12'>
             <label htmlFor="descripcion">Descripción</label>

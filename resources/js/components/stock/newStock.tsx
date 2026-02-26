@@ -28,7 +28,7 @@ const stockVacio = {
   producto_nombre:  '',
   proveedor_id:     0,
   proveedor_nombre: '',
-  cantidad:         0
+  cantidad:         1
 }
 
 export default function NewStock({ open, onOpenChange, onSubmit, loading, productosDisp }: Props){
@@ -59,6 +59,7 @@ export default function NewStock({ open, onOpenChange, onSubmit, loading, produc
     if (!open) {
       setData(stockVacio);
       setProductos([]);
+      setOptionProduct(null);
     }
   }, [open]);
 
@@ -142,7 +143,7 @@ export default function NewStock({ open, onOpenChange, onSubmit, loading, produc
               route="productos"
               value={optionProduct}
               onChange={(option) => seleccionarProducto(option)}
-              placeHolder="Seleccionar ruta"
+              placeHolder="Seleccionar"
             />
             {/*<Select
               value={String(data.producto_id)}
@@ -168,8 +169,14 @@ export default function NewStock({ open, onOpenChange, onSubmit, loading, produc
               className="text-right"
               type="number"
               value={data.cantidad}
-              onChange={(e) => setData({ ...data, cantidad: Number(e.target.value) })}
-              placeholder="Ingresar nombre"
+              min={1}
+              onChange={(e) => {
+                  const nro = Number(e.target.value);
+                  if(nro > 0){
+                    setData({ ...data, cantidad: nro })
+                  }
+                }
+              }
             />
           </div>
           <div className="flex flex-col items-end justify-end col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-6">

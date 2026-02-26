@@ -187,9 +187,9 @@ export default function NewEditProductos(){
   const [text, setText]     = useState('');
   const [color, setColor]   = useState('success');
 
-  const [file, setFile] = useState(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const [urlImg, setUrlImg] = useState("");
+
+  const [respuesta, setResp]= useState<{resultado: number, producto_id: number}>({resultado: 0, producto_id: 0});
 
   //funciones
   const handleSubmit = (e:React.FormEvent) => {
@@ -339,13 +339,8 @@ export default function NewEditProductos(){
     setColor('success');
     setActivo(true);
 
-    if (resp.resultado === 1 && resp.producto_id){
-      router.get(route('productos.edit', { producto: resp.producto_id }));
-    }
+    setResp({resultado: resp.resultado, producto_id: resp.producto_id});
 
-    setTitle('');
-    setText('');
-    setActivo(false);
   };
   
   const cancelar = () => {
@@ -467,10 +462,9 @@ export default function NewEditProductos(){
                   </figure>
                 </div>
               ) }
-              {/*<Input placeholder='Ingresa la dirección de tu imagen sin /' value={urlImg} onChange={(e) => { setUrlImg(e.target.value) }}/>*/}
               <div> 
                 <Button onClick={handleClick} type='button'>
-                  <File size={20} className=""/>  Seleccionar archivo
+                  <File size={20} className=""/>  { data.imagen ? 'Cambiar imagen' : 'Seleccionar archivo' }
                 </Button> 
                 <input 
                   type="file" 
@@ -503,6 +497,9 @@ export default function NewEditProductos(){
         color={color}
         onClose={() => {
             setActivo(false);
+            if (respuesta.resultado === 1 && respuesta.producto_id){
+              router.get(route('productos.edit', { producto: respuesta.producto_id }));
+            }
           }
         }
       />

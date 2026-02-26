@@ -418,6 +418,7 @@ export function FormasPagosForm({modo, /*formasPagoHab,*/ formasPagoSelected, se
             prefix="$" 
             className="text-right border rounded px-2 py-1" 
             onValueChange={(values) => { setMonto(values.floatValue || 0) }}
+            disabled={modo!='create'}
             onKeyDown={(e) => { if (e.key === "Enter") { 
               e.preventDefault(); // 👈 evita el submit 
               agregarFp(); 
@@ -500,6 +501,8 @@ export default function NewViewVenta(){
   const [title, setTitle]   = useState('');
   const [text, setText]     = useState('');
   const [color, setColor]   = useState('success');
+
+  const [respuesta, setResp]= useState<{resultado: number, venta_id: number}>({resultado: 0, venta_id: 0});
 
   //funciones
 
@@ -608,9 +611,10 @@ export default function NewViewVenta(){
       setColor('success'); 
       setActivo(true); 
 
-      if (resp.resultado === 1 && resp.venta_id){
+      setResp({resultado: resp.resultado, venta_id: resp.venta_id});
+      /*if (resp.resultado === 1 && resp.venta_id){
         router.get(route('ventas.view', { venta: resp.venta_id }));
-      }
+      }*/
       /*setTitle('');
       setText('');
       setActivo(false);*/
@@ -654,9 +658,10 @@ export default function NewViewVenta(){
       setColor('success');
       setActivo(true);
 
-      if (resp.resultado === 1 && resp.venta_id){
+      /*if (resp.resultado === 1 && resp.venta_id){
         router.get(route('ventas.view', { venta: resp.venta_id }));
-      }
+      }*/
+      setResp({resultado: resp.resultado, venta_id: resp.venta_id});
     }
   };
   
@@ -665,7 +670,7 @@ export default function NewViewVenta(){
   };
 
   //Effect
-  useEffect(() => {
+  /*useEffect(() => {
 		//const cambioDetectado = (resultado && resultado  !== propsActuales.resultado) || (mensaje && mensaje    !== propsActuales.mensaje) 
     const cambioDetectado = timestamp && timestamp !== ultimoTimestamp;
 
@@ -679,7 +684,7 @@ export default function NewViewVenta(){
       setColor(esError ? 'error' : 'success');
       setActivo(true); 
     }
-	}, [resultado, mensaje, venta_id, timestamp, ultimoTimestamp]);
+	}, [resultado, mensaje, venta_id, timestamp, ultimoTimestamp]);*/
 
   useEffect(() => {
     if(venta && mode === 'view'){
@@ -821,9 +826,9 @@ export default function NewViewVenta(){
         color={color}
         onClose={() => {
             setActivo(false);
-            /*if (resultado === 1 && (venta_id||venta)){
-              router.get(route('ventas.view', { venta: venta_id??venta?.venta_id }));
-            }*/
+            if (respuesta.resultado === 1 && respuesta.venta_id){
+              router.get(route('ventas.view', { venta: respuesta.venta_id }));
+            }
           }
         }
       />

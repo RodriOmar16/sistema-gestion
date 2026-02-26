@@ -19,6 +19,7 @@ import DataTableProductos from '@/components/productos/dataTableProductos';
 import { DatePicker } from '@/components/utils/date-picker';
 import GenericSelect from '@/components/utils/genericSelect';
 import Loading from '@/components/utils/loadingDialog';
+import { NumericFormat } from 'react-number-format';
 
 const breadcrumbs: BreadcrumbItem[] = [ { title: 'Productos', href: '', } ];
 
@@ -144,7 +145,16 @@ export function FiltrosForm({ resetearProducto, /*marcas, categorias,*/ data, se
         </div>        
         <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
           <label htmlFor="precio">Precio</label>
-          <Input type='number' className='text-right' value={data.precio} onChange={(e)=>set({...data, precio: Number(e.target.value)})}/>	
+          <NumericFormat 
+            value={data.precio} 
+            thousandSeparator="." 
+            decimalSeparator="," 
+            prefix="$" 
+            className="text-right border rounded px-2 py-1" 
+            onValueChange={(values) => {
+              set({...data, precio: values.floatValue || 0});
+            }}
+          />
         </div>
         <div className='col-span-6 sm:col-span-4 md:col-span-4 lg:col-span-2 flex flex-col'>
           <label className='mr-2'>Inhabilitado</label>

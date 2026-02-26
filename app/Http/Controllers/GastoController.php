@@ -192,19 +192,30 @@ class GastoController extends Controller
 
       //éxito
       DB::commit();
-      return inertia('gastos/index',[
+      return response()->json([
         'resultado' => 1,
         'mensaje'   => 'Se borró el gasto correctamente',
         'gasto_id'  => $gasto->gasto_id,
         'timestamp' => now()->timestamp
       ]);
+      /*return inertia('gastos/index',[
+        'resultado' => 1,
+        'mensaje'   => 'Se borró el gasto correctamente',
+        'gasto_id'  => $gasto->gasto_id,
+        'timestamp' => now()->timestamp
+      ]);*/
     } catch (\Throwable $e) {
       DB::rollback();
-      return inertia('gastos/index',[
+      return response()->json([
         'resultado' => 0,
         'mensaje'   => 'Ocurrió un error al intentar actualizar estaqdo del gasto: '.$e->getMessage(),
         'timestamp' => now()->timestamp
       ]);
+      /*return inertia('gastos/index',[
+        'resultado' => 0,
+        'mensaje'   => 'Ocurrió un error al intentar actualizar estaqdo del gasto: '.$e->getMessage(),
+        'timestamp' => now()->timestamp
+      ]);*/
     }
   }
 }

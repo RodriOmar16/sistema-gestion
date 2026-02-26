@@ -94,3 +94,31 @@ export function getCsrfToken(): string {
   const meta = document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement | null;
   return meta?.content ?? '';
 }
+
+export async function apiRequest<T>(
+  url: string,
+  method: 'GET' | 'POST' | 'PUT',
+  payload?: object
+): Promise<T> {
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+    'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement).content,
+  };
+
+  const options: RequestInit = {
+    method,
+    headers,
+  };
+
+  if (payload) {
+    options.body = JSON.stringify(payload);
+  }
+
+  const res = await fetch(url, options);
+
+  if (!res.ok) {
+    throw new Error(`Error ${res.status}: ${res.statusText}`);
+  }
+
+  return res.json() as Promise<T>;
+}

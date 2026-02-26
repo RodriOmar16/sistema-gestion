@@ -16,7 +16,7 @@ import { DatePicker } from '@/components/utils/date-picker';
 import { NumericFormat } from 'react-number-format';
 import DataTableGastos from '@/components/gastos/dataTableGastos';
 import NewEditGasto from '@/components/gastos/newEditGasto';
-import { convertirFechaBarrasGuiones, getCsrfToken } from '@/utils';
+import { apiRequest, convertirFechaBarrasGuiones, getCsrfToken } from '@/utils';
 import Loading from '@/components/utils/loadingDialog';
 
 const breadcrumbs: BreadcrumbItem[] = [ { title: 'Gastos', href: '', } ];
@@ -246,10 +246,10 @@ export default function Gastos(){
       setModalMode('edit');
     }
   };
-  const inhabilitarHabilitar = () => {
+  const inhabilitarHabilitar = async () => {
     if (!gastoCopia || !gastoCopia.gasto_id) return;
     
-    setLoading(true);
+    /*setLoading(true);
     router.put(
       route('gasto.toggleEstado', { gasto: gastoCopia.gasto_id }),{},
       {
@@ -262,7 +262,41 @@ export default function Gastos(){
           setGastoCopia(gastoVacio);
         }
       }
-    );
+    );*/
+
+    setLoading(true);
+
+    try {
+      let resp : {resultado: number, gasto_id: number, mensaje?:string} ;
+
+      resp = await apiRequest(route('gasto.toggleEstado',{ gasto: gastoCopia.gasto_id }), 'PUT');
+
+      setResp({ resultado: resp.resultado, gasto_id: resp.gasto_id });
+
+      if (resp.resultado === 0) {
+        setTitle('Error');
+        setText(resp.mensaje ?? 'Error inesperado');
+        setColor('error');
+        setActivo(true);
+        return;
+      }
+
+      setTitle('Estado modificado');
+      setText(`${resp.mensaje} (ID: ${resp.gasto_id})`);
+      setColor('success');
+      setActivo(true);
+
+    } catch (error: any) {
+      setTitle('Error de red');
+      setText(error.message);
+      setColor('error');
+      setActivo(true);
+    } finally {
+      setLoading(false);
+      setGastoCopia(gastoVacio);
+      setTextConfirmar('');
+      setConfirmar(false);
+    }
   };
 
   const cancelarInhabilitarHabilitar = () => { 
@@ -288,7 +322,7 @@ export default function Gastos(){
     setConfirOpen(true);
   };
 
-  const accionar = async () => {
+  /*const accionar = async () => {
     if (!pendingData) return;
     setConfirOpen(false);
     setLoading(true);
@@ -298,7 +332,7 @@ export default function Gastos(){
     
     let resp;
     let titulo = '';
-    if (modalMode === 'create') {
+    if (modalMode === 'create') {*/
       /*router.post(
         route('gastos.store'), payload,
         {
@@ -312,7 +346,7 @@ export default function Gastos(){
           }
         }
       );*/
-      const res  = await fetch(route('gastos.store'),{
+      /*const res  = await fetch(route('gastos.store'),{
         method: 'POST',
         headers: {
           'Content-Type': 'application/json', 
@@ -323,7 +357,7 @@ export default function Gastos(){
       resp = await res.json();
       titulo = 'Gasto nuevo';
 
-    } else {
+    } else {*/
       /*router.put(
         route('gasto.update',{gasto: pendingData.gasto_id}), payload,
         {
@@ -335,7 +369,7 @@ export default function Gastos(){
           }
         }
       );*/
-      const res = await fetch(route('gasto.update', {gasto: pendingData.gasto_id}), {
+      /*const res = await fetch(route('gasto.update', {gasto: pendingData.gasto_id}), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -362,6 +396,48 @@ export default function Gastos(){
     setText(resp.mensaje + ' ('+ resp.gasto_id +')'); 
     setColor('success'); 
     setActivo(true); 
+  };*/
+  const accionar = async () => {
+    if (!pendingData) return;
+    setConfirOpen(false);
+    setLoading(true);
+
+    const payload = { ...pendingData, fecha: convertirFechaBarrasGuiones(pendingData.fecha) };
+
+    try {
+      let resp : {resultado: number, gasto_id: number, mensaje?:string} ;
+      let titulo;
+
+      if (modalMode === 'create') {
+        resp = await apiRequest(route('gastos.store'), 'POST', payload);
+        titulo = 'Gasto nuevo';
+      } else {
+        resp = await apiRequest(route('gasto.update', { gasto: pendingData.gasto_id }), 'PUT', payload);
+        titulo = 'Gasto modificado';
+      }
+
+      setResp({ resultado: resp.resultado, gasto_id: resp.gasto_id });
+
+      if (resp.resultado === 0) {
+        setTitle('Error');
+        setText(resp.mensaje ?? 'Error inesperado');
+        setColor('error');
+        setActivo(true);
+        return;
+      }
+
+      setTitle(titulo);
+      setText(`${resp.mensaje} (${resp.gasto_id})`);
+      setColor('success');
+      setActivo(true);
+    } catch (error: any) {
+      setTitle('Error de red');
+      setText(error.message);
+      setColor('error');
+      setActivo(true);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const cancelarConfirmacion = () => {
@@ -378,7 +454,7 @@ export default function Gastos(){
   }, [gastos]);
 
 
-  useEffect(() => {
+  /*useEffect(() => {
     const cambioDetectado = timestamp && timestamp !== ultimoTimestamp;
 
     if (cambioDetectado) {
@@ -398,7 +474,7 @@ export default function Gastos(){
         )
       }
     }
-  }, [timestamp, ultimoTimestamp, resultado, mensaje, gasto_id, modalMode]);
+  }, [timestamp, ultimoTimestamp, resultado, mensaje, gasto_id, modalMode]);*/
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>

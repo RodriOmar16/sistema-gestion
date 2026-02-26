@@ -277,7 +277,7 @@ class ProductoController extends Controller
     if ($request->filled('codigo_barra')) {
       $query->where('codigo_barra', 'like', '%' . $request->codigo_barra . '%');
     }
-    if ($request->filled('precio') && $request->precio >= 0) {
+    if ($request->filled('precio') && $request->precio > 0) {
       $query->where('precio', $request->precio);
     }
     if($request->filled('vencimiento')){

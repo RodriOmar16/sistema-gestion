@@ -8,14 +8,15 @@ import { ArrowUpDown, ChevronDown, MoreHorizontal, Pen , Check, Ban,Search, X } 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table,  TableBody,  TableCell,  TableHead,  TableHeader,  TableRow } from "@/components/ui/table"
-import { Gasto } from "@/types/typeCrud"
+import { Gasto, Paginacion } from "@/types/typeCrud"
 import { convertirFechaGuionesBarras, convertirNumberPlata, formatDateTime, formatearNroCompleto } from "@/utils"
 import { Badge } from "../ui/badge"
+import { router } from "@inertiajs/react"
 
 interface Props {
   datos: Gasto[];
-  openEdit: (data:Gasto) => void;
-  abrirConfirmar: (data:Gasto) => void;
+  openEdit: (data: Gasto) => void;
+  abrirConfirmar: (data: Gasto) => void;
 }
 
 //export const columns: ColumnDef<Project>[] = [
@@ -189,13 +190,15 @@ export function getColumns(confirmar: (data: Gasto) => void, openEdit: (data: Ga
   ]
 //]
 }
-export default function DataTableGastos({datos, openEdit, abrirConfirmar}:Props) {
-  const [sorting, setSorting]                   = useState<SortingState>([])
-  const [columnFilters, setColumnFilters]       = useState<ColumnFiltersState>([])
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
-  const [rowSelection, setRowSelection]         = useState({});
-  const [busqueda, setBusqueda]                 = useState('');
-  
+
+export default function DataTableGastos({ datos, openEdit, abrirConfirmar }: Props) {
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  const [rowSelection, setRowSelection] = useState({});
+  const [busqueda, setBusqueda] = useState('');
+
+  //const rows = datos?.data ?? [];
   const data = useMemo(() => {
     const texto = busqueda.toLowerCase();
     return busqueda
@@ -209,11 +212,9 @@ export default function DataTableGastos({datos, openEdit, abrirConfirmar}:Props)
       : datos;
   }, [busqueda, datos]);
 
-  //functions
-  const confirmar = (data: Gasto) => {
-    abrirConfirmar(data);
-  };
-  const columns = getColumns(confirmar, openEdit); 
+
+  const confirmar = (data: Gasto) => abrirConfirmar(data);
+  const columns = getColumns(confirmar, openEdit);
 
   const table = useReactTable({
     data,
@@ -226,21 +227,13 @@ export default function DataTableGastos({datos, openEdit, abrirConfirmar}:Props)
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
-    state: {
-      sorting,
-      columnFilters,
-      columnVisibility,
-      rowSelection,
-    },
-  })
+    state: { sorting, columnFilters, columnVisibility, rowSelection },
+  });
 
   return (
     <div className="w-full">
-      <div className=" grid grid-cols-12 gap-4  py-2">
-        {/*<div className="col-span-6 sm:col-span-4 md:col-span-4 lg:col-span-2">
-          <PdfButton deshabilitado={datos.length == 0}/>
-        </div>*/}
-        <div className="col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12 flex justify-end  items-center">
+      <div className="grid grid-cols-12 gap-4 py-2">
+        <div className="col-span-12 flex justify-end items-center">
           <Input
             placeholder="Filtrar"
             value={busqueda}
@@ -249,6 +242,7 @@ export default function DataTableGastos({datos, openEdit, abrirConfirmar}:Props)
           />
         </div>
       </div>
+
       <div className="overflow-hidden rounded-md border">
         <Table>
           <TableHeader>
@@ -325,5 +319,5 @@ export default function DataTableGastos({datos, openEdit, abrirConfirmar}:Props)
         </div>
       </div>
     </div>
-  )
+  );
 }

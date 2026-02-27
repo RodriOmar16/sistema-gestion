@@ -24,7 +24,6 @@ import { NumericFormat } from 'react-number-format';
 const breadcrumbs: BreadcrumbItem[] = [ { title: 'Productos', href: '', } ];
 
 type propsForm = {
-  resetearProducto: (data:Producto[]) => void;
   /*marcas: Multiple[];
   categorias: Multiple[];*/
   data: Producto;
@@ -47,7 +46,7 @@ const productoVacio = {
   inhabilitado:        false,
 }
 
-export function FiltrosForm({ resetearProducto, /*marcas, categorias,*/ data, set }: propsForm){
+export function FiltrosForm({ /*marcas, categorias,*/ data, set }: propsForm){
   const [esperandoRespuesta, setEsperandoRespuesta] = useState(false)
   const [loading, setLoading]                       = useState(false);
   const [optionMarca, setOptionMarca]               = useState<Autocomplete|null>(null);
@@ -55,7 +54,6 @@ export function FiltrosForm({ resetearProducto, /*marcas, categorias,*/ data, se
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    resetearProducto([]);
     setLoading(true);
     const payload = {      ...data, buscar: true    }
     router.get(route('productos.index'), payload, {
@@ -204,7 +202,7 @@ export default function Productos(){
   };
   
   const { auth } = usePage<{auth: AuthProps}>().props;
-  const [productosCacheados, setProductosCacheados] = useState<Producto[]>([]);
+  const [cacheados, setCacheados] = useState<Producto[]>([]);
   const [ultimoTimestamp, setUltimoTimestamp] = useState<number | null>(null);
 
   const [load, setLoad] = useState(false);
@@ -276,13 +274,12 @@ export default function Productos(){
 
   //effect
   useEffect(() => {
-    if (
-      productos &&
-      productos.length > 0 &&
-      JSON.stringify(productos) !== JSON.stringify(productosCacheados)
-    ) {
-      setProductosCacheados(productos);
+    if (productos && productos?.length > 0) {
+      setCacheados(productos);
+    } else {
+      setCacheados([]);
     }
+    console.log("productos: ", productos)
   }, [productos]);
 
 
@@ -316,12 +313,11 @@ export default function Productos(){
           <FiltrosForm
             data={data}
             set={setData}
-            resetearProducto={setProductosCacheados}
           />
         </div>
         <div className="p-4 relative flex-1 overflow-auto rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
           <DataTableProductos
-            datos={productosCacheados?? []} 
+            datos={cacheados} 
             openEdit={openEdit} 
             abrirConfirmar={confirmar}
             dataIndex={data}

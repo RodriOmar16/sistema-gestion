@@ -7,13 +7,14 @@ import { ArrowUpDown, ChevronDown, MoreHorizontal, Pen , Check, Ban,Search } fro
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {  Table,  TableBody,  TableCell,  TableHead,  TableHeader,  TableRow } from "@/components/ui/table"
-import { Producto } from "@/types/typeCrud"
+import { Paginacion, Producto } from "@/types/typeCrud"
 import { convertirNumberPlata } from "@/utils"
 import { Badge } from "../ui/badge"
 import PdfButton from "../utils/pdf-button"
 import ExcelButton from "../utils/excel-button"
+import { router } from "@inertiajs/react"
 interface Props {
-  datos: Producto[];
+  datos:Producto[];
   openEdit: (data:Producto) => void;
   abrirConfirmar: (data:Producto) => void;
   dataIndex: object
@@ -225,10 +226,24 @@ export default function DataTableProductos({datos, openEdit, abrirConfirmar, dat
   const [rowSelection, setRowSelection]         = useState({});
   const [busqueda, setBusqueda]                 = useState('');
   
+  //const rows = datos?.data ?? [];
+  /*const data = useMemo(() => {
+    const texto = busqueda.toLowerCase();
+    return busqueda
+      ? rows.filter((campo:any) =>
+          campo.producto_nombre?.toLowerCase().includes(texto) ||
+          campo.categoria_nombre?.toLowerCase().includes(texto) ||
+          campo.precio?.toString().includes(texto) ||
+          campo.descripcion?.toLowerCase().includes(texto) ||
+          campo.codigo_barra?.toString().includes(texto) ||
+          campo.marca_nombre?.toLowerCase().includes(texto)
+        )
+      : rows;
+  }, [busqueda, rows]);*/
   const data = useMemo(() => {
     const texto = busqueda.toLowerCase();
     return busqueda
-      ? datos.filter((campo) =>
+      ? datos.filter((campo:any) =>
           campo.producto_nombre?.toLowerCase().includes(texto) ||
           campo.categoria_nombre?.toLowerCase().includes(texto) ||
           campo.precio?.toString().includes(texto) ||

@@ -446,11 +446,12 @@ export default function Gastos(){
 
   //effect
   useEffect(() => {
-    if (gastos && gastos.length > 0) {
+    if (gastos && gastos?.length > 0) {
       setCacheados(gastos);
     } else {
       setCacheados([]);
     }
+    console.log("gastos: ", gastos)
   }, [gastos]);
 
 
@@ -485,10 +486,10 @@ export default function Gastos(){
         </div>
         <div className="p-4 relative flex-1 overflow-auto rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
           <DataTableGastos
-            datos={cacheados?? []} 
-            openEdit={openEdit} 
+            datos={cacheados??[]}
+            openEdit={openEdit}
             abrirConfirmar={confirmar}
-            />
+          />
         </div>
       </div>
       <NewEditGasto

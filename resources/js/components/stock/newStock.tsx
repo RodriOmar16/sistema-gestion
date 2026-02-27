@@ -92,6 +92,7 @@ export default function NewStock({ open, onOpenChange, onSubmit, loading, produc
       setProductos([...productos, data]);
     }
     setData(stockVacio);
+    setOptionProduct(null);
   };
   const eliminar = (e: any) => {
     const nuevos = productos.filter(p => p.producto_id !== e.producto_id);
@@ -177,6 +178,13 @@ export default function NewStock({ open, onOpenChange, onSubmit, loading, produc
                   }
                 }
               }
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === 'Tab') {
+                  e.preventDefault();
+                  agregarElementos();
+                }
+              }}
+
             />
           </div>
           <div className="flex flex-col items-end justify-end col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-6">

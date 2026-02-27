@@ -597,7 +597,7 @@ export default function NewViewVenta(){
         },
         body: JSON.stringify(payload),
       });
-      const resp = await res.json();
+      resp = await res.json();
       titulo='Venta registrada';
 
     }else {

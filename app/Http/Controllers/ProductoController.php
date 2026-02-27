@@ -295,20 +295,21 @@ class ProductoController extends Controller
       );
     }
 
-    $productos = $query->latest()->get()->map(
-      function ($producto) { 
+    $productos = $query->latest()->get()->map( //->paginate(10)->through(
+      function ($producto) {
+        $categoria = $producto->categorias->first(); 
         return [ 
           'producto_id' => $producto->producto_id, 
           'producto_nombre' => $producto->nombre, 
           'descripcion' => $producto->descripcion, 
           'precio' => $producto->precio, 
-          'categoria_id' => $producto->categorias->first()->categoria_id ?? '', 
-          'categoria_nombre'=> $producto->categorias->first()->nombre ?? '', 
+          'categoria_id' => $categoria?->categoria_id ?? '',
+          'categoria_nombre' => $categoria?->nombre ?? '',
           'marca_id' => $producto->marca->marca_id ?? '', 
           'marca_nombre' => $producto->marca->nombre ?? '', 
           'codigo_barra' => $producto->codigo_barra, 
           'stock_minimo' => $producto->stock_minimo,
-          'stock_actual' => $producto->stock->cantidad??0, 
+          'stock_actual' => $producto->stock?->cantidad ?? 0,
           'vencimiento' => $producto->vencimiento, 
           'inhabilitado' => $producto->inhabilitado, 
           'imagen' => $producto->imagen, 
@@ -318,7 +319,9 @@ class ProductoController extends Controller
       }
     ); 
     
-    return inertia('productos/index', ['productos' => $productos]);
+    return inertia('productos/index', [
+      'productos' => $productos
+    ]);
   }
 
   public function create(){

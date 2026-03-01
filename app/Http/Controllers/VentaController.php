@@ -18,6 +18,8 @@ use App\Models\Producto;
 use App\Mail\VentaRegistradaMail;
 use App\Mail\VentaRegistradaDuenioMail;
 use App\Mail\StockMinimoAlcanzadoMail;
+use App\Mail\VentaAnuladaMail;
+
 
 use Barryvdh\DomPDF\Facade\Pdf;
 
@@ -466,6 +468,8 @@ class VentaController extends Controller
   {
     DB::beginTransaction();
     try {
+      $venta->load(['cliente']);
+
       // Marcar la venta como anulada
       $venta->update([
         'anulada'         => true,
@@ -506,9 +510,17 @@ class VentaController extends Controller
         'mensaje'   => 'La venta se anuló correctamente y el stock fue revertido.',
         'timestamp' => now()->timestamp
       ]);*/
+
+      //mando mail al cliente
+      Mail::to($venta->cliente->email)->send(new VentaAnuladaMail($venta));
+
+      //mando mail al dueño
+      Mail::to('rodrigoomarmiranda1@gmail.com')->send(new VentaAnuladaMail($venta));
+
       return response()->json([
         'resultado' => 1,
-        'mensaje'   => 'La venta se anuló correctamente y el stock fue revertido.',
+        'mensaje'   => 'La venta '.$venta->venta_id.',se anuló correctamente y el stock fue revertido.',
+        'venta_id'  => $venta->venta_id,
         'timestamp' => now()->timestamp
       ]);
     } catch (\Throwable $e) {

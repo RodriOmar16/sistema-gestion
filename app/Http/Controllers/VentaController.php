@@ -391,7 +391,8 @@ class VentaController extends Controller
       ]);*/
       return response()->json([
         'resultado' => 0,
-        'mensaje'   => 'Stock insuficiente para el producto ID: '.$det['id'],
+        'mensaje'   => 'Ocurrió un error al grabar la venta: '.$e->getMessage(),
+        'mode'      => 'create',
         'timestamp' => now()->timestamp,
       ]);
     }

@@ -396,7 +396,7 @@ class ProductoController extends Controller
       ]);*/
       return response()->json([
         'resultado'   => 1,
-        'mensaje'     => 'Producto create correctamente',
+        'mensaje'     => 'Producto creado correctamente',
         'producto_id' => $producto_id,
         'timestamp'   => now()->timestamp,
       ]);

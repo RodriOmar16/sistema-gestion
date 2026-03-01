@@ -334,9 +334,7 @@ export default function NewEditProductos(){
     setTitle(title);
     setText(resp.mensaje);
     setColor('success');
-    setActivo(true);
-
-    
+    setActivo(true);   
 
   };
   

@@ -22,7 +22,7 @@ interface Props {
 //export const columns: ColumnDef<Project>[] = [
 export function getColumns(confirmar: (data: Gasto) => void, openEdit: (data: Gasto) => void): ColumnDef<Gasto>[] {
   return [
-    {
+    /*{
       accessorKey: "gasto_id",
       header: ({column}) => {
         return (
@@ -35,7 +35,7 @@ export function getColumns(confirmar: (data: Gasto) => void, openEdit: (data: Ga
       cell: ({ row }) => (
         <div className="text-right">{row.getValue("gasto_id")}</div>
       ),
-    },
+    },*/
     {
       accessorKey: "fecha",
       header: ({column}) => {
@@ -63,7 +63,7 @@ export function getColumns(confirmar: (data: Gasto) => void, openEdit: (data: Ga
         return <div>{ formatDateTime(fechaString) }</div> 
       },
     },
-    {
+    /*{
       accessorKey: "caja_id",
       header: ({column}) => {
         return (
@@ -77,10 +77,10 @@ export function getColumns(confirmar: (data: Gasto) => void, openEdit: (data: Ga
       cell: ({ row }) => {
         const fila = row.original;
         return (
-          <div className="">{fila.caja_id === -1 ? 'actual' : (fila.caja_id === 0 ? 'Sin caja' : fila.caja_id)}</div>
+          <div className="">{fila.inhabilitado === 0 && (fila.caja_id===null || fila.caja_id===-1)? 'Actual' : (fila.caja_id === 0 ? 'Sin caja' : fila.caja_id)}</div>
         );
       },
-    },
+    },*/
     {
       accessorKey: "proveedor_nombre",
       header: ({column}) => {
@@ -104,6 +104,18 @@ export function getColumns(confirmar: (data: Gasto) => void, openEdit: (data: Ga
       }
       ,
       cell: ({ row }) => ( <div className="">{row.getValue("forma_pago_nombre")}</div> ),
+    },
+    {
+      accessorKey: "descripcion",
+      header: ({column}) => {
+        return (
+          <div className="flex">
+            Descripción
+          </div>
+        )
+      }
+      ,
+      cell: ({ row }) => ( <div className="">{row.getValue("descripcion")}</div> ),
     },
     {
       accessorKey: "monto",

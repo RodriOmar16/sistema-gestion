@@ -68,7 +68,6 @@ export default function Graficos(){
       setAnios(anios);
 
       const aux = anios.find((e:any) => e.anio === new Date().getFullYear());
-      console.log(aux)
       if (aux) {
         const nuevo = {...data, anio: aux.id};
         setData(nuevo);
@@ -81,8 +80,6 @@ export default function Graficos(){
 
   //funciones
   const obtenerData = async (form: PropsForm) => {
-    console.log("form: ", form);
-    console.log("anios: ", anios)
     const payload = {
       ...form,
       dia: convertirFechaBarrasGuiones(form.dia??''),
@@ -92,7 +89,6 @@ export default function Graficos(){
     const res = await fetch(route('ventas.getDatos',{...payload}));
     const data = await res.json();
     setLoad(false);
-    console.log("data: ", data);
     setDatos(data);
   }
 

@@ -101,7 +101,7 @@ export function FiltrosForm(){
         </a>
       </div>
       <form className='grid grid-cols-12 gap-4 px-4 pt-1 pb-4' onSubmit={handleSubmit}>
-        <div className='col-span-12 sm:col-span-3 md:col-span-3 lg:col-span-2'>
+        <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-2'>
           <label htmlFor="id">Id</label>
           <Input className='text-right' value={data.caja_id} onChange={(e)=>setData('caja_id',Number(e.target.value))}/>	
         </div>
@@ -122,7 +122,7 @@ export function FiltrosForm(){
           <label htmlFor="fechaHasta">Fecha Hasta</label>
           <DatePicker fecha={(data.fecha_hasta)} setFecha={ (fecha:string) => {setData({...data,fecha_hasta: fecha})} }/>
         </div>  
-        <div className='col-span-6 sm:col-span-2 md:col-span-2 lg:col-span-3 flex justify-end items-center'>
+        <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3 flex justify-end items-center'>
           <Button 
             className="p-0 hover:bg-transparent cursor-pointer"
             type="button"

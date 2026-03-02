@@ -277,7 +277,7 @@ export default function CreateViewCajas(){
           >
             {!caja ? (
               <> 
-                <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3'>
+                <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
                   Turnos
                   <GenericSelect
                     route="turnos"
@@ -286,7 +286,7 @@ export default function CreateViewCajas(){
                     placeHolder='Seleccionar'
                   />
                 </div>
-                <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
+                <div className='col-span-6 sm:col-span-4 md:col-span-4 lg:col-span-3'>
                   <label htmlFor="monto">Monto inicial</label>
                   <NumericFormat 
                     value={data.monto_inicial} 
@@ -301,7 +301,7 @@ export default function CreateViewCajas(){
                     } }}
                   />	
                 </div>
-                <div  className='flex items-center  justify-end px-4 pb-4 col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-3'>
+                <div  className='flex items-center  justify-end px-4 pb-4 col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
                   <Button type="button" onClick={iniciarCaja}>
                     { load ? ( <Loader2 size={20} className="animate-spin"/> ) : 
                               (<Save size={20} className=""/>)  }

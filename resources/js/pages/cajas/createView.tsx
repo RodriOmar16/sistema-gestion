@@ -323,7 +323,7 @@ export default function CreateViewCajas(){
                   <label htmlFor="fecha">Fecha</label>
                   <DatePicker disable fecha={(data.fecha)} setFecha={ (fecha:string) => {setData({...data,fecha: fecha})} }/>
                 </div>
-                <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
+                <div className='col-span-6 sm:col-span-4 md:col-span-4 lg:col-span-3'>
                   <label htmlFor="monto">Monto inicial</label>
                   <NumericFormat 
                     value={data.monto_inicial} 
@@ -373,7 +373,7 @@ export default function CreateViewCajas(){
                     </TableBody>
                   </Table>
                 </div>
-                <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-12'>
+                <div className='col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>
                   <div className="py-2 px-4 bg-blue-800 dark:bg-blue-900 text-white font-semibold rounded-t">
                     Según el usuario
                   </div>
@@ -457,7 +457,7 @@ export default function CreateViewCajas(){
                 <div  className={`py-2 pl-4 col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12 ${data.total_sistema - data.total_user > 0 ? 'bg-red-500 dark:bg-red-700' : 'bg-green-500 dark:bg-green-700'}`}>
                     Diferencia:{convertirNumberPlata(String(data.total_sistema - data.total_user))}
                 </div>
-                <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-12'>
+                <div className='col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>
                   Descripción
                   <Textarea 
                     id="descripcion" 

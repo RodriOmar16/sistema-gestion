@@ -267,7 +267,7 @@ export function DatosCliente({modo, data, set, setActivo, setTitle, setText, set
   return (
     <div className='px-4'>
       <div className='grid grid-cols-12 gap-4'>
-        <div className="col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-12 grid grid-cols-12 gap-4">
+        <div className="col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12 grid grid-cols-12 gap-4">
           {modo === 'create' ? (
             <>
               <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3'>
@@ -289,15 +289,14 @@ export function DatosCliente({modo, data, set, setActivo, setTitle, setText, set
           ) : (<></>)}
           {
             found==-1?(
-              <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-6 flex items-center'>
+              <div className='col-span-12 sm:col-span-6 md:col-span-12 lg:col-span-6 flex items-center'>
                  <Alert >
                   <AlertCircleIcon color="red"/>
-                  <AlertTitle>Aviso!</AlertTitle>
+                  <AlertTitle>Aviso !</AlertTitle>
                   <AlertDescription>
                     El cliente no se encuentra registrado, ingresa sus datos en el formulario.
                   </AlertDescription>
                 </Alert>
-                
               </div>
             ):(<></>)
           }
@@ -316,7 +315,7 @@ export function DatosCliente({modo, data, set, setActivo, setTitle, setText, set
           <label htmlFor="email">Email</label>
           <Input disabled={bloquear || modo!=='create'} value={data.email} onChange={(e)=>set({...data, email:e.target.value})}/>	
         </div>
-        <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3'>
+        <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
           <label htmlFor="dni">Documento</label>
           <InputDni disabled={bloquear || modo!=='create'} data={String(data.dni)} setData={(nro) => set({...data, dni: Number(nro)}) }/>
         </div>
@@ -408,16 +407,16 @@ export function FormasPagosForm({modo, /*formasPagoHab,*/ formasPagoSelected, se
       <div className='grid grid-cols-12 gap-4'>
         {modo !== 'view'? (
           <>
-            <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3'>
+            <div className='col-span-12 sm:col-span-4 md:col-span-6 lg:col-span-3'>
               <label htmlFor="forma_pago">Forma de pago</label>
               <GenericSelect
                 route="formas-pago"
                 value={optionFp}
                 onChange={(option) => seleccionarFp(option)}
-                placeHolder='Selec. Forma de pago'
+                placeHolder='Seleccionar'
               />
             </div>
-            <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
+            <div className='col-span-8 sm:col-span-3 md:col-span-4 lg:col-span-3'>
               <label htmlFor="monto">Monto</label>
               {/*<Input disabled={modo!='create'} className='text-right' type='number' value={monto} onChange={(e)=> setMonto(Number(e.target.value))}/>*/}
               <NumericFormat 
@@ -433,7 +432,7 @@ export function FormasPagosForm({modo, /*formasPagoHab,*/ formasPagoSelected, se
                 } }}
               />	
             </div>
-            <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3 flex items-center'>
+            <div className='col-span-12 sm:col-span-5 md:col-span-12 lg:col-span-3 flex items-center justify-end'>
               <Button type="button" onClick={agregarFp} disabled={totalVenta==0}>
                 <Plus size={20}/> Agregar         
               </Button>

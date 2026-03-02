@@ -96,20 +96,21 @@ export function DetallesProducto({modo, data, set, /*marcas*/}:Props){
           <Input value={data.descripcion} onChange={(e)=>set({...data, descripcion:e.target.value})}/>	
         </div>*/}
         <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
-          <label htmlFor="precio">Precio</label>
-          <NumericFormat 
-            value={data.precio} 
-            thousandSeparator="." 
-            decimalSeparator="," 
-            prefix="$" 
-            className="text-right border rounded px-2 py-1" 
-            onValueChange={(values) => {
-              set({...data, precio: values.floatValue || 0});
-            }}
-          />
-          {/*<Input type='number' className='text-right' value={data.precio} onChange={(e)=>set({...data, precio:Number(e.target.value)})}/>	*/}
+          <div className='flex flex-col'>
+            <label htmlFor="precio">Precio</label>
+            <NumericFormat 
+              value={data.precio} 
+              thousandSeparator="." 
+              decimalSeparator="," 
+              prefix="$" 
+              className="text-right border rounded px-2 py-1" 
+              onValueChange={(values) => {
+                set({...data, precio: values.floatValue || 0});
+              }}
+            />
+          </div>
         </div>
-        <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3'>
+        <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
           <label htmlFor="cliente">Marcas</label>
             <GenericSelect
               route="marcas"
@@ -139,7 +140,7 @@ export function DetallesProducto({modo, data, set, /*marcas*/}:Props){
           <label htmlFor="stockMinimo">Stock Mínimo</label>
           <Input type='number' className='text-right' value={data.stock_minimo} onChange={(e)=>set({...data, stock_minimo:Number(e.target.value)})}/>	
         </div>
-        <div className="col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3">
+        <div className="col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3">
           <label htmlFor="vencimiento">Vencimiento</label>
           <DatePicker fecha={(data.vencimiento??'')} setFecha={ (fecha:string) => {set({...data, vencimiento: fecha})} }/>
         </div>  
@@ -147,7 +148,7 @@ export function DetallesProducto({modo, data, set, /*marcas*/}:Props){
           <label className='mr-2'>Inhabilitado</label>
           <Switch checked={data.inhabilitado==0 ? false: true} onCheckedChange={(val) => set({...data, inhabilitado: Boolean(val)})} />
         </div>
-        <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-12'>
+        <div className='col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>
           Descripción
           <Textarea 
             id="descripcion" 

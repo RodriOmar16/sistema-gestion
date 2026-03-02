@@ -298,7 +298,7 @@ export default function DataTableProductos({datos, openEdit, abrirConfirmar, dat
             />
           </div>
         </div>
-        <div className="col-span-9 sm:col-span-10 md:col-span-10 lg:col-span-10 flex justify-end  items-center">
+        <div className="col-span-12 sm:col-span-10 md:col-span-10 lg:col-span-10 flex justify-end  items-center">
           <Input
             placeholder="Filtrar"
             value={busqueda}

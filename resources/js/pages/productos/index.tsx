@@ -107,11 +107,11 @@ export function FiltrosForm({ /*marcas, categorias,*/ data, set }: propsForm){
         </a>
       </div>
       <form className='grid grid-cols-12 gap-4 px-4 pt-1 pb-4' onSubmit={handleSubmit}>
-        <div className='col-span-12 sm:col-span-4 md:col-span-6 lg:col-span-2'>
+        <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-2'>
           <label htmlFor="id">Id</label>
           <Input value={data.producto_id} onChange={(e)=>set({...data, producto_id: Number(e.target.value)})}/>	
         </div>
-        <div className='col-span-12 sm:col-span-8 md:col-span-6 lg:col-span-4'>
+        <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-4'>
           <label htmlFor="nombre">Nombre</label>
           <Input value={data.producto_nombre} onChange={(e)=>set({...data, producto_nombre:e.target.value})}/>	
         </div>
@@ -141,24 +141,26 @@ export function FiltrosForm({ /*marcas, categorias,*/ data, set }: propsForm){
           <label htmlFor="vencimiento">Vencimiento</label>
           <DatePicker fecha={(data.vencimiento??'')} setFecha={ (fecha:string) => {set({...data, vencimiento: fecha})} }/>
         </div>        
-        <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
-          <label htmlFor="precio">Precio</label>
-          <NumericFormat 
-            value={data.precio} 
-            thousandSeparator="." 
-            decimalSeparator="," 
-            prefix="$" 
-            className="text-right border rounded px-2 py-1" 
-            onValueChange={(values) => {
-              set({...data, precio: values.floatValue || 0});
-            }}
-          />
+        <div className='col-span-12 sm:col-span-4 md:col-span-6 lg:col-span-3'>
+          <div className='flex flex-col'>
+            <label htmlFor="precio">Precio</label>
+            <NumericFormat 
+              value={data.precio} 
+              thousandSeparator="." 
+              decimalSeparator="," 
+              prefix="$" 
+              className="text-right border rounded px-2 py-1" 
+              onValueChange={(values) => {
+                set({...data, precio: values.floatValue || 0});
+              }}
+            />
+          </div>
         </div>
-        <div className='col-span-6 sm:col-span-4 md:col-span-4 lg:col-span-2 flex flex-col'>
+        <div className='col-span-6 sm:col-span-4 md:col-span-6 lg:col-span-2 flex flex-col'>
           <label className='mr-2'>Inhabilitado</label>
           <Switch checked={data.inhabilitado==0 ? false: true} onCheckedChange={(val) => set({...data, inhabilitado: val})} />
         </div>
-        <div className='col-span-6 sm:col-span-4 md:col-span-4 lg:col-span-12 flex justify-end items-center'>
+        <div className='col-span-6 sm:col-span-4 md:col-span-12 lg:col-span-12 flex justify-end items-center'>
           <Button 
             className="p-0 hover:bg-transparent cursor-pointer"
             type="button"

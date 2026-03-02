@@ -61,8 +61,6 @@ export default function NewEditRol({ open, onOpenChange, mode, rol, onSubmit, lo
 
         const menus = await resMenus.json();
         const rutas = await resRutas.json();
-        console.log("menus: ", menus)
-        console.log("rutas: ", rutas)
         setMenu(ordenarPorTexto(menus, 'nombre'));
         setRutas(ordenarPorTexto(rutas, 'nombre'));
       } catch (error) {

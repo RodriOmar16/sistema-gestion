@@ -139,7 +139,6 @@ export default function Usuarios(){
     id?: number;
     timestamp?: number;
   };
-  console.log("auth: ", auth);
   /*const [propsActuales, setPropsActuales] = useState<{
     resultado: number | undefined | null;
     mensaje: string | undefined | null | '';

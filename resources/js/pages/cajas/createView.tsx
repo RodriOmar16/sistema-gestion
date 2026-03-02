@@ -18,7 +18,6 @@ import { DatePicker } from '@/components/utils/date-picker';
 import SubirImagen from '@/components/utils/subir-imagen';
 import GenericSelect from '@/components/utils/genericSelect';
 import { NumericFormat } from 'react-number-format';
-
 const breadcrumbs: BreadcrumbItem[] = [ { title: '', href: '', } ];
 const cajaVacia = {
   caja_id:            0,
@@ -75,7 +74,10 @@ export default function CreateViewCajas(){
   const [optionTur, setOptionTurn] = useState<Autocomplete|null>(null);
   const [fechaCaja, setFechaCaja]  = useState<Date>();
 
-  const [respuesta, setResp]= useState<{resultado: number, caja_id: number}>({resultado: 0, caja_id: 0});
+  //const [respuesta, setResp]= useState<{resultado: number, caja_id: number}>({resultado: 0, caja_id: 0});
+  const [errorEfectivo, setErrorEfectivo]      = useState(false);
+  const [errorDebito, setErrorDebito]          = useState(false);
+  const [errorTransferencia, setErrorTransfer] = useState(false);
   
   //Effect
   useEffect(() => {
@@ -144,11 +146,13 @@ export default function CreateViewCajas(){
       return 
     }
 
-    //cambiar fecha a fechas con guiones antes de mandar
-    data.fecha = convertirFechaBarrasGuiones(data.fecha);
     setLoad(true);
 
-    const payload = {...data};
+    const payload = {
+      ...data,
+      fecha: convertirFechaBarrasGuiones(data.fecha)
+    };
+
     router.post(route('caja.open'), payload, {
       onError: (errors) => {
         setTitle('Error');
@@ -162,7 +166,19 @@ export default function CreateViewCajas(){
 
   const handleSubmit = (e:React.FormEvent) => {
     e.preventDefault();
-    
+    console.log("data: ",data)
+    if(errorEfectivo || errorDebito || errorTransferencia){
+      console.log("no se valida")
+      return;
+    }
+    if(Number(data.efectivo_user) === 0 && Number(data.debito_user) === 0 && Number(data.transferencia_user) === 0){
+      setTitle('Aviso!');
+      setText('Se requiere ingresar al menos un monto válido');
+      setColor('warning');
+      setActivo(true);
+      return;
+    }
+    console.log("llego: ", data)
     data.diferencia = Number(data.total_sistema) - Number(data.total_user);
     setTextConfirm("Estás seguro de finalizar la caja?");
     setConfirOpen(true);
@@ -183,6 +199,7 @@ export default function CreateViewCajas(){
     if (mode === 'create') {
       /*router.post(
         route('productos.store'),payload,
+
         {
           //forceFormData: true,
           preserveScroll: true,
@@ -316,10 +333,6 @@ export default function CreateViewCajas(){
                     className="text-right border rounded px-2 py-1" 
                     disabled
                     onValueChange={(values) => { setData({...data, monto_inicial: values.floatValue || 0}) }}
-                    onKeyDown={(e) => { if (e.key === "Enter") { 
-                      e.preventDefault(); // 👈 evita el submit 
-                      iniciarCaja(); 
-                    } }}
                   />	
                 </div>
                 <div className='pb-1 col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>
@@ -342,7 +355,7 @@ export default function CreateViewCajas(){
                         <TableCell>{convertirNumberPlata(String(data.efectivo))}</TableCell>
                         <TableCell>{convertirNumberPlata(String(data.debito))}</TableCell>
                         <TableCell>{convertirNumberPlata(String(data.transferencia))}</TableCell>
-                        <TableCell className="text-right">{convertirNumberPlata(String( data.efectivo + data.debito + data.transferencia ))}</TableCell>
+                        <TableCell className="text-right">{convertirNumberPlata(String( (Number(data.efectivo) + Number(data.debito) + Number(data.transferencia)) ))}</TableCell>
                       </TableRow>
                       <TableRow>
                         <TableCell className="font-medium">Egresos</TableCell>
@@ -350,11 +363,11 @@ export default function CreateViewCajas(){
                         <TableCell>{convertirNumberPlata(String((egresos ? egresos[1].valor : '')))}</TableCell>
                         <TableCell>{convertirNumberPlata(String((egresos ? egresos[2].valor : '')))}</TableCell>
                         <TableCell className="text-right">{convertirNumberPlata(String( 
-                          egresos ? egresos[0].valor + egresos[1].valor + egresos[2].valor : ''
+                          egresos ? Number(egresos[0].valor) + Number(egresos[1].valor) + Number(egresos[2].valor) : ''
                         ))}</TableCell>
                       </TableRow>
                       <TableRow className='bg-gray-100 dark:bg-black'>
-                        <TableCell colSpan={4} className='font-medium text-right'> Total:</TableCell>
+                        <TableCell colSpan={4} className='font-medium text-right'> Ganancia total:</TableCell>
                         <TableCell className="font-medium text-left" colSpan={1} > {convertirNumberPlata(String(data.total_sistema))} </TableCell>
                       </TableRow>
                     </TableBody>
@@ -370,16 +383,21 @@ export default function CreateViewCajas(){
                         <TableCell className="font-medium">Efectivo</TableCell>
                         <TableCell>
                           {data.abierta === 1 ? (
-                            <NumericFormat 
-                              value={data.efectivo_user} prefix="$" 
-                              thousandSeparator="." decimalSeparator="," 
-                              className="text-right border border-gray-300 rounded-md px-2 py-1 focus:ring-2 focus:ring-gray-400 focus:outline-none"
-                              onValueChange={(values) => { 
-                                const nuevo = values.floatValue || 0;
-                                setData({...data, efectivo_user: nuevo});
-                                setData('total_user', (Number(nuevo) + Number(data.debito_user) + Number(data.transferencia_user))) 
-                              }}
-                            />	
+                            <>
+                              <NumericFormat 
+                                value={data.efectivo_user} prefix="$" 
+                                thousandSeparator="." decimalSeparator="," 
+                                className="text-right border border-gray-300 rounded-md px-2 py-1 focus:ring-2 focus:ring-gray-400 focus:outline-none"
+                                onValueChange={(values) => { 
+                                  const nuevo = values.floatValue || 0;
+                                  setData({...data, efectivo_user: nuevo});
+                                  setData('total_user', (Number(nuevo) + Number(data.debito_user) + Number(data.transferencia_user))) 
+                                  console.log("nuevo typeof: ", typeof nuevo)
+                                  setErrorEfectivo(Number(nuevo) < 0);
+                                }}
+                              />	
+                              { errorEfectivo && (<p className='text-red-600 text-sm'> Valor inválido </p>) }
+                            </>
                           ) : (
                             convertirNumberPlata(String(data.efectivo_user))
                           )}
@@ -389,16 +407,20 @@ export default function CreateViewCajas(){
                         <TableCell className="font-medium">Débito</TableCell>
                         <TableCell>
                           {data.abierta === 1 ? (
-                            <NumericFormat 
-                              value={data.debito_user} prefix="$" 
-                              thousandSeparator="." decimalSeparator="," 
-                              className="text-right border border-gray-300 rounded-md px-2 py-1 focus:ring-2 focus:ring-gray-400 focus:outline-none"
-                              onValueChange={(values) => { 
-                                const nuevo = values.floatValue || 0;
-                                setData({...data, debito_user: nuevo});
-                                setData('total_user', (Number(nuevo) + Number(data.efectivo_user) + Number(data.transferencia_user))) 
-                              }}
-                            />
+                            <>
+                              <NumericFormat 
+                                value={data.debito_user} prefix="$" 
+                                thousandSeparator="." decimalSeparator="," 
+                                className="text-right border border-gray-300 rounded-md px-2 py-1 focus:ring-2 focus:ring-gray-400 focus:outline-none"
+                                onValueChange={(values) => { 
+                                  const nuevo = values.floatValue || 0;
+                                  setData({...data, debito_user: nuevo});
+                                  setData('total_user', (Number(nuevo) + Number(data.efectivo_user) + Number(data.transferencia_user))) 
+                                  setErrorDebito(Number(nuevo) < 0);
+                                }}
+                              />
+                              { errorDebito && (<p className='text-red-600 text-sm'> Valor inválido </p>) }
+                            </>
                           ): ( convertirNumberPlata(String(data.debito_user)) )}
                         </TableCell>
                       </TableRow>
@@ -406,16 +428,20 @@ export default function CreateViewCajas(){
                         <TableCell className="font-medium">Transferencia</TableCell>
                         <TableCell>
                           {data.abierta === 1 ? (
-                            <NumericFormat 
-                              value={data.transferencia_user} prefix="$" 
-                              thousandSeparator="." decimalSeparator="," 
-                              className="text-right border border-gray-300 rounded-md px-2 py-1 focus:ring-2 focus:ring-gray-400 focus:outline-none"
-                              onValueChange={(values) => { 
-                                const nuevo = values.floatValue || 0;
-                                setData({...data, transferencia_user: nuevo});
-                                setData('total_user', (Number(nuevo) + Number(data.efectivo_user) + Number(data.debito_user)))
-                              }}
-                            />
+                            <>
+                              <NumericFormat 
+                                value={data.transferencia_user} prefix="$" 
+                                thousandSeparator="." decimalSeparator="," 
+                                className="text-right border border-gray-300 rounded-md px-2 py-1 focus:ring-2 focus:ring-gray-400 focus:outline-none"
+                                onValueChange={(values) => { 
+                                  const nuevo = values.floatValue || 0;
+                                  setData({...data, transferencia_user: nuevo});
+                                  setData('total_user', (Number(nuevo) + Number(data.efectivo_user) + Number(data.debito_user)))
+                                  setErrorTransfer(Number(nuevo) < 0);
+                                }}
+                              />
+                              { errorTransferencia && (<p className='text-red-600 text-sm'> Valor inválido </p>) }
+                            </>
                           ): ( convertirNumberPlata(String(data.transferencia_user)) )}
                         </TableCell>
                       </TableRow>

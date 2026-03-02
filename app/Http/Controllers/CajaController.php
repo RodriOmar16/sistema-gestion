@@ -161,7 +161,9 @@ class CajaController extends Controller
       ]);
 
       // - egresos
-      $gastoHoy = Gasto::where('caja_id',-1)->get();
+      $gastoHoy = Gasto::whereNull('caja_id')
+                  ->where('inhabilitado', 0)
+                  ->get();
       $gastoEfect = $gastoDebito = $gastoTransfer = 0; 
 
       foreach($gastoHoy as $g){        

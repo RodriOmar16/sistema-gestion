@@ -171,27 +171,31 @@ export function DetallesVenta({modo, data, set, productos, setProd, setTitle, se
             </div>
           ) : ( <> </> )
         }
-        <div className='col-span-12 grid grid-cols-12 gap-4'>
-          <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3'>
-            <label htmlFor="cliente">Productos en Stock</label>
-              <GenericSelect
-                route="productos-stock"
-                value={optionProduct}
-                onChange={(option) => seleccionarProducto(option)}
-                placeHolder="Selec. producto"
-                isDisabled={modo!='create'}
-              />
-          </div>
-          <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3 flex items-center'>
-            <Button disabled={modo!='create'} type="button" onClick={agregarProducto}>
-              {load? (
-                <Loader2 size={20} className="animate-spin mr-2" />
-              ) : (
-                <Plus size={20}/>
-              )} Agregar
-            </Button>
-          </div>
-        </div>
+        {modo === 'create' ? (
+          <>
+            <div className='col-span-12 grid grid-cols-12 gap-4'>
+              <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3'>
+                <label htmlFor="cliente">Productos en Stock</label>
+                  <GenericSelect
+                    route="productos-stock"
+                    value={optionProduct}
+                    onChange={(option) => seleccionarProducto(option)}
+                    placeHolder="Selec. producto"
+                    isDisabled={modo!='create'}
+                  />
+              </div>
+              <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3 flex items-center'>
+                <Button disabled={modo!='create'} type="button" onClick={agregarProducto}>
+                  {load? (
+                    <Loader2 size={20} className="animate-spin mr-2" />
+                  ) : (
+                    <Plus size={20}/>
+                  )} Agregar
+                </Button>
+              </div>
+            </div>
+          </>
+        ):(<></>) }
       </div>
       <div className='pt-3'>
         <TableDetalles 
@@ -264,21 +268,25 @@ export function DatosCliente({modo, data, set, setActivo, setTitle, setText, set
     <div className='px-4'>
       <div className='grid grid-cols-12 gap-4'>
         <div className="col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-12 grid grid-cols-12 gap-4">
-          <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3'>
-            <label htmlFor="dni">Documento</label>
-            <InputDni 
-              disabled={modo!='create'} 
-              placeholder='Buscar por documento' 
-              data={String(dni)} 
-              setData={(nro) => setDni(nro) } 
-              onChange={buscarCliente}/>
-          </div>
-          <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-2 flex items-center'>
-            <Button disabled={modo!='create'} type="button" onClick={buscarCliente}>
-              { load ? (<Loader2 size={20} className="animate-spin mr-2" />) :  (<Search size={20}/>) }
-              Buscar         
-            </Button>
-          </div>
+          {modo === 'create' ? (
+            <>
+              <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3'>
+                <label htmlFor="dni">Documento</label>
+                <InputDni 
+                  disabled={modo!='create'} 
+                  placeholder='Buscar por documento' 
+                  data={String(dni)} 
+                  setData={(nro) => setDni(nro) } 
+                  onChange={buscarCliente}/>
+              </div>
+              <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-2 flex items-center'>
+                <Button disabled={modo!='create'} type="button" onClick={buscarCliente}>
+                  { load ? (<Loader2 size={20} className="animate-spin mr-2" />) :  (<Search size={20}/>) }
+                  Buscar         
+                </Button>
+              </div>
+            </>
+          ) : (<></>)}
           {
             found==-1?(
               <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-6 flex items-center'>
@@ -398,38 +406,40 @@ export function FormasPagosForm({modo, /*formasPagoHab,*/ formasPagoSelected, se
   return(
     <div className='px-4'>
       <div className='grid grid-cols-12 gap-4'>
-        <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3'>
-          <label htmlFor="forma_pago">Forma de pago</label>
-          <GenericSelect
-            route="formas-pago"
-            value={optionFp}
-            onChange={(option) => seleccionarFp(option)}
-            placeHolder='Selec. Forma de pago'
-            isDisabled={modo!='create'}
-          />
-        </div>
-        <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
-          <label htmlFor="monto">Monto</label>
-          {/*<Input disabled={modo!='create'} className='text-right' type='number' value={monto} onChange={(e)=> setMonto(Number(e.target.value))}/>*/}
-          <NumericFormat 
-            value={monto} 
-            thousandSeparator="." 
-            decimalSeparator="," 
-            prefix="$" 
-            className="text-right border rounded px-2 py-1" 
-            onValueChange={(values) => { setMonto(values.floatValue || 0) }}
-            disabled={modo!='create'}
-            onKeyDown={(e) => { if (e.key === "Enter") { 
-              e.preventDefault(); // 👈 evita el submit 
-              agregarFp(); 
-            } }}
-          />	
-        </div>
-        <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3 flex items-center'>
-          <Button type="button" onClick={agregarFp} disabled={totalVenta==0 || modo!='create'}>
-            <Plus size={20}/> Agregar         
-          </Button>
-        </div>
+        {modo !== 'view'? (
+          <>
+            <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3'>
+              <label htmlFor="forma_pago">Forma de pago</label>
+              <GenericSelect
+                route="formas-pago"
+                value={optionFp}
+                onChange={(option) => seleccionarFp(option)}
+                placeHolder='Selec. Forma de pago'
+              />
+            </div>
+            <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
+              <label htmlFor="monto">Monto</label>
+              {/*<Input disabled={modo!='create'} className='text-right' type='number' value={monto} onChange={(e)=> setMonto(Number(e.target.value))}/>*/}
+              <NumericFormat 
+                value={monto} 
+                thousandSeparator="." 
+                decimalSeparator="," 
+                prefix="$" 
+                className="text-right border rounded px-2 py-1" 
+                onValueChange={(values) => { setMonto(values.floatValue || 0) }}
+                onKeyDown={(e) => { if (e.key === "Enter") { 
+                  e.preventDefault(); // 👈 evita el submit 
+                  agregarFp(); 
+                } }}
+              />	
+            </div>
+            <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3 flex items-center'>
+              <Button type="button" onClick={agregarFp} disabled={totalVenta==0}>
+                <Plus size={20}/> Agregar         
+              </Button>
+            </div>
+          </>
+        ):( <></> )}
         <div className="col-span-12">
           <TableFormasPago 
             modo={modo}

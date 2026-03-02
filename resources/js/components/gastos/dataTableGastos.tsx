@@ -63,7 +63,7 @@ export function getColumns(confirmar: (data: Gasto) => void, openEdit: (data: Ga
         return <div>{ formatDateTime(fechaString) }</div> 
       },
     },
-    /*{
+    {
       accessorKey: "caja_id",
       header: ({column}) => {
         return (
@@ -80,7 +80,7 @@ export function getColumns(confirmar: (data: Gasto) => void, openEdit: (data: Ga
           <div className="">{fila.inhabilitado === 0 && (fila.caja_id===null || fila.caja_id===-1)? 'Actual' : (fila.caja_id === 0 ? 'Sin caja' : fila.caja_id)}</div>
         );
       },
-    },*/
+    },
     {
       accessorKey: "proveedor_nombre",
       header: ({column}) => {

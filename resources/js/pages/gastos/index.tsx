@@ -451,7 +451,6 @@ export default function Gastos(){
     } else {
       setCacheados([]);
     }
-    console.log("gastos: ", gastos)
   }, [gastos]);
 
 

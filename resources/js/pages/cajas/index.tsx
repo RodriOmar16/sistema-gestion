@@ -16,13 +16,10 @@ import { DatePicker } from '@/components/utils/date-picker';
 import { NumericFormat } from 'react-number-format';
 import DataTableCajas from '@/components/cajas/dataTableCajas';
 //import NewEditGasto from '@/components/gastos/newEditGasto';
-import { convertirFechaBarrasGuiones } from '@/utils';
+import { convertirFechaBarrasGuiones, getCsrfToken } from '@/utils';
+import Loading from '@/components/utils/loadingDialog';
 
 const breadcrumbs: BreadcrumbItem[] = [ { title: 'Cajas', href: '', } ];
-
-type propsForm = {
-  openCreate: () => void;
-}
 
 const cajaVacia = {
   caja_id:            0,
@@ -46,7 +43,7 @@ const cajaVacia = {
   abierta:            0
 };
 
-export function FiltrosForm({ openCreate }: propsForm){
+export function FiltrosForm(){
   const { data, setData, errors, processing } = useForm<Caja>(cajaVacia);
   const [load, setLoad]                       = useState(false);
   const [optionTur, setOptionTurn]            = useState<Autocomplete|null>(null);
@@ -98,7 +95,6 @@ export function FiltrosForm({ openCreate }: propsForm){
             title="Crear Caja" 
             variant="ghost" 
             size="icon" 
-            onClick={openCreate}
           >
             <CirclePlus size={30} className="text-green-600 scale-200" />
           </Button>
@@ -150,8 +146,8 @@ export function FiltrosForm({ openCreate }: propsForm){
 
 export default function Cajas(){
   //data
-  const [confirmOpen, setConfirOpen] = useState(false); //modal para confirmar acciones para cuado se crea o edita
-  const [textConfir, setTextConfirm] = useState('');
+  //const [confirmOpen, setConfirOpen] = useState(false); //modal para confirmar acciones para cuado se crea o edita
+  //const [textConfir, setTextConfirm] = useState('');
   
   const [modalOpen, setModalOpen]         = useState(false); //modal editar/crear
   const [modalMode, setModalMode]         = useState<'create' | 'edit'>('create');
@@ -178,6 +174,8 @@ export default function Cajas(){
   const [ultimoTimestamp, setUltimoTimestamp] = useState<number | null>(null);
   const [cacheados, setCacheados] = useState<Caja[]>([]);
 
+  const [respuesta, setResp]= useState<{resultado: number, caja_id: number}>({resultado: 0, caja_id: 0});
+
   //funciones
   const confirmar = (data: Caja) => {
     if(data){
@@ -187,11 +185,11 @@ export default function Cajas(){
       setModalMode('edit');
     }
   };
-  const inhabilitarHabilitar = () => {
+  const inhabilitarHabilitar = async () => {
     if (!cajaCopia || !cajaCopia.caja_id) return;
     
     setLoading(true);
-    router.put(
+    /*router.put(
       route('caja.toggleEstado', { caja: cajaCopia.caja_id }),{},
       {
         preserveScroll: true,
@@ -203,18 +201,45 @@ export default function Cajas(){
           setCajaCopia(cajaVacia);
         }
       }
-    );
+    );*/
+    const res = await fetch(route('caja.toggleEstado', { caja: cajaCopia.caja_id }), {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': getCsrfToken(),
+      },
+    });
+    const resp  = await res.json();
+    setLoading(false);
+    setResp({resultado: resp.resultado, caja_id: resp.caja_id});
+    
+    if (resp.resultado === 0) {
+      setTitle('Error');
+      setText(resp.mensaje ?? 'Error inesperado');
+      setColor('error');
+      setActivo(true);
+      return;
+    }
+
+    setTitle('Estado modificado');
+    setText(resp.mensaje);
+    setColor('success');
+    setActivo(true);
+
+    setTextConfirmar('');
+    setConfirmar(false);
+    setCajaCopia(cajaVacia);
   };
 
   const cancelarInhabilitarHabilitar = () => { 
     setConfirmar(false);
   };
 
-  const openCreate = () => {
+  /*const openCreate = () => {
     setModalMode('create');
     setSelectedCaja(undefined);
     setModalOpen(true);
-  };
+  };*/
 
   const openCaja = (data: Caja) => {
     setModalMode('edit');
@@ -231,7 +256,7 @@ export default function Cajas(){
     window.open(url, '_blank');
   };
 
-  const handleSave = (data: Caja) => {
+  /*const handleSave = (data: Caja) => {
     setPendingData(data);
     let texto = (modalMode === 'create')? 'grabar' : 'guardar cambios a';
     setTextConfirm('¿Estás seguro de '+texto+' esta caja?');
@@ -276,7 +301,7 @@ export default function Cajas(){
 
   const cancelarConfirmacion = () => {
     setConfirOpen(false);
-  };
+  };*/
 
   //effect
   useEffect(() => {
@@ -287,9 +312,7 @@ export default function Cajas(){
     }
   }, [cajas]);
 
-
-
-  useEffect(() => {
+  /*useEffect(() => {
     const cambioDetectado = timestamp && timestamp !== ultimoTimestamp;
 
     if (cambioDetectado) {
@@ -309,14 +332,14 @@ export default function Cajas(){
         )
       }
     }
-  }, [timestamp, ultimoTimestamp, resultado, mensaje, caja_id, modalMode]);
+  }, [timestamp, ultimoTimestamp, resultado, mensaje, caja_id, modalMode]);*/
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Cajas" />
       <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
         <div className="relative flex-none flex-1 rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
-          <FiltrosForm openCreate={openCreate}/>
+          <FiltrosForm/>
         </div>
         <div className="p-4 relative flex-1 overflow-auto rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
           <DataTableCajas
@@ -326,12 +349,12 @@ export default function Cajas(){
           />
         </div>
       </div>
-      <ModalConfirmar
+      {/*<ModalConfirmar
         open={confirmOpen}
         text={textConfir}
         onSubmit={accionar}
         onCancel={cancelarConfirmacion}
-      />
+      />*/}
       <ModalConfirmar
         open={openConfirmar}
         text={textConfirmar}
@@ -343,7 +366,19 @@ export default function Cajas(){
         title={title}
         text={text}
         color={color}
-        onClose={() => setActivo(false)}
+        onClose={() => {
+          setActivo(false);
+          if (respuesta.resultado === 1 && respuesta.caja_id) {
+            router.get(route('cajas.index'),
+              { caja_id: respuesta.caja_id, buscar: true },
+              { preserveScroll: true,	preserveState: true	}
+            )
+          }
+        }}
+      />
+      <Loading
+        open={loading}
+        onClose={() => {}}
       />
     </AppLayout>
   );

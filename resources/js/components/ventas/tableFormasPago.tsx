@@ -26,20 +26,20 @@ export function getColumns(
 ): ColumnDef<FormPago>[] {
 
   return [
-    {
+    /*{
       accessorKey: "id",
       header: ({column}) => {
         return (
           <div className="flex">
             ID
-            {/*<ArrowUpDown className="ml-1" size={17} onClick={() => column.toggleSorting(column.getIsSorted() === "asc")} />*/}
+            {<ArrowUpDown className="ml-1" size={17} onClick={() => column.toggleSorting(column.getIsSorted() === "asc")} />}
           </div>
         )
       },
       cell: ({ row }) => (
         <div className="text-right">{row.getValue("id")}</div>
       ),
-    },
+    },*/
     {
       accessorKey: "nombre",
       header: ({column}) => {

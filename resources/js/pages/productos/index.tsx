@@ -279,7 +279,7 @@ export default function Productos(){
     } else {
       setCacheados([]);
     }
-    console.log("productos: ", productos)
+    //console.log("productos: ", productos)
   }, [productos]);
 
 

@@ -74,6 +74,8 @@ export default function CreateViewCajas(){
 
   const [optionTur, setOptionTurn] = useState<Autocomplete|null>(null);
   const [fechaCaja, setFechaCaja]  = useState<Date>();
+
+  const [respuesta, setResp]= useState<{resultado: number, caja_id: number}>({resultado: 0, caja_id: 0});
   
   //Effect
   useEffect(() => {
@@ -107,13 +109,13 @@ export default function CreateViewCajas(){
     }
   }, [mode, caja]);
 
-  useEffect(() => {
+  /*useEffect(() => {
     if (data.turno_id && data.turno_nombre) {
       setOptionTurn({ value: Number(data.turno_id), label: data.turno_nombre });
     } else {
       setOptionTurn(null);
     }
-  }, [data.turno_id, data.turno_nombre]);
+  }, [data.turno_id, data.turno_nombre]);*/
 
   //funciones
   const selectTurnos = (option : any) => {

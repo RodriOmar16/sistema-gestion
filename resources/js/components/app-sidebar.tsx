@@ -26,10 +26,10 @@ export function AppSidebar() {
 
 	useLayoutEffect(() => {
 		const el = sidebarRef.current;
-		console.log("el: ",el)
+		//console.log("el: ",el)
 		if (!el) return;
 		const saved = localStorage.getItem("sidebar-scroll");
-		console.log("saved: ", saved)
+		//console.log("saved: ", saved)
 		if (saved) el.scrollTop = parseInt(saved, 10);
 	}, []);
 

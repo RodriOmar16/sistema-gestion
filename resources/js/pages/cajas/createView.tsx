@@ -178,7 +178,6 @@ export default function CreateViewCajas(){
       setActivo(true);
       return;
     }
-    console.log("llego: ", data)
     data.diferencia = Number(data.total_sistema) - Number(data.total_user);
     setTextConfirm("Estás seguro de finalizar la caja?");
     setConfirOpen(true);

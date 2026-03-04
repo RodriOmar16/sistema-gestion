@@ -55,6 +55,7 @@ class CajaController extends Controller
         'total_user'       => $c->total_user,
         'diferencia'       => $c->diferencia,
         'inhabilitado'     => $c->inhabilitado,
+        'abierta'          => $c->abierta,
         'monto_inicial'    => $c->monto_inicial,
         'descripcion'      => $c->descripcion,
         'efectivo'         => $c->efectivo,

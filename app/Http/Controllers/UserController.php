@@ -117,6 +117,10 @@ class UserController extends Controller
           'rol_id'  => $rol_id
         ]);
       }
+
+      //éxito
+      DB::commit();
+
       //envio mail
       Mail::to($user->email)->send(new UsuarioCreadoMail(
         $user->name,
@@ -124,7 +128,7 @@ class UserController extends Controller
         '123user'
       ));
 
-      DB::commit();
+      //retorno
       return inertia('users/index',[
         'resultado' => 1,
         'mensaje'   => 'Usuario creado exitosamente',

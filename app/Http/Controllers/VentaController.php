@@ -359,6 +359,9 @@ class VentaController extends Controller
         ]);
       }
 
+      //exito
+      DB::commit();
+
       // al final del store, antes de enviar el mail
       $venta->load(['cliente', 'detalles.producto']);
 
@@ -368,8 +371,6 @@ class VentaController extends Controller
       //mando mail al dueño
       Mail::to('rodrigoomarmiranda1@gmail.com')->send(new VentaRegistradaDuenioMail($venta));
 
-      //exito
-      DB::commit();
       /*return inertia('ventas/createView',[
         'resultado' => 1,
         'mensaje'   => 'Venta grabado correctamente',

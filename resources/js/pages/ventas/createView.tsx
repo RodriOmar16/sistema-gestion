@@ -555,6 +555,13 @@ export default function NewViewVenta(){
       setActivo(true);
       return
     }
+    if(parseFloat(redondear(data.total - totalFp,2)) < 0){
+      setTitle('Aviso !');
+      setText('Estás registrando más pago que el total.');
+      setColor('warning');
+      setActivo(true);
+      return
+    }
     //pregunto
     setTextConfirm("Estás seguro de "+(mode==='create'?'grabar':'anular')+' esta venta?');
     setConfirOpen(true);

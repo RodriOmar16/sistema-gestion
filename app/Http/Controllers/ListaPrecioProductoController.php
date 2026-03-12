@@ -102,8 +102,9 @@ class ListaPrecioProductoController extends Controller
         'precio_sugerido' => 'required|numeric',
         'precio_final'    => 'required|numeric',
       ]);
+
       // si $id < 0 significa que era un registro nuevo
-      if ($id < 0) {
+      if ($request->lista_precio_id < 0) {
         $existe = ListaPrecioProducto::where('proveedor_id', $request->proveedor_id)
                   ->where('producto_id', $request->producto_id)
                   ->exists();
@@ -124,7 +125,7 @@ class ListaPrecioProductoController extends Controller
           'created_at'      => now()
         ]);
       } else {
-        $lista = ListaPrecioProducto::findOrFail($id);
+        $lista = ListaPrecioProducto::findOrFail((int)$id);
         $lista->update([
           'proveedor_id'    => $validated['proveedor_id'],
           'producto_id'     => $validated['producto_id'],

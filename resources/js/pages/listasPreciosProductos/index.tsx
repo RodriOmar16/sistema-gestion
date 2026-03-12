@@ -428,7 +428,7 @@ export default function ListasPreciosProductos(){
       )
 
       router.put(
-        route('listasPrecios.update',{lista: listaPrecioCopia.lista_precio_id}), 
+        route('listasPrecios.update',{id: listaPrecioCopia.lista_precio_id}), 
          JSON.parse(JSON.stringify(listaPrecioCopia)),
         {
           preserveScroll: true,
@@ -474,7 +474,7 @@ export default function ListasPreciosProductos(){
     }
   }, [listas]);
 
-  useEffect(() => {
+  /*useEffect(() => {
     const cambioDetectado = timestamp && timestamp !== ultimoTimestamp;
 
     if (cambioDetectado) {
@@ -486,15 +486,15 @@ export default function ListasPreciosProductos(){
       setColor(esError ? 'error' : 'success');
       setActivo(true);
 
-      /*if (resultado === 1 && cliente_id) {
+      *if (resultado === 1 && cliente_id) {
         setModalOpen(false);
         router.get(route('clientes.index'),
           { cliente_id, buscar: true },
           { preserveScroll: true,	preserveState: true	}
         )
-      }*/
+      }*
     }
-  }, [resultado, mensaje, timestamp, ultimoTimestamp]);
+  }, [resultado, mensaje, timestamp, ultimoTimestamp]);*/
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>

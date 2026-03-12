@@ -139,7 +139,7 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
     //Route::get('/listas_precios_habilitadas', [ListaPrecioController::class, 'listasPreciosHabilitadas'])->name('listasPrecios.habilitadas');
     Route::get('/listas-precios', [ListaPrecioProductoController::class, 'index'])->name('listasPrecios.index');
     Route::post('/listas-precios', [ListaPrecioProductoController::class, 'store'])->name('listasPrecios.store');
-    Route::put('/listas-precios/{lista}', [ListaPrecioProductoController::class, 'update'])->name('listasPrecios.update');
+    Route::put('/listas-precios/{id}', [ListaPrecioProductoController::class, 'update'])->name('listasPrecios.update');
     //Route::put('/listas-precios/{lista}/estado', [ListaPrecioController::class, 'toggleEstado'])->name('listasPrecios.toggleEstado');
 
     //Productos

@@ -143,6 +143,7 @@ export default function DataTableVentas({datos, openEdit, dataIndex}:Props) {
   const [rowSelection, setRowSelection]         = useState({});
   const [busqueda, setBusqueda]                 = useState('');
   
+  console.log("dataIndex: ", dataIndex)
   const data = useMemo(() => {
     const texto = busqueda.toLowerCase();
     return busqueda

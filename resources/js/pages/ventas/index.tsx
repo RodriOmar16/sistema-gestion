@@ -20,9 +20,9 @@ import GenericSelect from '@/components/utils/genericSelect';
 const breadcrumbs: BreadcrumbItem[] = [ { title: 'Ventas', href: '', } ];
 
 type propsForm = {
-  //clientes: Multiple[];
   data: Venta;
   set: (e:any) => void;
+  setPayload: (p:any) => void;
 }
 
 const ventaVacia = {
@@ -37,8 +37,12 @@ const ventaVacia = {
   anulada:         false,
 }
 
-export function FiltrosForm({ /*clientes,*/ data, set }: propsForm){
+export function FiltrosForm({ data, set, setPayload }: propsForm){
   const [optionCliente, setOptionCliente] = useState<Autocomplete|null>(null);
+  const [optionTur, setOptionTurn]        = useState<Autocomplete|null>(null);
+  const [optionFp, setOptionFp]           = useState<Autocomplete|null>(null);
+  const [turnoFiltro, setTurnoFiltro]     = useState<{turno_id: number|string; turno_nombre: string}>({turno_id: '', turno_nombre: ''})
+  const [fpFiltro, setFpFiltro]           = useState<{forma_pago_id: number|string; forma_pago_nombre: string}>({forma_pago_id: '', forma_pago_nombre: ''})
   const [esperandoRespuesta, setEsperandoRespuesta] = useState(false)
   const [loading, setLoading] = useState(false);
 
@@ -50,8 +54,11 @@ export function FiltrosForm({ /*clientes,*/ data, set }: propsForm){
       fecha_desde: convertirFechaBarrasGuiones(data.fecha_desde??''), 
       fecha_hasta: convertirFechaBarrasGuiones(data.fecha_hasta??''),
       fecha_anulacion: convertirFechaBarrasGuiones(data.fecha_anulacion??''),
+      turno_id: turnoFiltro.turno_id,
+      forma_pago_id: fpFiltro.forma_pago_id,
       buscar: true    
     };
+    setPayload({...payload});
     router.get(route('ventas.index'), payload, {
       preserveState: true,
       preserveScroll: true,
@@ -64,6 +71,8 @@ export function FiltrosForm({ /*clientes,*/ data, set }: propsForm){
   const handleReset = () => {
     set(ventaVacia);
     setOptionCliente(null);
+    setOptionTurn(null); setTurnoFiltro({turno_id: '', turno_nombre: ''});
+    setOptionFp(null);   setFpFiltro({forma_pago_id: '', forma_pago_nombre: ''});
   }; 
 
   const seleccionarCliente = (option : any) => {
@@ -73,6 +82,24 @@ export function FiltrosForm({ /*clientes,*/ data, set }: propsForm){
     }else{
       set({...data, cliente_id: '', cliente_nombre: ''});
       setOptionCliente(null);
+    }
+  };
+  const selectTurnos = (option : any) => {
+    if(option){
+      setTurnoFiltro({turno_id: option.value, turno_nombre: option.label});
+      setOptionTurn(option);
+    }else{
+      setTurnoFiltro({turno_id: '', turno_nombre: ''});
+      setOptionTurn(null);
+    }
+  };
+  const seleccionarFp = (option : any) => {
+    if(option){
+      setFpFiltro({forma_pago_id: option.value, forma_pago_nombre: option.label});
+      setOptionFp(option);
+    }else{
+      setFpFiltro({forma_pago_id: '', forma_pago_nombre: ''});
+      setOptionFp(null);
     }
   };
 
@@ -93,15 +120,15 @@ export function FiltrosForm({ /*clientes,*/ data, set }: propsForm){
         </a>
       </div>
       <form className='grid grid-cols-12 gap-4 px-4 pt-1 pb-4' onSubmit={handleSubmit}>
-        <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
+        <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-2'>
           <label htmlFor="id">Id</label>
           <Input value={data.venta_id} onChange={(e)=>set({...data, venta_id: Number(e.target.value)})}/>	
         </div>
-        <div className="col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3">
+        <div className="col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-2">
           <label htmlFor="fechaDesde">Fecha Desde</label>
           <DatePicker fecha={(data.fecha_desde)} setFecha={ (fecha:string) => {set({...data,fecha_desde: fecha})} }/>
         </div>
-        <div className="col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3">
+        <div className="col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-2">
           <label htmlFor="fechaHasta">Fecha Hasta</label>
           <DatePicker fecha={(data.fecha_hasta)} setFecha={ (fecha:string) => {set({...data,fecha_hasta: fecha})} }/>
         </div>
@@ -111,10 +138,28 @@ export function FiltrosForm({ /*clientes,*/ data, set }: propsForm){
             route="clientes"
             value={optionCliente}
             onChange={(option) => seleccionarCliente(option)}
-            placeHolder="Selec. cliente"
+            placeHolder="Seleccionar"
           />
         </div>
-        <div className="col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3">
+        <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3'>
+          <label htmlFor="forma_pago">Forma de pago</label>
+          <GenericSelect
+            route="formas-pago"
+            value={optionFp}
+            onChange={(option) => seleccionarFp(option)}
+            placeHolder='Seleccionar'
+          />
+        </div>
+        <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3'>
+          Turnos
+          <GenericSelect
+            route="turnos"
+            value={optionTur}
+            onChange={(option) => selectTurnos(option)}
+            placeHolder='Seleccionar'
+          />
+        </div>
+        <div className="col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-2">
           <label htmlFor="fechaAnulacion">Anulación</label>
           <DatePicker fecha={(data.fecha_anulacion)} setFecha={ (fecha:string) => {set({...data,fecha_anulacion: fecha})} }/>
         </div>
@@ -122,7 +167,7 @@ export function FiltrosForm({ /*clientes,*/ data, set }: propsForm){
           <label className='mr-2'>Anulada</label>
           <Switch checked={data.anulada==0 ? false: true} onCheckedChange={(val) => set({...data, anulada: val})} />
         </div>
-        <div className='col-span-6 sm:col-span-6 md:col-span-6 lg:col-span-6 flex justify-end items-center'>
+        <div className='col-span-6 sm:col-span-6 md:col-span-6 lg:col-span-4 flex justify-end items-center'>
           <Button 
             className="p-0 hover:bg-transparen dark:hover:bg-transparent cursor-pointer"
             type="button"
@@ -147,11 +192,7 @@ export function FiltrosForm({ /*clientes,*/ data, set }: propsForm){
 export default function Ventas(){
   //data  
   const { data, setData, errors, processing } = useForm<Venta>(ventaVacia); //formulario que busca
-
-  const [openConfirmar, setConfirmar]     = useState(false); //para editar el estado
-  const [textConfirmar, setTextConfirmar] = useState(''); 
-  const [ventaCopia, setVentaCopia]       = useState<Venta>(ventaVacia);
-
+  const [payload, setPayload] = useState<any>({});
   const { ventas } = usePage().props as { ventas?: Venta[] }; //necesito los props de inertia
   const { resultado, mensaje, venta_id } = usePage().props as {
     resultado?: number;
@@ -182,13 +223,14 @@ export default function Ventas(){
           <FiltrosForm
             data={data}
             set={setData}
-            /*clientes={clientes}*//>
+            setPayload={(p:any) => setPayload({...p})}
+          />
         </div>
         <div className="p-4 relative flex-1 overflow-auto rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
           <DataTableVentas
             datos={cacheados?? []} 
             openEdit={openEdit}
-            dataIndex={data}
+            dataIndex={payload}
             />
         </div>
       </div>

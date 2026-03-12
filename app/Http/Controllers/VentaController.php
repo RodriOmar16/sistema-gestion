@@ -14,6 +14,8 @@ use App\Models\MovimientoStock;
 use App\Models\Stock;
 use App\Models\VentaPago;
 use App\Models\Producto;
+use App\Models\Turno;
+use App\Models\FormaPago;
 
 use App\Mail\VentaRegistradaMail;
 use App\Mail\VentaRegistradaDuenioMail;
@@ -50,6 +52,21 @@ class VentaController extends Controller
       $estado = filter_var($request->anulada, FILTER_VALIDATE_BOOLEAN);
       $query->where('anulada', $estado);
     }
+    //controlo ventas del turno
+    if($request->filled('turno_id')){
+      //obtengo el turno
+      $turno = Turno::where('turno_id', $request->turno_id)->first();
+      $query->whereRaw('HOUR(fecha_grabacion) >= ?',[$turno->apertura])
+            ->whereRaw('HOUR(fecha_grabacion) <= ?',[$turno->cierre]);
+    }
+
+    //obtengo ventas con el metodo de pago seleccionado
+    if ($request->filled('forma_pago_id')) {
+      $formaPagoId = $request->forma_pago_id;
+      $query->whereHas('formasPago', function ($q) use ($formaPagoId) {
+          $q->where('formas_pago.forma_pago_id', '=', $formaPagoId);
+      });
+    }
 
     $ventas = $query->get();
 
@@ -79,6 +96,22 @@ class VentaController extends Controller
     if($request->has('anulada')){
       $estado = filter_var($request->anulada, FILTER_VALIDATE_BOOLEAN);
       $query->where('anulada', $estado);
+    }
+
+    //controlo ventas del turno
+    if($request->filled('turno_id')){
+      //obtengo el turno
+      $turno = Turno::where('turno_id', $request->turno_id)->first();
+      $query->whereRaw('HOUR(fecha_grabacion) >= ?',[$turno->apertura])
+            ->whereRaw('HOUR(fecha_grabacion) <= ?',[$turno->cierre]);
+    }
+
+    //obtengo ventas con el metodo de pago seleccionado
+    if ($request->filled('forma_pago_id')) {
+      $formaPagoId = $request->forma_pago_id;
+      $query->whereHas('formasPago', function ($q) use ($formaPagoId) {
+          $q->where('formas_pago.forma_pago_id', '=', $formaPagoId);
+      });
     }
 
     $ventas = $query->get();
@@ -196,6 +229,22 @@ class VentaController extends Controller
     if($request->has('anulada')){
       $estado = filter_var($request->anulada, FILTER_VALIDATE_BOOLEAN);
       $query->where('anulada', $estado);
+    }
+
+    //controlo ventas del turno
+    if($request->filled('turno_id')){
+      //obtengo el turno
+      $turno = Turno::where('turno_id', $request->turno_id)->first();
+      $query->whereRaw('HOUR(fecha_grabacion) >= ?',[$turno->apertura])
+            ->whereRaw('HOUR(fecha_grabacion) <= ?',[$turno->cierre]);
+    }
+
+    //obtengo ventas con el metodo de pago seleccionado
+    if ($request->filled('forma_pago_id')) {
+        $formaPagoId = $request->forma_pago_id;
+        $query->whereHas('formasPago', function ($q) use ($formaPagoId) {
+            $q->where('formas_pago.forma_pago_id', '=', $formaPagoId);
+        });
     }
 
     $ventas = $query->with(['cliente'])->latest()->get()->map(function($v){
@@ -500,7 +549,7 @@ class VentaController extends Controller
       //mando mail al cliente
       //Mail::to($venta->cliente->email)->send(new VentaAnuladaMail($venta));
       Mail::to($venta->cliente->email)->queue(new VentaAnuladaMail($venta));
-      
+
       //mando mail al dueño
       //Mail::to('rodrigoomarmiranda1@gmail.com')->send(new VentaAnuladaMail($venta));
       Mail::to('rodrigoomarmiranda1@gmail.com')->queue(new VentaAnuladaMail($venta));

@@ -123,7 +123,7 @@ export function FiltrosForm({ openCreate }: propsForm){
             route="proveedores"
             value={optionProv}
             onChange={(option) => seleccionarProveedor(option)}
-            placeHolder='Selec. proveedor'
+            placeHolder='Seleccionar'
           />
         </div>
         <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-4'>
@@ -132,7 +132,7 @@ export function FiltrosForm({ openCreate }: propsForm){
             route="formas-pago"
             value={optionFp}
             onChange={(option) => seleccionarFp(option)}
-            placeHolder='Selec. Forma de pago'
+            placeHolder='Seleccionar'
           />
         </div>
         <div className="col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-2 lg:col-span-2">

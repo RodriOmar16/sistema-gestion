@@ -35,7 +35,7 @@
           <td>{{ $venta->venta_id }}</td>
           <td>{{ $venta->fecha_grabacion->format('d/m/Y H:i') }}</td>
           <td>{{ $venta->cliente->nombre ?? 'Sin cliente' }}</td>
-          <td class="num">${{ number_format($venta->total, 2) }}</td>
+          <td class="num">${{ number_format($venta->total, 2, ',', '.') }}</td>
           <td>{{ $venta->anulada ? 'Anulada' : 'Aprobada' }}</td>
           <td>{{ $venta->fecha_anulacion ? $venta->fecha_anulacion->format('d/m/Y') : '-' }}</td>
         </tr>
@@ -55,7 +55,7 @@
         @foreach($venta->detalles as $det)
           <tr>
             <td>{{ $det->producto->nombre ?? 'Sin producto' }}</td>
-            <td class="num">${{ number_format($det->precio, 2) }}</td>
+            <td class="num">${{ number_format($det->precio_unitario, 2, ',', '.') }}</td>
             <td class="num">{{ $det->cantidad }}</td>
           </tr>
         @endforeach
@@ -75,7 +75,7 @@
         @foreach($venta->pagos as $pago)
           <tr>
             <td>{{ $pago->formaPago->nombre ?? 'Sin tipo' }}</td>
-            <td class="num">${{ number_format($pago->monto, 2) }}</td>
+            <td class="num">${{ number_format($pago->monto, 2, ',', '.') }}</td>
             <td>{{ $pago->fecha_pago ? \Carbon\Carbon::parse($pago->fecha_pago)->format('d/m/Y') : '-' }}</td>
           </tr>
         @endforeach

@@ -122,11 +122,12 @@ class UserController extends Controller
       DB::commit();
 
       //envio mail
-      Mail::to($user->email)->send(new UsuarioCreadoMail(
+      /*Mail::to($user->email)->queue(new UsuarioCreadoMail(
         $user->name,
         $user->email,
         '123user'
-      ));
+      ));*/
+      Mail::to($user->email)->queue(new UsuarioCreadoMail($user->name, $user->email, '123user'));
 
       //retorno
       return inertia('users/index',[

@@ -286,12 +286,6 @@ class VentaController extends Controller
         $producto = Producto::where('producto_id', $det['id'])->first();
         if(!$producto){
           DB::rollback();
-          /*return inertia('ventas/createView', [
-            'resultado' => 0,
-            'mensaje'   => 'No se pudo encontrar información del producto a ventas: '.$det['id'],
-            'mode'      => 'create',
-            'timestamp' => now()->timestamp,
-          ]);*/
           return response()->json([
             'resultado' => 0,
             'mensaje'   => 'No se pudo encontrar información del producto a ventas: '.$det['id'],
@@ -304,12 +298,6 @@ class VentaController extends Controller
         $stock = Stock::where('producto_id', $det['id'])->first();
         if (!$stock || $stock->cantidad < $det['cantidad']) {
           DB::rollback();
-          /*return inertia('ventas/createView', [
-            'resultado' => 0,
-            'mensaje'   => 'Stock insuficiente para el producto ID: '.$det['id'],
-            'mode'      => 'create',
-            'timestamp' => now()->timestamp,
-          ]);*/
           return response()->json([
             'resultado' => 0,
             'mensaje'   => 'Stock insuficiente para el producto ID: '.$det['id'],
@@ -321,7 +309,8 @@ class VentaController extends Controller
 
         //aviso si hay poco stock
         if($stock->cantidad <= $producto->stock_minimo){
-          Mail::to('rodrigoomarmiranda1@gmail.com') ->send(new StockMinimoAlcanzadoMail($producto, $stock));
+          //Mail::to('rodrigoomarmiranda1@gmail.com')->send(new StockMinimoAlcanzadoMail($producto, $stock));
+          Mail::to('rodrigoomarmiranda1@gmail.com')->queue(new StockMinimoAlcanzadoMail($producto, $stock));
         }
         
         //creo el detalle
@@ -363,20 +352,16 @@ class VentaController extends Controller
       DB::commit();
 
       // al final del store, antes de enviar el mail
-      $venta->load(['cliente', 'detalles.producto']);
+      $venta->load(['cliente', 'detalles.producto', 'pagos']);
 
       //mando mail al cliente
-      Mail::to($cliente->email)->send(new VentaRegistradaMail($venta));
+      //Mail::to($cliente->email)->send(new VentaRegistradaMail($venta));
+      Mail::to($cliente->email)->queue(new VentaRegistradaMail($venta));
 
       //mando mail al dueño
-      Mail::to('rodrigoomarmiranda1@gmail.com')->send(new VentaRegistradaDuenioMail($venta));
+      //Mail::to('rodrigoomarmiranda1@gmail.com')->send(new VentaRegistradaDuenioMail($venta));
+      Mail::to('rodrigoomarmiranda1@gmail.com')->queue(new VentaRegistradaDuenioMail($venta));
 
-      /*return inertia('ventas/createView',[
-        'resultado' => 1,
-        'mensaje'   => 'Venta grabado correctamente',
-        'venta_id'  => $venta->venta_id,
-        'timestamp' => now()->timestamp,
-      ]);*/
       return response()->json([
         'resultado' => 1,
         'mensaje'   => 'Venta grabado correctamente',
@@ -513,10 +498,12 @@ class VentaController extends Controller
       ]);*/
 
       //mando mail al cliente
-      Mail::to($venta->cliente->email)->send(new VentaAnuladaMail($venta));
-
+      //Mail::to($venta->cliente->email)->send(new VentaAnuladaMail($venta));
+      Mail::to($venta->cliente->email)->queue(new VentaAnuladaMail($venta));
+      
       //mando mail al dueño
-      Mail::to('rodrigoomarmiranda1@gmail.com')->send(new VentaAnuladaMail($venta));
+      //Mail::to('rodrigoomarmiranda1@gmail.com')->send(new VentaAnuladaMail($venta));
+      Mail::to('rodrigoomarmiranda1@gmail.com')->queue(new VentaAnuladaMail($venta));
 
       return response()->json([
         'resultado' => 1,

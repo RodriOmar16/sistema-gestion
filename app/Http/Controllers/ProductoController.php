@@ -359,6 +359,7 @@ class ProductoController extends Controller
           'mensaje'   => 'El producto que intentas registrar ya existe',
           'timestamp' => now()->timestamp,
         ]);*/
+        DB::rollback();
         return response()->json([
           'resultado' => 0,
           'mensaje'   => 'El producto que intentas registrar ya existe',
@@ -454,6 +455,7 @@ class ProductoController extends Controller
           'mensaje'   => 'Ya existe un producto con esas especificaciones',
           'timestamp' => now()->timestamp,
         ]);*/
+        DB::rollback();
         return response()->json([
           'resultado' => 0,
           'mensaje'   => 'Ya existe un producto con esas especificaciones',

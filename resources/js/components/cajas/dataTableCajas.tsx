@@ -21,7 +21,7 @@ interface Props {
 //export const columns: ColumnDef<Project>[] = [
 export function getColumns(confirmar: (data: Caja) => void, open: (data: Caja) => void): ColumnDef<Caja>[] {
   return [
-    /*{
+    {
       accessorKey: "caja_id",
       header: ({column}) => {
         return (
@@ -34,31 +34,34 @@ export function getColumns(confirmar: (data: Caja) => void, open: (data: Caja) =
       cell: ({ row }) => (
         <div className="text-right">{row.getValue("caja_id")}</div>
       ),
-    },*/
-    {
-      accessorKey: "fecha",
-      header: ({column}) => {
-        return (
-          <div className="flex">
-            Registro
-          </div>
-        )
-      }
-      ,
-      cell: ({ row }) => ( <div className="">{convertirFechaGuionesBarras(row.getValue("fecha"))}</div> ),
     },
     {
       accessorKey: "created_at",
       header: ({column}) => {
         return (
           <div className="flex">
-            Grabación
+            Apertura
           </div>
         )
       }
       ,
       cell: ({ row }) => {
         const fechaString = row.getValue("created_at") as string;
+        return <div>{ formatDateTime(fechaString) }</div> 
+      },
+    },
+    {
+      accessorKey: "updated_at",
+      header: ({column}) => {
+        return (
+          <div className="flex">
+            Cierre
+          </div>
+        )
+      }
+      ,
+      cell: ({ row }) => {
+        const fechaString = row.getValue("updated_at") as string;
         return <div>{ formatDateTime(fechaString) }</div> 
       },
     },

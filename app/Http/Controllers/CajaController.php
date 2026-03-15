@@ -61,7 +61,8 @@ class CajaController extends Controller
         'efectivo'         => $c->efectivo,
         'debito'           => $c->debito,
         'transferencia'    => $c->transferencia,
-        'user_grabacion'   => $c->user_grabacion
+        'user_grabacion'   => $c->user_grabacion,
+        'updated_at'       => $c->updated_at,
       ];
     });
 

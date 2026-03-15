@@ -68,39 +68,72 @@ class TurnoController extends Controller
     ]);
   }
 
-  public function store(Request $request)
+  private function horaToSegundos(string $hora): int
+  {
+    [$h, $m, $s] = explode(':', $hora);
+    return $h * 3600 + $m * 60 + $s;
+  }
+
+  private function verificarSolapados(string $aperturaNueva, string $cierreNueva, ?int $ignorarId = null): bool
+  {
+    $aNueva = $this->horaToSegundos($aperturaNueva);
+    $cNueva = $this->horaToSegundos($cierreNueva);
+    if ($cNueva <= $aNueva) $cNueva += 86400; // cruza medianoche
+
+    return Turno::where('inhabilitado', 0)
+      ->when($ignorarId, fn($q) => $q->where('turno_id', '!=', $ignorarId))
+      ->get()
+      ->contains(function($t) use ($aNueva, $cNueva) {
+        $a = $this->horaToSegundos($t->apertura);
+        $c = $this->horaToSegundos($t->cierre);
+        if ($c <= $a) $c += 86400; // cruza medianoche
+
+        // chequeo en el mismo día
+        $solapaMismoDia = $a < $cNueva && $c > $aNueva;
+
+        // chequeo en el día siguiente (sumo 86400 a ambos extremos del turno existente)
+        $aNext = $a + 86400;
+        $cNext = $c + 86400;
+        $solapaDiaSiguiente = $aNext < $cNueva && $cNext > $aNueva;
+
+        return $solapaMismoDia || $solapaDiaSiguiente;
+      });
+  }
+
+  public function store(Request $request) 
   {
     DB::beginTransaction();
     try {
-      //controlo los datos
       $validated = $request->validate([
         'nombre'        => 'required|string|max:255',
         'apertura'      => 'required|date_format:H:i:s',
         'cierre'        => 'required|date_format:H:i:s',
         'inhabilitado'  => 'boolean'
       ]);
-      if (strtotime($validated['apertura']) >= strtotime($validated['cierre'])) {
-        DB::rollback();
+
+      // Verifico solapamiento contra todos los turnos existentes
+      if ($this->verificarSolapados($validated['apertura'], $validated['cierre'])) {
+        DB::rollBack();
         return inertia('turnos/index', [
           'resultado' => 0,
-          'mensaje'   => 'La hora de apertura debe ser anterior a la hora de cierre.',
+          'mensaje'   => 'Se definió un horario solapado, no es posible crearlo.',
           'timestamp' => now()->timestamp,
         ]);
       }
 
-      //verifico que no se repita
+      // Verifico nombre duplicado
       $nombre = strtolower(trim($validated['nombre']));
       $existe = Turno::whereRaw('LOWER(TRIM(nombre)) = ?', [$nombre])->exists();
-      if($existe){
-        DB::rollback();
-        return inertia('turnos/index',[
+      if ($existe) {
+        DB::rollBack();
+        return inertia('turnos/index', [
           'resultado' => 0,
           'mensaje'   => 'Ya existe un turno registrado con ese nombre.',
           'timestamp' => now()->timestamp,
         ]);
       }
 
-      //creo el turno
+      // Creo turno
       $turno = Turno::create([
         'nombre'       => $validated['nombre'],
         'apertura'     => $validated['apertura'],
@@ -108,17 +141,17 @@ class TurnoController extends Controller
         'inhabilitado' => $validated['inhabilitado'] ? 1 : 0,
         'created_at'   => now(),
       ]);
-      //commit
+
       DB::commit();
-      return inertia('turnos/index',[
+      return inertia('turnos/index', [
         'resultado' => 1,
         'mensaje'   => 'Turno creado correctamente',
         'turno_id'  => $turno->turno_id,
         'timestamp' => now()->timestamp,
       ]);
     } catch (\Throwable $e) {
-      DB::rollback();
-      return inertia('turnos/index',[
+      DB::rollBack();
+      return inertia('turnos/index', [
         'resultado' => 0,
         'mensaje'   => "Ocurrió un error al crear el turno: ".$e->getMessage(),
         'timestamp' => now()->timestamp,
@@ -130,35 +163,38 @@ class TurnoController extends Controller
   {
     DB::beginTransaction();
     try {
-      //controlo los datos
       $validated = $request->validate([
         'nombre'        => 'required|string|max:255',
         'apertura'      => 'required|date_format:H:i:s',
         'cierre'        => 'required|date_format:H:i:s',
         'inhabilitado'  => 'boolean'
       ]);
-      if (strtotime($validated['apertura']) >= strtotime($validated['cierre'])) {
-        DB::rollback();
+
+      // Verifico solapamiento contra otros turnos habilitados
+      if ($this->verificarSolapados($validated['apertura'], $validated['cierre'], $turno->turno_id)) {
+        DB::rollBack();
         return inertia('turnos/index', [
           'resultado' => 0,
-          'mensaje'   => 'La hora de apertura debe ser anterior a la hora de cierre.',
+          'mensaje'   => 'Se definió un horario solapado, no es posible modificarlo.',
           'timestamp' => now()->timestamp,
         ]);
       }
-      //verifico que no se repita
+
+      // Verifico nombre duplicado
       $nombre = strtolower(trim($validated['nombre']));
       $existe = Turno::whereRaw('LOWER(TRIM(nombre)) = ?', [$nombre])
-                ->where('turno_id','!=',$turno->turno_id)
-                ->exists();
-      if($existe){
-        DB::rollback();
-        return inertia('turnos/index',[
+        ->where('turno_id', '!=', $turno->turno_id)
+        ->exists();
+      if ($existe) {
+        DB::rollBack();
+        return inertia('turnos/index', [
           'resultado' => 0,
           'mensaje'   => 'Ya existe un turno registrado con ese nombre.',
           'timestamp' => now()->timestamp,
         ]);
       }
-      //modifico el turno
+
+      // Actualizo turno
       $turno->update([
         'nombre'       => $validated['nombre'],
         'apertura'     => $validated['apertura'],
@@ -166,23 +202,27 @@ class TurnoController extends Controller
         'inhabilitado' => $validated['inhabilitado'] ? 1 : 0,
         'updated_at'   => now(),
       ]);
-      //commit
+
       DB::commit();
-      return inertia('turnos/index',[
+      return inertia('turnos/index', [
         'resultado' => 1,
         'mensaje'   => 'Turno modificado correctamente',
         'turno_id'  => $turno->turno_id,
         'timestamp' => now()->timestamp,
       ]);
     } catch (\Throwable $e) {
-      DB::rollback();
-      return inertia('turnos/index',[
+      DB::rollBack();
+      return inertia('turnos/index', [
         'resultado' => 0,
         'mensaje'   => "Ocurrió un error al modificar el turno: ".$e->getMessage(),
         'timestamp' => now()->timestamp,
       ]);
     }
   }
+
+
+
+
 
   public function toggleEstado(Request $request, Turno $turno)
   {

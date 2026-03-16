@@ -157,6 +157,8 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
     Route::put('/producto/cambio-estado/{producto}', [ProductoController::class, 'toggleEstado'])->name('productos.toggleEstado');
     Route::get('producto/generar-codigo', [ProductoController::class, 'generarCodigo'])->name('productos.generarCodigo');
     Route::get('/productos/images', [ProductoController::class, 'getImages'])->name('productos.getImages');
+    Route::get('/productos/modelo-excel', [ProductoController::class, 'downloadModelo'])->name('productos.modeloExcel');
+    Route::post('/producto/carga-masiva', [ProductoController::class, 'storeMasivo'])->name('productos.storeMasivo');
 
     //Stock
     Route::get('/stock-disponible', [StockController::class, 'stockDisponible'])->name('stock.disponible');;

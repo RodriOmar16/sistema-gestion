@@ -259,17 +259,6 @@ export default function NewEditProductos(){
     let title = '';
 
     if (mode === 'create') {
-      /*router.post(
-        route('productos.store'),payload,
-        {
-          //forceFormData: true,
-          preserveScroll: true,
-          preserveState: true,
-          onFinish: () => {
-            setLoad(false);
-          }
-        }
-      );*/
       const res  = await fetch(route('productos.store'),{
         method: 'POST',
         headers: {
@@ -279,36 +268,9 @@ export default function NewEditProductos(){
         body: JSON.stringify(payload),
       });
       resp = await res.json();
-      /*setLoad(false);
 
-      if(resp.resultado === 0){
-        setTitle('Error');
-        setText(resp.mensaje ?? 'Error inesperado');
-        setColor('error');
-        setActivo(true);
-        return;
-      }
-      
-      setTitle('Producto nuevo'); 
-      setText(resp.mensaje); 
-      setColor('success'); 
-      setActivo(true); */
       title = 'Producto nuevo';
-      //color = 'success';
-
     } else {
-      /*router.put(
-        route('productos.update',{producto: data.producto_id}),
-        payload,
-        {
-          //forceFormData: true,
-          preserveScroll: true,
-          preserveState: true,
-          onFinish: () => {
-            setLoad(false);
-          }
-        }
-      );*/
       const res = await fetch(route('productos.update', {producto: data.producto_id}), {
         method: 'PUT',
         headers: {
@@ -374,22 +336,6 @@ export default function NewEditProductos(){
     };
     cargarDatos();
   },[]);
-
-  /*useEffect(() => {
-    const cambioDetectado = timestamp && timestamp !== ultimoTimestamp;
-		//const cambioDetectado = (resultado && resultado  !== propsActuales.resultado) || (mensaje && mensaje    !== propsActuales.mensaje) 
-
-		if (cambioDetectado) {
-      //setPropsActuales({ resultado, mensaje, producto_id });
-      setUltimoTimestamp(timestamp);
-
-      const esError = resultado === 0;
-      setTitle(esError ? 'Error' : mode === 'create' ? 'Producto nuevo' : 'Producto modificado');
-      setText(esError ? mensaje ?? 'Error inesperado' : `${mensaje} (ID: ${producto_id})`);
-      setColor(esError ? 'error' : 'success');
-      setActivo(true); 
-    }
-	}, [resultado, mensaje, producto_id, timestamp, ultimoTimestamp, mode]);*/
 
   useEffect(() => {
     if(producto && mode === 'edit'){

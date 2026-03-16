@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\File;
 
 
 use App\Models\Producto;
+use App\Models\Categoria;
 use App\Models\Stock;
 use App\Models\ProductoCategoria;
 use App\Models\ProductoLista;
@@ -348,17 +349,14 @@ class ProductoController extends Controller
         'imagen'          => 'required|string|max:255',
         'vencimiento'     => 'nullable|string|max:255'
       ]);
+
       //controlar que no se repita
       $codigoBarras = strtolower(trim($validated['codigo_barra']));
+      $nombre       = strtolower(trim($validated['producto_nombre']));
       $existe = Producto::whereRaw('LOWER(TRIM(codigo_barra)) = ?', [$codigoBarras])
-                        //->where('precio', $validated['precio'])
+                        ->whereRaw('LOWER(TRIM(nombre)) = ?', [$nombre])
                         ->exists();
       if($existe){
-        /*return inertia('productos/createEdit',[
-          'resultado' => 0,
-          'mensaje'   => 'El producto que intentas registrar ya existe',
-          'timestamp' => now()->timestamp,
-        ]);*/
         DB::rollback();
         return response()->json([
           'resultado' => 0,
@@ -366,6 +364,7 @@ class ProductoController extends Controller
           'timestamp' => now()->timestamp,
         ]);
       }
+
       //crear el producto y sus tablas intermedias
       $producto = Producto::create([
         'nombre'          => $validated['producto_nombre'],
@@ -563,27 +562,151 @@ class ProductoController extends Controller
       'producto_id' => $producto->producto_id,
       'timestamp' => now()->timestamp,
     ]);*/
-  return response()->json([
-    'resultado'   => 1,
-    'mensaje'     => 'Estado modificado exitosamente',
-    'producto_id' => $producto->producto_id,
-    'timestamp' => now()->timestamp,
-  ]);
+    return response()->json([
+      'resultado'   => 1,
+      'mensaje'     => 'Estado modificado exitosamente',
+      'producto_id' => $producto->producto_id,
+      'timestamp' => now()->timestamp,
+    ]);
   }
 
-  public function generarCodigo()
+  // Método interno que devuelve solo el string
+  protected function generarCodigoInterno(): string
   {
-    // genero el codigo
-    $codigo = (string) str_pad(mt_rand(100000000000, 999999999999), 13, '0', STR_PAD_LEFT);
-    
-    // valido que no repetirá
     do {
       $codigo = (string) str_pad(mt_rand(100000000000, 999999999999), 13, '0', STR_PAD_LEFT);
-    } while (Producto::where('codigo_barra', (string)$codigo)->exists());
-    
-    // devuelvo
-    return response()->json(['codigo_barra' => (string) $codigo]);
+    } while (Producto::where('codigo_barra', $codigo)->exists());
+
+    return $codigo;
   }
 
+  // Endpoint que devuelve JSON (para frontend)
+  public function generarCodigo()
+  {
+    return response()->json(['codigo_barra' => $this->generarCodigoInterno()]);
+  }
 
+  public function downloadModelo()
+  {
+    $spreadsheet = new Spreadsheet();
+    $sheet       = $spreadsheet->getActiveSheet();
+
+    // Encabezados
+    $sheet->setCellValue('A1', 'Nombre');
+    $sheet->setCellValue('B1', 'Descripción');
+    $sheet->setCellValue('C1', 'Precio');
+    $sheet->setCellValue('D1', 'Cód. Barras');
+    $sheet->setCellValue('E1', 'Stock Mín.');
+    $sheet->setCellValue('F1', 'Inhabilitado (Si/No)');
+    $sheet->setCellValue('G1', 'Marca');
+    $sheet->setCellValue('H1', 'Categorías');
+    $sheet->setCellValue('I1', 'Vencimiento');
+    $sheet->setCellValue('J1', 'Imagen');
+
+    // Fila
+    $sheet->setCellValue('A2', 'Nombre_Producto');
+    $sheet->setCellValue('B2', 'Esto es una descrip');
+    $sheet->setCellValue('C2', '0');
+    $sheet->setCellValue('D2', '2132132156489');
+    $sheet->setCellValue('E2', '5');
+    $sheet->setCellValue('F2', 'No');
+    $sheet->setCellValue('G2', 'Marca 1');
+    $sheet->setCellValue('H2', 'Categoría 1, Categoría 2');
+    $sheet->setCellValue('I2', 'DD/MM/AAAA');
+    $sheet->setCellValue('J2', 'nombre_archivo.extension');
+
+    //controla la redimension del ancho
+    foreach (range('A', 'J') as $col) {
+      $sheet->getColumnDimension($col)->setAutoSize(true);
+    }
+
+    //marca el encabezado
+    $sheet->getStyle('A1:J1')->getFont()->setBold(true);
+
+    // Guardar en archivo temporal
+    $writer   = new Xlsx($spreadsheet);
+    $filename = 'modelo.xlsx';
+    $tempFile = tempnam(sys_get_temp_dir(), $filename);
+    $writer->save($tempFile);
+
+    return response()->download($tempFile, $filename)->deleteFileAfterSend(true);
+  }
+
+  public function storeMasivo(Request $request)
+  {
+    DB::beginTransaction();
+    try {
+      //validar los datos
+      $validated = $request->validate([
+        'productos' => 'required|array|min:1',
+      ]);
+
+      $errores = [];
+      $productos = $validated['productos'];
+
+      foreach ($productos as $prod) {
+        $codigoBarras = strtolower(trim($prod['codigo_barra'] ?? ''));
+        $nombre       = strtolower(trim($prod['producto_nombre'] ?? ''));
+
+        $existe = Producto::whereRaw('LOWER(TRIM(codigo_barra)) = ?', [$codigoBarras])
+                          ->orWhereRaw('LOWER(TRIM(nombre)) = ?', [$nombre])
+                          ->exists();
+
+        if ($existe) {
+          $errores[] = [
+            'producto' => $nombre,
+            'error'    => 'Este producto se detectó como repetido.'
+          ];
+          continue;
+        }
+
+        $producto = Producto::create([
+          'nombre'       => $prod['producto_nombre'],
+          'descripcion'  => $prod['descripcion'],
+          'inhabilitado' => $prod['inhabilitado'] ? 1 : 0,
+          'precio'       => $prod['precio'],
+          'marca_id'     => $prod['marca_id'] ?? 14,
+          'stock_minimo' => $prod['stock_minimo'],
+          'codigo_barra' => $prod['codigo_barra'] ?? $this->generarCodigoInterno(),
+          'imagen'       => $prod['imagen'],
+          'vencimiento'  => $prod['vencimiento'],
+        ]);
+
+        $categoriasNom = $prod['categoria_nombre'] ?? [];
+        foreach ($categoriasNom as $c) {
+          $nombreCat = strtolower(trim($c));
+          $categoria = Categoria::whereRaw('LOWER(TRIM(nombre)) = ?', [$nombreCat])->first();
+          if ($categoria) {
+            ProductoCategoria::firstOrCreate([
+              'producto_id'  => $producto->producto_id,
+              'categoria_id' => $categoria->categoria_id,
+            ]);
+          }
+        }
+      }
+
+      if (!empty($errores)) {
+        $erroresStr = collect($errores)
+          ->map(fn($e) => "Producto: {$e['producto']} - {$e['error']}")
+          ->implode("\n");
+      }
+
+      //commit
+      DB::commit();
+      return response()->json([
+        'resultado'   => 1,
+        'mensaje'     => 'Carga masiva de Productos creada correctamente',
+        'timestamp'   => now()->timestamp,
+        'errores'     => $erroresStr,
+      ]);
+    } catch (\Throwable $e) {
+      DB::rollback();
+      return response()->json([
+        'resultado' => 0,
+        'mensaje'   => 'Ocurrió un error al intentar grabar de forma masiva productos: '.$e->getMessage(),
+        'timestamp' => now()->timestamp,
+        'errores'     => $errores,
+      ]);
+    }
+  }
 }

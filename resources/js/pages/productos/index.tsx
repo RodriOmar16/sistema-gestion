@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem } from '@/types';
 import { AuthProps, Autocomplete, Producto } from '@/types/typeCrud';
-import { Search, Brush, Loader2, CirclePlus, Filter } from 'lucide-react';
+import { Search, Brush, Loader2, CirclePlus, Filter, FilePlus } from 'lucide-react';
 import ModalConfirmar from '@/components/modalConfirmar';
 import PdfButton from '@/components/utils/pdf-button';
 import ShowMessage from '@/components/utils/showMessage';
@@ -20,14 +20,14 @@ import { DatePicker } from '@/components/utils/date-picker';
 import GenericSelect from '@/components/utils/genericSelect';
 import Loading from '@/components/utils/loadingDialog';
 import { NumericFormat } from 'react-number-format';
+import CargaMasiva from '@/components/productos/cargaMasivaProductos';
 
 const breadcrumbs: BreadcrumbItem[] = [ { title: 'Productos', href: '', } ];
 
 type propsForm = {
-  /*marcas: Multiple[];
-  categorias: Multiple[];*/
   data: Producto;
   set: (e:any) => void;
+  setMasivo: (e:any) => void;
 }
 
 const productoVacio = {
@@ -46,7 +46,7 @@ const productoVacio = {
   inhabilitado:        false,
 }
 
-export function FiltrosForm({ /*marcas, categorias,*/ data, set }: propsForm){
+export function FiltrosForm({ data, set, setMasivo }: propsForm){
   const [esperandoRespuesta, setEsperandoRespuesta] = useState(false)
   const [loading, setLoading]                       = useState(false);
   const [optionMarca, setOptionMarca]               = useState<Autocomplete|null>(null);
@@ -94,17 +94,29 @@ export function FiltrosForm({ /*marcas, categorias,*/ data, set }: propsForm){
     <div>
       <div className='flex items-center justify-between px-3 pt-3'>
         <div className='flex'> <Filter size={20} />  Filtros</div>
-        <a href={route('productos.create')} target='_blank'>
+        <div>
           <Button 
-            className="p-0 hover:bg-transparent cursor-pointer"
+            title="Alta Masiva" 
+            className="p-0 hover:bg-transparent cursor-pointer "
             type="button"
-            title="Nuevo" 
             variant="ghost" 
             size="icon"
+            onClick={() => setMasivo(true)}
           >
-            <CirclePlus size={30} className="text-green-600 scale-200" />
+            <FilePlus size={30} className="text-indigo-600 scale-200" />
           </Button>
-        </a>
+          <a href={route('productos.create')} target='_blank'>
+            <Button 
+              className="p-0 hover:bg-transparent cursor-pointer"
+              type="button"
+              title="Nuevo" 
+              variant="ghost" 
+              size="icon"
+            >
+              <CirclePlus size={30} className="text-green-600 scale-200" />
+            </Button>
+          </a>
+        </div>
       </div>
       <form className='grid grid-cols-12 gap-4 px-4 pt-1 pb-4' onSubmit={handleSubmit}>
         <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-2'>
@@ -203,11 +215,12 @@ export default function Productos(){
     timestamp?: number;
   };
   
-  const { auth } = usePage<{auth: AuthProps}>().props;
-  const [cacheados, setCacheados] = useState<Producto[]>([]);
+  const { auth }                              = usePage<{auth: AuthProps}>().props;
+  const [cacheados, setCacheados]             = useState<Producto[]>([]);
   const [ultimoTimestamp, setUltimoTimestamp] = useState<number | null>(null);
 
-  const [load, setLoad] = useState(false);
+  const [load, setLoad]             = useState(false);
+  const [openMasivo, setOpenMasivo] = useState(false);
   const [respuesta, setResp]= useState<{resultado: number, producto_id: number}>({resultado: 0, producto_id: 0});
 
   //funciones
@@ -221,18 +234,6 @@ export default function Productos(){
   };
   const inhabilitarHabilitar = async () => {
     if (!productoCopia || !productoCopia.producto_id) return;
-    /*router.put(
-      route('productos.toggleEstado', { producto: productoCopia.producto_id }),{},
-      {
-        preserveScroll: true,
-        preserveState: true,
-        onFinish: () => {
-          setTextConfirmar('');
-          setConfirmar(false);
-          setProductoCopia(productoVacio);
-        }
-      }
-    );*/
     setLoad(true);
     const res = await fetch(route('productos.toggleEstado', { producto: productoCopia.producto_id }), {
       method: 'PUT',
@@ -281,31 +282,7 @@ export default function Productos(){
     } else {
       setCacheados([]);
     }
-    //console.log("productos: ", productos)
   }, [productos]);
-
-
-  /*useEffect(() => {
-    const cambioDetectado = timestamp && timestamp !== ultimoTimestamp;
-
-    if (cambioDetectado) {
-      //setPropsActuales({ resultado, mensaje, producto_id });
-      setUltimoTimestamp(timestamp);
-
-      const esError = resultado === 0;
-      setTitle(esError ? 'Error' : 'Producto modificado');
-      setText(esError ? mensaje ?? 'Error inesperado' : `${mensaje} (ID: ${producto_id})`);
-      setColor(esError ? 'error' : 'success');
-      setActivo(true);
-
-      if (resultado === 1 && producto_id) {
-        router.get(route('productos.index'),
-          { producto_id, buscar: true },
-          { preserveScroll: true,	preserveState: true	}
-        )
-      }
-    }
-  }, [resultado, mensaje, producto_id, timestamp, ultimoTimestamp]);*/
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
@@ -315,6 +292,7 @@ export default function Productos(){
           <FiltrosForm
             data={data}
             set={setData}
+            setMasivo={setOpenMasivo}
           />
         </div>
         <div className="p-4 relative flex-1 overflow-auto rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
@@ -350,6 +328,10 @@ export default function Productos(){
       <Loading
         open={load}
         onClose={() => {}}
+      />
+      <CargaMasiva 
+        open={openMasivo}
+        onOpenChange={setOpenMasivo}
       />
     </AppLayout>
   );

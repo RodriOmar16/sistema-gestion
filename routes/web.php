@@ -233,6 +233,7 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
     Route::get('caja/ver/{caja}', [CajaController::class, 'show'])->name('caja.show');
     Route::put('/caja/update/{caja}', [CajaController::class, 'update'])->name('caja.update');
     Route::put('/caja/eliminar/{caja}', [CajaController::class, 'destroy'])->name('caja.destroy');
+    Route::put('/caja/eliminar/{caja}', [CajaController::class, 'destroyIndex'])->name('caja.destroyIndex');
     
     //Marcas
     //Route::get('/marcas_habilitadas', [MarcaController::class, 'marcasHabilitadas'])->name('marcas.marcasHabilitadas');

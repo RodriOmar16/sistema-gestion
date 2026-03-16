@@ -337,7 +337,10 @@ class CajaController extends Controller
   {
     DB::beginTransaction();
      try {
-        $caja->update(['inhabilitado' => 1]);
+        $caja->update([
+          'inhabilitado' => 1,
+          'abierta'      => 0,
+        ]);
 
         // obtengo todos los gastos que estaban relacionados a la caja y los libero
         $gastos = Gasto::where('caja_id', $caja->caja_id)->get();
@@ -358,6 +361,37 @@ class CajaController extends Controller
             'mode'      => 'edit',
             'resultado' => 0,
             'mensaje'   => 'Error al bloquear la caja: ' . $e->getMessage(),
+        ]);
+    }
+  }
+  public function destroyInex(Request $request, Caja $caja)
+  {
+    DB::beginTransaction();
+     try {
+        $caja->update([
+          'inhabilitado' => 1,
+          'abierta'      => 0,
+        ]);
+
+        // obtengo todos los gastos que estaban relacionados a la caja y los libero
+        $gastos = Gasto::where('caja_id', $caja->caja_id)->get();
+        foreach($gastos as $g){
+          $g->update(['caja_id' => null]);
+        }
+
+        //éxito
+        DB::commit();
+        return response()->json([
+          'resultado' => 1,
+          'mensaje'   => 'Caja inhabilitada correctamente',
+          'caja_id'   => $caja->caja_id, // ojo, antes tenías $caja_id sin definir
+          'timestamp' => now()->timestamp,
+        ]);
+    } catch (\Throwable $e) {
+      DB::rollback();
+        return response()->json([
+          'resultado' => 0,
+          'mensaje'   => 'Error al bloquear la caja: ' . $e->getMessage(),
         ]);
     }
   }

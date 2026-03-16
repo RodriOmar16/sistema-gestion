@@ -202,7 +202,7 @@ export default function Cajas(){
         }
       }
     );*/
-    const res = await fetch(route('caja.destroy', { caja: cajaCopia.caja_id }), {
+    const res = await fetch(route('caja.destroyIndex', { caja: cajaCopia.caja_id }), {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',

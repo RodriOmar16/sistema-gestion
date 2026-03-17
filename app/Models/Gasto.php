@@ -15,7 +15,7 @@ class Gasto extends Model
 
     protected $table      = 'gastos';
     protected $primaryKey = 'gasto_id';
-    protected $fillable   = ['caja_id', 'proveedor_id', 'forma_pago_id', 'fecha', 'monto', 'descripcion', 'inhabilitado'];
+    protected $fillable   = ['caja_id', 'proveedor_id','categoria_gasto_id', 'forma_pago_id', 'fecha', 'monto', 'descripcion', 'inhabilitado'];
 
     public function caja(){
         return $this->belongsTo(Caja::class, 'caja_id');
@@ -28,5 +28,10 @@ class Gasto extends Model
     {
         return $this->belongsTo(FormaPago::class, 'forma_pago_id', 'forma_pago_id');
     }
-
+    
+    // Relación con categoría
+    public function categoria()
+    {
+        return $this->belongsTo(CategoriaGasto::class, 'categoria_gasto_id', 'categoria_gasto_id');
+    }
 }

@@ -134,7 +134,7 @@ class ProveedorController extends Controller
         'proveedor_id' => $proveedor->proveedor_id
       ]);
     } catch (\Throwable $e) {
-      DB::rollback();
+      DB::rollBack();
       return inertia('proveedores/index',[
         'resultado' => 0,
         'mensaje'   => 'Ocurrió un error al crear el proveedor: '.$e->getMessage()
@@ -190,7 +190,7 @@ class ProveedorController extends Controller
         'proveedor_id' => $proveedor->proveedor_id
       ]);
     } catch (\Throwable $e) {
-      DB::rollback();
+      DB::rollBack();
       return inertia('proveedores/index',[
         'resultado' => 0,
         'mensaje'   => 'Ocurrió un error al editar el proveedor: '.$e->getMessage()

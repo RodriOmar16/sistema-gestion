@@ -126,7 +126,7 @@ class ClienteController extends Controller
         'timestamp' => now()->timestamp,
       ]);
     } catch (\Throwable $e) {
-      DB::rollback();
+      DB::rollBack();
       return inertia('clientes/index',[
         'resultado' => 0,
         'mensaje'   => 'Ocurrió un problema al crear el cliente: '.$e->getMessage(),
@@ -176,7 +176,7 @@ class ClienteController extends Controller
         'timestamp' => now()->timestamp,
       ]);
     } catch (\Throwable $e) {
-      DB::rollback();
+      DB::rollBack();
       return inertia('clientes/index',[
         'resultado' => 0,
         'mensaje'   => 'Ocurrió un error al intentar actualizar el cliente: '.$e->getMessage(),

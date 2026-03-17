@@ -140,7 +140,7 @@ class UserController extends Controller
       //envio de mail al email recibido para avisar que se creo el user
 
     } catch (\Throwable $e) {
-      DB::rollback();
+      DB::rollBack();
       return inertia('users/index',[
         'resultado' => 0,
         'mensaje'   => 'Ocurrió un error: '.$e->getMessage(),
@@ -154,7 +154,7 @@ class UserController extends Controller
    */
   public function update(Request $request, User $user)
   {
-    //inicio la transaccion con posibles commit o rollback
+    //inicio la transaccion con posibles commit o rollBack
     DB::beginTransaction();
     try {
       //valido que no haya repetidos
@@ -195,7 +195,7 @@ class UserController extends Controller
         'timestamp' => now()->timestamp
       ]);
     } catch (\Throwable $e) {
-      DB::rollback();
+      DB::rollBack();
       return inertia('users/index',[
         'resultado' => 0,
         'mensaje'   => 'Error inerperado: '.e->getMessage(),

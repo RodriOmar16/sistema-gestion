@@ -203,7 +203,7 @@ class CajaController extends Controller
         'timestamp' => now()->timestamp,
       ]);
     } catch (\Throwable $e) {
-      DB::rollback();
+      DB::rollBack();
       return Inertia::render('cajas/createView', [
         'resultado' => 0, 
         'mensaje'   => 'Error al abrir caja: '.$e->getMessage(), 
@@ -321,7 +321,7 @@ class CajaController extends Controller
             'timestamp' => now()->timestamp,
         ]);
     } catch (\Throwable $e) {
-      DB::rollback();
+      DB::rollBack();
         return inertia('cajas/createView', [
             'mode'      => 'edit',
             'resultado' => 0,
@@ -356,7 +356,7 @@ class CajaController extends Controller
             'timestamp' => now()->timestamp,
         ]);
     } catch (\Throwable $e) {
-      DB::rollback();
+      DB::rollBack();
         return inertia('cajas/createView', [
             'mode'      => 'edit',
             'resultado' => 0,
@@ -388,7 +388,7 @@ class CajaController extends Controller
           'timestamp' => now()->timestamp,
         ]);
     } catch (\Throwable $e) {
-      DB::rollback();
+      DB::rollBack();
         return response()->json([
           'resultado' => 0,
           'mensaje'   => 'Error al bloquear la caja: ' . $e->getMessage(),

@@ -100,7 +100,7 @@ class FormaPagoController extends Controller
       ]);
 
     } catch (\Throwable $e) {
-      DB::rollback();
+      DB::rollBack();
       return inertia('formasPago/index',[
         'resultado' => 0,
         'mensaje'   => 'Ocurrió un error al intentar crear la forma de pago: '.$e->getMessage()
@@ -144,7 +144,7 @@ class FormaPagoController extends Controller
       ]);
 
     } catch (\Throwable $e) {
-      DB::rollback();
+      DB::rollBack();
       return inertia('formasPago/index',[
         'resultado' => 0,
         'mensaje'   => 'Ocurrió un error al intentar actualizar la forma de pago: '.$e->getMessage()

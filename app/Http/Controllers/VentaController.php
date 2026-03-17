@@ -334,7 +334,7 @@ class VentaController extends Controller
         //obtengo el producto
         $producto = Producto::where('producto_id', $det['id'])->first();
         if(!$producto){
-          DB::rollback();
+          DB::rollBack();
           return response()->json([
             'resultado' => 0,
             'mensaje'   => 'No se pudo encontrar información del producto a ventas: '.$det['id'],
@@ -346,7 +346,7 @@ class VentaController extends Controller
         //controlo el stock
         $stock = Stock::where('producto_id', $det['id'])->first();
         if (!$stock || $stock->cantidad < $det['cantidad']) {
-          DB::rollback();
+          DB::rollBack();
           return response()->json([
             'resultado' => 0,
             'mensaje'   => 'Stock insuficiente para el producto ID: '.$det['id'],
@@ -419,7 +419,7 @@ class VentaController extends Controller
       ]);
 
     } catch (\Throwable $e) {
-      DB::rollback();
+      DB::rollBack();
       /*return inertia('ventas/createView',[
         'resultado' => 0,
         'mensaje'   => 'Ocurrió un error al grabar la venta: '.$e->getMessage(),
@@ -561,7 +561,7 @@ class VentaController extends Controller
         'timestamp' => now()->timestamp
       ]);
     } catch (\Throwable $e) {
-      DB::rollback();
+      DB::rollBack();
       return response()->json([
         'resultado' => 0,
         'mensaje'   => 'Error al anular la venta: '.$e->getMessage(),

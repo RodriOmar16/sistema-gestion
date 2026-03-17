@@ -54,8 +54,7 @@ class GastoController extends Controller
       $query->where('fecha', '<=', $request->fecha_hasta);
     }
 
-
-    /*$gastos = $query->latest()->get()->map(function ($g) { 
+    $gastos = $query->latest()->get()->map(function ($g) {
       return [
         'gasto_id'         => $g->gasto_id,
         'fecha'            => $g->fecha,
@@ -71,27 +70,8 @@ class GastoController extends Controller
       ];
     });
 
-    return inertia('gastos/index',[
-      'gastos' => $gastos
-    ]);*/
-    $gastos = $query->latest()->get()->map(function ($g) { /*->paginate(20)->through*/
-        return [
-            'gasto_id'         => $g->gasto_id,
-            'fecha'            => $g->fecha,
-            'caja_id'          => $g->caja_id,
-            'proveedor_id'     => $g->proveedor_id,
-            'proveedor_nombre' => optional($g->proveedor)->nombre,
-            'forma_pago_id'    => $g->forma_pago_id,
-            'forma_pago_nombre'=> optional($g->formaPago)->nombre,
-            'monto'            => $g->monto,
-            'descripcion'      => $g->descripcion,
-            'inhabilitado'     => $g->inhabilitado,
-            'created_at'       => $g->created_at,
-        ];
-    });
-
     return inertia('gastos/index', [
-        'gastos' => $gastos,
+      'gastos' => $gastos,
     ]);
   }
 
@@ -139,7 +119,7 @@ class GastoController extends Controller
         'timestamp' => now()->timestamp
       ]);*/
     } catch (\Throwable $e) {
-      DB::rollback();
+      DB::rollBack();
       /*return inertia('gastos/index',[
         'resultado' => 0,
         'mensaje'   => 'Ocurrió un error al intentar crear el gasto: '.$e->getMessage(),
@@ -187,7 +167,7 @@ class GastoController extends Controller
         'timestamp' => now()->timestamp
       ]);*/
     } catch (\Throwable $e) {
-      DB::rollback();
+      DB::rollBack();
       return response()->json([
         'resultado' => 0,
         'mensaje'   => 'Ocurrió un error al intentar actualizar el gasto: '.$e->getMessage(),
@@ -224,7 +204,7 @@ class GastoController extends Controller
         'timestamp' => now()->timestamp
       ]);*/
     } catch (\Throwable $e) {
-      DB::rollback();
+      DB::rollBack();
       return response()->json([
         'resultado' => 0,
         'mensaje'   => 'Ocurrió un error al intentar actualizar estaqdo del gasto: '.$e->getMessage(),

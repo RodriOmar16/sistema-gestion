@@ -214,7 +214,7 @@ class StockController extends Controller
         'nuevo'     => 1
       ]);
     } catch (\Throwable $e) {
-      DB::rollback();
+      DB::rollBack();
       return inertia('stock/index',[
         'resultado' => 0,
         'mensaje'   => 'Ocurrió un error al intentar registrar el stock: '.$e->getMessage()
@@ -255,7 +255,7 @@ class StockController extends Controller
         'nuevo'     => false,
       ]);
     } catch (\Throwable $e) {
-      DB::rollback();
+      DB::rollBack();
       return inertia('stock/index',[
         'resultado' => 0,
         'mensaje'   => 'Ocurrió un problema al intentar actualizar el stock: '.$e->getMessage(),

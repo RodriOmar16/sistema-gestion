@@ -145,7 +145,7 @@ class RolController extends Controller
 
     public function update(Request $request, Rol $rol)
     {
-      //inicio la transaccion con posibles commit o rollback
+      //inicio la transaccion con posibles commit o rollBack
       DB::beginTransaction();
       try {
         //valido que no haya repetidos
@@ -185,7 +185,7 @@ class RolController extends Controller
           'rol_id'    => $rol->rol_id
         ]);
       } catch (\Throwable $e) {
-        DB::rollback();
+        DB::rollBack();
         return inertia('roles/index',[
           'resultado' => 0,
           'mensaje'   => 'Error inerperado: '.e->getMessage()

@@ -152,7 +152,7 @@ class ListaPrecioProductoController extends Controller
       ]);*/
       return redirect()->back()->with('success', 'Proceso registrado correctamente.');
     } catch (\Throwable $e) {
-      DB::rollback();
+      DB::rollBack();
       //return response()->json(['error' => $e->getMessage()], 500);
       return redirect()->back()->with('error', 'Error: '.$e->getMessage());
     }

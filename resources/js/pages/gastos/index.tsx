@@ -18,11 +18,13 @@ import DataTableGastos from '@/components/gastos/dataTableGastos';
 import NewEditGasto from '@/components/gastos/newEditGasto';
 import { apiRequest, convertirFechaBarrasGuiones, getCsrfToken } from '@/utils';
 import Loading from '@/components/utils/loadingDialog';
+import CategoriaGastos from '@/components/gastos/categoriaGastos';
 
 const breadcrumbs: BreadcrumbItem[] = [ { title: 'Gastos', href: '', } ];
 
 type propsForm = {
-  openCreate: () => void;
+  openCreate:   () => void;
+  setCatGastos: (p:Boolean) => void;
 }
 
 const gastoVacio = {
@@ -40,12 +42,12 @@ const gastoVacio = {
   inhabilitado:     0
 };
 
-export function FiltrosForm({ openCreate }: propsForm){
+export function FiltrosForm({ openCreate, setCatGastos }: propsForm){
   const { data, setData, errors, processing } = useForm<Gasto>(gastoVacio);
   const [load, setLoad]                       = useState(false);
   const [optionProv, setOptionProv]           = useState<Autocomplete|null>(null);
   const [optionFp, setOptionFp]               = useState<Autocomplete|null>(null);
-
+ 
   const tipoCajas = [ {id:0, nombre: 'Sin caja'}, {id: -1, nombre: 'Principal'} ];
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -55,10 +57,6 @@ export function FiltrosForm({ openCreate }: propsForm){
       ...data, 
       fecha_desde: convertirFechaBarrasGuiones(data.fecha_desde??''),
       fecha_hasta: convertirFechaBarrasGuiones(data.fecha_hasta??''),
-      /*gasto_id: Number(data.gasto_id),
-      proveedor_id: Number(data.proveedor_id),
-      forma_pago_id: Number(data.forma_pago_id),
-      monto: Number(data.monto),*/
       buscar: true    
     }
     
@@ -100,16 +98,28 @@ export function FiltrosForm({ openCreate }: propsForm){
     <div>
       <div className='flex items-center justify-between px-3 pt-3'>
         <div className='flex'> <Filter size={20} />  Filtros</div>
-        <Button 
-          className="p-0 hover:bg-transparent cursor-pointer"
-          type="button"
-          title="Nuevo" 
-          variant="ghost" 
-          size="icon" 
-          onClick={openCreate}
-        >
-          <CirclePlus size={30} className="text-green-600 scale-200" />
-        </Button>
+        <div>
+          <Button 
+            className="p-0 hover:bg-transparent cursor-pointer"
+            type="button"
+            title="Nuevo" 
+            variant="ghost" 
+            size="icon" 
+            onClick={openCreate}
+          >
+            <CirclePlus size={30} className="text-green-600 scale-200" />
+          </Button>
+          <Button 
+            className="p-0 hover:bg-transparent cursor-pointer"
+            type="button"
+            title="Nueva Categoría" 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => {setCatGastos(true)}}
+          >
+            <CirclePlus size={30} className="text-indigo-600 scale-200" />
+          </Button>
+        </div>
       </div>
       <form className='grid grid-cols-12 gap-4 px-4 pt-1 pb-4' onSubmit={handleSubmit}>
         <div className='col-span-12 sm:col-span-3 md:col-span-3 lg:col-span-2'>
@@ -231,11 +241,9 @@ export default function Gastos(){
     gasto_id?: number;
     timestamp?: number;
   };
-  const [ultimoTimestamp, setUltimoTimestamp] = useState<number | null>(null);
-  const [cacheados, setCacheados] = useState<Gasto[]>([]);
-
-  const [respuesta, setResp]= useState<{resultado: number, gasto_id: number}>({resultado: 0, gasto_id: 0});
-
+  const [cacheados, setCacheados]      = useState<Gasto[]>([]);
+  const [respuesta, setResp]           = useState<{resultado: number, gasto_id: number}>({resultado: 0, gasto_id: 0});
+  const [verCatGatos, setVerCatGastos] = useState(false);
 
   //funciones
   const confirmar = (data: Gasto) => {
@@ -248,22 +256,6 @@ export default function Gastos(){
   };
   const inhabilitarHabilitar = async () => {
     if (!gastoCopia || !gastoCopia.gasto_id) return;
-    
-    /*setLoading(true);
-    router.put(
-      route('gasto.toggleEstado', { gasto: gastoCopia.gasto_id }),{},
-      {
-        preserveScroll: true,
-        preserveState: true,
-        onFinish: () => {
-          setLoading(false);
-          setTextConfirmar('');
-          setConfirmar(false);
-          setGastoCopia(gastoVacio);
-        }
-      }
-    );*/
-
     setLoading(true);
 
     try {
@@ -322,81 +314,6 @@ export default function Gastos(){
     setConfirOpen(true);
   };
 
-  /*const accionar = async () => {
-    if (!pendingData) return;
-    setConfirOpen(false);
-    setLoading(true);
-
-    const payload = JSON.parse(JSON.stringify(pendingData));
-    payload.fecha = convertirFechaBarrasGuiones(payload.fecha);
-    
-    let resp;
-    let titulo = '';
-    if (modalMode === 'create') {*/
-      /*router.post(
-        route('gastos.store'), payload,
-        {
-          preserveScroll: true,
-          preserveState: true,
-          onFinish: () => {
-            setLoading(false);
-            setTextConfirmar('');
-            setConfirmar(false);
-            setGastoCopia(gastoVacio);
-          }
-        }
-      );*/
-      /*const res  = await fetch(route('gastos.store'),{
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json', 
-          'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement).content,
-        },
-        body: JSON.stringify(payload),
-      });
-      resp = await res.json();
-      titulo = 'Gasto nuevo';
-
-    } else {*/
-      /*router.put(
-        route('gasto.update',{gasto: pendingData.gasto_id}), payload,
-        {
-          preserveScroll: true,
-          preserveState: true,
-          onFinish: () => {
-            setLoading(false);
-            setPendingData(undefined);
-          }
-        }
-      );*/
-      /*const res = await fetch(route('gasto.update', {gasto: pendingData.gasto_id}), {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': getCsrfToken(),
-        },
-        body: JSON.stringify(payload),
-      });
-      resp  = await res.json();
-      titulo = 'Gasto modificado';
-    }
-    setLoading(false);
-    
-    setResp({resultado: resp.resultado, gasto_id: resp.gasto_id});
-
-    if(resp.resultado === 0){
-      setTitle('Error');
-      setText(resp.mensaje ?? 'Error inesperado');
-      setColor('error');
-      setActivo(true);
-      return;
-    }
-
-    setTitle(titulo); 
-    setText(resp.mensaje + ' ('+ resp.gasto_id +')'); 
-    setColor('success'); 
-    setActivo(true); 
-  };*/
   const accionar = async () => {
     if (!pendingData) return;
     setConfirOpen(false);
@@ -453,35 +370,14 @@ export default function Gastos(){
     }
   }, [gastos]);
 
-
-  /*useEffect(() => {
-    const cambioDetectado = timestamp && timestamp !== ultimoTimestamp;
-
-    if (cambioDetectado) {
-      setUltimoTimestamp(timestamp)
-
-      const esError = resultado === 0;
-      setTitle(esError ? 'Error' : modalMode === 'create' ? 'Gasto nuevo' : 'Gasto modificado');
-      setText(esError ? mensaje ?? 'Error inesperado' : `${mensaje} (ID: ${gasto_id})`);
-      setColor(esError ? 'error' : 'success');
-      setActivo(true);
-
-      if (resultado === 1 && gasto_id) {
-        setModalOpen(false);
-        router.get(route('gastos.index'),
-          { gasto_id, buscar: true },
-          { preserveScroll: true,	preserveState: true	}
-        )
-      }
-    }
-  }, [timestamp, ultimoTimestamp, resultado, mensaje, gasto_id, modalMode]);*/
-
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Gastos" />
       <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
         <div className="relative flex-none flex-1 rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
-          <FiltrosForm openCreate={openCreate}/>
+          <FiltrosForm 
+            openCreate={openCreate}
+            setCatGastos={(p:Boolean) => setVerCatGastos(Boolean(p))}/>
         </div>
         <div className="p-4 relative flex-1 overflow-auto rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
           <DataTableGastos
@@ -529,6 +425,10 @@ export default function Gastos(){
       <Loading
         open={loading}
         onClose={() => {}}
+      />
+      <CategoriaGastos
+        open={verCatGatos}
+        onOpenChange={setVerCatGastos}
       />
     </AppLayout>
   );

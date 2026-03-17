@@ -75,7 +75,7 @@ class CarouselController extends Controller
                 })
                 ->exists();
       if($existe){
-        DB::rollback();
+        DB::rollBack();
         return inertia('banners/index',[
           'resultado' => 0,
           'mensaje'   => 'Ya existe un banner con esos datos',
@@ -100,7 +100,7 @@ class CarouselController extends Controller
         'timestamp' => now()->timestamp,
       ]);
     } catch (\Throwable $e) {
-      DB::rollback();
+      DB::rollBack();
       return inertia('banners/index',[
         'resultado' => 0,
         'mensaje'   => 'Ocurrió un proble al crear el banner: '.$e->getMessage(),
@@ -132,7 +132,7 @@ class CarouselController extends Controller
                 ->where('id', '!=', $carousel->id)
                 ->exists();
       if($existe){
-        DB::rollback();
+        DB::rollBack();
         return inertia('banners/index',[
           'resultado' => 0,
           'mensaje'   => 'Ya existe un banner con esos datos',
@@ -151,7 +151,7 @@ class CarouselController extends Controller
         'timestamp' => now()->timestamp,
       ]);
     } catch (\Throwable $e) {
-      DB::rollback();
+      DB::rollBack();
       return inertia('banners/index',[
         'resultado' => 0,
         'mensaje'   => 'Ocurrió un proble al actualizar el banner: '.$e->getMessage(),

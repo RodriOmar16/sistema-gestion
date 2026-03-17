@@ -106,7 +106,7 @@ class CategoriaController extends Controller
       ]);
 
     } catch (\Throwable $e) {
-      DB::rollback();
+      DB::rollBack();
       return inertia('categorias/index',[
         'resultado' => 0, 
         'mensaje' => 'Ocurrió un error al crear la categoria: '.$e->getMessage(),
@@ -150,7 +150,7 @@ class CategoriaController extends Controller
       ]);
       
     } catch (\Throwable $e) {
-      DB::rollback();
+      DB::rollBack();
       return inertia('categorias/index',[
         'resultado' => 0, 
         'mensaje' => 'Ocurrió un error al actualizar: '.$e->getMessage(),

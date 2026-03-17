@@ -250,6 +250,12 @@ export interface Caja {
   updated_at?:        string;
 }
 
+export interface CategoriaGasto {
+  categoria_gasto_id: string|number;
+  nombre:             string;
+  inhabilitado:       boolean|number;
+}
+
 //para componente selec multiple
 export type Multiple = { 
   id: number; 

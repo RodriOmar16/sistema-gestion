@@ -22,6 +22,7 @@ use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\VentaController;
 use App\Http\Controllers\TurnoController;
 use App\Http\Controllers\GastoController;
+use App\Http\Controllers\CategoriaGastoController;
 use App\Http\Controllers\GraficosController;
 use App\Http\Controllers\StockController;
 use App\Http\Controllers\CarouselController;
@@ -224,6 +225,10 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
     Route::post('/gasto/nuevo', [GastoController::class, 'store'])->name('gastos.store');
     Route::put('/gasto/update/{gasto}', [GastoController::class, 'update'])->name('gasto.update');
     Route::put('/gasto/eliminar/{gasto}', [GastoController::class, 'toggleEstado'])->name('gasto.toggleEstado');
+    
+    //Categorias de Gastos
+    Route::post('/categoria-gastos-nueva', [CategoriaGastoController::class, 'store'])->name('categoriaGasto.store');
+    Route::get('/categoria-gastos', [CategoriaGastoController::class, 'index'])->name('categoriaGasto.index');
 
     //Cajas
     Route::get('/cajas', [CajaController::class, 'index'])->name('cajas.index');

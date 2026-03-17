@@ -76,7 +76,7 @@ class MarcaController extends Controller
       $nombre = strtolower(trim($validated['nombre']));
       $existe = Marca::whereRaw('LOWER(TRIM(nombre)) = ?', [$nombre])->exists();
       if($existe){
-        DB::rollback();
+        DB::rollBack();
         return inertia('marcas/index',[
           'resultado' => 0,
           'mensaje'   => 'Ya existe una marca registrada con ese nombre.',
@@ -100,7 +100,7 @@ class MarcaController extends Controller
         'timestamp' => now()->timestamp,
       ]);
     } catch (\Throwable $e) {
-      DB::rollback();
+      DB::rollBack();
       return inertia('marcas/index',[
         'resultado' => 0,
         'mensaje'   => "Ocurrió un error al crear la marca: ".$e->getMessage(),
@@ -125,7 +125,7 @@ class MarcaController extends Controller
                 ->where('marca_id','!=',$marca->marca_id)
                 ->exists();
       if($existe){
-        DB::rollback();
+        DB::rollBack();
         return inertia('marcas/index',[
           'resultado' => 0,
           'mensaje'   => 'Ya existe una marca registrada con ese nombre.',
@@ -149,7 +149,7 @@ class MarcaController extends Controller
         'timestamp' => now()->timestamp,
       ]);
     } catch (\Throwable $e) {
-      DB::rollback();
+      DB::rollBack();
       return inertia('marcas/index',[
         'resultado' => 0,
         'mensaje'   => "Ocurrió un error al modificar la marca: ".$e->getMessage(),

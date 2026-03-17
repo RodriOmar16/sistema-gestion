@@ -27,9 +27,9 @@ function DataTableMasivo({ data, setData}: PropsTable) {
     const newData = [...data];
     newData.splice(index, 1);
     setData(newData);
-    if(data.length == 0){
+    /*if(data.length == 0){
       console.log("entro");
-    }
+    }*/
   };
 
   return (

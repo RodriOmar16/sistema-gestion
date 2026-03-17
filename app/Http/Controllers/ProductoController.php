@@ -357,7 +357,7 @@ class ProductoController extends Controller
                         ->whereRaw('LOWER(TRIM(nombre)) = ?', [$nombre])
                         ->exists();
       if($existe){
-        DB::rollback();
+        DB::rollBack();
         return response()->json([
           'resultado' => 0,
           'mensaje'   => 'El producto que intentas registrar ya existe',
@@ -401,7 +401,7 @@ class ProductoController extends Controller
         'timestamp'   => now()->timestamp,
       ]);
     } catch (\Throwable $e) {
-      DB::rollback();
+      DB::rollBack();
       /*return inertia('productos/createEdit',[
         'resultado' => 0,
         'mensaje'   => 'Ocurrió un error al intentar crear el producto: '.$e->getMessage(),
@@ -454,7 +454,7 @@ class ProductoController extends Controller
           'mensaje'   => 'Ya existe un producto con esas especificaciones',
           'timestamp' => now()->timestamp,
         ]);*/
-        DB::rollback();
+        DB::rollBack();
         return response()->json([
           'resultado' => 0,
           'mensaje'   => 'Ya existe un producto con esas especificaciones',
@@ -503,7 +503,7 @@ class ProductoController extends Controller
         'timestamp' => now()->timestamp,
       ]);
     } catch (\Throwable $e) {
-      DB::rollback();
+      DB::rollBack();
       /*return inertia('productos/createEdit',[
         'resultado' => 0,
         'mensaje'   => 'Ocurrió un problema al momento de actualizar el producto: '.$e->getMessage(),
@@ -700,7 +700,7 @@ class ProductoController extends Controller
         'errores'     => $erroresStr,
       ]);
     } catch (\Throwable $e) {
-      DB::rollback();
+      DB::rollBack();
       return response()->json([
         'resultado' => 0,
         'mensaje'   => 'Ocurrió un error al intentar grabar de forma masiva productos: '.$e->getMessage(),

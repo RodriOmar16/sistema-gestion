@@ -109,7 +109,7 @@ class ListaPrecioController extends Controller
                                     });
                             })->exists();
       if ($existe) {
-        DB::rollback();
+        DB::rollBack();
         return inertia('listasPrecios/index', [
           'resultado' => 0,
           'mensaje'   => 'Ya existe una lista habilitada con fechas que se solapan.'
@@ -131,7 +131,7 @@ class ListaPrecioController extends Controller
         'lista_precio_id' => $lista->lista_precio_id
       ]);
     } catch (\Throwable $e) {
-      DB::rollback();
+      DB::rollBack();
       return inertia('listasPrecios/index',[
         'resultado' => 0,
         'mensaje'   => 'Ocurrió un error al intentar crear la lista de precios: '.$e->getMessage()
@@ -168,7 +168,7 @@ class ListaPrecioController extends Controller
                                     });
                             })->exists();
       if ($existe) {
-        DB::rollback();
+        DB::rollBack();
         return inertia('listasPrecios/index', [
           'resultado' => 0,
           'mensaje'   => 'Ya existe una lista habilitada con fechas que se solapan.'
@@ -190,7 +190,7 @@ class ListaPrecioController extends Controller
         'lista_precio_id' => $lista->lista_precio_id
       ]);
     } catch (\Throwable $e) {
-      DB::rollback();
+      DB::rollBack();
       return inertia('listasPrecios/index',[
         'resultado' => 0,
         'mensaje'   => 'Ocurrió un error al intentar actualizar la lista de precios: '.$e->getMessage()

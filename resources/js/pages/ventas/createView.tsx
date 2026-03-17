@@ -25,6 +25,7 @@ import TableFormasPago from '@/components/ventas/tableFormasPago';
 import GenericSelect from '@/components/utils/genericSelect';
 import { NumericFormat } from 'react-number-format';
 import Loading from '@/components/utils/loadingDialog';
+import { Checkbox } from "@/components/ui/checkbox"
 
 const breadcrumbs: BreadcrumbItem[] = [ { title: '', href: '', } ];
 const ventaVacia = {
@@ -215,55 +216,65 @@ export function DetallesVenta({modo, data, set, productos, setProd, setTitle, se
 //-----------------------------------------------------------------------------
 
 interface PropsCli{
-  data: Cliente;
-  set: (e:any) => void;
-  modo: string;
+  data:      Cliente;
+  set:       (e:any) => void;
+  modo:      string;
   setActivo: (e:boolean) => void;
-  setTitle: (e:string) => void;
-  setText: (e:string) => void;
-  setColor: (e:string) => void;
+  setTitle:  (e:string) => void;
+  setText:   (e:string) => void;
+  setColor:  (e:string) => void;
+  cf:        boolean;
+  setCf:     (e:boolean) => void;
 }
 
-export function DatosCliente({modo, data, set, setActivo, setTitle, setText, setColor}:PropsCli){
+export function DatosCliente({modo, data, set, setActivo, setTitle, setText, setColor, cf, setCf}:PropsCli){
   const [dni, setDni]           = useState('');
   const [bloquear, setBloquear] = useState(false);
   const [found, setFound]       = useState(0);
   const [load, setLoad]         = useState(false);
 
-  const buscarCliente = async () => {
+  const buscarCliente = async (cfOverride?: boolean) => {
+    const cfValue = cfOverride ?? cf; // usa el override si lo hay
     setLoad(true);
-    if(!dni){
-      setFound(0)
+
+    if (!dni && !cfValue) {
+      setFound(0);
       setBloquear(false);
       set(clienteVacio);
       setLoad(false);
       return;
     }
-    
-    const res = await fetch(route('clientes.porDni',{dni: dni}));
+
+    let documento = dni;
+    if (cfValue) {
+      documento = "1";
+    }
+
+    const res = await fetch(route("clientes.porDni", { dni: documento }));
     const cli = await res.json();
     setLoad(false);
 
-    if(cli && cli.length > 0){
+    if (cli && cli.length > 0) {
       setBloquear(true);
       cli[0].fecha_nacimiento = convertirFechaGuionesBarras(cli[0].fecha_nacimiento);
-      set({...cli[0]});
-      setFound(1)
-      setTitle('');
-      setText('');
-      setColor('warning');
+      set({ ...cli[0] });
+      setFound(1);
+      setTitle("");
+      setText("");
+      setColor("warning");
       setActivo(false);
-    }else {
-      setFound(-1)
+    } else {
+      setFound(-1);
       setBloquear(false);
       set(clienteVacio);
-      setTitle('Cliente no encontrado');
-      setText('Ingresa los datos del cliente manualmente.');
-      setColor('warning');
+      setTitle("Cliente no encontrado");
+      setText("Ingresa los datos del cliente manualmente.");
+      setColor("warning");
       setActivo(true);
     }
-    setDni('');
+    setDni("");
   };
+
   return (
     <div className='px-4'>
       <div className='grid grid-cols-12 gap-4'>
@@ -277,13 +288,23 @@ export function DatosCliente({modo, data, set, setActivo, setTitle, setText, set
                   placeholder='Buscar por documento' 
                   data={String(dni)} 
                   setData={(nro) => setDni(nro) } 
-                  onChange={buscarCliente}/>
+                  onChange={() => buscarCliente()}/>
               </div>
               <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-2 flex items-center'>
-                <Button disabled={modo!='create'} type="button" onClick={buscarCliente}>
+                <Button disabled={modo!='create'} type="button" onClick={() => buscarCliente()}>
                   { load ? (<Loader2 size={20} className="animate-spin mr-2" />) :  (<Search size={20}/>) }
                   Buscar         
                 </Button>
+              </div>
+              <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-6  flex items-center justify-end'>
+                <Checkbox
+                  onCheckedChange={(checked) => {
+                    const nuevoCf = Boolean(checked);
+                    setCf(nuevoCf);
+                    buscarCliente(nuevoCf); // le paso el valor directamente
+                  }}
+                />
+                <span className='ml-2'>Consumidor Final</span>
               </div>
             </>
           ) : (<></>)}
@@ -486,21 +507,12 @@ export default function NewViewVenta(){
   const { auth } = usePage<{auth: AuthProps}>().props;
   const [permiso, setPermiso] = useState(false);
   breadcrumbs[0].title = (mode=='create'? 'Nueva' : 'Ver')+' venta';
-  /*const [propsActuales, setPropsActuales] = useState<{
-    resultado: number | undefined | null;
-    mensaje: string | undefined | null | '';
-    venta_id: number | undefined | null;
-  }>({ resultado: undefined, mensaje: undefined, venta_id: undefined });*/
-  const [ultimoTimestamp, setUltimoTimestamp] = useState<Number | null>(null);
 
   const [ load, setLoad ] = useState(false);
   const { data, setData }                          = useForm<Venta>(ventaVacia);
   const {data: dataCli, setData: setDataCli }      = useForm<Cliente>(cliente??clienteVacio);
-  //const {data: dataFp, setData: setDataFp }        = useForm<FormPago>(formaPagoVacia);
   const [totalFp, setTotalFp] = useState(0);
-  //const [productosHab, setProductosHab]            = useState<ProductoHab[]>([]);
   const [productosDet, setProductosDet]            = useState<Detalle[]>(detalles??[]);
-  //const [formasPagoHab, setFormasPagoHab]          = useState<Multiple[]>([]);
   const [formasPagoSelected,setFormasPagoSelected] = useState<FormPago[]>(formasPago??[]);
 
   const [confirmOpen, setConfirOpen]  = useState(false); //modal para confirmar acciones para cuado se crea
@@ -512,6 +524,8 @@ export default function NewViewVenta(){
   const [color, setColor]   = useState('success');
 
   const [respuesta, setResp]= useState<{resultado: number, venta_id: number}>({resultado: 0, venta_id: 0});
+  
+  const [consumidorFinal, setConsumidorFinal] = useState(false);
 
   //funciones
 
@@ -583,28 +597,13 @@ export default function NewViewVenta(){
       detalles:        productosDet,
       formasPagos:     formasPagoSelected
     } 
-    //console.log("payload: ", payload)
+
     setConfirOpen(false);
     setTextConfirm('');
     setLoad(true);
 
     let resp; let titulo='';
     if(mode === 'create'){
-      /*router.post(route('ventas.store'),payload,
-        {
-          preserveScroll: true,
-          preserveState: true,
-          onFinish: () => {
-            setLoad(false);
-          },
-          onError: (errors) => {
-            setTitle('Error');
-            setText(errors.general ?? 'Error inesperado');
-            setColor('error');
-            setActivo(true);
-          }
-        }
-      );*/
       const res  = await fetch(route('ventas.store'),{
         method: 'POST',
         headers: {
@@ -617,16 +616,6 @@ export default function NewViewVenta(){
       titulo='Venta registrada';
 
     }else {
-      //setLoad(false);
-      /*router.put(route('ventas.destroy',{venta: venta?.venta_id??0}),{motivo:'prueba'},
-        {
-          preserveScroll: true,
-          preserveState: true,
-          onFinish: () => {
-            setLoad(false);
-          }
-        }
-      );*/
       const res = await fetch(route('ventas.destroy', { venta: venta?.venta_id ?? 0 }), {
         method: 'PUT',
         headers: {
@@ -661,22 +650,6 @@ export default function NewViewVenta(){
   };
 
   //Effect
-  /*useEffect(() => {
-		//const cambioDetectado = (resultado && resultado  !== propsActuales.resultado) || (mensaje && mensaje    !== propsActuales.mensaje) 
-    const cambioDetectado = timestamp && timestamp !== ultimoTimestamp;
-
-		if (cambioDetectado) {
-      //setPropsActuales({ resultado, mensaje, venta_id});
-      setUltimoTimestamp(timestamp);
-
-      const esError = resultado === 0;
-      setTitle(esError ? 'Error' : mode === 'create' ? 'Venta nueva' : 'Venta Anulada');
-      setText(esError ? mensaje ?? 'Error inesperado' : `${mensaje} (ID: ${venta_id})`);
-      setColor(esError ? 'error' : 'success');
-      setActivo(true); 
-    }
-	}, [resultado, mensaje, venta_id, timestamp, ultimoTimestamp]);*/
-
   useEffect(() => {
     if(venta && mode === 'view'){
       setData({
@@ -734,7 +707,9 @@ export default function NewViewVenta(){
                   setActivo={setActivo}
                   setTitle={setTitle}
                   setText={setText}
-                  setColor={setColor}/>
+                  setColor={setColor}
+                  cf={consumidorFinal}
+                  setCf={setConsumidorFinal}/>
               </div>
               <div className='pb-4 col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12 bg-gray-100 dark:bg-neutral-900'>
                 <div className='py-4 px-4'>

@@ -45,7 +45,8 @@ type ConcepValor = {concepto: string, valor: number}
 
 export default function CreateViewCajas(){
   //data
-  const [ load, setLoad ] = useState(false);
+  const [ load, setLoad ]         = useState(false);
+  const [ loadBloq, setLoadBloq ] = useState(false);
   const { mode, caja, resultado, mensaje, caja_id, timestamp, ingresos, egresos } = usePage().props as { 
     mode?:      string | 'create' | 'edit';
     caja?:      Caja;
@@ -106,18 +107,8 @@ export default function CreateViewCajas(){
       const [year, month, day] = caja.fecha.split("-");
       const fechaFila = new Date(Number(year), Number(month) - 1, Number(day));
       setFechaCaja(new Date(Number(year), Number(month) - 1, Number(day)));
-      console.log("fechaFila: ", fechaFila)
-      console.log("fechaCaja: ", fechaCaja)
     }
   }, [mode, caja]);
-
-  /*useEffect(() => {
-    if (data.turno_id && data.turno_nombre) {
-      setOptionTurn({ value: Number(data.turno_id), label: data.turno_nombre });
-    } else {
-      setOptionTurn(null);
-    }
-  }, [data.turno_id, data.turno_nombre]);*/
 
   //funciones
   const selectTurnos = (option : any) => {
@@ -166,7 +157,6 @@ export default function CreateViewCajas(){
 
   const handleSubmit = (e:React.FormEvent) => {
     e.preventDefault();
-    console.log("data: ",data)
     if(errorEfectivo || errorDebito || errorTransferencia){
       console.log("no se valida")
       return;
@@ -196,18 +186,6 @@ export default function CreateViewCajas(){
     };
 
     if (mode === 'create') {
-      /*router.post(
-        route('productos.store'),payload,
-
-        {
-          //forceFormData: true,
-          preserveScroll: true,
-          preserveState: true,
-          onFinish: () => {
-            setLoad(false);
-          }
-        }
-      );*/
       console.log("entro por error")
     } else {
       router.put(
@@ -239,10 +217,8 @@ export default function CreateViewCajas(){
 
   const inhabilitarCaja = () => {
     //caja.destroy
-    console.log("llego")
     const payload = {...data};
-    setLoad(true);
-    console.log("payload: ", payload)
+    setLoadBloq(true);
     
     setConfirmarText('');
     setOpenConfirmar(false);
@@ -256,7 +232,7 @@ export default function CreateViewCajas(){
         setColor('error');
         setActivo(true);
       },
-      onFinish: () => setLoad(false),
+      onFinish: () => setLoadBloq(false),
     });
   };
 
@@ -469,7 +445,7 @@ export default function CreateViewCajas(){
                 <div className='flex justify-end px-4 col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>
                   {data.inhabilitado == 0 && (
                     <Button type="button" className='bg-red-500 hover:bg-red-800 text-white mr-2' onClick={eliminarCaja}>
-                    { load ? ( <Loader2 size={20} className="animate-spin"/> ) : 
+                    { loadBloq ? ( <Loader2 size={20} className="animate-spin"/> ) : 
                               (<Ban size={20} className=""/>)  }
                     Inhabilitar
                   </Button>

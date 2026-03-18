@@ -203,20 +203,22 @@ export interface Turno{
 }
 
 export interface Gasto{
-  gasto_id:         string|number;
-  fecha:            string;
-  fecha_desde:      string;
-  fecha_hasta:      string;
-  caja_id:          string|number;
-  proveedor_id:     number|string;
-  proveedor_nombre: string;
-  forma_pago_id:    number|string;
-  forma_pago_nombre:string;
-  monto:            string|number;
-  descripcion:      string;
-  inhabilitado:     number;
-  created_at?:      string;
-  updated_at?:      string;
+  gasto_id:               string|number;
+  fecha:                  string;
+  fecha_desde:            string;
+  fecha_hasta:            string;
+  caja_id:                string|number;
+  proveedor_id:           number|string;
+  proveedor_nombre:       string;
+  categoria_gasto_id?:     number|string;
+  categoria_gasto_nombre?: string;
+  forma_pago_id:          number|string;
+  forma_pago_nombre:      string;
+  monto:                  string|number;
+  descripcion:            string;
+  inhabilitado:           number;
+  created_at?:            string;
+  updated_at?:            string;
 }
 export interface Marca{
   marca_id:     string|number;
@@ -254,6 +256,9 @@ export interface CategoriaGasto {
   categoria_gasto_id: string|number;
   nombre:             string;
   inhabilitado:       boolean|number;
+  load?:              boolean;
+  editar?:            boolean;
+  nombreOriginal?:    string;
 }
 
 //para componente selec multiple

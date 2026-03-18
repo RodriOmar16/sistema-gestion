@@ -8,7 +8,7 @@ import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem } from '@/types';
 import { Autocomplete, Gasto } from '@/types/typeCrud';
 import { Select,  SelectContent,  SelectGroup,  SelectItem,  SelectLabel,  SelectTrigger,  SelectValue } from "@/components/ui/select"
-import { Search, Brush, Loader2, CirclePlus, Filter, Check } from 'lucide-react';
+import { Search, Brush, Loader2, CirclePlus, Filter, FolderKanban } from 'lucide-react';
 import ModalConfirmar from '@/components/modalConfirmar';
 import ShowMessage from '@/components/utils/showMessage';
 import GenericSelect from '@/components/utils/genericSelect';
@@ -110,14 +110,14 @@ export function FiltrosForm({ openCreate, setCatGastos }: propsForm){
             <CirclePlus size={30} className="text-green-600 scale-200" />
           </Button>
           <Button 
-            className="p-0 hover:bg-transparent cursor-pointer"
+            className="p-0 hover:bg-transparent cursor-pointer ml-1"
             type="button"
             title="Nueva Categoría" 
             variant="ghost" 
             size="icon" 
             onClick={() => {setCatGastos(true)}}
           >
-            <CirclePlus size={30} className="text-indigo-600 scale-200" />
+            <FolderKanban size={30} className="text-indigo-600 scale-200" />
           </Button>
         </div>
       </div>

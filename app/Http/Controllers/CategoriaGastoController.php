@@ -15,24 +15,21 @@ class CategoriaGastoController extends Controller
   public function index()
   {
     $query = CategoriaGasto::query();
-    $categorias = $query->get();
+    $categorias = $query->get()->map(function($c){
+      return [
+        'categoria_gasto_id' => $c->categoria_gasto_id,
+        'nombre'             => $c->nombre,
+        'inhabilitado'       => $c->inhabilitado,
+        'load'               => 0,
+        'editar'             => 0
+      ];
+    });
 
     return response()->json([
       'categorias' => $categorias
     ]);
   }
 
-  /**
-   * Show the form for creating a new resource.
-   */
-  public function create()
-  {
-      //
-  }
-
-  /**
-   * Store a newly created resource in storage.
-   */
   public function store(Request $request)
   {
     DB::beginTransaction();
@@ -78,35 +75,63 @@ class CategoriaGastoController extends Controller
     }
   }
 
-  /**
-   * Display the specified resource.
-   */
-  public function show(CategoriaGasto $categoriaGasto)
+  public function update(Request $request, CategoriaGasto $categoria)
   {
-      //
+    DB::beginTransaction();
+    try {
+      //controlo los datos
+      $validated = $request->validate([
+        'nombre'  => 'required|string|max:255',
+      ]);
+      
+      //modifico el gasto
+      $categoria->update([
+        'nombre'     => $request['nombre'],
+        'updated_at' => now(),
+      ]);
+
+      //éxito
+      DB::commit();
+      return response()->json([
+        'resultado' => 1,
+        'mensaje'   => 'La categoría de gastos se modificó correctamente',
+        'categoria_gasto_id'  => $categoria->categoria_gasto_id,
+        'timestamp' => now()->timestamp
+      ]);
+    } catch (\Throwable $e) {
+      DB::rollBack();
+      return response()->json([
+        'resultado' => 0,
+        'mensaje'   => 'Ocurrió un error al intentar actualizar la categoria de gasto: '.$e->getMessage(),
+        'timestamp' => now()->timestamp
+      ]);
+    }
   }
 
-  /**
-   * Show the form for editing the specified resource.
-   */
-  public function edit(CategoriaGasto $categoriaGasto)
-  {
-      //
-  }
+  public function toggleEstado(Request $request, CategoriaGasto $categoria){
+    DB::beginTransaction();
+    try {      
+      //modifico el gasto
+      $categoria->update([
+        'inhabilitado' => !$categoria->inhabilitado,
+        'updated_at'  => now(),
+      ]);
 
-  /**
-   * Update the specified resource in storage.
-   */
-  public function update(Request $request, CategoriaGasto $categoriaGasto)
-  {
-      //
-  }
-
-  /**
-   * Remove the specified resource from storage.
-   */
-  public function destroy(CategoriaGasto $categoriaGasto)
-  {
-      //
+      //éxito
+      DB::commit();
+      return response()->json([
+        'resultado'           => 1,
+        'mensaje'             => 'Se modificó el estado correctamente',
+        'categoria_gasto_id'  => $categoria->categoria_gasto_id,
+        'timestamp'           => now()->timestamp
+      ]);
+    } catch (\Throwable $e) {
+      DB::rollBack();
+      return response()->json([
+        'resultado' => 0,
+        'mensaje'   => 'Ocurrió un error al intentar actualizar estado de la categoria: '.$e->getMessage(),
+        'timestamp' => now()->timestamp
+      ]);
+    }
   }
 }

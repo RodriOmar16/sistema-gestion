@@ -180,6 +180,7 @@ class GastoController extends Controller
       ]);*/
     }
   }
+  
   public function toggleEstado(Request $request, Gasto $gasto){
      DB::beginTransaction();
     try {      

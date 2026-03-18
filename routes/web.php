@@ -229,6 +229,8 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
     //Categorias de Gastos
     Route::post('/categoria-gastos-nueva', [CategoriaGastoController::class, 'store'])->name('categoriaGasto.store');
     Route::get('/categoria-gastos', [CategoriaGastoController::class, 'index'])->name('categoriaGasto.index');
+    Route::put('/categoria-gastos/cambio-estado/{categoria}', [CategoriaGastoController::class, 'toggleEstado'])->name('categoriaGasto.toggleEstado');
+    Route::put('/categoria-gastos/update/{categoria}', [CategoriaGastoController::class, 'update'])->name('categoriaGasto.update');
 
     //Cajas
     Route::get('/cajas', [CajaController::class, 'index'])->name('cajas.index');

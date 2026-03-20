@@ -82,6 +82,18 @@ export function getColumns(confirmar: (data: Gasto) => void, openEdit: (data: Ga
       },
     },
     {
+      accessorKey: "categoria_gasto_nombre",
+      header: ({column}) => {
+        return (
+          <div className="flex">
+            Categoría
+          </div>
+        )
+      }
+      ,
+      cell: ({ row }) => ( <div className="">{row.getValue("categoria_gasto_nombre")}</div> ),
+    },
+    {
       accessorKey: "proveedor_nombre",
       header: ({column}) => {
         return (

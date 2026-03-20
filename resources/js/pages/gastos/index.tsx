@@ -28,18 +28,20 @@ type propsForm = {
 }
 
 const gastoVacio = {
-  gasto_id:         '',
-  fecha:            '',
-  fecha_desde:      '',
-  fecha_hasta:      '',
-  caja_id:          '',
-  proveedor_id:     '',
-  proveedor_nombre: '',
-  forma_pago_id:    '',
-  forma_pago_nombre:'',
-  monto:            '',
-  descripcion:      '',
-  inhabilitado:     0
+  gasto_id:               '',
+  fecha:                  '',
+  fecha_desde:            '',
+  fecha_hasta:            '',
+  caja_id:                '',
+  proveedor_id:           '',
+  proveedor_nombre:       '',
+  categoria_gasto_id:     '',
+  categoria_gasto_nombre: '',
+  forma_pago_id:          '',
+  forma_pago_nombre:      '',
+  monto:                  '',
+  descripcion:            '',
+  inhabilitado:           0
 };
 
 export function FiltrosForm({ openCreate, setCatGastos }: propsForm){
@@ -47,6 +49,7 @@ export function FiltrosForm({ openCreate, setCatGastos }: propsForm){
   const [load, setLoad]                       = useState(false);
   const [optionProv, setOptionProv]           = useState<Autocomplete|null>(null);
   const [optionFp, setOptionFp]               = useState<Autocomplete|null>(null);
+  const [optionCg, setOptionCg]               = useState<Autocomplete|null>(null);
  
   const tipoCajas = [ {id:0, nombre: 'Sin caja'}, {id: -1, nombre: 'Principal'} ];
 
@@ -71,6 +74,7 @@ export function FiltrosForm({ openCreate, setCatGastos }: propsForm){
     setData(gastoVacio);
     setOptionProv(null);
     setOptionFp(null);
+    setOptionCg(null);
   };
 
   const seleccionarProveedor = (option : any) => {
@@ -91,6 +95,15 @@ export function FiltrosForm({ openCreate, setCatGastos }: propsForm){
       //setFpId(0);
       setData({...data, forma_pago_id: '', forma_pago_nombre: ''});
       setOptionFp(null);
+    }
+  };
+  const seleccionarCategoria = (option : any) => {
+    if(option){
+      setData({...data, categoria_gasto_id: option.value, categoria_gasto_nombre: option.label});
+      setOptionCg(option);
+    }else{
+      setData({...data, categoria_gasto_id: '', categoria_gasto_nombre: ''});
+      setOptionCg(null);
     }
   };
 
@@ -122,12 +135,12 @@ export function FiltrosForm({ openCreate, setCatGastos }: propsForm){
         </div>
       </div>
       <form className='grid grid-cols-12 gap-4 px-4 pt-1 pb-4' onSubmit={handleSubmit}>
-        <div className='col-span-12 sm:col-span-3 md:col-span-3 lg:col-span-2'>
+        <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-1'>
           <label htmlFor="id">Id</label>
           <Input className='text-right' value={data.gasto_id} onChange={(e)=>setData('gasto_id',Number(e.target.value))}/>	
           { errors.gasto_id && <p className='text-red-500	'>{ errors.gasto_id }</p> }
         </div>
-        <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-4'>
+        <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
           Proveedores
           <GenericSelect
             route="proveedores"
@@ -136,12 +149,21 @@ export function FiltrosForm({ openCreate, setCatGastos }: propsForm){
             placeHolder='Seleccionar'
           />
         </div>
-        <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-4'>
+        <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
           <label htmlFor="forma_pago">Forma de pago</label>
           <GenericSelect
             route="formas-pago"
             value={optionFp}
             onChange={(option) => seleccionarFp(option)}
+            placeHolder='Seleccionar'
+          />
+        </div>
+        <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
+          Categoría
+          <GenericSelect
+            route="categoria-gastos"
+            value={optionCg}
+            onChange={(option) => seleccionarCategoria(option)}
             placeHolder='Seleccionar'
           />
         </div>
@@ -174,17 +196,19 @@ export function FiltrosForm({ openCreate, setCatGastos }: propsForm){
           <DatePicker fecha={(data.fecha_hasta)} setFecha={ (fecha:string) => {setData({...data,fecha_hasta: fecha})} }/>
         </div>        
         <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
-          <label htmlFor="monto">Monto</label>
-          <NumericFormat 
-            value={data.monto} 
-            thousandSeparator="." 
-            decimalSeparator="," 
-            prefix="$" 
-            className="text-right border rounded px-2 py-1" 
-            onValueChange={(values) => { setData({...data,monto: values.floatValue || 0}) }}
-          />	
+          <div className='flex flex-col'>
+            <label htmlFor="monto">Monto</label>
+            <NumericFormat 
+              value={data.monto} 
+              thousandSeparator="." 
+              decimalSeparator="," 
+              prefix="$" 
+              className="text-right border rounded px-2 py-1" 
+              onValueChange={(values) => { setData({...data,monto: values.floatValue || 0}) }}
+            />
+          </div>	
         </div>
-        <div className='col-span-6 sm:col-span-2 md:col-span-2 lg:col-span-5 flex justify-end items-center'>
+        <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-5 flex justify-end items-center'>
           <Button 
             className="p-0 hover:bg-transparent cursor-pointer"
             type="button"

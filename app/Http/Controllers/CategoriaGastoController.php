@@ -9,9 +9,26 @@ use Illuminate\Support\Facades\DB;
 
 class CategoriaGastoController extends Controller
 {
-  /**
-   * Display a listing of the resource.
-   */
+  public function habilitados(Request $request)
+  {
+    try {
+      $buscar = $request->get('buscar', '');
+
+      $categorias = CategoriaGasto::query()
+        ->where('inhabilitado',0)
+        ->when($buscar, fn($q) => $q->where('nombre', 'LIKE', "%{$buscar}%"))
+        ->select('categoria_gasto_id as id', 'nombre')
+        ->paginate(20);
+
+      return response()->json([
+          'elementos' => $categorias
+      ]);
+    } catch (\Throwable $e) {
+      //Log::error('Error en buscar productos: ' . $e->getMessage());
+      return response()->json(['error' => $e->getMessage()], 500);
+    }
+  }
+
   public function index()
   {
     $query = CategoriaGasto::query();

@@ -19,8 +19,8 @@ class GastoController extends Controller
         'gastos' => []
       ]);
     }
-    //dd($request->all());
-    $query = Gasto::query()->with(['proveedor', 'formaPago']);
+    
+    $query = Gasto::query()->with(['proveedor', 'formaPago', 'categoria']);
 
     if ($request->filled('gasto_id')) {
       $query->where('gasto_id', $request->gasto_id);
@@ -40,6 +40,9 @@ class GastoController extends Controller
     if ($request->filled('proveedor_id')) {
       $query->where('proveedor_id', $request->proveedor_id);
     }
+    if ($request->filled('categoria_gasto_id')) {
+      $query->where('categoria_gasto_id', $request->categoria_gasto_id);
+    }
     if ($request->filled('forma_pago_id')) {
       $query->where('forma_pago_id', $request->forma_pago_id);
     }
@@ -56,17 +59,19 @@ class GastoController extends Controller
 
     $gastos = $query->latest()->get()->map(function ($g) {
       return [
-        'gasto_id'         => $g->gasto_id,
-        'fecha'            => $g->fecha,
-        'caja_id'          => $g->caja_id,
-        'proveedor_id'     => $g->proveedor_id,
-        'proveedor_nombre' => optional($g->proveedor)->nombre,
-        'forma_pago_id'    => $g->forma_pago_id,
-        'forma_pago_nombre'=> optional($g->formaPago)->nombre,
-        'monto'            => $g->monto,
-        'descripcion'      => $g->descripcion,
-        'inhabilitado'     => $g->inhabilitado,
-        'created_at'       => $g->created_at,
+        'gasto_id'               => $g->gasto_id,
+        'fecha'                  => $g->fecha,
+        'caja_id'                => $g->caja_id,
+        'proveedor_id'           => $g->proveedor_id,
+        'proveedor_nombre'       => optional($g->proveedor)->nombre,
+        'categoria_gasto_id'     => $g->categoria_gasto_id,
+        'categoria_gasto_nombre' => optional($g->categoria)->nombre??'',
+        'forma_pago_id'          => $g->forma_pago_id,
+        'forma_pago_nombre'      => optional($g->formaPago)->nombre,
+        'monto'                  => $g->monto,
+        'descripcion'            => $g->descripcion,
+        'inhabilitado'           => $g->inhabilitado,
+        'created_at'             => $g->created_at,
       ];
     });
 
@@ -85,23 +90,25 @@ class GastoController extends Controller
       }
 
       $validated = $request->validate([
-        'fecha'            => 'required|date',
-        'caja_id'          => 'nullable|integer',
-        'proveedor_id'     => 'required|integer',
-        'forma_pago_id'    => 'required|integer',
-        'monto'            => 'required|numeric',
-        'descripcion'      => 'string|max:255',
+        'fecha'              => 'required|date',
+        'caja_id'            => 'nullable|integer',
+        'proveedor_id'       => 'required|integer',
+        'categoria_gasto_id' => 'required|integer',
+        'forma_pago_id'      => 'required|integer',
+        'monto'              => 'required|numeric',
+        'descripcion'        => 'string|max:255',
       ]);
       
       //creo el gasto
       $gasto = Gasto::create([
-        'fecha'            => $validated['fecha'],
-        'caja_id'          => $request->caja_id ?? null,
-        'proveedor_id'     => $validated['proveedor_id'],
-        'forma_pago_id'    => $validated['forma_pago_id'],
-        'monto'            => $validated['monto'],
-        'descripcion'      => $validated['descripcion'],
-        'created_at'       => now(),
+        'fecha'              => $validated['fecha'],
+        'caja_id'            => $request->caja_id ?? null,
+        'proveedor_id'       => $validated['proveedor_id'],
+        'categoria_gasto_id' => $validated['categoria_gasto_id'],
+        'forma_pago_id'      => $validated['forma_pago_id'],
+        'monto'              => $validated['monto'],
+        'descripcion'        => $validated['descripcion'],
+        'created_at'         => now(),
       ]);
 
       //éxito
@@ -112,19 +119,8 @@ class GastoController extends Controller
         'gasto_id'  => $gasto->gasto_id,
         'timestamp' => now()->timestamp
       ]);
-      /*return inertia('gastos/index',[
-        'resultado' => 1,
-        'mensaje'   => 'El gasto se creó correctamente',
-        'gasto_id'  => $gasto->gasto_id,
-        'timestamp' => now()->timestamp
-      ]);*/
     } catch (\Throwable $e) {
       DB::rollBack();
-      /*return inertia('gastos/index',[
-        'resultado' => 0,
-        'mensaje'   => 'Ocurrió un error al intentar crear el gasto: '.$e->getMessage(),
-        'timestamp' => now()->timestamp
-      ]);*/
       return response()->json([
         'resultado' => 0,
         'mensaje'   => 'Ocurrió un error al intentar crear el gasto: '.$e->getMessage(),
@@ -180,7 +176,7 @@ class GastoController extends Controller
       ]);*/
     }
   }
-  
+
   public function toggleEstado(Request $request, Gasto $gasto){
      DB::beginTransaction();
     try {      

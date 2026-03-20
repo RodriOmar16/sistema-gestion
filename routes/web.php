@@ -227,8 +227,9 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
     Route::put('/gasto/eliminar/{gasto}', [GastoController::class, 'toggleEstado'])->name('gasto.toggleEstado');
     
     //Categorias de Gastos
-    Route::post('/categoria-gastos-nueva', [CategoriaGastoController::class, 'store'])->name('categoriaGasto.store');
+    Route::get('/categoria-gastos/habilitados', [CategoriaGastoController::class, 'habilitados'])->name('categoriaGasto.habilitados');
     Route::get('/categoria-gastos', [CategoriaGastoController::class, 'index'])->name('categoriaGasto.index');
+    Route::post('/categoria-gastos-nueva', [CategoriaGastoController::class, 'store'])->name('categoriaGasto.store');
     Route::put('/categoria-gastos/cambio-estado/{categoria}', [CategoriaGastoController::class, 'toggleEstado'])->name('categoriaGasto.toggleEstado');
     Route::put('/categoria-gastos/update/{categoria}', [CategoriaGastoController::class, 'update'])->name('categoriaGasto.update');
 

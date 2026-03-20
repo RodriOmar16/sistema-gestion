@@ -28,18 +28,20 @@ interface Props{
 }
 
 const gastoVacio = {
-  gasto_id:         0,
-  fecha:            (new Date()).toLocaleDateString(),
-  fecha_desde:      '',
-  fecha_hasta:      '',
-  caja_id:          '',
-  proveedor_id:     '',
-  proveedor_nombre: '',
-  forma_pago_id:    '',
-  forma_pago_nombre:'',
-  monto:            '',
-  descripcion:      '',
-  inhabilitado:     0
+  gasto_id:               '',
+  fecha:                  (new Date()).toLocaleDateString(),
+  fecha_desde:            '',
+  fecha_hasta:            '',
+  caja_id:                '',
+  proveedor_id:           '',
+  proveedor_nombre:       '',
+  categoria_gasto_id:     '',
+  categoria_gasto_nombre: '',
+  forma_pago_id:          '',
+  forma_pago_nombre:      '',
+  monto:                  '',
+  descripcion:            '',
+  inhabilitado:           0
 };
 
 export default function NewEditGasto({ open, onOpenChange, mode, gasto, onSubmit }: Props){
@@ -50,6 +52,7 @@ export default function NewEditGasto({ open, onOpenChange, mode, gasto, onSubmit
   const { data, setData, get, post, processing, errors } = useForm<Gasto>(gastoVacio);
   const [optionProv, setOptionProv]           = useState<Autocomplete|null>(null);
   const [optionFp, setOptionFp]               = useState<Autocomplete|null>(null);
+  const [optionCg, setOptionCg]               = useState<Autocomplete|null>(null);
 
   const tipoCajas = [ {id:0, nombre: 'Sin caja'}, {id: -1, nombre: 'Principal'} ];
 
@@ -59,21 +62,24 @@ export default function NewEditGasto({ open, onOpenChange, mode, gasto, onSubmit
       setData(gastoVacio);
       setOptionProv(null);
       setOptionFp(null);
+      setOptionCg(null);
     }else{
       if(gasto && mode === 'edit'){
         setData({
-          gasto_id:         gasto.gasto_id,
-          fecha:            convertirFechaGuionesBarras(gasto.fecha??''),
-          fecha_desde:      '',
-          fecha_hasta:      '',
-          caja_id:          gasto.caja_id,
-          proveedor_id:     gasto.proveedor_id,
-          proveedor_nombre: gasto.proveedor_nombre,
-          forma_pago_id:    gasto.forma_pago_id,
-          forma_pago_nombre:gasto.forma_pago_nombre,
-          monto:            gasto.monto,
-          descripcion:      gasto.descripcion,
-          inhabilitado:     gasto.inhabilitado
+          gasto_id:               gasto.gasto_id,
+          fecha:                  convertirFechaGuionesBarras(gasto.fecha??''),
+          fecha_desde:            '',
+          fecha_hasta:            '',
+          caja_id:                gasto.caja_id,
+          proveedor_id:           gasto.proveedor_id,
+          proveedor_nombre:       gasto.proveedor_nombre,
+          categoria_gasto_id:     gasto.categoria_gasto_id,
+          categoria_gasto_nombre: gasto.categoria_gasto_nombre,
+          forma_pago_id:          gasto.forma_pago_id,
+          forma_pago_nombre:      gasto.forma_pago_nombre,
+          monto:                  gasto.monto,
+          descripcion:            gasto.descripcion,
+          inhabilitado:           gasto.inhabilitado
         });        
       }
     }
@@ -85,6 +91,12 @@ export default function NewEditGasto({ open, onOpenChange, mode, gasto, onSubmit
     if(!data.proveedor_id){
       setTitle('¡Campo faltante!');
       setText('Se requiere que selecciones un proveedor');
+      setActivo(true);
+      return 
+    }
+    if(!data.categoria_gasto_id){
+      setTitle('¡Campo faltante!');
+      setText('Se requiere que selecciones una categoría');
       setActivo(true);
       return 
     }
@@ -112,6 +124,12 @@ export default function NewEditGasto({ open, onOpenChange, mode, gasto, onSubmit
       setActivo(true);
       return 
     }
+    if(data.fecha === '' || !data.fecha){
+      setTitle('¡Campo faltante!');
+      setText('Se requiere que ingreses una fecha');
+      setActivo(true);
+      return 
+    }
     onSubmit(data);
   }
 
@@ -133,6 +151,15 @@ export default function NewEditGasto({ open, onOpenChange, mode, gasto, onSubmit
       //setFpId(0);
       setData({...data, forma_pago_id: '', forma_pago_nombre: ''});
       setOptionFp(null);
+    }
+  };
+  const seleccionarCategoria = (option : any) => {
+    if(option){
+      setData({...data, categoria_gasto_id: option.value, categoria_gasto_nombre: option.label});
+      setOptionCg(option);
+    }else{
+      setData({...data, categoria_gasto_id: '', categoria_gasto_nombre: ''});
+      setOptionCg(null);
     }
   };
 
@@ -170,7 +197,7 @@ export default function NewEditGasto({ open, onOpenChange, mode, gasto, onSubmit
               setFecha={ (fecha:string) => {setData({...data, fecha})} }
             />
           </div>
-          <div className="col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-6">
+          <div className="col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-12">
             <label htmlFor="proveedor">Proveedor</label>
             {
               mode === 'create' ? (
@@ -191,7 +218,28 @@ export default function NewEditGasto({ open, onOpenChange, mode, gasto, onSubmit
               )
             }
           </div>
-          <div className="col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-6">
+          <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-12'>
+            <label htmlFor="categoria">Categoría</label>
+            {
+              mode === 'create' ? (
+                <GenericSelect
+                  route="categoria-gastos"
+                  value={optionCg}
+                  onChange={(option) => seleccionarCategoria(option)}
+                  placeHolder='Seleccionar'
+                />
+              ) :(
+                <>
+                  <Input
+                    disabled
+                    value={data.categoria_gasto_nombre}
+                    placeholder="Categoria"
+                  />
+                </>
+              )
+            }
+          </div>
+          <div className="col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-12">
             <label htmlFor="fp">Forma de Pago</label>
             {
               mode === 'create' ? (
@@ -212,7 +260,7 @@ export default function NewEditGasto({ open, onOpenChange, mode, gasto, onSubmit
               )
             }
           </div>
-          <div className="col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-6">
+          <div className="col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-12">
             <label htmlFor="padre">Caja</label>
             <Select
               value={String(data.caja_id)}
@@ -232,18 +280,20 @@ export default function NewEditGasto({ open, onOpenChange, mode, gasto, onSubmit
               </SelectContent>
             </Select>
           </div>
-          <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-6'>
-            <label htmlFor="monto">Monto</label>
-            <NumericFormat 
-              value={data.monto} 
-              thousandSeparator="." 
-              decimalSeparator="," 
-              prefix="$" 
-              className="text-right border rounded px-2 py-1" 
-              onValueChange={(values) => { setData({...data,monto: values.floatValue || 0}) }}
-            />
+          <div className='col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>
+            <div className="flex flex-col">
+              <label htmlFor="monto">Monto</label>
+              <NumericFormat 
+                value={data.monto} 
+                thousandSeparator="." 
+                decimalSeparator="," 
+                prefix="$" 
+                className="text-right border rounded px-2 py-1" 
+                onValueChange={(values) => { setData({...data,monto: values.floatValue || 0}) }}
+              />
+            </div>
           </div>
-          <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-12'>
+          <div className='col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>
             <label htmlFor="descripcion">Descripción</label>
             <Textarea 
               id="descripcion" 

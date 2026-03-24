@@ -260,26 +260,30 @@ export default function NewEditGasto({ open, onOpenChange, mode, gasto, onSubmit
               )
             }
           </div>
-          <div className="col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-12">
-            <label htmlFor="padre">Caja</label>
-            <Select
-              value={String(data.caja_id)}
-              onValueChange={(value) => setData('caja_id', Number(value))}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  {tipoCajas.map((e: any) => (
-                    <SelectItem key={e.id} value={String(e.id)}>
-                      {e.nombre}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </div>
+          { mode === 'create' ? (
+            <div className="col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-12">
+              <label htmlFor="padre">Caja</label>
+              <Select
+                value={String(data.caja_id)}
+                onValueChange={(value) => setData('caja_id', Number(value))}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {tipoCajas.map((e: any) => (
+                      <SelectItem key={e.id} value={String(e.id)}>
+                        {e.nombre}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+          ) : (
+            <></>
+          )}
           <div className='col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>
             <div className="flex flex-col">
               <label htmlFor="monto">Monto</label>

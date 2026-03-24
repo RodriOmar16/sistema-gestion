@@ -303,7 +303,9 @@ class VentaController extends Controller
       //controlo si existe o no el cliente, si no lo registro
       $dni = strtolower(trim($validated['dni']));
       $fecha_nacimiento = $validated['fecha_nacimiento'];
+      $email_cliente    = $validated['email'];
       $cliente = Cliente::whereRaw('LOWER(TRIM(dni)) = ?', [$dni])
+                  ->where('email',  $email_cliente)
                   ->where('fecha_nacimiento', $fecha_nacimiento)
                   ->first();
       if(!$cliente){

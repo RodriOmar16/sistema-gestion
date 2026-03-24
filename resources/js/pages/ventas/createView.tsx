@@ -288,7 +288,10 @@ export function DatosCliente({modo, data, set, setActivo, setTitle, setText, set
                   placeholder='Buscar por documento' 
                   data={String(dni)} 
                   setData={(nro) => setDni(nro) } 
-                  onChange={() => buscarCliente()}/>
+                  onChange={() => {
+                    setCf(false);
+                    buscarCliente(false);
+                  }}/>
               </div>
               <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-2 flex items-center'>
                 <Button disabled={modo!='create'} type="button" onClick={() => buscarCliente()}>
@@ -298,6 +301,7 @@ export function DatosCliente({modo, data, set, setActivo, setTitle, setText, set
               </div>
               <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-6  flex items-center justify-end'>
                 <Checkbox
+                  checked={cf}
                   onCheckedChange={(checked) => {
                     const nuevoCf = Boolean(checked);
                     setCf(nuevoCf);

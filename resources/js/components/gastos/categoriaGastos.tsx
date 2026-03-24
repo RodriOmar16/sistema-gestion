@@ -233,8 +233,6 @@ export default function CategoriaGastos({ open, onOpenChange }: Props){
   };
 
   const confirmarEditar = (indice:number) => {
-    //array[indice].editar = true;
-    console.log("editando... ",array[indice] )
     setIndice(indice);
     if(!array[indiceCategoria].nombre){
       setTitle('Campo faltante');
@@ -251,7 +249,6 @@ export default function CategoriaGastos({ open, onOpenChange }: Props){
   const editar = async () => {
     setTextoConfirmar('');
     setEditarConfirmar(false);
-    console.log("editando...")
 
     const id = array[indiceCategoria].categoria_gasto_id;
     const payload = { ...array[indiceCategoria] }

@@ -156,12 +156,6 @@ class GastoController extends Controller
         'gasto_id'  => $gasto->gasto_id,
         'timestamp' => now()->timestamp
       ]);
-      /*return inertia('gastos/index',[
-        'resultado' => 1,
-        'mensaje'   => 'El gasto se modificó correctamente',
-        'gasto_id'  => $gasto->gasto_id,
-        'timestamp' => now()->timestamp
-      ]);*/
     } catch (\Throwable $e) {
       DB::rollBack();
       return response()->json([
@@ -169,16 +163,11 @@ class GastoController extends Controller
         'mensaje'   => 'Ocurrió un error al intentar actualizar el gasto: '.$e->getMessage(),
         'timestamp' => now()->timestamp
       ]);
-      /*return inertia('gastos/index',[
-        'resultado' => 0,
-        'mensaje'   => 'Ocurrió un error al intentar actualizar el gasto: '.$e->getMessage(),
-        'timestamp' => now()->timestamp
-      ]);*/
     }
   }
 
   public function toggleEstado(Request $request, Gasto $gasto){
-     DB::beginTransaction();
+    DB::beginTransaction();
     try {      
       //modifico el gasto
       $gasto->update([
@@ -194,24 +183,13 @@ class GastoController extends Controller
         'gasto_id'  => $gasto->gasto_id,
         'timestamp' => now()->timestamp
       ]);
-      /*return inertia('gastos/index',[
-        'resultado' => 1,
-        'mensaje'   => 'Se borró el gasto correctamente',
-        'gasto_id'  => $gasto->gasto_id,
-        'timestamp' => now()->timestamp
-      ]);*/
     } catch (\Throwable $e) {
       DB::rollBack();
       return response()->json([
         'resultado' => 0,
-        'mensaje'   => 'Ocurrió un error al intentar actualizar estaqdo del gasto: '.$e->getMessage(),
+        'mensaje'   => 'Ocurrió un error al intentar actualizar estado del gasto: '.$e->getMessage(),
         'timestamp' => now()->timestamp
       ]);
-      /*return inertia('gastos/index',[
-        'resultado' => 0,
-        'mensaje'   => 'Ocurrió un error al intentar actualizar estaqdo del gasto: '.$e->getMessage(),
-        'timestamp' => now()->timestamp
-      ]);*/
     }
   }
 }

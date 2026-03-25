@@ -36,6 +36,7 @@ export interface Menu{
   icono: string;
   inhabilitado: boolean | undefined;
   ruta_id?: number | string | null;
+  ruta_url?: string | null;
   created_at?: string;
   updated_at?: string;
 }
@@ -52,6 +53,15 @@ export interface Rol {
   rol_id: number | string;
   nombre: string;
   inhabilitado: boolean | 1 | 0 | 'true' | 'false';
+  created_at?: string;
+  updated_at?: string;
+} 
+
+export interface Permiso {
+  permiso_id:   number | string;
+  clave:        string;
+  descripcion:  string;
+  inhabilitado: boolean | number;
   created_at?: string;
   updated_at?: string;
 } 

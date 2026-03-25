@@ -5,7 +5,7 @@ import {
   LayoutGrid,  List,  Image,  ShoppingBasket,  Settings,  FolderKanban,  ShoppingCart,
   Contact,  CircleDollarSign,  Logs,  SquareChartGantt,  FolderTree,  Network,
   User, Route, SquareMenu, Calculator, CalendarClock, Banknote, Layers, ScrollText,
-  Activity, CircleUser, EarthLock, ChartArea, Tag
+  Activity, CircleUser, EarthLock, ChartArea, Tag, Joystick
 } from 'lucide-react';
 import { edit } from '@/routes/profile';
 
@@ -16,7 +16,7 @@ function construirMenuJerarquico(items: any[]): NavItem[] {
     LayoutGrid, List, Image, ShoppingBasket, Settings, FolderKanban, ShoppingCart,
     Contact, CircleDollarSign, Logs, SquareChartGantt, FolderTree, Network, User, Route,
     SquareMenu, Calculator,CalendarClock, Banknote, Layers, ScrollText, Activity, CircleUser,
-    EarthLock, ChartArea, Tag
+    EarthLock, ChartArea, Tag, Joystick
     //para opcion menu
   };
 

@@ -97,18 +97,23 @@ class MenuWebController extends Controller
         $query = MenuWeb::query();
       }
       
-      $menus = $query->with('padreMenu')->latest()->get()->map(function ($menu) {
+      //pido todas las rutas
+      $rutas = Ruta::all()->keyBy('ruta_id');
+
+      $menus = $query->with('padreMenu')->latest()->get()->map(function ($menu) use ($rutas) {
+        $ruta = $menu->ruta_id ? $rutas->get($menu->ruta_id) : null;
         return [
-          'menu_id' => $menu->menu_id,
-          'nombre' => $menu->nombre,
-          'padre_id' => $menu->padre,
-          'padre' => $menu->padreMenu ? $menu->padreMenu->nombre : null,
-          'orden' => $menu->orden,
-          'icono' => $menu->icono,
+          'menu_id'      => $menu->menu_id,
+          'nombre'       => $menu->nombre,
+          'padre_id'     => $menu->padre,
+          'padre'        => $menu->padreMenu ? $menu->padreMenu->nombre : null,
+          'orden'        => $menu->orden,
+          'icono'        => $menu->icono,
           'inhabilitado' => $menu->inhabilitado,
-          'created_at' => $menu->created_at,
-          'updated_at' => $menu->updated_at,
-          'ruta_id' => $menu->ruta_id,
+          'created_at'   => $menu->created_at,
+          'updated_at'   => $menu->updated_at,
+          'ruta_id'      => $ruta?->ruta_id,
+          'ruta_url'     => $ruta?->url,
         ];
       });
 
@@ -223,9 +228,9 @@ class MenuWebController extends Controller
 			try {
 				//valido
 				$validated = $request->validate([
-						'nombre' => 'required|string|max:255',
-						'padre' => 'nullable|integer',
-            'icono' => 'required|string|max:255',
+						'nombre'       => 'required|string|max:255',
+						'padre'        => 'nullable|integer',
+            'icono'        => 'required|string|max:255',
             'inhabilitado' => 'nullable|boolean',
             'ruta_id'      => 'nullable|integer',
 				]);
@@ -244,7 +249,9 @@ class MenuWebController extends Controller
           }
 
           //controlo que no se repita, no pueden 2 opciones apuntar al mismo menu
-          $esRutaRepetida = MenuWeb::where('ruta_id', $rutaBuscada)->exists();
+          $esRutaRepetida = MenuWeb::where('ruta_id', $rutaBuscada)
+                                      ->where('menu_id','<>', $menu->menu_id)
+                                      ->exists();
           if($esRutaRepetida){
             DB::rollBack();
             return inertia('menu/index', [

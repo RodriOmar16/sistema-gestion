@@ -91,8 +91,10 @@ class UserController extends Controller
       ]);
       //verifico que no se repita
       $nombreUser = strtolower(trim($validated['name']));
-      $existe = User::whereRaw('LOWER(TRIM(name)) = ?',[$nombreUser])
-                  ->exists();
+      $email      = $validated['email'];
+      $existe     = User::whereRaw('LOWER(TRIM(name)) = ?',[$nombreUser])
+                      ->where('email',$email)
+                      ->exists();
       if($existe){
         return inertia('users/index',[
           'resultado' => 0,
@@ -122,11 +124,7 @@ class UserController extends Controller
       DB::commit();
 
       //envio mail
-      /*Mail::to($user->email)->queue(new UsuarioCreadoMail(
-        $user->name,
-        $user->email,
-        '123user'
-      ));*/
+      /*Mail::to($user->email)->queue(new UsuarioCreadoMail($user->name,$user->email,'123user'));*/
       Mail::to($user->email)->queue(new UsuarioCreadoMail($user->name, $user->email, '123user'));
 
       //retorno
@@ -136,9 +134,6 @@ class UserController extends Controller
         'id'        => $id,
         'timestamp' => now()->timestamp
       ]);
-
-      //envio de mail al email recibido para avisar que se creo el user
-
     } catch (\Throwable $e) {
       DB::rollBack();
       return inertia('users/index',[

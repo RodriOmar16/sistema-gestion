@@ -42,6 +42,7 @@ export default function NewEditDialog({ open, onOpenChange, mode, menu, onSubmit
     icono:        '',
     inhabilitado: false,
     ruta_id:      '',
+    ruta_url:     '',
   };
   const [ activo, setActivo ]       = useState(false);
   const [ text, setText ]           = useState('');
@@ -89,6 +90,7 @@ export default function NewEditDialog({ open, onOpenChange, mode, menu, onSubmit
     }
 
     if (menu) {
+      console.log(menu)
       setData({
         menu_id:      menu.menu_id,
         nombre:       menu.nombre,
@@ -97,9 +99,14 @@ export default function NewEditDialog({ open, onOpenChange, mode, menu, onSubmit
         orden:        0,
         icono:        menu.icono,
         inhabilitado: menu.inhabilitado,
-        ruta_id:      menu.ruta_id
+        ruta_id:      menu.ruta_id,
+        ruta_url:     menu.ruta_url
       });
       setSinRuta(!menu.ruta_id);
+      setOptionRuta({
+        value: Number(menu.ruta_id)??0,
+        label: menu.ruta_url??''
+      });
     } else {
       setData(menuVacio);
       setSinRuta(false);

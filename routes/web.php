@@ -8,6 +8,7 @@ use App\Http\Controllers\MenuWebController;
 use App\Http\Controllers\RutaController;
 use App\Http\Controllers\RolController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\PermisoController;
 
 use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\ProveedorController;
@@ -97,6 +98,14 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
     Route::put('/menu/{menu}', [MenuWebController::class, 'update'])->name('menu.update');
     Route::put('/menu/{menu}/estado', [MenuWebController::class, 'toggleEstado'])->name('menu.toggleEstado');
 
+    //Permisos
+    //Route::get('/init_menu', [PermisoController::class, 'padresHabilitados'])->name('menu.padres');
+    //Route::get('/menu_habilitados', [PermisoController::class, 'menusHabilitados'])->name('menu.habilitados');
+    Route::get('/permisos',[PermisoController::class, 'index'])->name('permisos.index');
+    Route::post('/permiso-nuevo', [PermisoController::class, 'store'])->name('permisos.store');
+    Route::put('/permiso-update/{permiso}', [PermisoController::class, 'update'])->name('permisos.update');
+    Route::put('/permiso/{permiso}/estado', [PermisoController::class, 'destroy'])->name('permisos.toggleEstado');
+
     //Rutas
     Route::get('/rutas_habilitadas', [RutaController::class, 'rutasHabilitadas'])->name('rutas.habilitadas');
     Route::get('/rutas/habilitados', [RutaController::class, 'habilitadas'])->name('rutas.habilitadasRutas');
@@ -112,6 +121,7 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
     Route::post('/roles', [RolController::class, 'store'])->name('roles.store');
     Route::put('/roles/{rol}', [RolController::class, 'update'])->name('roles.update');
     Route::put('/roles/{rol}/estado', [RolController::class, 'toggleEstado'])->name('roles.toggleEstado');
+
 
     //Usuarios
     Route::get('/user/{user}/roles_user', [UserController::class, 'rolesUser'])->name('users.rolesUser');

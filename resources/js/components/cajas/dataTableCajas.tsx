@@ -111,7 +111,12 @@ export function getColumns(confirmar: (data: Caja) => void, open: (data: Caja) =
         )
       }
       ,
-      cell: ({ row }) => ( <div className="">{convertirNumberPlata(row.getValue("diferencia"))}</div> ),
+      cell: ({ row }) => {
+        const fila = row.original;
+        return (
+          <div className={fila.diferencia < 0 ? 'text-green-500' : (fila.diferencia > 0? 'text-red-500' : '')}>{convertirNumberPlata(String(fila.diferencia))}</div>
+        )
+      },
     },
     {
       accessorKey: "inhabilitado",

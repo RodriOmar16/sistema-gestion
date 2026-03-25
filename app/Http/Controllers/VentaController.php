@@ -328,6 +328,7 @@ class VentaController extends Controller
         'total'           => $validated['total'],
         'anulada'         => $validated['anulada'] ? 1 : 0,
         'created_at'      => now(),
+        'user_grabacion'  => auth()->user()->email,
       ]);
 
       //registrar detalles, el movimiento de stock para cada detalle, update en el stock también
@@ -510,7 +511,8 @@ class VentaController extends Controller
       // Marcar la venta como anulada
       $venta->update([
         'anulada'         => true,
-        'fecha_anulacion' => now()
+        'fecha_anulacion' => now(),
+        'user_anulacion' => auth()->user()->email,
       ]);
 
       // Registrar motivo de anulación

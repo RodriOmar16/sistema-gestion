@@ -15,7 +15,7 @@ class Venta extends Model
 {
     protected $primaryKey = 'venta_id';
     protected $table      = 'ventas';
-    protected $fillable   = ['fecha_grabacion', 'cliente_id', 'fecha_anulacion', 'anulada', 'total'];
+    protected $fillable   = ['fecha_grabacion', 'cliente_id', 'fecha_anulacion', 'anulada', 'total', 'user_grabacion', 'user_anulacion'];
     protected $casts = [
         'fecha_grabacion' => 'datetime',
         'fecha_anulacion' => 'datetime',

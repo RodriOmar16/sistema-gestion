@@ -100,7 +100,7 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
 
     //Permisos
     //Route::get('/init_menu', [PermisoController::class, 'padresHabilitados'])->name('menu.padres');
-    //Route::get('/menu_habilitados', [PermisoController::class, 'menusHabilitados'])->name('menu.habilitados');
+    Route::get('/permiso/{permiso}/roles_users', [PermisoController::class, 'rolesYusers'])->name('permisos.rolesYusers');
     Route::get('/permisos',[PermisoController::class, 'index'])->name('permisos.index');
     Route::post('/permiso-nuevo', [PermisoController::class, 'store'])->name('permisos.store');
     Route::put('/permiso-update/{permiso}', [PermisoController::class, 'update'])->name('permisos.update');
@@ -125,6 +125,7 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
 
     //Usuarios
     Route::get('/user/{user}/roles_user', [UserController::class, 'rolesUser'])->name('users.rolesUser');
+    Route::get('/users_habilitados', [UserController::class, 'usersHabilitados'])->name('users.habilitados');
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
     Route::post('/users', [UserController::class, 'store'])->name('users.store');
     Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');

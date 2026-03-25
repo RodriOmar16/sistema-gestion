@@ -91,8 +91,6 @@ export default function NewEditRol({ open, onOpenChange, mode, rol, onSubmit, lo
         fetch(`/rol/${rol.rol_id}/menus_rutas`)
           .then(res => res.json())
           .then(({ menus_asignados, rutas_asignadas }) => {
-          console.log("menus_asignados: ",menus_asignados, ".. rutas_asignadas ", rutas_asignadas);
-          console.log("Array.isArray(menus_asignados): ", Array.isArray(menus_asignados))
             setSelectedMenus(
               Array.isArray(menus_asignados) && menus_asignados.length > 0
                 ? ordenarPorTexto(menus_asignados, 'nombre')

@@ -6,9 +6,35 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 use App\Models\Permiso;
+use App\Models\RolPermiso;
+use App\Models\UserPermiso;
 
 class PermisoController extends Controller
 {
+  public function rolesYusers($permiso_id){
+    $permiso = Permiso::with(['roles', 'usuarios'])->findOrFail($permiso_id);
+    $roles = $permiso->roles
+      ->where('inhabilitado', false)
+      ->map(function($r){
+      return [
+        'id'     => $r->rol_id,
+        'nombre' => $r->nombre
+      ];
+    });
+    $users = $permiso->usuarios
+      ->where('inhabilitado', false)
+      ->map(function($u){
+      return [
+        'id'     => $u->id,
+        'nombre' => $u->email
+      ];
+    });
+    return response()->json([
+      'roles_asignados' => $roles->values()->all(),
+      'usuarios_asignados' => $users->values()->all(),
+    ]);
+  }
+
   public function index(Request $request)
   {
     if(!$request->has('buscar')){
@@ -52,9 +78,12 @@ class PermisoController extends Controller
   {
     DB::beginTransaction();
     try {
+      //dd($request->all());
       $validated = $request->validate([
         'clave'       => 'required|string|max:255|unique:permisos,clave',
         'descripcion' => 'string|max:255',
+        'roles'       => 'array',
+        'users'       => 'array',
       ]);
       
       //creo el permiso
@@ -65,12 +94,31 @@ class PermisoController extends Controller
         'created_at'  => now(),
       ]);
 
+      $permiso_id = $permiso->permiso_id;
+
+      // Extraer IDs de users y roles
+      $userIds = collect($request->input('users'))->pluck('id')->unique()->toArray();
+      $roleIds = collect($request->input('roles'))->pluck('id')->unique()->toArray();
+
+      foreach($roleIds as $r){
+        RolPermiso::firstOrCreate([
+          'permiso_id' => $permiso_id, 
+          'rol_id'     => $r, 
+        ]);
+      }
+      foreach($userIds as $u){
+        UserPermiso::firstOrCreate([
+          'permiso_id' => $permiso_id, 
+          'user_id'    => $u
+        ]);
+      }
+
       //éxito
       DB::commit();
       return response()->json([
         'resultado'  => 1,
         'mensaje'    => 'El permiso se creó correctamente',
-        'permiso_id' => $permiso->permiso_id,
+        'permiso_id' => $permiso_id,
         'timestamp'  => now()->timestamp
       ]);
     } catch (\Throwable $e) {
@@ -89,15 +137,25 @@ class PermisoController extends Controller
     try {
       $validated = $request->validate([
         'clave'       => 'required|string|max:255|unique:permisos,clave,' . $permiso->permiso_id . ',permiso_id',
-        'descripcion'  => 'string|max:255',
+        'descripcion' => 'string|max:255',
+        'roles'       => 'array',
+        'users'       => 'array',
       ]);
       
+      //los controles de unicidad se hacen en el $validated
+
       //creo el permiso
       $permiso->update([
         'clave'       => $validated['clave'],
         'descripcion' => $validated['descripcion'],
         'updated_at'  => now(),
       ]);
+
+      //procedo a actualizar los datos de tablas intermedias
+      $rolIds  = collect($request->roles)->pluck('id')->unique()->toArray();
+      $userIds = collect($request->users)->pluck('id')->unique()->toArray();
+      $permiso->roles()->sync($rolIds);
+      $permiso->usuarios()->sync($userIds);
 
       //éxito
       DB::commit();
@@ -123,7 +181,7 @@ class PermisoController extends Controller
     try {      
       //modifico el permiso
       $permiso->update([
-        'inhabilitado' => 1,
+        'inhabilitado' => !$permiso->inhabilitado,
         'updated_at'  => now(),
       ]);
 

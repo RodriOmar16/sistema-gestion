@@ -33,7 +33,6 @@ class RolController extends Controller
       'menus_asignados' => $menus->values()->all(),
       'rutas_asignadas' => $rutas->values()->all(),
     ]);
-
   }
   public function rolesHabilitados(){
     $roles = Rol::where('inhabilitado', false)->get()->map(function($rol){
@@ -90,10 +89,10 @@ class RolController extends Controller
     try {
       // Validación básica
       $validated = $request->validate([
-        'nombre' => 'required|string|max:255',
+        'nombre'       => 'required|string|max:255',
         'inhabilitado' => 'boolean',
-        'menus' => 'required|array|min:1',
-        'rutas' => 'required|array|min:1',
+        'menus'        => 'required|array|min:1',
+        'rutas'        => 'required|array|min:1',
       ]);
       //verifico que el rol no exista ya 
       $name = strtolower(trim($validated['nombre']));

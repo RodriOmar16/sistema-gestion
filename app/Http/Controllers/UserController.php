@@ -15,6 +15,16 @@ use App\Models\UsuarioRol;
 
 class UserController extends Controller
 {
+  public function usersHabilitados(){
+    $users = User::where('inhabilitado', false)->get()->map(function($u){
+      return [
+        'id'     => $u->id,
+        'nombre' => $u->email
+      ];
+    });
+    return response()->json($users);
+  }
+
   public function rolesUser($user_id){
     $user = User::with(['roles'])->findOrFail($user_id);
     $roles = $user->roles

@@ -11,13 +11,14 @@ import { useForm } from "@inertiajs/react"
 import React, { useState, useEffect } from "react"
 import { Loader2 } from 'lucide-react';
 import ShowMessage from "@/components/utils/showMessage";
-import { Autocomplete, Permiso } from "@/types/typeCrud";
-import { convertirFechaGuionesBarras } from "@/utils";
+import { Autocomplete, Multiple, Permiso } from "@/types/typeCrud";
+import { convertirFechaGuionesBarras, ordenarPorTexto } from "@/utils";
 import { DatePicker } from "../utils/date-picker";
 import GenericSelect from "../utils/genericSelect";
 import { NumericFormat } from "react-number-format";
 import ModalConfirmar from "../modalConfirmar";
 import { route } from "ziggy-js";
+import SelectMultiple from "../utils/select-multiple";
 
 interface Props{
   open: boolean;
@@ -41,18 +42,56 @@ export default function NewEditPermiso({ open, onOpenChange, mode, permiso, onSu
   const [title, setTitle]   = useState('');
   const { data, setData, get, post, processing, errors } = useForm<Permiso>(permisoVacio);
 
+  const [roles, setRoles] = useState<Multiple[]>([]);
+  const [selectedRoles, setSelectedRoles] = useState<Multiple[]>([]);
+  const [users, setUsers] = useState<Multiple[]>([]);
+  const [selectedUsers, setSelectedUsers] = useState<Multiple[]>([]);
+
   //useEffect
+  useEffect(() => {
+    const cargarDatos = async () => {
+      try {
+        const [ resRoles, resUsers ] = await Promise.all([
+          fetch(route('roles.habilitados')),
+          fetch(route('users.habilitados')),
+        ]);
+
+        const rols = await resRoles.json();
+        const user = await resUsers.json();
+        setRoles(ordenarPorTexto(rols, 'nombre'));
+        setUsers(ordenarPorTexto(user, 'nombre'));
+      } catch (error) {
+        console.error("Error al cargar los datos: ", error);
+      }
+    };
+    cargarDatos();
+  }, []);
+
   useEffect(() => {
     if (!open) {
       setData(permisoVacio);
+      setSelectedRoles([]);
+      setSelectedUsers([]);
     }else{
       if(permiso && mode === 'edit'){
+        //guardo la info
         setData({
           permiso_id:   permiso.permiso_id,
           clave:        permiso.clave,
           descripcion:  permiso.descripcion,
           inhabilitado: permiso.inhabilitado
-        });        
+        });
+
+        //pido los datos
+        fetch(`/permiso/${permiso.permiso_id}/roles_users`)
+          .then(res => res.json())
+          .then(({ roles_asignados, usuarios_asignados }) => {
+            //console.log("menus_asignados: ",menus_asignados, ".. rutas_asignadas ", rutas_asignadas);
+            //console.log("Array.isArray(menus_asignados): ", Array.isArray(menus_asignados))
+            setSelectedRoles(ordenarPorTexto(roles_asignados, 'nombre'));
+            setSelectedUsers(ordenarPorTexto(usuarios_asignados, 'nombre'));
+
+          });
       }
     }
   }, [open, mode, permiso]);
@@ -73,7 +112,18 @@ export default function NewEditPermiso({ open, onOpenChange, mode, permiso, onSu
       setActivo(true);
       return 
     }
-    onSubmit(data);
+
+    if(selectedRoles.length === 0 && selectedUsers.length === 0){
+      setTitle('Asignación interrumpida');
+      setText('Se requiere que asignes este permiso a al menos un usuario o un rol.');
+      setActivo(true);
+      return 
+    }
+    onSubmit({
+      ...data,
+      roles: selectedRoles,
+      users: selectedUsers,
+    });
   }
 
   return (
@@ -115,6 +165,14 @@ export default function NewEditPermiso({ open, onOpenChange, mode, permiso, onSu
               value={data.descripcion}
               onChange={(e) => setData({...data, descripcion: e.target.value})}
             />
+          </div>
+          <div className="col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12">
+            <label htmlFor="roles">Roles</label>
+            <SelectMultiple opciones={roles} seleccionados={selectedRoles} setSeleccionados={setSelectedRoles}/>
+          </div>
+          <div className="col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12">
+            <label htmlFor="usuarios">Usuarios</label>
+            <SelectMultiple opciones={users} seleccionados={selectedUsers} setSeleccionados={setSelectedUsers}/>
           </div>
         </form>
         <DialogFooter>

@@ -199,7 +199,7 @@ export default function Permisos(){
     setModalOpen(true);
   };
 
-  const handleSave = (data: Permiso) => {
+  const handleSave = (data: any) => {
     setPendingData(data);
     let texto = (modalMode === 'create')? 'grabar' : 'guardar cambios a';
     setTextConfirm('¿Estás seguro de '+texto+' este permiso?');
@@ -211,8 +211,8 @@ export default function Permisos(){
     setConfirOpen(false);
     setLoading(true);
 
-    const payload = { ...pendingData };
-    console.log("payload: ", payload)
+    const payload = {...pendingData}
+    
     try {
       let resp : {resultado: number, permiso_id: number, mensaje?:string} ;
       let titulo;
@@ -221,7 +221,7 @@ export default function Permisos(){
         resp = await apiRequest(route('permisos.store'), 'POST', payload);
         titulo = 'Permiso nuevo';
       } else {
-        resp = await apiRequest(route('permisos.update', { permiso: pendingData.permiso_id }), 'PUT', payload);
+        resp = await apiRequest(route('permisos.update', { permiso: pendingData?.permiso_id }), 'PUT', payload);
         titulo = 'Permiso modificado';
       }
 

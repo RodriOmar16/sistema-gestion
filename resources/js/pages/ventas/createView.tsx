@@ -530,6 +530,8 @@ export default function NewViewVenta(){
   
   const [consumidorFinal, setConsumidorFinal] = useState(false);
 
+  const [motivo, setMotivo] = useState('');
+
   //funciones
 
   const handleSubmit = (e:React.FormEvent) => {
@@ -625,7 +627,7 @@ export default function NewViewVenta(){
           'Content-Type': 'application/json',
           'X-CSRF-TOKEN': getCsrfToken()//document.querySelector('meta[name="csrf-token"]')?.content ?? '',
         },
-        body: JSON.stringify({ motivo: 'prueba' }),
+        body: JSON.stringify({ motivo: motivo }),
       });
       resp = await res.json();
       titulo='Venta anulada';
@@ -746,6 +748,16 @@ export default function NewViewVenta(){
                   setTotalFp={(x) => setTotalFp(x)}
                 />
               </div>
+              { permiso && mode !== 'create' && data.anulada == 0 && 
+                <div className='pt-2 px-4 pb-1 col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>
+                  <Textarea 
+                    id="motivo" 
+                    placeholder="Escribe un motivo de anulación..." 
+                    value={motivo}
+                    onChange={(e) => setMotivo(e.target.value)}
+                  />
+                </div>
+              }
             </div>
             {
               !data.anulada ? (

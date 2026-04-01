@@ -762,13 +762,6 @@ export default function NewViewVenta(){
             {
               !data.anulada ? (
                 <div  className='flex justify-end px-4 pb-4 col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>
-                  {/*permiso && (
-                    <Button type="button" onClick={handleSubmit} className={mode!='create'? 'bg-red-600 hover:bg-red-700 text-white' : ''}>
-                      { load ? ( <Loader2 size={20} className="animate-spin"/> ) : 
-                              ( mode === 'create'? (<Save size={20} className=""/>) : (<Ban size={20} className=""/>) )}
-                      { ( mode === 'create' ? 'Grabar' : 'Anular')  }          
-                    </Button>
-                  )*/}
                   {
                     mode === 'create' ? (
                       <Button type="button" onClick={handleSubmit}>

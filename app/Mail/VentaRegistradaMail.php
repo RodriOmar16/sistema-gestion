@@ -24,7 +24,7 @@ class VentaRegistradaMail extends Mailable implements ShouldQueue
     }
 
     public function build(){
-        return $this->subject('Se registró una nueva venta')
+        return $this->subject('Compra nueva realizada')
                     ->view('emails.venta_registrada');
     }
 

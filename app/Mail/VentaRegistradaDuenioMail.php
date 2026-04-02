@@ -24,7 +24,7 @@ class VentaRegistradaDuenioMail extends Mailable implements ShouldQueue
     }
 
     public function build(){
-        return $this->subject('Se registró una nueva venta')
+        return $this->subject('Nueva venta registrada')
                     ->view('emails.venta_registrada_duenio');
     }
 }

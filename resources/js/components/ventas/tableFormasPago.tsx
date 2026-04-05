@@ -3,26 +3,43 @@ import {
   ColumnDef,  ColumnFiltersState,  flexRender,  getCoreRowModel,  getFilteredRowModel,
   getPaginationRowModel,  getSortedRowModel,  SortingState,  useReactTable,  VisibilityState,
 } from "@tanstack/react-table"
-import { ArrowUpDown, Plus, Minus, X } from "lucide-react"
+import { ArrowUpDown, Plus, Minus, X, Pen } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {  Table,  TableBody,  TableCell,  TableHead,  TableHeader,  TableRow } from "@/components/ui/table"
-import { Venta } from "@/types/typeCrud"
+import { Autocomplete, Venta } from "@/types/typeCrud"
 import { convertirFechaGuionesBarras, convertirNumberPlata } from "@/utils"
 import { Badge } from "../ui/badge"
+import GenericSelect from "../utils/genericSelect"
 
-type FormPago = {id: number, nombre: string, monto: number, fecha: string};
+type FormPago = {
+  id: number,
+  forma_pago_id: number, 
+  forma_pago_nombre: string, 
+  monto: number, 
+  fecha: string,
+  titular: string,
+  banco_billetera_id: number,
+  banco_billetera_nombre: string,
+  estado_id: number,
+  estado_nombre: string,
+  cbu_nro_comprobante: string,
+};
 
 interface Props {
   modo:   string;
   datos:  FormPago[];
-  quitar: (id:number) => void;
+  quitar: (p:any) => void;
+  editarFp: (p:any) => void;
+  anulada: 0|1|boolean|"true"|"false"
 }
 
 //export const columns: ColumnDef<Project>[] = [
 export function getColumns(  
-  quitar: (id:number) => void,
-  modo: string
+  quitar: (p:any) => void,
+  editarFp: (p:any) => void,
+  modo: string,
+  anulada: 0|1|boolean|"true"|"false"
 ): ColumnDef<FormPago>[] {
 
   return [
@@ -41,17 +58,76 @@ export function getColumns(
       ),
     },*/
     {
-      accessorKey: "nombre",
+      accessorKey: "forma_pago_nombre",
       header: ({column}) => {
         return (
           <div className="flex">
-            Nombre
+            Pago
             <ArrowUpDown className="ml-1" size={17} onClick={() => column.toggleSorting(column.getIsSorted() === "asc")} />
           </div>
         )
       }
       ,
-      cell: ({ row }) => ( <div className="">{row.getValue("nombre")}</div> ),
+      cell: ({ row }) => ( <div className="">{row.getValue("forma_pago_nombre")}</div> ),
+    },
+    {
+      accessorKey: "banco_billetera_nombre",
+      header: ({column}) => {
+        return (
+          <div className="flex">
+            Entidad
+            {<ArrowUpDown className="ml-1" size={17} onClick={() => column.toggleSorting(column.getIsSorted() === "asc")} />}
+          </div>
+        )
+      },
+      cell: ({ row }) => {
+        const fila = row.original;
+        return (
+          <div>{ fila.banco_billetera_nombre }</div>
+        );
+      },
+    },
+    {
+      accessorKey: "titular",
+      header: ({column}) => {
+        return (
+          <div className="flex">
+            Titular
+            {<ArrowUpDown className="ml-1" size={17} onClick={() => column.toggleSorting(column.getIsSorted() === "asc")} />}
+          </div>
+        )
+      },
+      cell: ({ row }) => (
+        <div className="text-right">{row.getValue("titular")}</div>
+      ),
+    },
+    {
+      accessorKey: "cbu_nro_comprobante",
+      header: ({column}) => {
+        return (
+          <div className="flex">
+            CBU/Nro. comp.
+            {<ArrowUpDown className="ml-1" size={17} onClick={() => column.toggleSorting(column.getIsSorted() === "asc")} />}
+          </div>
+        )
+      },
+      cell: ({ row }) => (
+        <div className="text-right">{row.getValue("cbu_nro_comprobante")}</div>
+      ),
+    },
+    {
+      accessorKey: "estado_nombre",
+      header: ({column}) => {
+        return (
+          <div className="flex">
+            Estado
+            {<ArrowUpDown className="ml-1" size={17} onClick={() => column.toggleSorting(column.getIsSorted() === "asc")} />}
+          </div>
+        )
+      },
+      cell: ({ row }) => (
+        <div className="">{row.getValue("estado_nombre")}</div>
+      ),
     },
     {
       accessorKey: "monto",
@@ -63,7 +139,7 @@ export function getColumns(
         )
       }
       ,
-      cell: ({ row }) => ( <div className="">{ convertirNumberPlata( row.getValue("monto"))}</div> ),
+      cell: ({ row }) => ( <div className="text-right">{ convertirNumberPlata( row.getValue("monto"))}</div> ),
     },
     {
       accessorKey: "Acciones",
@@ -81,14 +157,26 @@ export function getColumns(
         return (
           <div className='flex'>
             <Button 
+              type="button"
               disabled={modo!='create'}
               className="p-0 hover:bg-transparent cursor-pointer"
               title="Quitar" 
               variant="ghost" 
               size="icon" 
-              onClick={() => quitar(fila.id)}>
+              onClick={() => quitar(fila)}>
               <X size={20} className="text-red-500" />
             </Button>
+            {fila.forma_pago_id != 1 && !anulada && (
+              <Button 
+                type="button"
+                className="p-0 hover:bg-transparent cursor-pointer"
+                title="Editar" 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => {editarFp(fila)}}>
+                <Pen size={20} className="text-orange-500" />
+              </Button>
+            )}
           </div>
         );
       },
@@ -96,7 +184,7 @@ export function getColumns(
   ]
 //]
 }
-export default function TableFormasPago({modo, datos, quitar}:Props) {
+export default function TableFormasPago({modo, datos, quitar, editarFp, anulada}:Props) {
   const [sorting, setSorting]                   = useState<SortingState>([])
   const [columnFilters, setColumnFilters]       = useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
@@ -109,12 +197,13 @@ export default function TableFormasPago({modo, datos, quitar}:Props) {
     return busqueda
       ? datos.filter((campo) =>
           campo.id?.toString().toLowerCase().includes(texto) ||
-          campo.nombre?.toLowerCase().includes(texto)
+          campo.forma_pago_nombre?.toLowerCase().includes(texto)
         )
       : datos;
   }, [busqueda, datos]);
 
-  const columns = getColumns(quitar, modo); 
+  const columns = getColumns(quitar, editarFp, modo, anulada); 
+  //console.log("data: ", data)
 
   const table = useReactTable({
     data,
@@ -178,7 +267,7 @@ export default function TableFormasPago({modo, datos, quitar}:Props) {
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
-                  className="h-24 text-center"
+                  className="h-16 text-center"
                 >
                   No se agregó ninguna forma de pago.
                 </TableCell>

@@ -29,6 +29,8 @@ use App\Http\Controllers\StockController;
 use App\Http\Controllers\CarouselController;
 use App\Http\Controllers\MarcaController;
 use App\Http\Controllers\CajaController;
+use App\Http\Controllers\BancoBilleteraController;
+use App\Http\Controllers\EstadoOperacionController;
 
 use App\Http\Controllers\ProjectController;
 
@@ -219,6 +221,7 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
     Route::get('venta/ver/{venta}', [VentaController::class, 'view'])->name('ventas.view');
     Route::put('/ventas/update/{venta}', [VentaController::class, 'update'])->name('ventas.update');
     Route::put('/ventas/anular/{venta}', [VentaController::class, 'destroy'])->name('ventas.destroy');
+    Route::put('/ventas/cambio-forma-pago/{venta}', [VentaController::class, 'editarFp'])->name('ventas.editarFp');
     Route::get('/ventas/obtener-anios', [VentaController::class, 'getAnios'])->name('ventas.getAnios');
     Route::get('/ventas/obtener-datos', [VentaController::class, 'getDatos'])->name('ventas.getDatos');
     
@@ -272,6 +275,12 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
 
     //Gráficos
     Route::get('/dashboard', [GraficosController::class, 'index'])->name('graficos.index');
+
+    //Bancos-Billeteras
+    Route::get('/bancos-billeteras/habilitados', [BancoBilleteraController::class, 'habilitados'])->name('bancosBilleteras.habilitados');
+
+    //Estados-Operaciones
+    Route::get('/estados-operaciones/habilitados', [EstadoOperacionController::class, 'habilitados'])->name('estadosOperaciones.habilitados');
 
     //---
 

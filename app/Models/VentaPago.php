@@ -30,11 +30,11 @@ class VentaPago extends Model
 
     public function bancoBilletera()
     {
-        return $this->belongsTo(BancosBilleteras::class, 'banco_billetera_id');
+        return $this->belongsTo(BancoBilletera::class, 'banco_billetera_id');
     }
 
     public function estadoOperacion()
     {
-        return $this->belongsTo(EstadosOperaciones::class, 'estado_id');
+        return $this->belongsTo(EstadoOperacion::class, 'estado_id');
     }
 }

@@ -26,6 +26,7 @@ import GenericSelect from '@/components/utils/genericSelect';
 import { NumericFormat } from 'react-number-format';
 import Loading from '@/components/utils/loadingDialog';
 import { Checkbox } from "@/components/ui/checkbox"
+import EditarFormaPagoRow from '@/components/ventas/editarRowFormaPago';
 
 const breadcrumbs: BreadcrumbItem[] = [ { title: '', href: '', } ];
 const ventaVacia = {
@@ -55,7 +56,19 @@ const formaPagoVacia = {
   fecha: (new Date()).toLocaleDateString()
 }
 type Detalle  = {id: number, nombre:string, precio:number , cantidad: number };
-type FormPago = {id: number, nombre: string, monto: number, fecha: string};
+type FormPago = {
+  id: number,
+  forma_pago_id: number, 
+  forma_pago_nombre: string, 
+  monto: number, 
+  fecha: string,
+  titular: string,
+  banco_billetera_id: number,
+  banco_billetera_nombre: string,
+  estado_id: number,
+  estado_nombre: string,
+  cbu_nro_comprobante: string,
+};
 
 //-----------------------------------------------------------------------------------
 interface PropsDet{
@@ -356,58 +369,127 @@ export function DatosCliente({modo, data, set, setActivo, setTitle, setText, set
 }
 //-------------------------------------------------------------------------------
 interface PropsFp{
+  ventaId: number|0;
   modo:                  string;
   //formasPagoHab:         Multiple[];
   formasPagoSelected:    FormPago[];
   //setFormaPagoSelected:  (array:any[]) => void;
-  setFormaPagoSelected: React.Dispatch<React.SetStateAction<FormPago[]>>;
+  setFormaPagoSelected:  React.Dispatch<React.SetStateAction<FormPago[]>>;
   totalVenta:            number;
   totalFp:               number;
   setTotalFp:            (e:number) => void;   
+  anulada:               0|1|boolean|"true"|"false"
 }
-export function FormasPagosForm({modo, /*formasPagoHab,*/ formasPagoSelected, setFormaPagoSelected, totalVenta, totalFp, setTotalFp}:PropsFp){
-  const fpVacio = { id: 0, nombre: '' }
-  //const [fpId, setFpId]         = useState(0);
+export function FormasPagosForm({ventaId, modo, /*formasPagoHab,*/ formasPagoSelected, setFormaPagoSelected, totalVenta, totalFp, setTotalFp, anulada}:PropsFp){
   const [monto, setMonto]       = useState(0);
+
+  const fpVacio                 = { id: 0, nombre: '' }
   const [fp ,setFp]             = useState<{id: number, nombre: string}>(fpVacio);
   const [optionFp, setOptionFp] = useState<Autocomplete|null>(null);
 
+  const bancBillVacio                         = { id: 0 , nombre: '' };
+  const [bancBille, setBancBille]             = useState<{id: number, nombre: string}>(bancBillVacio);
+  const [optionBancBille, setOptionBancBille] = useState<Autocomplete|null>(null);
+
+  const estOpVacio                    = { id: 0 , descripcion: '' };
+  const [estadoOp, setEstadoOp]       = useState<{id: number, descripcion: string}>(estOpVacio);
+  const [optionEstOp, setOptionEstOp] = useState<Autocomplete|null>(null);
+
+  const [titular, setTitular] = useState('');
+  const [cbu, setCbu] = useState('');
+
+  const [openEditarFp, setOpenEditarFp] = useState(false);
+  const [fpEditada, setFpEditada]       = useState<FormPago>({
+    id: 0,
+    forma_pago_id: 0, 
+    forma_pago_nombre: '', 
+    monto: 0, 
+    fecha:  (new Date()).toLocaleDateString(),
+    titular: '',
+    banco_billetera_id: 0,
+    banco_billetera_nombre: '',
+    estado_id:0,
+    estado_nombre:'',
+    cbu_nro_comprobante: '',
+  });
+
+  const [idTabla, setIdTabla] = useState(-1);
+
   const agregarFp = () => {
     //controlo que el formulario se haya completado
-    if(!fp.id || !monto){
+    if(totalVenta==0 || !fp.id || !monto){
       return
     }
     
     const estaEnArray = formasPagoSelected.find(e => e.id === fp.id);
     if(estaEnArray){
-      setFormaPagoSelected((prev:any) => 
-        prev.map((d:any) => 
-          d.id === fp.id ? { ...d, monto: Number(d.monto) + Number(monto) } : d
-        )
-      );
-    }else{
-      setFormaPagoSelected([
-        ...formasPagoSelected,
-        {
-          id: fp.id, 
-          nombre: fp.nombre, 
-          monto: monto, 
-          fecha: (new Date()).toLocaleDateString(),
-        }
-      ]); 
+      if(fp.id === 1){ //si es efectivo acumulo
+        setFormaPagoSelected((prev:any) => 
+          prev.map((d:any) => 
+            d.id === fp.id ? { ...d, monto: Number(d.monto) + Number(monto) } : d
+          )
+        );
+        //reseteo y me corto
+        setFp(fpVacio);
+        setOptionFp(null);
+        
+        setBancBille(bancBillVacio);
+        setOptionBancBille(null);
+        
+        setEstadoOp(estOpVacio);
+        setOptionEstOp(null);
+
+        setMonto(0);
+        setTitular('');
+        setCbu('');
+        return;
+      }
     }
+
+    setFormaPagoSelected([
+      ...formasPagoSelected,
+      {
+        id:                     idTabla, 
+        forma_pago_id:          fp.id,
+        forma_pago_nombre:      fp.nombre, 
+        monto:                  monto, 
+        fecha:                  (new Date()).toLocaleDateString(),
+        titular:                titular,
+        banco_billetera_id:     bancBille.id,
+        banco_billetera_nombre: bancBille.nombre,
+        estado_id:              estadoOp.id,
+        estado_nombre:          estadoOp.descripcion,
+        cbu_nro_comprobante:    cbu,
+      }
+    ]); 
+    setIdTabla(prev => prev-1);
     
-    //setFpId(0);
+    //reseteo
     setFp(fpVacio);
     setOptionFp(null);
+    
+    setBancBille(bancBillVacio);
+    setOptionBancBille(null);
+    
+    setEstadoOp(estOpVacio);
+    setOptionEstOp(null);
+
     setMonto(0);
+    setTitular('');
+    setCbu('');
   };
 
-  const quitarFp = (id:number) => {
+  const quitarFp = (fp: any) => {
     //quitar aqui y en los detalles del producto
-    const aux:FormPago[] = formasPagoSelected.filter(e => e.id !== id);
+    const aux:FormPago[] = formasPagoSelected.filter(e => e != fp);
     setFormaPagoSelected(aux);
   }
+
+  const editarFp = (p_fp:any) => {
+    //console.log("Abrir modal y editar: ", p_fp);
+    setOpenEditarFp(true);
+    setFpEditada(p_fp);
+  };
 
   const seleccionarFp = (option : any) => {
     if(option){
@@ -421,6 +503,38 @@ export function FormasPagosForm({modo, /*formasPagoHab,*/ formasPagoSelected, se
     }
   };
 
+  const seleccionarBancBilletera = (option:any) => {
+    if(option){
+      setOptionBancBille(option);
+      setBancBille({id: option.value, nombre: option.label});
+    }else{
+      setOptionBancBille({label: '', value: 0});
+      setBancBille({id: 0, nombre: ''});
+    }
+  };
+
+  const seleccionarEstadoOperacion = (option:any) => {
+    if(option){
+      setOptionEstOp(option);
+      setEstadoOp({id: option.value, descripcion: option.label});
+    }else{
+      setOptionEstOp({label: '', value: 0});
+      setEstadoOp({id: 0, descripcion: ''});
+    }
+  };
+
+  const editoRowFp = (nvo:any) => {
+    setFormaPagoSelected(
+      prev =>
+        prev.map(item =>
+          item.id === nvo.id
+            ? { ...nvo }
+            : item
+        )
+    );
+    setOpenEditarFp(false);
+  };
+
   useEffect(() => { //calcula el total
     setTotalFp(formasPagoSelected.reduce((acc, fp) => acc + Number(fp.monto), 0));
   }, [formasPagoSelected]);
@@ -431,7 +545,7 @@ export function FormasPagosForm({modo, /*formasPagoHab,*/ formasPagoSelected, se
         {modo !== 'view'? (
           <>
             <div className='col-span-12 sm:col-span-4 md:col-span-6 lg:col-span-3'>
-              <label htmlFor="forma_pago">Forma de pago</label>
+              <label htmlFor="forma_pago">Tipo</label>
               <GenericSelect
                 route="formas-pago"
                 value={optionFp}
@@ -439,6 +553,44 @@ export function FormasPagosForm({modo, /*formasPagoHab,*/ formasPagoSelected, se
                 placeHolder='Seleccionar'
               />
             </div>
+            {fp.id!=1 && (
+              <>
+                <div className='col-span-12 sm:col-span-4 md:col-span-6 lg:col-span-3'>
+                  <label htmlFor="entidad">Entidad</label>
+                  <GenericSelect
+                    route="bancos-billeteras"
+                    value={optionBancBille}
+                    onChange={(option) => seleccionarBancBilletera(option)}
+                    placeHolder='Seleccionar'
+                  />
+                </div>
+                <div className='col-span-12 sm:col-span-4 md:col-span-6 lg:col-span-3'>
+                  <label htmlFor="estado">Estado Operación</label>
+                  <GenericSelect
+                    route="estados-operaciones"
+                    value={optionEstOp}
+                    onChange={(option) => seleccionarEstadoOperacion(option)}
+                    placeHolder='Seleccionar'
+                  />
+                </div>
+                <div className='col-span-12 sm:col-span-4 md:col-span-6 lg:col-span-3'>
+                  <label htmlFor="titular">Titular</label>
+                  <Input 
+                    value={titular} 
+                    onChange={(e)=>setTitular(e.target.value)}
+                  />	
+                </div>
+                <div className='col-span-12 sm:col-span-4 md:col-span-6 lg:col-span-3'>
+                  <label htmlFor="cbu">CBU/Nro. Comprobante</label>
+                  <Input
+                    className='text-right'
+                    type='number'
+                    value={cbu} 
+                    onChange={(e)=>setCbu(e.target.value)}
+                  />	
+                </div>
+              </>
+            )}
             <div className='col-span-8 sm:col-span-3 md:col-span-4 lg:col-span-3'>
               <div className='flex flex-col'>
                 <label htmlFor="monto">Monto</label>
@@ -449,10 +601,12 @@ export function FormasPagosForm({modo, /*formasPagoHab,*/ formasPagoSelected, se
                   prefix="$" 
                   className="text-right border rounded px-2 py-1" 
                   onValueChange={(values) => { setMonto(values.floatValue || 0) }}
-                  onKeyDown={(e) => { if (e.key === "Enter") { 
-                    e.preventDefault(); // 👈 evita el submit 
-                    agregarFp(); 
-                  } }}
+                  onKeyDown={(e) => { 
+                    if (e.key === "Enter") { 
+                      e.preventDefault(); // 👈 evita el submit 
+                      agregarFp(); 
+                    } 
+                  }}
                 />	
               </div>
             </div>
@@ -463,11 +617,13 @@ export function FormasPagosForm({modo, /*formasPagoHab,*/ formasPagoSelected, se
             </div>
           </>
         ):( <></> )}
-        <div className="col-span-12">
+        <div className="col-span-12 h-full">
           <TableFormasPago 
             modo={modo}
             datos={formasPagoSelected} 
             quitar={quitarFp}
+            editarFp={editarFp}
+            anulada={anulada}
           />
         </div>
         <div className="col-span-12 flex justify-center">
@@ -489,6 +645,13 @@ export function FormasPagosForm({modo, /*formasPagoHab,*/ formasPagoSelected, se
           </div>
         </div>
       </div>
+      <EditarFormaPagoRow
+        ventaId={ventaId}
+        open={openEditarFp}
+        onOpenChange={() => setOpenEditarFp(false)}
+        formaPago={fpEditada}
+        onChange={(e:any) => { editoRowFp(e) }}
+      />
     </div>
   );
 }
@@ -739,6 +902,7 @@ export default function NewViewVenta(){
                   <hr />
                 </div>
                 <FormasPagosForm
+                  ventaId={Number(data.venta_id)??0}
                   modo={mode??'create'}
                   //formasPagoHab={formasPagoHab}
                   formasPagoSelected={formasPagoSelected}
@@ -746,6 +910,7 @@ export default function NewViewVenta(){
                   totalVenta={data.total}
                   totalFp={totalFp}
                   setTotalFp={(x) => setTotalFp(x)}
+                  anulada={data.anulada}
                 />
               </div>
               { permiso && mode !== 'create' && data.anulada == 0 && 

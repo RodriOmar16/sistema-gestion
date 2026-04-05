@@ -295,9 +295,15 @@ class VentaController extends Controller
         'detalles.*.precio'   => 'required|numeric',
         'detalles.*.cantidad' => 'required|integer|min:1',
         'formasPagos' => 'required|array|min:1',
-        'formasPagos.*.id'    => 'required|integer',
+        'formasPagos.*.forma_pago_id' => 'required|integer',
         'formasPagos.*.fecha' => 'required|date',
         'formasPagos.*.monto' => 'required|numeric|min:1',
+        
+        'formasPagos.*.titular'            => 'nullable|string',
+        'formasPagos.*.banco_billetera_id' => 'numeric|nullable',
+        'formasPagos.*.estado_id'          => 'numeric|nullable',
+        'formasPagos.*.cbu_nro_comprobante'=> 'string|nullable',
+
       ]);
 
       //controlo si existe o no el cliente, si no lo registro
@@ -392,11 +398,15 @@ class VentaController extends Controller
       $formasPagos = $validated['formasPagos'];
       foreach ($formasPagos as $fp) {
         VentaPago::create([
-          'venta_id'      => $venta->venta_id,
-          'forma_pago_id' => $fp['id'],
-          'fecha_pago'    => now() /*$fp['fecha']*/,
-          'monto'         => $fp['monto'],
-          'created_at'      => now(),
+          'venta_id'            => $venta->venta_id,
+          'forma_pago_id'       => $fp['forma_pago_id'],
+          'fecha_pago'          => now() /*$fp['fecha']*/,
+          'monto'               => $fp['monto'],
+          'titular'             => $fp['titular']??'',
+          'cbu_nro_comprobante' => $fp['cbu_nro_comprobante']??'',
+          'estado_id'          => $fp['estado_id'] > 0 ? $fp['estado_id'] : null,
+          'banco_billetera_id' => $fp['banco_billetera_id'] > 0 ? $fp['banco_billetera_id'] : null,
+          'created_at'          => now(),
         ]);
       }
 
@@ -468,17 +478,33 @@ class VentaController extends Controller
     //obtengo los datos del cliente
     $cliente = Cliente::find($venta->cliente_id);
 
+    /*
+        titular: string,
+        banco_billetera_id: number,
+        banco_billetera_nombre: string,
+        estado_id: number,
+        estado_nombre: string,
+        cbu_nro_comprobante: string,
+    */
+
     //obtengo las formas de pago de la venta
     $formasPagos = VentaPago::query()
-    ->with('formaPago')
+    ->with('formaPago', 'bancoBilletera', 'estadoOperacion')
     ->where('venta_id', $venta->venta_id)
     ->get()
     ->map(function($fp){
       return [
-        'id'     => (int)$fp->forma_pago_id,
-        'nombre' => optional($fp->formaPago)->nombre,
-        'monto'  => (float)$fp->monto,
-        'fecha'  => $fp->fecha
+        'id'                     => $fp->venta_pago_id,
+        'forma_pago_id'          => (int)$fp->forma_pago_id,
+        'forma_pago_nombre'      => optional($fp->formaPago)->nombre,
+        'monto'                  => (float)$fp->monto,
+        'fecha'                  => $fp->fecha_pago,
+        'titular'                => $fp->titular??'',
+        'banco_billetera_id'     => $fp->banco_billetera_id,
+        'banco_billetera_nombre' => optional($fp->bancoBilletera)->nombre,
+        'estado_id'              => $fp->estado_id,
+        'estado_nombre'          => optional($fp->estadoOperacion)->descripcion,
+        'cbu_nro_comprobante'    => $fp->cbu_nro_comprobante,
       ];
     });
 
@@ -576,6 +602,45 @@ class VentaController extends Controller
         'mensaje'   => 'Error al anular la venta: '.$e->getMessage(),
         'timestamp' => now()->timestamp
       ]);*/
+    }
+  }
+  
+  public function editarFp(Venta $venta, Request $request)
+  {
+    DB::beginTransaction();
+    try {
+      $validated = $request->validate([
+          'id'                 => 'required|integer|exists:ventas_pagos,venta_pago_id',
+          'banco_billetera_id' => 'nullable|integer',
+          'estado_id'          => 'nullable|integer',
+          'titular'            => 'nullable|string|max:255',
+          'cbu_nro_comprobante'=> 'nullable|string|max:255',
+      ]);
+
+      $ventaPago = VentaPago::where('venta_pago_id', $request->id)->first();
+
+      $ventaPago->update([
+        'banco_billetera_id'  => $validated['banco_billetera_id'] > 0 ? $validated['banco_billetera_id'] : null,
+        'estado_id'           => $validated['estado_id'] > 0 ? $validated['estado_id'] : null,
+        'titular'             => $validated['titular'] ?? '',
+        'cbu_nro_comprobante' => $validated['cbu_nro_comprobante'] ?? '',
+      ]);
+
+      DB::commit();
+      
+
+      return response()->json([
+        'resultado' => 1,
+        'mensaje'   => 'Forma de pago modificada correctamente',
+        'timestamp' => now()->timestamp
+      ]);
+    } catch (\Throwable $e) {
+      DB::rollBack();
+      return response()->json([
+        'resultado' => 0,
+        'mensaje'   => 'Error al cambiar los datos de la forma de pago de la venta: '.$e->getMessage(),
+        'timestamp' => now()->timestamp
+      ]);
     }
   }
 

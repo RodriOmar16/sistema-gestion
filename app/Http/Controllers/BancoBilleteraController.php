@@ -2,12 +2,33 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
 use App\Models\BancoBilletera;
 use App\Http\Requests\StoreBancoBilleteraRequest;
 use App\Http\Requests\UpdateBancoBilleteraRequest;
 
 class BancoBilleteraController extends Controller
 {
+    public function habilitados(Request $request){
+        try {
+        $buscar = $request->get('buscar', '');
+
+        $bancosBilleteras = BancoBilletera::query()
+            ->where('inhabilitado',0)
+            ->when($buscar, fn($q) => $q->where('nombre', 'LIKE', "%{$buscar}%"))
+            ->select('banco_billetera_id as id', 'nombre')
+            ->paginate(20);
+
+        return response()->json([
+            'elementos' => $bancosBilleteras
+        ]);
+        } catch (\Throwable $e) {
+        //Log::error('Error en buscar categorias: ' . $e->getMessage());
+        return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
     /**
      * Display a listing of the resource.
      */

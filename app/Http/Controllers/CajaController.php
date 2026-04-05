@@ -110,9 +110,6 @@ class CajaController extends Controller
                     ->get();
 
       //obtengo id de formas de pago
-      /*$fp_efec_id     = FormaPago::where('nombre', 'Efectivo')->first()->forma_pago_id;
-      $fp_debit_id    = FormaPago::where('nombre', 'Débito')->first()->forma_pago_id;
-      $fp_transfer_id = FormaPago::where('nombre', 'Transferencia')->first()->forma_pago_id;*/
       $fp_efec   = FormaPago::where('nombre', 'Efectivo')->first();
       $fp_debit  = FormaPago::where('nombre', 'Débito')->first();
       $fp_transf = FormaPago::where('nombre', 'Transferencias')->first();
@@ -146,7 +143,7 @@ class CajaController extends Controller
         'fecha'              => $validated['fecha'],
         'monto_inicial'      => $validated['monto_inicial'],
         'descripcion'        => '',
-        'user_grabacion'     => auth()->user()->email ?? 'sistema',//cómo dejo grabado el user actual, su email???
+        'user_grabacion'     => auth()->user()->email ?? 'sistema',
         'diferencia'         => 0,
         'inhabilitado'       => 0,
         //calculadas

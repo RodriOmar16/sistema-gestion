@@ -82,11 +82,10 @@ export function getColumns(
         const fila = row.original;
         const cant = fila.cantidad;
         const [cantInput, setCantInput] = useState(cant.toString());
-        /*( 
-        <div className="">{row.getValue("cliente_nombre")}</div> )*/
+
         return (
           <>
-            <div className="flex justify-">
+            <div className="flex items-center">
               <Button
                 variant="outline"
                 size="sm"
@@ -95,30 +94,14 @@ export function getColumns(
               >
                 <Minus size={20}/>
               </Button>
-              {/*<Input
-                className="mx-2 w-30 text-center"
-                value={cant}
-                disabled={modo!='create'}
-                onChange={(e) => cambiarCantidad(fila.id, e.target.value)}
-                inputMode="numeric"
-              />
               <Input
-                className="mx-2 w-30 text-center"
-                value={cant}
-                disabled={modo!='create'}
-                onChange={(e) => cambiarCantidad(fila.id, e.target.value)} // string
-                onBlur={(e) => cambiarCantidad(fila.id, parseInt(e.target.value) || 0)} // número final
-                inputMode="numeric"
-              />*/}
-              <Input
-                className="mx-2 w-30 text-center"
+                className="mx-2 w-15 text-center"
                 value={cantInput}
                 disabled={modo != 'create'}
                 onChange={(e) => setCantInput(e.target.value)} // solo string
                 onBlur={() => cambiarCantidad(fila.id, cantInput)} // al salir, parsea y guarda
                 inputMode="numeric"
               />
-
               <Button
                 variant="outline"
                 size="sm"
@@ -143,7 +126,6 @@ export function getColumns(
       }
       ,
       cell: ({ row }) => {
-        //( <div className="">{ convertirNumberPlata( row.getValue("precio"))}</div> )
         const det = row.original;
         const subtotal = det.cantidad * det.precio; 
         

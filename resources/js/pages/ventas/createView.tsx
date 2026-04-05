@@ -58,11 +58,6 @@ type Detalle  = {id: number, nombre:string, precio:number , cantidad: number };
 type FormPago = {id: number, nombre: string, monto: number, fecha: string};
 
 //-----------------------------------------------------------------------------------
-/*type ProductoHab = {
-  id: number; 
-  nombre: string, 
-  precio: number, 
-};*/
 interface PropsDet{
   data: Venta;
   set: (e:any) => void;
@@ -85,12 +80,16 @@ export function DetallesVenta({modo, data, set, productos, setProd, setTitle, se
     set({...data, total:Number(e)})
   };
 
-  const agregarProducto = async () => {
-    if(productoId===0){ //si no seleccionas nada 
+  const agregarProducto = async (idSeleccionado?: number) => {
+    let id = idSeleccionado;
+    if(idSeleccionado){
+      setProdId(idSeleccionado);
+    }else{
       return;
-    }
+    }  
+
     setLoad(true);
-    const res  = await fetch(route('productos.getProducto', productoId));
+    const res  = await fetch(route('productos.getProducto', id/*productoId*/));
     const data = await res.json();
     setLoad(false);
     
@@ -105,12 +104,12 @@ export function DetallesVenta({modo, data, set, productos, setProd, setTitle, se
     const producto = data.producto;    
 
     //si ya existe al menos 1
-    const obj = productos.find(e => e.id === productoId)
+    const obj = productos.find(e => e.id === id/*productoId*/)
     if(obj){
       //si está agregado le sumo la cantidad
       setProd((prev:any) =>
         prev.map((d:any) =>
-          d.id === productoId ? { ...d, cantidad: d.cantidad + 1 } : d
+          d.id === id /*productoId*/ ? { ...d, cantidad: d.cantidad + 1 } : d
         )
       );
     } else {
@@ -143,6 +142,7 @@ export function DetallesVenta({modo, data, set, productos, setProd, setTitle, se
       //set({...data, producto_id: option.value, producto_nombre: option.label});
       setProdId(option.value);
       setOptionProduct(option);
+      agregarProducto(option.value);
     }else{
       //set({...data, producto_id: '', producto_nombre: ''});
       setProdId(0);
@@ -180,12 +180,12 @@ export function DetallesVenta({modo, data, set, productos, setProd, setTitle, se
                   route="productos-stock"
                   value={optionProduct}
                   onChange={(option) => seleccionarProducto(option)}
-                  placeHolder="Selec. producto"
+                  placeHolder="Seleccionar"
                   isDisabled={modo!='create'}
                 />
             </div>
             <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3 flex items-end'>
-              <Button disabled={modo!='create'} type="button" onClick={agregarProducto}>
+              <Button disabled={modo!='create'} type="button" onClick={() => agregarProducto(0)}>
                 {load? (
                   <Loader2 size={20} className="animate-spin mr-2" />
                 ) : (
@@ -297,7 +297,7 @@ export function DatosCliente({modo, data, set, setActivo, setTitle, setText, set
                   Buscar         
                 </Button>
               </div>
-              <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-6  flex items-center justify-end'>
+              <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-6 flex items-center justify-end'>
                 <Checkbox
                   checked={cf}
                   onCheckedChange={(checked) => {
@@ -470,7 +470,7 @@ export function FormasPagosForm({modo, /*formasPagoHab,*/ formasPagoSelected, se
             quitar={quitarFp}
           />
         </div>
-        <div className="col-span-12 flex justify-center mb-2">
+        <div className="col-span-12 flex justify-center">
           <div className="p-2 rounded border">
             <span className="text-sm text-muted-foreground">Total</span><br />
             <span className="font-bold text-lg">${redondear(totalVenta, 2)}</span>
@@ -716,7 +716,7 @@ export default function NewViewVenta(){
                   cf={consumidorFinal}
                   setCf={setConsumidorFinal}/>
               </div>
-              <div className='pb-4 col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12 bg-gray-100 dark:bg-neutral-900'>
+              <div className='col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12 bg-gray-100 dark:bg-neutral-900'>
                 <div className='py-4 px-4'>
                   Detalles de la venta
                   <hr />
@@ -733,7 +733,7 @@ export default function NewViewVenta(){
                   setActivo={setActivo}
                 />
               </div>
-              <div className='pb-1 col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>
+              <div className='col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>
                 <div className='py-4 px-4'>
                   Formas de pago
                   <hr />

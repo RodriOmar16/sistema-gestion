@@ -6,6 +6,7 @@ use Inertia\Inertia;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 use App\Models\Caja;
 use App\Models\Venta;
@@ -13,6 +14,8 @@ use App\Models\VentaPago;
 use App\Models\Turno;
 use App\Models\FormaPago;
 use App\Models\Gasto;
+
+use App\Mail\CajaCerradaMail;
 
 use App\Http\Requests\StoreCajaRequest;
 use App\Http\Requests\UpdateCajaRequest;
@@ -310,6 +313,10 @@ class CajaController extends Controller
         ]);
 
         DB::commit();
+
+        $caja->load(['gastos.proveedor', 'gastos.categoria', 'gastos.formaPago']);
+        Mail::to('rodrigoomarmiranda1@gmail.com')->queue(new CajaCerradaMail($caja));
+
         return inertia('cajas/createView', [
             'mode'      => 'edit',
             'resultado' => 1,

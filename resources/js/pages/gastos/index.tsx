@@ -230,14 +230,6 @@ export function FiltrosForm({ openCreate, setCatGastos }: propsForm){
   );
 };
 
-interface PageProps {
-  flash: {
-    success?: string;
-    error?: string;
-  };
-  [key: string]: any;
-}
-
 export default function Gastos(){
   //data
   const [confirmOpen, setConfirOpen] = useState(false); //modal para confirmar acciones para cuado se crea o edita

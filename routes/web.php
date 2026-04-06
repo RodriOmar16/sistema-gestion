@@ -278,6 +278,10 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
 
     //Bancos-Billeteras
     Route::get('/bancos-billeteras/habilitados', [BancoBilleteraController::class, 'habilitados'])->name('bancosBilleteras.habilitados');
+    Route::get('/bancos-billeteras', [BancoBilleteraController::class, 'index'])->name('bancosBilleteras.index');
+    Route::post('/bancos-billeteras/nuevo', [BancoBilleteraController::class, 'store'])->name('bancoBilletera.store');
+    Route::put('/bancos-billeteras/update/{bancoBilletera}', [BancoBilleteraController::class, 'update'])->name('bancoBilletera.update');
+    Route::put('/bancos-billeteras/cambio-estado/{bancoBilletera}', [BancoBilleteraController::class, 'toggleEstado'])->name('bancoBilletera.toggleEstado');
 
     //Estados-Operaciones
     Route::get('/estados-operaciones/habilitados', [EstadoOperacionController::class, 'habilitados'])->name('estadosOperaciones.habilitados');

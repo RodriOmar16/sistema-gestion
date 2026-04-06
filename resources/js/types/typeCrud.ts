@@ -271,6 +271,14 @@ export interface CategoriaGasto {
   nombreOriginal?:    string;
 }
 
+export interface BancoBilletera {
+  banco_billetera_id: string|number;
+  nombre:             string;
+  inhabilitado:       boolean|number;
+  created_at?:        string;
+  updated_at?:        string;
+}
+
 //para componente selec multiple
 export type Multiple = { 
   id: number; 

@@ -129,8 +129,8 @@ export function getColumns(
         const elem = row.original;
         const colorClasses = elem.estado_id === 1 ?
           'bg-green-500 text-white dark:bg-green-600'
-          : ( elem.estado_id == 2 ? 'bg-red-500 text-white dark:bg-red-600' 
-                                  :  'bg-gray-500 text-white dark:bg-gray-600' );
+          : ( elem.estado_id == 2 ? 'bg-orange-500 text-white dark:bg-orange-600' 
+                                  :  'bg-red-500 text-white dark:bg-red-600' );
 
         return (
           <>

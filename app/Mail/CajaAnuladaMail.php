@@ -10,7 +10,7 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class CajaCerradaMail extends Mailable implements ShouldQueue
+class CajaAnuladaMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
@@ -23,9 +23,7 @@ class CajaCerradaMail extends Mailable implements ShouldQueue
 
     public function build()
     {
-        return $this->subject('Caja cerrada correctamente')
-                    ->view('emails.cajaCerradaMail');
+        return $this->subject('Caja anulada/eliminada')
+                    ->view('emails.cajaAnuladaMail');
     }
-
-
 }

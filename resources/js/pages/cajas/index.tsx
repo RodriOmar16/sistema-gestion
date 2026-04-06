@@ -16,7 +16,7 @@ import { DatePicker } from '@/components/utils/date-picker';
 import { NumericFormat } from 'react-number-format';
 import DataTableCajas from '@/components/cajas/dataTableCajas';
 //import NewEditGasto from '@/components/gastos/newEditGasto';
-import { convertirFechaBarrasGuiones, getCsrfToken } from '@/utils';
+import { apiRequest, convertirFechaBarrasGuiones, getCsrfToken } from '@/utils';
 import Loading from '@/components/utils/loadingDialog';
 
 const breadcrumbs: BreadcrumbItem[] = [ { title: 'Cajas', href: '', } ];
@@ -189,19 +189,40 @@ export default function Cajas(){
     if (!cajaCopia || !cajaCopia.caja_id) return;
     
     setLoading(true);
-    /*router.put(
-      route('caja.toggleEstado', { caja: cajaCopia.caja_id }),{},
-      {
-        preserveScroll: true,
-        preserveState: true,
-        onFinish: () => {
-          setLoading(false);
-          setTextConfirmar('');
-          setConfirmar(false);
-          setCajaCopia(cajaVacia);
-        }
+
+    try {
+      let resp : {resultado: number, caja_id: number, mensaje?:string} ;
+
+      resp = await apiRequest(route('caja.destroyIndex',{ caja: cajaCopia.caja_id }), 'PUT');
+
+      setResp({resultado: resp.resultado, caja_id: resp.caja_id});
+
+      if (resp.resultado === 0) {
+        setTitle('Error');
+        setText(resp.mensaje ?? 'Error inesperado');
+        setColor('error');
+        setActivo(true);
+        return;
       }
-    );*/
+
+      setTitle('Estado modificado');
+      setText(resp.mensaje??'');
+      setColor('success');
+      setActivo(true);
+
+    } catch (error: any) {
+      setTitle('Error de red');
+      setText(error.message);
+      setColor('error');
+      setActivo(true);
+    } finally {
+      setLoading(false);
+      setTextConfirmar('');
+      setConfirmar(false);
+      setCajaCopia(cajaVacia);
+    }
+
+    /*setLoading(true);
     const res = await fetch(route('caja.destroyIndex', { caja: cajaCopia.caja_id }), {
       method: 'PUT',
       headers: {
@@ -228,7 +249,7 @@ export default function Cajas(){
 
     setTextConfirmar('');
     setConfirmar(false);
-    setCajaCopia(cajaVacia);
+    setCajaCopia(cajaVacia);*/
   };
 
   const cancelarInhabilitarHabilitar = () => { 

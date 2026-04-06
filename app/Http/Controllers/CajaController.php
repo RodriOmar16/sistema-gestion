@@ -16,6 +16,7 @@ use App\Models\FormaPago;
 use App\Models\Gasto;
 
 use App\Mail\CajaCerradaMail;
+use App\Mail\CajaAnuladaMail;
 
 use App\Http\Requests\StoreCajaRequest;
 use App\Http\Requests\UpdateCajaRequest;
@@ -341,62 +342,70 @@ class CajaController extends Controller
   {
     DB::beginTransaction();
      try {
-        $caja->update([
-          'inhabilitado' => 1,
-          'abierta'      => 0,
-        ]);
+      $caja->update([
+        'inhabilitado' => 1,
+        'abierta'      => 0,
+      ]);
 
-        // obtengo todos los gastos que estaban relacionados a la caja y los libero
-        $gastos = Gasto::where('caja_id', $caja->caja_id)->get();
-        foreach($gastos as $g){
-          $g->update(['caja_id' => null]);
-        }
-        DB::commit();
-        return inertia('cajas/createView', [
-            'mode'      => 'edit',
-            'resultado' => 1,
-            'mensaje'   => 'Caja inhabilitada correctamente',
-            'caja_id'   => $caja->caja_id, // ojo, antes tenías $caja_id sin definir
-            'timestamp' => now()->timestamp,
-        ]);
-    } catch (\Throwable $e) {
-      DB::rollBack();
-        return inertia('cajas/createView', [
-            'mode'      => 'edit',
-            'resultado' => 0,
-            'mensaje'   => 'Error al bloquear la caja: ' . $e->getMessage(),
-        ]);
-    }
-  }
-  public function destroyInex(Request $request, Caja $caja)
-  {
-    DB::beginTransaction();
-     try {
-        $caja->update([
-          'inhabilitado' => 1,
-          'abierta'      => 0,
-        ]);
+      // obtengo todos los gastos que estaban relacionados a la caja y los libero
+      $gastos = Gasto::where('caja_id', $caja->caja_id)->get();
+      foreach($gastos as $g){
+        $g->update(['caja_id' => null]);
+      }
+      
+      DB::commit();
 
-        // obtengo todos los gastos que estaban relacionados a la caja y los libero
-        $gastos = Gasto::where('caja_id', $caja->caja_id)->get();
-        foreach($gastos as $g){
-          $g->update(['caja_id' => null]);
-        }
+      Mail::to('rodrigoomarmiranda1@gmail.com')->queue(new CajaAnuladaMail($caja));
 
-        //éxito
-        DB::commit();
-        return response()->json([
+      return inertia('cajas/createView', [
+          'mode'      => 'edit',
           'resultado' => 1,
           'mensaje'   => 'Caja inhabilitada correctamente',
           'caja_id'   => $caja->caja_id, // ojo, antes tenías $caja_id sin definir
           'timestamp' => now()->timestamp,
-        ]);
+      ]);
     } catch (\Throwable $e) {
       DB::rollBack();
-        return response()->json([
+      return inertia('cajas/createView', [
+          'mode'      => 'edit',
           'resultado' => 0,
           'mensaje'   => 'Error al bloquear la caja: ' . $e->getMessage(),
-        ]);
+      ]);
+    }
+  }
+
+  public function destroyIndex(Request $request, Caja $caja)
+  {
+    DB::beginTransaction();
+     try {
+      $caja->update([
+        'inhabilitado' => 1,
+        'abierta'      => 0,
+      ]);
+
+      // obtengo todos los gastos que estaban relacionados a la caja y los libero
+      $gastos = Gasto::where('caja_id', $caja->caja_id)->get();
+      foreach($gastos as $g){
+        $g->update(['caja_id' => null]);
+      }
+
+      //éxito
+      DB::commit();
+
+      Mail::to('rodrigoomarmiranda1@gmail.com')->queue(new CajaAnuladaMail($caja));
+
+      return response()->json([
+        'resultado' => 1,
+        'mensaje'   => 'Caja inhabilitada correctamente',
+        'caja_id'   => $caja->caja_id, // ojo, antes tenías $caja_id sin definir
+        'timestamp' => now()->timestamp,
+      ]);
+    } catch (\Throwable $e) {
+      DB::rollBack();
+      return response()->json([
+        'resultado' => 0,
+        'mensaje'   => 'Error al bloquear la caja: ' . $e->getMessage(),
+      ]);
     }
   }
 }

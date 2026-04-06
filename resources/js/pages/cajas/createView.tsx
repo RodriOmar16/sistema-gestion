@@ -18,6 +18,7 @@ import { DatePicker } from '@/components/utils/date-picker';
 import SubirImagen from '@/components/utils/subir-imagen';
 import GenericSelect from '@/components/utils/genericSelect';
 import { NumericFormat } from 'react-number-format';
+
 const breadcrumbs: BreadcrumbItem[] = [ { title: '', href: '', } ];
 const cajaVacia = {
   caja_id:            0,

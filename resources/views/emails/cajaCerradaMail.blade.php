@@ -13,7 +13,7 @@
       </style>
   </head>
   <body>
-      <h1>Caja cerrada correctamente</h1>
+      <h1>Caja cerrada correctamente ✅</h1>
 
       <p>La caja con ID <strong>{{ $caja->caja_id }}</strong> fue cerrada el día <strong>{{ $caja->fecha }}</strong>.</p>
 
@@ -43,11 +43,11 @@
           <tr><td><strong>Total</strong></td><td><strong>${{ number_format($caja->total_user, 2, ',', '.') }}</strong></td></tr>
       </table>
 
-      <p><strong>Diferencia:</strong> ${{ number_format($caja->diferencia, 2, ',', '.') }}</p>
+      <p><strong>Diferencia:</strong> ${{ number_format($caja->diferencia, 2,  ',', '.') }}</p>
 
       <p><em>Descripción:</em> {{ $caja->descripcion }}</p>
 
-      <div class="section-title">Gastos asociados a la caja</div>
+      <div class="section-title"><h4>Gastos asociados a la caja</h4></div>
 
       @if($caja->gastos->count())
           <table>
@@ -71,9 +71,13 @@
               @endforeach
           </table>
       @else
-          <p>No hay gastos registrados para esta caja.</p>
+          <h4>No hay gastos registrados para esta caja.</h4>
       @endif
 
-      <p>Gracias,<br>{{ config('app.name') }}</p>
+      <p>Gracias,{{ config('app.name') }}.</p>
+      <hr style="margin: 20px 0;">
+      <p style="font-size: 12px; color: #888; text-align: center;">
+          Este es un correo automático, por favor no responder.
+      </p>
   </body>
 </html>

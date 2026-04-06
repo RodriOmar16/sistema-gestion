@@ -478,15 +478,6 @@ class VentaController extends Controller
     //obtengo los datos del cliente
     $cliente = Cliente::find($venta->cliente_id);
 
-    /*
-        titular: string,
-        banco_billetera_id: number,
-        banco_billetera_nombre: string,
-        estado_id: number,
-        estado_nombre: string,
-        cbu_nro_comprobante: string,
-    */
-
     //obtengo las formas de pago de la venta
     $formasPagos = VentaPago::query()
     ->with('formaPago', 'bancoBilletera', 'estadoOperacion')

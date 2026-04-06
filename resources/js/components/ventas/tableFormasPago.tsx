@@ -98,14 +98,14 @@ export function getColumns(
         )
       },
       cell: ({ row }) => (
-        <div className="text-right">{row.getValue("titular")}</div>
+        <div className="">{row.getValue("titular")}</div>
       ),
     },
     {
       accessorKey: "cbu_nro_comprobante",
       header: ({column}) => {
         return (
-          <div className="flex">
+          <div className="flex justify-center">
             CBU/Nro. comp.
             {<ArrowUpDown className="ml-1" size={17} onClick={() => column.toggleSorting(column.getIsSorted() === "asc")} />}
           </div>
@@ -125,15 +125,29 @@ export function getColumns(
           </div>
         )
       },
-      cell: ({ row }) => (
-        <div className="">{row.getValue("estado_nombre")}</div>
-      ),
+      cell: ({ row }) => {
+        const elem = row.original;
+        const colorClasses = elem.estado_id === 1 ?
+          'bg-green-500 text-white dark:bg-green-600'
+          : ( elem.estado_id == 2 ? 'bg-red-500 text-white dark:bg-red-600' 
+                                  :  'bg-gray-500 text-white dark:bg-gray-600' );
+
+        return (
+          <>
+            {elem.forma_pago_id != 1 && (
+              <Badge variant="secondary" className={`flex items-center gap-1 ${colorClasses}`}>
+                { elem.estado_nombre }
+              </Badge>
+            )}
+          </>
+        );
+      }
     },
     {
       accessorKey: "monto",
       header: ({column}) => {
         return (
-          <div className="flex">
+          <div className="flex justify-center">
             Monto
           </div>
         )
@@ -145,17 +159,16 @@ export function getColumns(
       accessorKey: "Acciones",
       header: ({column}) => {
         return (
-          <div className="flex">
+          <div className="flex justify-center">
             Acción
           </div>
         )
       }
       ,
       cell: ({ row }) => {
-        //( <div className="">{ convertirNumberPlata( row.getValue("precio"))}</div> )
         const fila = row.original;
         return (
-          <div className='flex'>
+          <div className='flex justify-center'>
             <Button 
               type="button"
               disabled={modo!='create'}
@@ -189,7 +202,7 @@ export default function TableFormasPago({modo, datos, quitar, editarFp, anulada}
   const [columnFilters, setColumnFilters]       = useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [rowSelection, setRowSelection]         = useState({});
-  //const [detalles, setDetalles]                 = useState<Detalle[]>(datos);
+
   const [busqueda, setBusqueda]                 = useState('');
   
   const data = useMemo(() => {
@@ -203,7 +216,6 @@ export default function TableFormasPago({modo, datos, quitar, editarFp, anulada}
   }, [busqueda, datos]);
 
   const columns = getColumns(quitar, editarFp, modo, anulada); 
-  //console.log("data: ", data)
 
   const table = useReactTable({
     data,

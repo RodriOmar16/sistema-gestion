@@ -61,19 +61,19 @@ export function getColumns(
       accessorKey: "precio",
       header: ({column}) => {
         return (
-          <div className="flex">
+          <div className="flex justify-center">
             Precio
           </div>
         )
       }
       ,
-      cell: ({ row }) => ( <div className="">{ convertirNumberPlata( row.getValue("precio"))}</div> ),
+      cell: ({ row }) => ( <div className="text-right">{ convertirNumberPlata( row.getValue("precio"))}</div> ),
     },
     {
       accessorKey: "cantidad",
       header: ({column}) => {
         return (
-          <div className="flex">
+          <div className="flex justify-center">
             Cantidad
           </div>
         )
@@ -85,7 +85,7 @@ export function getColumns(
 
         return (
           <>
-            <div className="flex items-center">
+            <div className="flex items-center justify-center">
               <Button
                 variant="outline"
                 size="sm"
@@ -119,7 +119,7 @@ export function getColumns(
       accessorKey: "SubTotal",
       header: ({column}) => {
         return (
-          <div className="flex">
+          <div className="flex justify-center">
             Sub total
           </div>
         )
@@ -130,7 +130,7 @@ export function getColumns(
         const subtotal = det.cantidad * det.precio; 
         
         return (
-          <div className="">{ convertirNumberPlata(subtotal.toString())}</div>
+          <div className="text-right">{ convertirNumberPlata(subtotal.toString())}</div>
         );
       },
     },    
@@ -138,7 +138,7 @@ export function getColumns(
       accessorKey: "acciones",
       header: ({column}) => {
         return (
-          <div className="flex">
+          <div className="flex justify-center">
             Acción
           </div>
         )
@@ -148,7 +148,7 @@ export function getColumns(
         //( <div className="">{ convertirNumberPlata( row.getValue("precio"))}</div> )
         const fila = row.original;
         return (
-          <div className='flex'>
+          <div className='flex justify-center'>
             <Button 
               className="p-0 hover:bg-transparent cursor-pointer"
               title="Quitar" 
@@ -309,7 +309,7 @@ export default function TableDetalles({datos, setDatos, setTotal, quitar, modo/*
                 Total:
               </TableCell>
               <TableCell
-                  className={`${totalTable===0? '' : 'text-lg'} text-left font-bold`}>
+                  className={`${totalTable===0? '' : 'text-lg'} text-right font-bold`}>
                 ${redondear(totalTable,2)}
               </TableCell>
             </TableRow>

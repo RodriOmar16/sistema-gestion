@@ -661,7 +661,7 @@ class VentaController extends Controller
       if ($tipo == 1) {
           // Por día → ventas por hora
           $ventas = DB::table('ventas')
-              ->selectRaw('HOUR(fecha_grabacion) as hora, COUNT(*) as valor')
+              ->selectRaw('HOUR(fecha_grabacion) as hora, COUNT(*) as cantidad, SUM(total) as ganancia')
               ->where('anulada', 0)
               ->whereDate('fecha_grabacion', $dia)
               ->groupBy(DB::raw('HOUR(fecha_grabacion)'))
@@ -670,8 +670,9 @@ class VentaController extends Controller
 
           foreach ($ventas as $v) {
               $arr[] = [
-                  'name'  => str_pad($v->hora, 2, '0', STR_PAD_LEFT).":00",
-                  'valor' => $v->valor,
+                  'name'     => str_pad($v->hora, 2, '0', STR_PAD_LEFT).":00",
+                  'cantidad' => $v->cantidad,
+                  'total'    => $v->ganancia
               ];
           }
       }
@@ -679,7 +680,7 @@ class VentaController extends Controller
       if ($tipo == 2) {
           // Por mes → ventas por día del mes
           $ventas = DB::table('ventas')
-              ->selectRaw('DAY(fecha_grabacion) as dia, COUNT(*) as valor')
+              ->selectRaw('DAY(fecha_grabacion) as dia, COUNT(*) as cantidad, SUM(total) as ganancia')
               ->where('anulada', 0)
               ->whereYear('fecha_grabacion', $anio)
               ->whereMonth('fecha_grabacion', $mes)
@@ -689,8 +690,9 @@ class VentaController extends Controller
 
           foreach ($ventas as $v) {
               $arr[] = [
-                  'name'  => $v->dia, // número del día
-                  'valor' => $v->valor,
+                  'name'     => $v->dia, // número del día
+                  'cantidad' => $v->cantidad,
+                  'total'    => $v->ganancia,
               ];
           }
       }

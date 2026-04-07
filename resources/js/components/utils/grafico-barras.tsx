@@ -1,3 +1,4 @@
+import { convertirNumberPlata } from '@/utils';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
 /*const data = [
@@ -7,19 +8,40 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recha
 ];*/
 
 interface Props{
+  tipo: number;
+  modo: boolean;
   data: any[];
   ejeX: string;
   ejeY: string;
   color: string;
 }
 
-export default function GraficoBarras({ejeX, ejeY, data, color}:Props) {
+const CustomTooltip = ({ active, payload, label, tipo }: any) => {
+  if (active && payload && payload.length) {
+    const punto = payload[0].payload; // el objeto completo de ese dato
+    return (
+      <div style={{ backgroundColor: '#fff', border: '1px solid #ccc', padding: '10px' }}>
+        <p>{tipo==1 ? 'Hora' : 'Día'}: <strong>{label}</strong></p>
+        <p>Cantidad: <strong>{punto.cantidad}</strong></p>
+        <p>Ganancia: <strong>{convertirNumberPlata(String(punto.total))}</strong></p>
+      </div>
+    );
+  }
+  return null;
+};
+
+export default function GraficoBarras({tipo, modo, ejeX, ejeY, data, color}:Props) {
   return (
     <ResponsiveContainer width="100%" height={300}>
-      <BarChart data={data}>
+      <BarChart data={data}
+        margin={{ left: modo ? 40 : 0 }}
+      >
         <XAxis dataKey={ejeX} />
-        <YAxis />
-        <Tooltip />
+        <Tooltip content={<CustomTooltip tipo={tipo}/>}/>
+        <YAxis
+          tickFormatter={(value: number) => !modo ? String(value) : `$${value.toLocaleString('es-AR')}`}
+        />
+
         <Bar dataKey={ejeY} fill={color} />
       </BarChart>
     </ResponsiveContainer>

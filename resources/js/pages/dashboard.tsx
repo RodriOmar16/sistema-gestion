@@ -10,6 +10,7 @@ import { Select,  SelectContent,  SelectGroup,  SelectItem,  SelectLabel,  Selec
 import { DatePicker } from '@/components/utils/date-picker';
 import { convertirFechaBarrasGuiones, formatDate } from '@/utils';
 import { Loader2 } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
 
 
 const breadcrumbs: BreadcrumbItem[] = [ { title: 'Gráficos', href: '', } ];
@@ -35,17 +36,6 @@ const propVacio : PropsForm = {
 
 export default function Graficos(){
   //data  
-  /*const [data, setData] = useState<any[]>([
-    { name: 'Enero', ventas: 12000 },
-    { name: 'Febrero', ventas: 9000 },
-    { name: 'Marzo', ventas: 18000 },
-    { name: 'Mayo', ventas: 20000 },
-    { name: 'Junio', ventas: 11000 },
-    { name: 'Julio', ventas: 13500 },
-    { name: 'Agosto', ventas: 9000 },
-    { name: 'Septiembre', ventas: 10000 },
-    { name: 'Octubre', ventas: 15000 },
-  ]);*/
   const [load, setLoad]   = useState(false);
   const [data, setData]   = useState<PropsForm>(propVacio);
   const [anios, setAnios] = useState<{id: number, anio:number}[]>([]);
@@ -57,6 +47,7 @@ export default function Graficos(){
     {id: 7, nombre: 'Julio'},    {id: 8, nombre: 'Agosto'},    {id: 9, nombre: 'Septiembre'},
     {id: 10, nombre: 'Octubre'},    {id: 11, nombre: 'Noviembre'},    {id: 12, nombre: 'Diciembre'}
   ];
+  const [modo, setModo] = useState(false);
 
   //useEffect
   useEffect(() => {
@@ -189,24 +180,10 @@ export default function Graficos(){
             </div>
           )
         }
-        {/*<div className="col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-4 overflow-auto rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
-            <div className='ml-4 my-3 text-center'>Barras</div>
-            <GraficoBarras data={data} ejeX='name' ejeY='ventas' color="#2219cd"/>
-          </div>
-          <div className="col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-4 overflow-auto rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
-            <div className='ml-4 my-3 text-center'>Tortas</div>
-            <GraficoTortas 
-              data={data} 
-              name='name' 
-              valor='ventas'
-              colores={['#0088FE', '#00C49F', '#FFBB28', '#FF8042']}/>
-          </div>
-          <div className="col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-4 overflow-auto rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
-            <div className='ml-4 my-3 text-center'>Líneas</div>
-            <GraficoLineas
-              data={data} name='name' valor='ventas'
-              color="#8782ca"/>
-          </div>*/}
+        <div className='col-span-6 sm:col-span-4 md:col-span-4 lg:col-span-3 flex flex-col'>
+          <label className='mr-2'>Totales</label>
+          <Switch checked={modo} onCheckedChange={(val) => setModo(val)} />
+        </div>
       </div>
       <div className="flex items-center justify-center mx-4 overflow-auto rounded-xl h-80 border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
         {datos.length === 0 && !load && (
@@ -222,10 +199,10 @@ export default function Graficos(){
         {datos.length > 0 && !load && (
           <>
             {data.tipo == 1 && (
-              <GraficoBarras data={datos} ejeX='name' ejeY='valor' color="#2219cd"/>
+              <GraficoBarras tipo={data.tipo} modo={modo} data={datos} ejeX='name' ejeY={modo? 'total' : 'cantidad'} color="#cd8e19"/>
             )}
             {data.tipo == 2 && (
-              <GraficoBarras data={datos} ejeX='name' ejeY='valor' color="#524ea3"/>
+              <GraficoBarras tipo={data.tipo} modo={modo} data={datos} ejeX='name' ejeY={modo? 'total' : 'cantidad'} color="#4e89a3"/>
             )}
             {data.tipo == 3 && (
               <GraficoLineas

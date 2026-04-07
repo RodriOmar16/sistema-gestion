@@ -700,7 +700,7 @@ class VentaController extends Controller
       if ($tipo == 3) {
           // Por año → ventas por mes
           $ventas = DB::table('ventas')
-              ->selectRaw('MONTH(fecha_grabacion) as mes, COUNT(*) as valor')
+              ->selectRaw('MONTH(fecha_grabacion) as mes, COUNT(*) as cantidad, SUM(total) as ganancia')
               ->where('anulada', 0)
               ->whereYear('fecha_grabacion', $anio)
               ->groupBy(DB::raw('MONTH(fecha_grabacion)'))
@@ -713,10 +713,11 @@ class VentaController extends Controller
           ];
 
           foreach ($ventas as $v) {
-              $arr[] = [
-                  'name'  => $nombresMeses[$v->mes],
-                  'valor' => $v->valor,
-              ];
+            $arr[] = [
+              'name'     => $nombresMeses[$v->mes],
+              'cantidad' => $v->cantidad,
+              'total'    => $v->ganancia,
+            ];
           }
       }
 

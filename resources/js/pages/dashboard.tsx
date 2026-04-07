@@ -206,7 +206,10 @@ export default function Graficos(){
             )}
             {data.tipo == 3 && (
               <GraficoLineas
-                data={datos} name='name' valor='valor'
+                data={datos} 
+                tipo={data.tipo} modo={modo}
+                name='name' 
+                valor={modo? 'total' : 'cantidad'}
                 color="#8782ca"
               />
             )}

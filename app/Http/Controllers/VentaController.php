@@ -657,6 +657,8 @@ class VentaController extends Controller
       $dia  = $request->input('dia');
 
       $arr = [];
+      $totalFinal    = 0;
+      $cantidadFinal = 0;
 
       if ($tipo == 1) {
           // Por día → ventas por hora
@@ -669,11 +671,13 @@ class VentaController extends Controller
               ->get();
 
           foreach ($ventas as $v) {
-              $arr[] = [
-                  'name'     => str_pad($v->hora, 2, '0', STR_PAD_LEFT).":00",
-                  'cantidad' => $v->cantidad,
-                  'total'    => $v->ganancia
-              ];
+            $arr[] = [
+                'name'     => str_pad($v->hora, 2, '0', STR_PAD_LEFT).":00",
+                'cantidad' => $v->cantidad,
+                'total'    => $v->ganancia
+            ];
+            $totalFinal += $v->ganancia;
+            $cantidadFinal += $v->cantidad;
           }
       }
 
@@ -689,39 +693,48 @@ class VentaController extends Controller
               ->get();
 
           foreach ($ventas as $v) {
-              $arr[] = [
-                  'name'     => $v->dia, // número del día
-                  'cantidad' => $v->cantidad,
-                  'total'    => $v->ganancia,
-              ];
+            $arr[] = [
+                'name'     => $v->dia, // número del día
+                'cantidad' => $v->cantidad,
+                'total'    => $v->ganancia,
+            ];
+            $totalFinal += $v->ganancia;
+            $cantidadFinal += $v->cantidad;
           }
       }
 
       if ($tipo == 3) {
-          // Por año → ventas por mes
-          $ventas = DB::table('ventas')
-              ->selectRaw('MONTH(fecha_grabacion) as mes, COUNT(*) as cantidad, SUM(total) as ganancia')
-              ->where('anulada', 0)
-              ->whereYear('fecha_grabacion', $anio)
-              ->groupBy(DB::raw('MONTH(fecha_grabacion)'))
-              ->orderBy('mes')
-              ->get();
+        // Por año → ventas por mes
+        $ventas = DB::table('ventas')
+            ->selectRaw('MONTH(fecha_grabacion) as mes, COUNT(*) as cantidad, SUM(total) as ganancia')
+            ->where('anulada', 0)
+            ->whereYear('fecha_grabacion', $anio)
+            ->groupBy(DB::raw('MONTH(fecha_grabacion)'))
+            ->orderBy('mes')
+            ->get();
 
-          $nombresMeses = [
-              1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
-              7=>'Julio',8=>'Agosto',9=>'Septiembre',10=>'Octubre',11=>'Noviembre',12=>'Diciembre'
+        $nombresMeses = [
+            1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
+            7=>'Julio',8=>'Agosto',9=>'Septiembre',10=>'Octubre',11=>'Noviembre',12=>'Diciembre'
+        ];
+
+        foreach ($ventas as $v) {
+          $arr[] = [
+            'name'     => $nombresMeses[$v->mes],
+            'cantidad' => $v->cantidad,
+            'total'    => $v->ganancia,
           ];
-
-          foreach ($ventas as $v) {
-            $arr[] = [
-              'name'     => $nombresMeses[$v->mes],
-              'cantidad' => $v->cantidad,
-              'total'    => $v->ganancia,
-            ];
-          }
+          $totalFinal += $v->ganancia;
+          $cantidadFinal += $v->cantidad;
+        }
       }
 
-      return response()->json($arr);
+      $obj = [
+        'arr'            => $arr,
+        'total_final'    => $totalFinal,
+        'cantidad_final' => $cantidadFinal,
+      ];
+      return response()->json($obj);
   }
 
 

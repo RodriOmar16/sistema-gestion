@@ -20,7 +20,7 @@ const CustomTooltip = ({ active, payload, label, tipo }: any) => {
   if (active && payload && payload.length) {
     const punto = payload[0].payload; // el objeto completo de ese dato
     return (
-      <div style={{ backgroundColor: '#fff', border: '1px solid #ccc', padding: '10px' }}>
+      <div style={{ backgroundColor: '#ececec', border: '1px solid #ccc', padding: '10px' }}>
         <p>{tipo==1 ? 'Hora' : 'Día'}: <strong>{label}</strong></p>
         <p>Cantidad: <strong>{punto.cantidad}</strong></p>
         <p>Ganancia: <strong>{convertirNumberPlata(String(punto.total))}</strong></p>

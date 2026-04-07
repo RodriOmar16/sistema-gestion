@@ -8,7 +8,7 @@ import GraficoLineas from '@/components/utils/grafico-lineas';
 import { route } from 'ziggy-js';
 import { Select,  SelectContent,  SelectGroup,  SelectItem,  SelectLabel,  SelectTrigger,  SelectValue } from "@/components/ui/select"
 import { DatePicker } from '@/components/utils/date-picker';
-import { convertirFechaBarrasGuiones, formatDate } from '@/utils';
+import { convertirFechaBarrasGuiones, convertirNumberPlata, formatDate } from '@/utils';
 import { Loader2 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 
@@ -48,6 +48,8 @@ export default function Graficos(){
     {id: 10, nombre: 'Octubre'},    {id: 11, nombre: 'Noviembre'},    {id: 12, nombre: 'Diciembre'}
   ];
   const [modo, setModo] = useState(false);
+  const [totalFinal, setTotalFinal] = useState(0);
+  const [cantFinal, setCantFinal]   = useState(0);
 
   //useEffect
   useEffect(() => {
@@ -80,7 +82,9 @@ export default function Graficos(){
     const res = await fetch(route('ventas.getDatos',{...payload}));
     const data = await res.json();
     setLoad(false);
-    setDatos(data);
+    setDatos(data.arr);
+    setTotalFinal(data.total_final);
+    setCantFinal(data.cantidad_final);
   }
 
   return (
@@ -185,6 +189,23 @@ export default function Graficos(){
           <Switch checked={modo} onCheckedChange={(val) => setModo(val)} />
         </div>
       </div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 my-6">
+        <div className="bg-white rounded-xl shadow p-4 text-center">
+          <h3 className="text-sm text-gray-500">Ganancias</h3>
+          <p className="text-2xl font-bold text-green-600">
+            {convertirNumberPlata(String(totalFinal))}
+          </p>
+        </div>
+        <div className="bg-white rounded-xl shadow p-4 text-center">
+          <h3 className="text-sm text-gray-500">Cantidad de Ventas</h3>
+          <p className="text-2xl font-bold text-blue-600">{cantFinal}</p>
+        </div>
+        <div className="bg-white rounded-xl shadow p-4 text-center">
+          <h3 className="text-sm text-gray-500">Promedio</h3>
+          <p className="text-2xl font-bold text-purple-600">$456</p>
+        </div>
+      </div>
+
       <div className="flex items-center justify-center mx-4 overflow-auto rounded-xl h-80 border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
         {datos.length === 0 && !load && (
           <div className='ml-4 my-3 text-center'>

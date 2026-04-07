@@ -19,7 +19,7 @@ const CustomTooltip = ({ active, payload, label, tipo }: any) => {
   if (active && payload && payload.length) {
     const punto = payload[0].payload; // el objeto completo de ese dato
     return (
-      <div style={{ backgroundColor: '#fff', border: '1px solid #ccc', padding: '10px' }}>
+      <div style={{ backgroundColor: '#ececec', border: '1px solid #ccc', padding: '10px' }}>
         <p>Mes: <strong>{label}</strong></p>
         <p>Cantidad: <strong>{punto.cantidad}</strong></p>
         <p>Ganancia: <strong>{convertirNumberPlata(String(punto.total))}</strong></p>
@@ -33,7 +33,7 @@ export default function GraficoLineas({tipo, modo, data, name, valor, color}:Pro
   return (
     <ResponsiveContainer width="100%" height={300}>
       <LineChart data={data}
-        margin={{ left: modo ? 50 : 0 }}
+        margin={{ left: modo ? 50 : 0, top: 10 }}
       >
         <XAxis dataKey={name} />
         <YAxis 

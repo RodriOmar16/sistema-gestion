@@ -189,20 +189,20 @@ export default function Graficos(){
           <Switch checked={modo} onCheckedChange={(val) => setModo(val)} />
         </div>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 my-6">
-        <div className="bg-white rounded-xl shadow p-4 text-center">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4 px-4">
+        <div className="bg-gray-100 rounded-xl border p-4 text-center">
           <h3 className="text-sm text-gray-500">Ganancias</h3>
-          <p className="text-2xl font-bold text-green-600">
-            {convertirNumberPlata(String(totalFinal))}
+          <p className="text-2xl font-bold text-green-800">
+            {load? '...' : convertirNumberPlata(String(totalFinal))}
           </p>
         </div>
-        <div className="bg-white rounded-xl shadow p-4 text-center">
+        <div className="bg-gray-100 rounded-xl border p-4 text-center">
           <h3 className="text-sm text-gray-500">Cantidad de Ventas</h3>
-          <p className="text-2xl font-bold text-blue-600">{cantFinal}</p>
+          <p className="text-2xl font-bold text-blue-800">{load? '...' : cantFinal}</p>
         </div>
-        <div className="bg-white rounded-xl shadow p-4 text-center">
+        <div className="bg-gray-100 rounded-xl border p-4 text-center">
           <h3 className="text-sm text-gray-500">Promedio</h3>
-          <p className="text-2xl font-bold text-purple-600">$456</p>
+          <p className="text-2xl font-bold text-purple-800">$456</p>
         </div>
       </div>
 

@@ -365,6 +365,7 @@ export default function DataTableProductos({datos, openEdit, abrirConfirmar, dat
         </div>
         <div className="space-x-2">
           <Button
+            className="dark:hover:bg-white"
             variant="outline"
             size="sm"
             onClick={() => table.previousPage()}
@@ -373,6 +374,7 @@ export default function DataTableProductos({datos, openEdit, abrirConfirmar, dat
             Anterior
           </Button>
           <Button
+            className="dark:hover:bg-white"
             variant="outline"
             size="sm"
             onClick={() => table.nextPage()}

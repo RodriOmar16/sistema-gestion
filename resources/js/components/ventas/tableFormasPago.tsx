@@ -127,17 +127,27 @@ export function getColumns(
       },
       cell: ({ row }) => {
         const elem = row.original;
-        const colorClasses = elem.estado_id === 1 ?
+        const colorClasses = elem.forma_pago_id == 1? '' : (
+         elem.estado_id === 1 ?
           'bg-green-500 text-white dark:bg-green-600'
           : ( elem.estado_id == 2 ? 'bg-orange-500 text-white dark:bg-orange-600' 
-                                  :  'bg-red-500 text-white dark:bg-red-600' );
+                                  :  'bg-red-500 text-white dark:bg-red-600' )
+          ); 
 
+
+          console.log("elem: ", elem)
         return (
           <>
-            {elem.forma_pago_id != 1 && (
-              <Badge variant="secondary" className={`flex items-center gap-1 ${colorClasses}`}>
-                { elem.estado_nombre }
-              </Badge>
+            {elem.forma_pago_id != 1  ?  (
+              <>
+                {elem.estado_id != 0 && 
+                  <Badge variant="secondary" className={`flex items-center gap-1 ${colorClasses}`}>
+                  { elem.estado_nombre }
+                </Badge>
+                }
+              </>
+            ) :(
+              <></>
             )}
           </>
         );

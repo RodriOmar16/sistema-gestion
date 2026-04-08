@@ -8,7 +8,7 @@ import GraficoLineas from '@/components/utils/grafico-lineas';
 import { route } from 'ziggy-js';
 import { Select,  SelectContent,  SelectGroup,  SelectItem,  SelectLabel,  SelectTrigger,  SelectValue } from "@/components/ui/select"
 import { DatePicker } from '@/components/utils/date-picker';
-import { convertirFechaBarrasGuiones, convertirNumberPlata, formatDate } from '@/utils';
+import { convertirFechaBarrasGuiones, convertirNumberPlata, formatDate, redondear } from '@/utils';
 import { Loader2 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 
@@ -50,6 +50,7 @@ export default function Graficos(){
   const [modo, setModo] = useState(false);
   const [totalFinal, setTotalFinal] = useState(0);
   const [cantFinal, setCantFinal]   = useState(0);
+  const [promedio, setPromedio]     = useState(0);
 
   //useEffect
   useEffect(() => {
@@ -85,6 +86,7 @@ export default function Graficos(){
     setDatos(data.arr);
     setTotalFinal(data.total_final);
     setCantFinal(data.cantidad_final);
+    setPromedio(data.cantidad_final === 0 ? 0 : Math.round(data.total_final/data.cantidad_final * 100) / 100 );
   }
 
   return (
@@ -190,19 +192,19 @@ export default function Graficos(){
         </div>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4 px-4">
-        <div className="bg-gray-100 rounded-xl border p-4 text-center">
-          <h3 className="text-sm text-gray-500">Ganancias</h3>
-          <p className="text-2xl font-bold text-green-800">
+        <div className="bg-gray-200 dark:bg-gray-800 rounded-xl border p-4 text-center">
+          <h3 className="text-sm text-gray-800 dark:text-white">Ganancias</h3>
+          <p className="text-2xl font-bold text-green-700 dark:text-green-400">
             {load? '...' : convertirNumberPlata(String(totalFinal))}
           </p>
         </div>
-        <div className="bg-gray-100 rounded-xl border p-4 text-center">
-          <h3 className="text-sm text-gray-500">Cantidad de Ventas</h3>
-          <p className="text-2xl font-bold text-blue-800">{load? '...' : cantFinal}</p>
+        <div className="bg-gray-200 dark:bg-gray-800 rounded-xl border p-4 text-center">
+          <h3 className="text-sm text-gray-800 dark:text-white">Ventas</h3>
+          <p className="text-2xl font-bold text-blue-800 dark:text-blue-400">{load? '...' : cantFinal}</p>
         </div>
-        <div className="bg-gray-100 rounded-xl border p-4 text-center">
-          <h3 className="text-sm text-gray-500">Promedio</h3>
-          <p className="text-2xl font-bold text-purple-800">$456</p>
+        <div className="bg-gray-200 dark:bg-gray-800 rounded-xl border p-4 text-center">
+          <h3 className="text-sm text-gray-800 dark:text-white">Promedio</h3>
+          <p className="text-2xl font-bold text-teal-700 dark:text-teal-400">{load? '...' : convertirNumberPlata(String(promedio))}</p>
         </div>
       </div>
 

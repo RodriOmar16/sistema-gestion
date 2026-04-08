@@ -224,6 +224,7 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
     Route::put('/ventas/cambio-forma-pago/{venta}', [VentaController::class, 'editarFp'])->name('ventas.editarFp');
     Route::get('/ventas/obtener-anios', [VentaController::class, 'getAnios'])->name('ventas.getAnios');
     Route::get('/ventas/obtener-datos', [VentaController::class, 'getDatos'])->name('ventas.getDatos');
+    Route::get('/ventas/obtener-datos-productos', [VentaController::class, 'getDatosProd'])->name('ventas.getDatosProductos'); 
     
     //Turnos
     Route::get('/turnos_habilitados', [TurnoController::class, 'turnosHabilitados'])->name('turnos.turnosHabilitados');

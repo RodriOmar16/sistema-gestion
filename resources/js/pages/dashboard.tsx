@@ -11,6 +11,7 @@ import { DatePicker } from '@/components/utils/date-picker';
 import { convertirFechaBarrasGuiones, convertirNumberPlata, formatDate, redondear } from '@/utils';
 import { Loader2 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
+import GraficoRankin from '@/components/utils/grafico-ranking';
 
 
 const breadcrumbs: BreadcrumbItem[] = [ { title: 'Gráficos', href: '', } ];
@@ -51,6 +52,9 @@ export default function Graficos(){
   const [totalFinal, setTotalFinal] = useState(0);
   const [cantFinal, setCantFinal]   = useState(0);
   const [promedio, setPromedio]     = useState(0);
+ //
+  const [datosProd, setDatosProd] = useState([]); 
+
 
   //useEffect
   useEffect(() => {
@@ -80,13 +84,19 @@ export default function Graficos(){
       anio: anios.find((e:any) => e.id === form.anio)?.anio ?? (new Date().getFullYear())
     }
     setLoad(true);
-    const res = await fetch(route('ventas.getDatos',{...payload}));
+    const [res, resp] = await Promise.all([
+      fetch(route('ventas.getDatos',{...payload})),
+      fetch(route('ventas.getDatosProductos',{...payload}))
+    ]);
     const data = await res.json();
     setLoad(false);
     setDatos(data.arr);
     setTotalFinal(data.total_final);
     setCantFinal(data.cantidad_final);
     setPromedio(data.cantidad_final === 0 ? 0 : Math.round(data.total_final/data.cantidad_final * 100) / 100 );
+    
+    const dataProductos = await resp.json();
+    setDatosProd(dataProductos.arr);
   }
 
   return (
@@ -239,6 +249,23 @@ export default function Graficos(){
           </>
         )}
       </div>
+      <div className='mt-3 py-2 px-4'>Ranking de productos</div>
+      <div className=" flex items-center justify-center mx-4 overflow-auto rounded-xl h-80 border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
+        {datosProd.length === 0 && !load && (
+          <div className='ml-4 my-3 text-center'>
+            No hay datos para mostrar
+          </div>
+        )}
+        { load && (
+          <div className='ml-4 my-3 text-center flex items-center'>
+            <Loader2 size={20} className="animate-spin mr-2" /> Cargando...
+          </div>
+        )}
+        {datosProd.length > 0 && !load && (
+          <GraficoRankin data={datosProd} ejeX='cantidad' ejeY='name' color="#19cd9d" altura={600}/>
+        )}
+      </div>
+
     </AppLayout>
   );
 }

@@ -430,7 +430,7 @@ export default function CreateViewCajas(){
                     </TableBody>
                   </Table>
                 </div>
-                <div  className={`py-2 pl-4 col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12 ${data.total_sistema - data.total_user > 0 ? 'bg-red-500 dark:bg-red-700' : 'bg-green-500 dark:bg-green-700'}`}>
+                <div  className={`py-2 pl-4 col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12 text-white ${data.total_sistema - data.total_user > 0 ? 'bg-red-600 dark:bg-red-800' : 'bg-green-600 dark:bg-green-800'}`}>
                     Diferencia:{convertirNumberPlata(String(data.total_sistema - data.total_user))}
                 </div>
                 <div className='col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>

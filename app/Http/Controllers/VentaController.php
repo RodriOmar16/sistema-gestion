@@ -736,6 +736,57 @@ class VentaController extends Controller
       ];
       return response()->json($obj);
   }
+  
+  public function getDatosProd(Request $request)
+  {
+    $tipo = $request->input('tipo');
+    $anio = $request->input('anio');
+    $mes  = $request->input('mes');
+    $dia  = $request->input('dia');
 
+    $arr = [];
+    $totalFinal    = 0;
+    $cantidadFinal = 0;
+
+    $query = DB::table('det_ventas as dv')
+        ->join('ventas as v', 'dv.venta_id', '=', 'v.venta_id')
+        ->join('productos as p', 'dv.producto_id', '=', 'p.producto_id')
+        ->selectRaw('p.nombre as producto, SUM(dv.cantidad) as cantidad, SUM(dv.subtotal) as total')
+        ->where('v.anulada', 0);
+
+    // filtros según tipo
+    if ($tipo == 1) {
+        $query->whereDate('v.fecha_grabacion', $dia);
+    }
+    if ($tipo == 2) {
+        $query->whereYear('v.fecha_grabacion', $anio)
+              ->whereMonth('v.fecha_grabacion', $mes);
+    }
+    if ($tipo == 3) {
+        $query->whereYear('v.fecha_grabacion', $anio);
+    }
+
+    $ventas = $query
+        ->groupBy('p.nombre')
+        ->orderByDesc('cantidad') // ranking por cantidad vendida
+        ->get();
+
+    foreach ($ventas as $v) {
+        $arr[] = [
+            'name'     => $v->producto,
+            'cantidad' => $v->cantidad,
+            'total'    => $v->total,
+        ];
+        $totalFinal += $v->total;
+        $cantidadFinal += $v->cantidad;
+    }
+
+    $obj = [
+        'arr'            => $arr,
+        'total_final'    => $totalFinal,
+        'cantidad_final' => $cantidadFinal,
+    ];
+    return response()->json($obj);
+  }
 
 }

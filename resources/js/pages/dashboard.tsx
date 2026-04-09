@@ -305,11 +305,11 @@ export default function Graficos(){
                   <>
                     <div className='flex gap-4 grid grid-cols-12'>
                       {/* Gráficos */}
-                      <div className="col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-7">
+                      <div className="col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-7">
                         <GraficoRankin data={modo? datosProdTotal : datosProd} ejeX={modo? 'total' : 'cantidad'} ejeY='name' color="#19cd9d" altura={450}/>
                       </div>
                       {/* Tablas */}
-                      <div className="col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-5 pt-4 pr-4">
+                      <div className="col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-5 pt-4 pr-4">
                         <table className="w-full border-collapse border border-gray-300 dark:border-gray-700">
                           <thead>
                             <tr className="bg-gray-200 dark:bg-gray-800">

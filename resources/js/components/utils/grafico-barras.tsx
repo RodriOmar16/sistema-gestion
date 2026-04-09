@@ -1,5 +1,5 @@
 import { convertirNumberPlata } from '@/utils';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LabelList } from 'recharts';
 
 /*const data = [
   { name: 'Enero', ventas: 12000 },
@@ -33,15 +33,27 @@ const CustomTooltip = ({ active, payload, label, tipo }: any) => {
 export default function GraficoBarras({tipo, modo, ejeX, ejeY, data, color}:Props) {
   return (
     <ResponsiveContainer width="100%" height={300}>
-      <BarChart data={data}
+      <BarChart
+        data={data}
         margin={{ left: modo ? 40 : 0 }}
       >
-        <XAxis dataKey={ejeX} />
+        <XAxis dataKey={ejeX}/>
         <Tooltip content={<CustomTooltip tipo={tipo}/>} cursor={{ fill: '#2F2F3A', opacity: 0.3 }} />
         <YAxis
           tickFormatter={(value: number) => !modo ? String(value) : `$${value.toLocaleString('es-AR')}`}
         />
-        <Bar dataKey={ejeY} fill={color} />
+        <Bar dataKey={ejeY} fill={color}>
+          <LabelList
+            dataKey={ejeY}
+            position="center"
+            fill="#000"
+            formatter={(label: React.ReactNode) =>
+              typeof label === 'number'
+                ? label.toLocaleString('es-AR')
+                : convertirNumberPlata(String(label))
+            }
+          />
+        </Bar>
       </BarChart>
     </ResponsiveContainer>
   );

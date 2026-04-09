@@ -744,49 +744,70 @@ class VentaController extends Controller
     $mes  = $request->input('mes');
     $dia  = $request->input('dia');
 
-    $arr = [];
+    $arr  = [];
+    $arr2 = [];
     $totalFinal    = 0;
     $cantidadFinal = 0;
 
-    $query = DB::table('det_ventas as dv')
-        ->join('ventas as v', 'dv.venta_id', '=', 'v.venta_id')
-        ->join('productos as p', 'dv.producto_id', '=', 'p.producto_id')
-        ->selectRaw('p.nombre as producto, SUM(dv.cantidad) as cantidad, SUM(dv.subtotal) as total')
-        ->where('v.anulada', 0);
+    // consulta base
+    $baseQuery = DB::table('det_ventas as dv')
+      ->join('ventas as v', 'dv.venta_id', '=', 'v.venta_id')
+      ->join('productos as p', 'dv.producto_id', '=', 'p.producto_id')
+      ->selectRaw('p.nombre as producto, SUM(dv.cantidad) as cantidad, SUM(dv.subtotal) as total')
+      ->where('v.anulada', 0);
 
     // filtros según tipo
     if ($tipo == 1) {
-        $query->whereDate('v.fecha_grabacion', $dia);
+      $baseQuery->whereDate('v.fecha_grabacion', $dia);
     }
     if ($tipo == 2) {
-        $query->whereYear('v.fecha_grabacion', $anio)
-              ->whereMonth('v.fecha_grabacion', $mes);
+      $baseQuery->whereYear('v.fecha_grabacion', $anio)
+                ->whereMonth('v.fecha_grabacion', $mes);
     }
     if ($tipo == 3) {
-        $query->whereYear('v.fecha_grabacion', $anio);
+      $baseQuery->whereYear('v.fecha_grabacion', $anio);
     }
 
-    $ventas = $query
-        ->groupBy('p.nombre')
-        ->orderByDesc('cantidad') // ranking por cantidad vendida
-        ->get();
+    // ranking por cantidad
+    $ventas = (clone $baseQuery)
+      ->groupBy('p.nombre')
+      ->orderByDesc('cantidad')
+      ->limit(10)
+      ->get();
 
     foreach ($ventas as $v) {
-        $arr[] = [
-            'name'     => $v->producto,
-            'cantidad' => $v->cantidad,
-            'total'    => $v->total,
-        ];
-        $totalFinal += $v->total;
-        $cantidadFinal += $v->cantidad;
+      $arr[] = [
+        'name'     => $v->producto,
+        'cantidad' => $v->cantidad,
+        'total'    => $v->total,
+      ];
+      $totalFinal += $v->total;
+      $cantidadFinal += $v->cantidad;
+    }
+
+    // ranking por total vendido
+    $ventas2 = (clone $baseQuery)
+      ->groupBy('p.nombre')
+      ->orderByDesc('total') // 👈 ahora ordena por total
+      ->limit(10)
+      ->get();
+
+    foreach ($ventas2 as $v) {
+      $arr2[] = [
+        'name'     => $v->producto,
+        'cantidad' => $v->cantidad,
+        'total'    => $v->total,
+      ];
     }
 
     $obj = [
-        'arr'            => $arr,
-        'total_final'    => $totalFinal,
-        'cantidad_final' => $cantidadFinal,
+      'arr'            => $arr,   // top 10 por cantidad
+      'arr2'           => $arr2,  // top 10 por total vendido
+      'total_final'    => $totalFinal,
+      'cantidad_final' => $cantidadFinal,
     ];
     return response()->json($obj);
   }
+
 
 }

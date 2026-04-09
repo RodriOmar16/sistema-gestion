@@ -14,22 +14,22 @@ const sidebarNavItems: NavItem[] = [
     {
         title: 'Perfil',
         href: edit(),
-        icon: null,
+        icon: undefined,
     },
     {
         title: 'Contraseña',
         href: editPassword(),
-        icon: null,
+        icon: undefined,
     },
     {
         title: 'Verificación de dos pasos',
         href: show(),
-        icon: null,
+        icon: undefined,
     },
     {
         title: 'Apariencia',
         href: editAppearance(),
-        icon: null,
+        icon: undefined,
     },
 ];
 
@@ -53,7 +53,7 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
                     <nav className="flex flex-col space-y-1 space-x-0">
                         {sidebarNavItems.map((item, index) => (
                             <Button
-                                key={`${typeof item.href === 'string' ? item.href : item.href.url}-${index}`}
+                                key={`${typeof item.href === 'string' ? item.href : item.href?.url}-${index}`}
                                 size="sm"
                                 variant="ghost"
                                 asChild
@@ -62,7 +62,7 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
                                         currentPath ===
                                         (typeof item.href === 'string'
                                             ? item.href
-                                            : item.href.url),
+                                            : item.href?.url),
                                 })}
                             >
                                 <Link href={item.href}>

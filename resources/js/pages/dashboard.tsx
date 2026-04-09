@@ -52,8 +52,13 @@ export default function Graficos(){
   const [totalFinal, setTotalFinal] = useState(0);
   const [cantFinal, setCantFinal]   = useState(0);
   const [promedio, setPromedio]     = useState(0);
- //
-  const [datosProd, setDatosProd] = useState([]); 
+  //
+  const [datosProd, setDatosProd]           = useState([]); 
+  const [datosProdTotal, setDatosProdTotal] = useState([]); 
+  const [gastos, setGastos] = useState([]);
+
+  //
+  const [tab, setTab] = useState<'ventas' | 'productos' | 'gastos'>('ventas');
 
 
   //useEffect
@@ -97,174 +102,266 @@ export default function Graficos(){
     
     const dataProductos = await resp.json();
     setDatosProd(dataProductos.arr);
+    setDatosProdTotal(dataProductos.arr2);
   }
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Gráficos" />
-      <div className="grid grid-cols-12 gap-2 overflow-x-auto rounded-xl p-4">
-        <div className="col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-2 lg:col-span-2">
-          <label htmlFor="tipo">Selec. Tipo</label>
-          <Select
-            value={String(data.tipo)}
-            onValueChange={(value) => {
-              const nuevo = {...data, 'tipo': Number(value)}
-              setData(nuevo);
-              obtenerData(nuevo);
-            }}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                {tipos.map((e: any) => (
-                  <SelectItem key={e.id} value={String(e.id)}>
-                    {String(e.tipo)}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-        </div>
-        
-        {
-          (data.tipo !=3 && data.tipo !=1) && (
-            <div className="col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-2 lg:col-span-2">
-              <label htmlFor="padre">Selec. Mes</label>
-              <Select
-                value={String(data.mes)}
-                onValueChange={(value) => {
-                  const nuevo = {...data, 'mes': Number(value)};
-                  setData(nuevo);
-                  obtenerData(nuevo);
-                }}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    {meses.map((e: any) => (
-                      <SelectItem key={e.id} value={String(e.id)}>
-                        {String(e.nombre)}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </div>
-          )
-        }
-        {
-          data.tipo != 1 && (
-            <div className="col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-2 lg:col-span-2">
-              <label htmlFor="anio">Selec. Año</label>
-              <Select
-                value={String(data.anio)}
-                onValueChange={(value) => {
-                  const nuevo = {...data, 'anio': Number(value)};
-                  setData(nuevo);
-                  obtenerData(nuevo);
-                }}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    {anios.map((e: any) => (
-                      <SelectItem key={e.id} value={String(e.id)}>
-                        {String(e.anio)}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </div>
-          )
-        }
-        {
-          data.tipo == 1 && (
-            <div className="col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-2">
-              <label htmlFor="fechaDesde">Fecha</label>
-              <DatePicker fecha={data.dia??''} setFecha={ (fecha:string) => {
-                const nuevo = {...data,dia: fecha};
-                setData(nuevo)
-                obtenerData(nuevo);
-              } }/>
-            </div>
-          )
-        }
-        <div className='col-span-6 sm:col-span-4 md:col-span-4 lg:col-span-3 flex flex-col'>
-          <label className='mr-2'>Totales</label>
-          <Switch checked={modo} onCheckedChange={(val) => setModo(val)} />
-        </div>
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4 px-4">
-        <div className="bg-gray-200 dark:bg-gray-800 rounded-xl border p-4 text-center">
-          <h3 className="text-sm text-gray-800 dark:text-white">Ganancias</h3>
-          <p className="text-2xl font-bold text-green-700 dark:text-green-400">
-            {load? '...' : convertirNumberPlata(String(totalFinal))}
-          </p>
-        </div>
-        <div className="bg-gray-200 dark:bg-gray-800 rounded-xl border p-4 text-center">
-          <h3 className="text-sm text-gray-800 dark:text-white">Ventas</h3>
-          <p className="text-2xl font-bold text-blue-800 dark:text-blue-400">{load? '...' : cantFinal}</p>
-        </div>
-        <div className="bg-gray-200 dark:bg-gray-800 rounded-xl border p-4 text-center">
-          <h3 className="text-sm text-gray-800 dark:text-white">Promedio</h3>
-          <p className="text-2xl font-bold text-teal-700 dark:text-teal-400">{load? '...' : convertirNumberPlata(String(promedio))}</p>
-        </div>
-      </div>
+      {/* --- */}
+      <div>
+        <div className="p-4">
+          {/* Botones de pestañas */}
+          <div className="flex space-x-4 border-b">
+            <button
+              className={`pb-2 ${tab === 'ventas' ? 'border-b-2 border-blue-500 font-bold' : ''}`}
+              onClick={() => setTab('ventas')}
+            >
+              Ventas
+            </button>
+            <button
+              className={`pb-2 ${tab === 'productos' ? 'border-b-2 border-blue-500 font-bold' : ''}`}
+              onClick={() => setTab('productos')}
+            >
+              Productos
+            </button>
+            <button
+              className={`pb-2 ${tab === 'gastos' ? 'border-b-2 border-blue-500 font-bold' : ''}`}
+              onClick={() => setTab('gastos')}
+            >
+              Gastos
+            </button>
+          </div>
 
-      <div className="flex items-center justify-center mx-4 overflow-auto rounded-xl h-80 border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
-        {datos.length === 0 && !load && (
-          <div className='ml-4 my-3 text-center'>
-            No hay datos para mostrar
+          {/* Filtros */}
+          <div className="grid grid-cols-12 gap-2 overflow-x-auto rounded-xl p-4">
+            <div className="col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-2 lg:col-span-2">
+              <label htmlFor="tipo">Selec. Tipo</label>
+              <Select
+                value={String(data.tipo)}
+                onValueChange={(value) => {
+                  const nuevo = {...data, 'tipo': Number(value)}
+                  setData(nuevo);
+                  obtenerData(nuevo);
+                }}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {tipos.map((e: any) => (
+                      <SelectItem key={e.id} value={String(e.id)}>
+                        {String(e.tipo)}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {
+              (data.tipo !=3 && data.tipo !=1) && (
+                <div className="col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-2 lg:col-span-2">
+                  <label htmlFor="padre">Selec. Mes</label>
+                  <Select
+                    value={String(data.mes)}
+                    onValueChange={(value) => {
+                      const nuevo = {...data, 'mes': Number(value)};
+                      setData(nuevo);
+                      obtenerData(nuevo);
+                    }}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        {meses.map((e: any) => (
+                          <SelectItem key={e.id} value={String(e.id)}>
+                            {String(e.nombre)}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )
+            }
+            {
+              data.tipo != 1 && (
+                <div className="col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-2 lg:col-span-2">
+                  <label htmlFor="anio">Selec. Año</label>
+                  <Select
+                    value={String(data.anio)}
+                    onValueChange={(value) => {
+                      const nuevo = {...data, 'anio': Number(value)};
+                      setData(nuevo);
+                      obtenerData(nuevo);
+                    }}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        {anios.map((e: any) => (
+                          <SelectItem key={e.id} value={String(e.id)}>
+                            {String(e.anio)}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )
+            }
+            {
+              data.tipo == 1 && (
+                <div className="col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-2">
+                  <label htmlFor="fechaDesde">Fecha</label>
+                  <DatePicker fecha={data.dia??''} setFecha={ (fecha:string) => {
+                    const nuevo = {...data,dia: fecha};
+                    setData(nuevo)
+                    obtenerData(nuevo);
+                  } }/>
+                </div>
+              )
+            }
+            <div className='col-span-6 sm:col-span-4 md:col-span-4 lg:col-span-3 flex flex-col'>
+              <label className='mr-2'>Totales</label>
+              <Switch checked={modo} onCheckedChange={(val) => setModo(val)} />
+            </div>
           </div>
-        )}
-        { load && (
-          <div className='ml-4 my-3 text-center flex items-center'>
-            <Loader2 size={20} className="animate-spin mr-2" /> Cargando...
-          </div>
-        )}
-        {datos.length > 0 && !load && (
-          <>
-            {data.tipo == 1 && (
-              <GraficoBarras tipo={data.tipo} modo={modo} data={datos} ejeX='name' ejeY={modo? 'total' : 'cantidad'} color="#cd8e19"/>
-            )}
-            {data.tipo == 2 && (
-              <GraficoBarras tipo={data.tipo} modo={modo} data={datos} ejeX='name' ejeY={modo? 'total' : 'cantidad'} color="#4e89a3"/>
-            )}
-            {data.tipo == 3 && (
-              <GraficoLineas
-                data={datos} 
-                tipo={data.tipo} modo={modo}
-                name='name' 
-                valor={modo? 'total' : 'cantidad'}
-                color="#8782ca"
-              />
-            )}
-          </>
-        )}
+
+          {/* Contenido dinámico */}
+          {tab === 'ventas' && (
+            <div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4 px-4">
+                <div className="bg-gray-200 dark:bg-gray-800 rounded-xl border p-4 text-center">
+                  <h3 className="text-sm text-gray-800 dark:text-white">Ganancias</h3>
+                  <p className="text-2xl font-bold text-green-700 dark:text-green-400">
+                    {load? '...' : convertirNumberPlata(String(totalFinal))}
+                  </p>
+                </div>
+                <div className="bg-gray-200 dark:bg-gray-800 rounded-xl border p-4 text-center">
+                  <h3 className="text-sm text-gray-800 dark:text-white">Ventas</h3>
+                  <p className="text-2xl font-bold text-blue-800 dark:text-blue-400">{load? '...' : cantFinal}</p>
+                </div>
+                <div className="bg-gray-200 dark:bg-gray-800 rounded-xl border p-4 text-center">
+                  <h3 className="text-sm text-gray-800 dark:text-white">Promedio</h3>
+                  <p className="text-2xl font-bold text-teal-700 dark:text-teal-400">{load? '...' : convertirNumberPlata(String(promedio))}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-center mx-4 overflow-auto rounded-xl h-80 border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
+                {datos.length === 0 && !load && (
+                  <div className='ml-4 my-3 text-center'>
+                    No hay datos para mostrar
+                  </div>
+                )}
+                { load && (
+                  <div className='ml-4 my-3 text-center flex items-center'>
+                    <Loader2 size={20} className="animate-spin mr-2" /> Cargando...
+                  </div>
+                )}
+                {datos.length > 0 && !load && (
+                  <>
+                    {data.tipo == 1 && (
+                      <GraficoBarras tipo={data.tipo} modo={modo} data={datos} ejeX='name' ejeY={modo? 'total' : 'cantidad'} color="#cd8e19"/>
+                    )}
+                    {data.tipo == 2 && (
+                      <GraficoBarras tipo={data.tipo} modo={modo} data={datos} ejeX='name' ejeY={modo? 'total' : 'cantidad'} color="#4e89a3"/>
+                    )}
+                    {data.tipo == 3 && (
+                      <GraficoLineas
+                        data={datos} 
+                        tipo={data.tipo} modo={modo}
+                        name='name' 
+                        valor={modo? 'total' : 'cantidad'}
+                        color="#8782ca"
+                      />
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+
+          {tab === 'productos' && (
+            <div>
+              <div className=" flex items-center justify-center mx-4 overflow-auto rounded-xl h-80 border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
+                {datosProd.length === 0 && !load && (
+                  <div className='ml-4 my-3 text-center'>
+                    No hay datos para mostrar
+                  </div>
+                )}
+                { load && (
+                  <div className='ml-4 my-3 text-center flex items-center'>
+                    <Loader2 size={20} className="animate-spin mr-2" /> Cargando...
+                  </div>
+                )}
+                {datosProd.length > 0 && !load && (
+                  <>
+                    <div className='flex gap-4 grid grid-cols-12'>
+                      {/* Gráficos */}
+                      <div className="col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-7">
+                        <GraficoRankin data={modo? datosProdTotal : datosProd} ejeX={modo? 'total' : 'cantidad'} ejeY='name' color="#19cd9d" altura={450}/>
+                      </div>
+                      {/* Tablas */}
+                      <div className="col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-5 pt-4 pr-4">
+                        <table className="w-full border-collapse border border-gray-300 dark:border-gray-700">
+                          <thead>
+                            <tr className="bg-gray-200 dark:bg-gray-800">
+                              <th className="border px-2 py-1">Nombre</th>
+                              <th className="border px-2 py-1">Cantidad</th>
+                              <th className="border px-2 py-1">Precio</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {(modo? datosProdTotal : datosProd).map((item:any, i) => (
+                              <tr key={i} className="hover:bg-gray-100 dark:hover:bg-gray-900">
+                                <td className="border px-2 py-1">{item.name}</td>
+                                <td className="border px-2 py-1 text-center">{item.cantidad}</td>
+                                <td className="border px-2 py-1 text-right">{(Number(item.total)/item.cantidad).toLocaleString('es-AR', { style: 'currency', currency: 'ARS' })}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+
+          {tab === 'gastos' && (
+            <div>
+              <div className=" flex items-center justify-center mx-4 overflow-auto rounded-xl h-80 border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
+                {datosProd.length === 0 && !load && (
+                  <div className='ml-4 my-3 text-center'>
+                    No hay datos para mostrar
+                  </div>
+                )}
+                { load && (
+                  <div className='ml-4 my-3 text-center flex items-center'>
+                    <Loader2 size={20} className="animate-spin mr-2" /> Cargando...
+                  </div>
+                )}
+                {gastos.length > 0 && !load && (
+                  <>
+                    
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
-      <div className='mt-3 py-2 px-4'>Ranking de productos</div>
-      <div className=" flex items-center justify-center mx-4 overflow-auto rounded-xl h-80 border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
-        {datosProd.length === 0 && !load && (
-          <div className='ml-4 my-3 text-center'>
-            No hay datos para mostrar
-          </div>
-        )}
-        { load && (
-          <div className='ml-4 my-3 text-center flex items-center'>
-            <Loader2 size={20} className="animate-spin mr-2" /> Cargando...
-          </div>
-        )}
-        {datosProd.length > 0 && !load && (
-          <GraficoRankin data={datosProd} ejeX='cantidad' ejeY='name' color="#19cd9d" altura={600}/>
-        )}
-      </div>
+      {/* --- */}
+      
+      
 
     </AppLayout>
   );

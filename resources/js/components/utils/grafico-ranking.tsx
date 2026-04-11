@@ -29,12 +29,12 @@ export default function GraficoRankin({ ejeX, ejeY, data, color, altura}:Props) 
       <BarChart 
         data={data}
         layout="vertical"
-        margin={{ left: 20, right: 15, top:10, bottom:10 }}
+        margin={{ left: 12, right: 15, top:10, bottom:10 }}
       >
         <Tooltip content={<CustomTooltip />} cursor={{ fill: '#2F2F3A', opacity: 0.3 }} />
         <XAxis type="number" />
-        <YAxis type="category" dataKey={ejeY} width={150}/>
-        <Bar dataKey={ejeX} fill={color}>
+        <YAxis type="category" dataKey={ejeY} width={150} fontSize={14}/>
+        <Bar dataKey={ejeX} fill={color} barSize={25}>
           <LabelList 
             dataKey={ejeX} 
             position="center" 

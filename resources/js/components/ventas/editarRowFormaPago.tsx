@@ -140,10 +140,10 @@ export default function EditarFormaPagoRow({ ventaId, open, onOpenChange, formaP
 
     if(data.id < 0){
       //es nueva la row, estoy grabando la venta
-      console.log("nueva venta: ", ventaId, data.id)
+      //console.log("nueva venta: ", ventaId, data.id)
     }else{
       //estoy editando o por anular  
-      console.log("venta existente pero valida: ", ventaId, data.id)
+      //console.log("venta existente pero valida: ", ventaId, data.id)
       //consula PUT a la base
       setLoad(true);
 

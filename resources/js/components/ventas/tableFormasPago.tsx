@@ -136,7 +136,7 @@ export function getColumns(
 
         return (
           <>
-            {elem.forma_pago_id != 1 && elem.estado_id != 0 ?  (
+            {elem.forma_pago_id != 1 && (elem.estado_id && elem.estado_id != 0) ?  (
               <>
                 <Badge 
                   className={`flex items-center gap-1 ${colorClasses}`}

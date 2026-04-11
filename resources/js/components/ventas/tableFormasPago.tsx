@@ -223,7 +223,6 @@ export default function TableFormasPago({modo, datos, quitar, editarFp, anulada}
         )
       : datos;
   }, [busqueda, datos]);
-  console.log("datos: ", datos)
 
   const columns = getColumns(quitar, editarFp, modo, anulada); 
 

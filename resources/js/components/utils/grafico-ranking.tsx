@@ -34,7 +34,7 @@ export default function GraficoRankin({ ejeX, ejeY, data, color, altura}:Props) 
         <Tooltip content={<CustomTooltip />} cursor={{ fill: '#2F2F3A', opacity: 0.3 }} />
         <XAxis type="number" />
         <YAxis type="category" dataKey={ejeY} width={150} fontSize={14}/>
-        <Bar dataKey={ejeX} fill={color} barSize={25}>
+        <Bar dataKey={ejeX} fill={color}>
           <LabelList 
             dataKey={ejeX} 
             position="center" 

@@ -134,17 +134,16 @@ export function getColumns(
                                     :  'bg-red-500 text-white dark:bg-red-600' )
         ); 
 
-
-          console.log("elem: ", elem)
         return (
           <>
-            {elem.forma_pago_id != 1  ?  (
+            {elem.forma_pago_id != 1 && elem.estado_id != 0 ?  (
               <>
-                {(elem.estado_id && elem.estado_id != 0) && 
-                  <Badge variant="secondary" className={`flex items-center gap-1 ${colorClasses}`}>
-                  { elem.estado_nombre }
+                <Badge 
+                  className={`flex items-center gap-1 ${colorClasses}`}
+                  variant="secondary" 
+                >
+                  {elem.estado_nombre}
                 </Badge>
-                }
               </>
             ) :(
               <></>
@@ -224,6 +223,7 @@ export default function TableFormasPago({modo, datos, quitar, editarFp, anulada}
         )
       : datos;
   }, [busqueda, datos]);
+  console.log("datos: ", datos)
 
   const columns = getColumns(quitar, editarFp, modo, anulada); 
 

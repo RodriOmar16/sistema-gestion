@@ -69,12 +69,12 @@ export default function EditarFormaPagoRow({ ventaId, open, onOpenChange, formaP
    
   const { data, setData, get, post, processing, errors } = useForm<FormPago>(fpVacio);
 
-  const bancBillVacio                         = { id: 0 , nombre: '' };
-  const [bancBille, setBancBille]             = useState<{id: number, nombre: string}>(bancBillVacio);
+  //const bancBillVacio                         = { id: 0 , nombre: '' };
+  //const [bancBille, setBancBille]             = useState<{id: number, nombre: string}>(bancBillVacio);
   const [optionBancBille, setOptionBancBille] = useState<Autocomplete|null>(null);
 
-  const estOpVacio                    = { id: 0 , descripcion: '' };
-  const [estadoOp, setEstadoOp]       = useState<{id: number, descripcion: string}>(estOpVacio);
+  //const estOpVacio                    = { id: 0 , descripcion: '' };
+  //const [estadoOp, setEstadoOp]       = useState<{id: number, descripcion: string}>(estOpVacio);
   const [optionEstOp, setOptionEstOp] = useState<Autocomplete|null>(null);
 
   //useEffect

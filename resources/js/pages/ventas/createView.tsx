@@ -422,47 +422,50 @@ export function FormasPagosForm({ventaId, modo, /*formasPagoHab,*/ formasPagoSel
     }
     
     const estaEnArray = formasPagoSelected.find(e => e.id === fp.id);
-    if(estaEnArray){
-      if(fp.id === 1){ //si es efectivo acumulo
-        setFormaPagoSelected((prev:any) => 
-          prev.map((d:any) => 
-            d.id === fp.id ? { ...d, monto: Number(d.monto) + Number(monto) } : d
-          )
-        );
-        //reseteo y me corto
-        setFp(fpVacio);
-        setOptionFp(null);
-        
-        setBancBille(bancBillVacio);
-        setOptionBancBille(null);
-        
-        setEstadoOp(estOpVacio);
-        setOptionEstOp(null);
+    if(estaEnArray && fp.id === 1){
+      //si es efectivo acumulo
+      setFormaPagoSelected((prev:any) => 
+        prev.map((d:any) => 
+          d.id === fp.id ? { ...d, monto: Number(d.monto) + Number(monto) } : d
+        )
+      );
+      //reseteo y me corto
+      setFp(fpVacio);
+      setOptionFp(null);
+      
+      setBancBille(bancBillVacio);
+      setOptionBancBille(null);
+      
+      setEstadoOp(estOpVacio);
+      setOptionEstOp(null);
 
-        setMonto(0);
-        setTitular('');
-        setCbu('');
-        return;
-      }
+      setMonto(0);
+      setTitular('');
+      setCbu('');
+      return;
+    }else{
+      console.log("estadoOp: ", estadoOp)
+      console.log("formasPagoSelected: ", formasPagoSelected)
+      //agrego
+      setFormaPagoSelected([
+        ...formasPagoSelected,
+        {
+          id:                     idTabla, 
+          forma_pago_id:          fp.id,
+          forma_pago_nombre:      fp.nombre, 
+          monto:                  monto, 
+          fecha:                  (new Date()).toLocaleDateString(),
+          titular:                titular,
+          banco_billetera_id:     bancBille.id,
+          banco_billetera_nombre: bancBille.nombre,
+          estado_id:              estadoOp.id,
+          estado_nombre:          estadoOp.descripcion,
+          cbu_nro_comprobante:    cbu,
+        }
+      ]); 
+      setIdTabla(prev => prev-1);
     }
-
-    setFormaPagoSelected([
-      ...formasPagoSelected,
-      {
-        id:                     idTabla, 
-        forma_pago_id:          fp.id,
-        forma_pago_nombre:      fp.nombre, 
-        monto:                  monto, 
-        fecha:                  (new Date()).toLocaleDateString(),
-        titular:                titular,
-        banco_billetera_id:     bancBille.id,
-        banco_billetera_nombre: bancBille.nombre,
-        estado_id:              estadoOp.id,
-        estado_nombre:          estadoOp.descripcion,
-        cbu_nro_comprobante:    cbu,
-      }
-    ]); 
-    setIdTabla(prev => prev-1);
+    
     
     //reseteo
     setFp(fpVacio);
@@ -524,6 +527,7 @@ export function FormasPagosForm({ventaId, modo, /*formasPagoHab,*/ formasPagoSel
   };
 
   const editoRowFp = (nvo:any) => {
+    console.log("nvo: ", nvo)
     setFormaPagoSelected(
       prev =>
         prev.map(item =>

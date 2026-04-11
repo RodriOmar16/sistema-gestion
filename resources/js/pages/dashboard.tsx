@@ -238,19 +238,23 @@ export default function Graficos(){
           {tab === 'ventas' && (
             <div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4 px-4">
-                <div className="bg-gray-200 dark:bg-gray-800 rounded-xl border p-4 text-center">
+                <div className="bg-gray-200 dark:bg-gray-800 border p-3 text-center">
                   <h3 className="text-sm text-gray-800 dark:text-white">Ganancias</h3>
-                  <p className="text-2xl font-bold text-green-700 dark:text-green-400">
-                    {load? '...' : convertirNumberPlata(String(totalFinal))}
+                  <p className="text-2xl font-bold text-green-700 dark:text-green-400 text-center flex justify-center items-center h-10">
+                    {load ? <Loader2 size={25} className="animate-spin" /> : convertirNumberPlata(String(totalFinal))}
                   </p>
                 </div>
-                <div className="bg-gray-200 dark:bg-gray-800 rounded-xl border p-4 text-center">
+                <div className="bg-gray-200 dark:bg-gray-800 border p-3 text-center">
                   <h3 className="text-sm text-gray-800 dark:text-white">Ventas</h3>
-                  <p className="text-2xl font-bold text-blue-800 dark:text-blue-400">{load? '...' : cantFinal}</p>
+                  <p className="text-2xl font-bold text-blue-800 dark:text-blue-400 text-center flex justify-center items-center h-10">
+                    {load? <Loader2 size={25} className="animate-spin" /> : cantFinal}
+                  </p>
                 </div>
-                <div className="bg-gray-200 dark:bg-gray-800 rounded-xl border p-4 text-center">
+                <div className="bg-gray-200 dark:bg-gray-800 border p-3 text-center">
                   <h3 className="text-sm text-gray-800 dark:text-white">Promedio</h3>
-                  <p className="text-2xl font-bold text-teal-700 dark:text-teal-400">{load? '...' : convertirNumberPlata(String(promedio))}</p>
+                  <p className="text-2xl font-bold text-teal-700 dark:text-teal-400 text-center flex justify-center items-center h-10">
+                    {load? <Loader2 size={25} className="animate-spin" /> : convertirNumberPlata(String(promedio))}
+                  </p>
                 </div>
               </div>
 
@@ -268,7 +272,7 @@ export default function Graficos(){
                 {datos.length > 0 && !load && (
                   <>
                     {data.tipo == 1 && (
-                      <GraficoBarras tipo={data.tipo} modo={modo} data={datos} ejeX='name' ejeY={modo? 'total' : 'cantidad'} color="#cd8e19"/>
+                      <GraficoBarras tipo={data.tipo} modo={modo} data={datos} ejeX='name' ejeY={modo? 'total' : 'cantidad'} color="#5831ac"/>
                     )}
                     {data.tipo == 2 && (
                       <GraficoBarras tipo={data.tipo} modo={modo} data={datos} ejeX='name' ejeY={modo? 'total' : 'cantidad'} color="#4e89a3"/>
@@ -306,7 +310,7 @@ export default function Graficos(){
                     <div className='flex gap-4 grid grid-cols-12'>
                       {/* Gráficos */}
                       <div className="col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-7">
-                        <GraficoRankin data={modo? datosProdTotal : datosProd} ejeX={modo? 'total' : 'cantidad'} ejeY='name' color="#19cd9d" altura={450}/>
+                        <GraficoRankin data={modo? datosProdTotal : datosProd} ejeX={modo? 'total' : 'cantidad'} ejeY='name' color="#19cd9d" altura={400}/>
                       </div>
                       {/* Tablas */}
                       <div className="col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-5 pt-4 pr-4">

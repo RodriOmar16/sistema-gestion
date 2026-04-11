@@ -48,6 +48,7 @@ export default function Graficos(){
     {id: 7, nombre: 'Julio'},    {id: 8, nombre: 'Agosto'},    {id: 9, nombre: 'Septiembre'},
     {id: 10, nombre: 'Octubre'},    {id: 11, nombre: 'Noviembre'},    {id: 12, nombre: 'Diciembre'}
   ];
+  const [tema, setTema] = useState('');
   const [modo, setModo] = useState(false);
   const [totalFinal, setTotalFinal] = useState(0);
   const [cantFinal, setCantFinal]   = useState(0);
@@ -78,6 +79,7 @@ export default function Graficos(){
       }
     };
     cargarDatos();
+    setTema(localStorage.getItem('appearance')??'light');
   }, []);
 
 
@@ -105,6 +107,7 @@ export default function Graficos(){
     setDatosProdTotal(dataProductos.arr2);
   }
 
+  console.log("tema: ", tema)
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Gráficos" />
@@ -272,7 +275,7 @@ export default function Graficos(){
                 {datos.length > 0 && !load && (
                   <>
                     {data.tipo == 1 && (
-                      <GraficoBarras tipo={data.tipo} modo={modo} data={datos} ejeX='name' ejeY={modo? 'total' : 'cantidad'} color="#5831ac"/>
+                      <GraficoBarras tipo={data.tipo} modo={modo} data={datos} ejeX='name' ejeY={modo? 'total' : 'cantidad'} color={tema=='dark' ? "#6543af" : "#491aae"}/>
                     )}
                     {data.tipo == 2 && (
                       <GraficoBarras tipo={data.tipo} modo={modo} data={datos} ejeX='name' ejeY={modo? 'total' : 'cantidad'} color="#4e89a3"/>
@@ -283,7 +286,7 @@ export default function Graficos(){
                         tipo={data.tipo} modo={modo}
                         name='name' 
                         valor={modo? 'total' : 'cantidad'}
-                        color="#8782ca"
+                        color={tema=='dark' ? "#82b6ca" : "#1693c5"}
                       />
                     )}
                   </>

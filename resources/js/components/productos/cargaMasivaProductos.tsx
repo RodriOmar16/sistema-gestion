@@ -121,7 +121,7 @@ export default function CargaMasiva({ open, onOpenChange }: Props){
   //funciones
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("llegó")
+    
     if(prods.length <= 0){
       setTitle('Información faltante!');
       setText('Se requiere subir un archivo con al menos un producto válido.');
@@ -145,7 +145,7 @@ export default function CargaMasiva({ open, onOpenChange }: Props){
       };
     });
 
-    console.log("payload: ", payload);
+    
     const res  = await fetch(route('productos.storeMasivo'),{
       method: 'POST',
       headers: {
@@ -158,7 +158,7 @@ export default function CargaMasiva({ open, onOpenChange }: Props){
     const resp = await res.json();
 
     if(resp.resultado == 0){
-      setTitle("Error en carga masiva exitosa");
+      setTitle("Error en carga masiva");
       setText(resp.mensaje);
       setColor('error');
       setActivo(true);
@@ -166,7 +166,7 @@ export default function CargaMasiva({ open, onOpenChange }: Props){
     }
 
     if(resp.errores.length > 0){
-      setTitle("Error en carga masiva exitosa");
+      setTitle("Errores en carga masiva");
       setText(resp.errores);
       setColor('error');
       setActivo(true);

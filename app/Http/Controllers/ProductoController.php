@@ -697,7 +697,7 @@ class ProductoController extends Controller
         'resultado'   => 1,
         'mensaje'     => 'Carga masiva de Productos creada correctamente',
         'timestamp'   => now()->timestamp,
-        'errores'     => $erroresStr,
+        'errores'     => $erroresStr??[],
       ]);
     } catch (\Throwable $e) {
       DB::rollBack();

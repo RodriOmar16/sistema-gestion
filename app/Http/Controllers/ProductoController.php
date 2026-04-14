@@ -659,13 +659,18 @@ class ProductoController extends Controller
           ];
           continue;
         }
+        
+        $marca = null;
+        if(!empty($prod['marca_nombre'])){
+          $marca = Marca::where('nombre', $prod['marca_nombre'])->first();
+        }
 
         $producto = Producto::create([
           'nombre'       => $prod['producto_nombre'],
           'descripcion'  => $prod['descripcion'],
           'inhabilitado' => $prod['inhabilitado'] ? 1 : 0,
           'precio'       => $prod['precio'],
-          'marca_id'     => $prod['marca_id'] ?? 14,
+          'marca_id'     => $marca?->marca_id ?? 14,
           'stock_minimo' => $prod['stock_minimo'],
           'codigo_barra' => $prod['codigo_barra'] ?? $this->generarCodigoInterno(),
           'imagen'       => $prod['imagen'],
@@ -685,6 +690,7 @@ class ProductoController extends Controller
         }
       }
 
+      $erroresStr = [];
       if (!empty($errores)) {
         $erroresStr = collect($errores)
           ->map(fn($e) => "Producto: {$e['producto']} - {$e['error']}")
@@ -697,7 +703,7 @@ class ProductoController extends Controller
         'resultado'   => 1,
         'mensaje'     => 'Carga masiva de Productos creada correctamente',
         'timestamp'   => now()->timestamp,
-        'errores'     => $erroresStr??[],
+        'errores'     => $erroresStr,
       ]);
     } catch (\Throwable $e) {
       DB::rollBack();
@@ -705,7 +711,7 @@ class ProductoController extends Controller
         'resultado' => 0,
         'mensaje'   => 'Ocurrió un error al intentar grabar de forma masiva productos: '.$e->getMessage(),
         'timestamp' => now()->timestamp,
-        'errores'     => $errores,
+        'errores'     => $erroresStr,
       ]);
     }
   }

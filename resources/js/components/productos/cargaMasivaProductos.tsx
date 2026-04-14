@@ -86,9 +86,6 @@ function DataTableMasivo({ data, setData}: PropsTable) {
   );
 }
 
-
-
-
 interface Props{
   open: boolean;
   onOpenChange: (open:boolean) => void;

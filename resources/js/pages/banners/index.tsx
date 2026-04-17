@@ -205,7 +205,6 @@ export default function Banners(){
 		setLoading(true);
 
 		const payload = JSON.parse(JSON.stringify(pendingData));
-		console.log("payload: ", payload)
 		if (modalMode === 'create') {
 			router.post(
 				route('banners.store'), payload,

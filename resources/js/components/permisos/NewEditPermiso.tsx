@@ -86,8 +86,6 @@ export default function NewEditPermiso({ open, onOpenChange, mode, permiso, onSu
         fetch(`/permiso/${permiso.permiso_id}/roles_users`)
           .then(res => res.json())
           .then(({ roles_asignados, usuarios_asignados }) => {
-            //console.log("menus_asignados: ",menus_asignados, ".. rutas_asignadas ", rutas_asignadas);
-            //console.log("Array.isArray(menus_asignados): ", Array.isArray(menus_asignados))
             setSelectedRoles(ordenarPorTexto(roles_asignados, 'nombre'));
             setSelectedUsers(ordenarPorTexto(usuarios_asignados, 'nombre'));
 

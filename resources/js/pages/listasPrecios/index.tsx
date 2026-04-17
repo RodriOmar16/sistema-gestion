@@ -187,9 +187,7 @@ export default function ListasPrecios(){
     }
   };
   const inhabilitarHabilitar = () => {
-    console.log("listaPrecioCopia: ", listaPrecioCopia)
     if (!listaPrecioCopia || !listaPrecioCopia.lista_precio_id) return;
-    console.log("Enviando ID:", listaPrecioCopia.lista_precio_id);
     setLoading(true);
     router.put(
       route('listasPrecios.toggleEstado', { lista: listaPrecioCopia.lista_precio_id }),{},

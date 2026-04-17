@@ -159,7 +159,6 @@ export default function CreateViewCajas(){
   const handleSubmit = (e:React.FormEvent) => {
     e.preventDefault();
     if(errorEfectivo || errorDebito || errorTransferencia){
-      console.log("no se valida")
       return;
     }
     if(Number(data.efectivo_user) === 0 && Number(data.debito_user) === 0 && Number(data.transferencia_user) === 0){
@@ -187,7 +186,6 @@ export default function CreateViewCajas(){
     };
 
     if (mode === 'create') {
-      console.log("entro por error")
     } else {
       router.put(
         route('caja.update',{caja: data.caja_id}),
@@ -368,7 +366,6 @@ export default function CreateViewCajas(){
                                   const nuevo = values.floatValue || 0;
                                   setData({...data, efectivo_user: nuevo});
                                   setData('total_user', (Number(nuevo) + Number(data.debito_user) + Number(data.transferencia_user))) 
-                                  console.log("nuevo typeof: ", typeof nuevo)
                                   setErrorEfectivo(Number(nuevo) < 0);
                                 }}
                               />	

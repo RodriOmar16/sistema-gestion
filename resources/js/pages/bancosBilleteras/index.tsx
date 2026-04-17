@@ -314,7 +314,6 @@ export default function BancosBilleteras(){
         color={color}
         onClose={() => {
           setActivo(false);
-          console.log("respuesta: ", respuesta)
           if (respuesta.resultado === 1 && respuesta.banco_billetera_id) {
             setModalOpen(false);
             router.get(route('bancosBilleteras.index'),

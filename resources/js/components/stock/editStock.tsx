@@ -53,8 +53,6 @@ export default function EditStock({ open, onOpenChange, onSubmit, loading, stock
   }, [open]);
   useEffect(() => {
     if (open) {
-      console.log("stock: ", stock);
-
       setData({
         stock_id:        stock?.stock_id,
         producto_id:     stock?.producto_id,

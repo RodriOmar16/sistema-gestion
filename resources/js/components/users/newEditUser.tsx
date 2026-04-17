@@ -78,7 +78,6 @@ export default function NewEditUser({ open, onOpenChange, mode, user, onSubmit, 
         fetch(`/user/${user.id}/roles_user`)
           .then(res => res.json())
           .then(({ roles_asignados }) => {
-            //console.log("roles_asignados: ", roles_asignados)
             if(roles_asignados && roles_asignados.length == 0){
               // Asegurarse que vengan en formato Multiple[]
               setSelectedRoles([]);

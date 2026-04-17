@@ -14,8 +14,6 @@ interface Props {
 }
 
 export default function SelectMultiple({opciones, seleccionados, setSeleccionados}: Props) {
-
-  //console.log("seleccionados: ", seleccionados)
   const toggleSeleccion = (id: number) => {
     const yaExiste = seleccionados.some((v) => v.id === id);
     if (yaExiste) {

@@ -444,8 +444,6 @@ export function FormasPagosForm({ventaId, modo, /*formasPagoHab,*/ formasPagoSel
       setCbu('');
       return;
     }else{
-      console.log("estadoOp: ", estadoOp)
-      console.log("formasPagoSelected: ", formasPagoSelected)
       //agrego
       setFormaPagoSelected([
         ...formasPagoSelected,
@@ -489,7 +487,6 @@ export function FormasPagosForm({ventaId, modo, /*formasPagoHab,*/ formasPagoSel
   }
 
   const editarFp = (p_fp:any) => {
-    //console.log("Abrir modal y editar: ", p_fp);
     setOpenEditarFp(true);
     setFpEditada(p_fp);
   };
@@ -527,7 +524,6 @@ export function FormasPagosForm({ventaId, modo, /*formasPagoHab,*/ formasPagoSel
   };
 
   const editoRowFp = (nvo:any) => {
-    console.log("nvo: ", nvo)
     setFormaPagoSelected(
       prev =>
         prev.map(item =>

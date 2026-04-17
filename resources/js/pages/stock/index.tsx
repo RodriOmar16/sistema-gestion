@@ -203,8 +203,7 @@ export default function Productos(){
       if (!pendingData) return;
       setLoading(true);
       const payload = JSON.parse(JSON.stringify(pendingData));
-  
-      console.log("payload: ", payload)
+
       if (modalMode === 'create') {
         router.post(
           route('stock.store'), {productos: payload},

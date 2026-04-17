@@ -90,7 +90,6 @@ export default function NewEditDialog({ open, onOpenChange, mode, menu, onSubmit
     }
 
     if (menu) {
-      console.log(menu)
       setData({
         menu_id:      menu.menu_id,
         nombre:       menu.nombre,

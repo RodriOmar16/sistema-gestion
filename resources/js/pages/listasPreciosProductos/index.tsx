@@ -401,7 +401,6 @@ export default function ListasPreciosProductos(){
       setText('Elemento agregado correctamente a la lista de precio');
       setColor('success');
     }else {
-      console.log("hay repetidos")
       setActivo(true);
       setTitle("Repetidos en la lista");
       setText('No es posible agregar este elemento porque ya se encuentra en el listado.');

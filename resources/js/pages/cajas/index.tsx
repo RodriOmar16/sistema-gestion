@@ -265,7 +265,6 @@ export default function Cajas(){
   const openCaja = (data: Caja) => {
     setModalMode('edit');
     setSelectedCaja(data);
-    console.log("caja: ", data)
     //setModalOpen(true);
     //abro en otra ventana la caja
     //'caja.show'

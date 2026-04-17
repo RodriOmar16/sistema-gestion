@@ -100,7 +100,6 @@ export function getColumns(
       ,
       cell: ({ row }) => {
         const fechaString = row.getValue("updated_at") as string;
-        console.log("fechaString: ", fechaString)
         return <div>{ fechaString && formatDateTime(fechaString) }</div> 
       },
     },

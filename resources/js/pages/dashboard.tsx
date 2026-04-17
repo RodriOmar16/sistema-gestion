@@ -106,8 +106,7 @@ export default function Graficos(){
     setDatosProd(dataProductos.arr);
     setDatosProdTotal(dataProductos.arr2);
   }
-
-  console.log("tema: ", tema)
+  
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Gráficos" />

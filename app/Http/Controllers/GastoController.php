@@ -192,4 +192,55 @@ class GastoController extends Controller
       ]);
     }
   }
+
+  public function getDatosGatos(Request $request){
+    $tipo = $request->input('tipo');
+    $anio = $request->input('anio');
+    $mes  = $request->input('mes');
+    $dia  = $request->input('dia');
+
+    $arr = [];
+    $totalFinal    = 0;
+    $cantidadFinal = 0;
+
+    // base query con join a categorias
+    $query = DB::table('gastos as g')
+        ->join('categorias_gastos as c', 'g.categoria_gasto_id', '=', 'c.categoria_gasto_id')
+        ->selectRaw('c.nombre as categoria, COUNT(*) as cantidad, SUM(g.monto) as total')
+        ->where('g.inhabilitado', 0);
+
+    // filtros según tipo
+    if ($tipo == 1) {
+        $query->whereDate('g.fecha', $dia);
+    }
+    if ($tipo == 2) {
+        $query->whereYear('g.fecha', $anio)
+              ->whereMonth('g.fecha', $mes);
+    }
+    if ($tipo == 3) {
+        $query->whereYear('g.fecha', $anio);
+    }
+
+    $gastos = $query
+        ->groupBy('c.nombre')
+        ->orderByDesc('total') // ranking por monto gastado
+        ->get();
+
+    foreach ($gastos as $g) {
+        $arr[] = [
+            'name'     => $g->categoria,
+            'cantidad' => $g->cantidad,
+            'total'    => $g->total,
+        ];
+        $totalFinal += $g->total;
+        $cantidadFinal += $g->cantidad;
+    }
+
+    $obj = [
+        'arr'            => $arr,
+        'total_final'    => $totalFinal,
+        'cantidad_final' => $cantidadFinal,
+    ];
+    return response()->json($obj);
+  }
 }

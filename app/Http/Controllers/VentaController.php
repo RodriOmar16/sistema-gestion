@@ -788,7 +788,7 @@ class VentaController extends Controller
     // ranking por total vendido
     $ventas2 = (clone $baseQuery)
       ->groupBy('p.nombre')
-      ->orderByDesc('total') // 👈 ahora ordena por total
+      ->orderByDesc('total') // ordena por total
       ->limit(10)
       ->get();
 

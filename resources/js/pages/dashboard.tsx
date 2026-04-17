@@ -12,6 +12,7 @@ import { convertirFechaBarrasGuiones, convertirNumberPlata, formatDate, redondea
 import { Loader2 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import GraficoRankin from '@/components/utils/grafico-ranking';
+import GraficoGastos from '@/components/utils/grafico_gasto';
 
 
 const breadcrumbs: BreadcrumbItem[] = [ { title: 'Gráficos', href: '', } ];
@@ -91,9 +92,10 @@ export default function Graficos(){
       anio: anios.find((e:any) => e.id === form.anio)?.anio ?? (new Date().getFullYear())
     }
     setLoad(true);
-    const [res, resp] = await Promise.all([
+    const [res, resp, respGasto] = await Promise.all([
       fetch(route('ventas.getDatos',{...payload})),
-      fetch(route('ventas.getDatosProductos',{...payload}))
+      fetch(route('ventas.getDatosProductos',{...payload})),
+      fetch(route('gastos.getDatosGatos', {...payload}))
     ]);
     const data = await res.json();
     setLoad(false);
@@ -105,6 +107,10 @@ export default function Graficos(){
     const dataProductos = await resp.json();
     setDatosProd(dataProductos.arr);
     setDatosProdTotal(dataProductos.arr2);
+
+    const dataGastos = await respGasto.json();
+    console.log("dataGastos: ", dataGastos);
+    setGastos(dataGastos.arr);
   }
   
   return (
@@ -357,7 +363,11 @@ export default function Graficos(){
                 )}
                 {gastos.length > 0 && !load && (
                   <>
-                    
+                    <GraficoGastos
+                      data={gastos}
+                      dataKey='total'
+                      nameKey='cantidad'
+                    />
                   </>
                 )}
               </div>

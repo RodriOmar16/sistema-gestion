@@ -9,7 +9,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LabelList } 
 
 interface Props{
   tipo: number;
-  modo: boolean;
+  modo?: boolean;
   data: any[];
   ejeX: string;
   ejeY: string;
@@ -35,7 +35,7 @@ export default function GraficoBarras({tipo, modo, ejeX, ejeY, data, color}:Prop
     <ResponsiveContainer width="100%" height={300}>
       <BarChart
         data={data}
-        margin={{ left: modo ? 40 : 0 }}
+        margin={{ left: modo ? 40 : 0, right: 15 }}
       >
         <XAxis dataKey={ejeX}/>
         <Tooltip content={<CustomTooltip tipo={tipo}/>} cursor={{ fill: '#2F2F3A', opacity: 0.3 }} />

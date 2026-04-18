@@ -8,7 +8,7 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'rec
 ];*/
 interface Props{
   tipo: number;
-  modo: boolean;
+  modo?: boolean;
   data: any[];
   name: string;
   valor: string;

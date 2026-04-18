@@ -14,7 +14,7 @@ const CustomTooltip = ({ active, payload }: any) => {
     const punto = payload[0].payload;
     return (
       <div className="rounded-lg shadow-md bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 p-3">
-        <p>Nombre: <strong>{punto.name}</strong></p>
+        <p>Categoría: <strong>{punto.name}</strong></p>
         <p>Cantidad: <strong>{punto.cantidad}</strong></p>
         <p>Ganancia: <strong>{convertirNumberPlata(String(punto.total))}</strong></p>
       </div>
@@ -34,7 +34,7 @@ export default function GraficoGastos({ data, dataKey, nameKey, altura, colores 
           nameKey={nameKey}
           cx="50%"
           cy="50%"
-          outerRadius={altura??0 / 2.5}
+          outerRadius={(altura ?? 300) / 2.5}
           label={({ name, value }) =>
             `${name}: ${Number(value).toLocaleString('es-AR')}`
           }

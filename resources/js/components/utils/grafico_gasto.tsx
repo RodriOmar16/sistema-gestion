@@ -6,7 +6,7 @@ interface Props {
   dataKey: string;   // ej: "total"
   nameKey: string;   // ej: "name"
   altura?: number;
-  colores?: string[];
+  colores: string[];
 }
 
 const CustomTooltip = ({ active, payload }: any) => {
@@ -23,7 +23,7 @@ const CustomTooltip = ({ active, payload }: any) => {
   return null;
 };
 
-export default function GraficoGastos({ data, dataKey, nameKey, altura, colores = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042']}: Props) {
+export default function GraficoGastos({ data, dataKey, nameKey, altura, colores}: Props) {
   return (
     <ResponsiveContainer width="100%" height={altura}>
       <PieChart>
@@ -34,9 +34,9 @@ export default function GraficoGastos({ data, dataKey, nameKey, altura, colores 
           nameKey={nameKey}
           cx="50%"
           cy="50%"
-          outerRadius={(altura ?? 300) / 2.5}
+          outerRadius={120}
           label={({ name, value }) =>
-            `${name}: ${Number(value).toLocaleString('es-AR')}`
+            `${name}: ${convertirNumberPlata(String(value))}`
           }
         >
           {data.map((_, index) => (

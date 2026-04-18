@@ -62,7 +62,6 @@ export default function Graficos(){
   //
   const [tab, setTab] = useState<'ventas' | 'productos' | 'gastos'>('ventas');
 
-
   //useEffect
   useEffect(() => {
     const cargarDatos = async () => {
@@ -109,8 +108,11 @@ export default function Graficos(){
     setDatosProdTotal(dataProductos.arr2);
 
     const dataGastos = await respGasto.json();
-    console.log("dataGastos: ", dataGastos);
-    setGastos(dataGastos.arr);
+
+    setGastos(dataGastos.arr.map((e:any) => ({
+      ...e,
+      total: Number(e.total)
+    })));
   }
   
   return (
@@ -369,6 +371,11 @@ export default function Graficos(){
                       dataKey='total'
                       nameKey='name'
                       altura={300}
+                      colores={tema != 'dark'? 
+                          ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'] 
+                        : 
+                          ['#144f83', '#02604f', '#b68416', '#822e04']
+                      }
                     />
                   </>
                 )}

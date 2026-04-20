@@ -58,7 +58,8 @@ export default function Graficos(){
   const [datosProd, setDatosProd]           = useState([]); 
   const [datosProdTotal, setDatosProdTotal] = useState([]); 
   const [gastos, setGastos] = useState([]);
-
+  const [totalGastos, setTotalGastos] = useState(0);
+  const [cantGastos, setCantGastos] = useState(0);
   //
   const [tab, setTab] = useState<'ventas' | 'productos' | 'gastos'>('ventas');
 
@@ -108,7 +109,8 @@ export default function Graficos(){
     setDatosProdTotal(dataProductos.arr2);
 
     const dataGastos = await respGasto.json();
-
+    setTotalGastos(dataGastos.total_final);
+    setCantGastos(dataGastos.cantidad_final);
     setGastos(dataGastos.arr.map((e:any) => ({
       ...e,
       total: Number(e.total)
@@ -318,10 +320,10 @@ export default function Graficos(){
                 )}
                 {datosProd.length > 0 && !load && (
                   <>
-                    <div className='flex gap-4 grid grid-cols-12'>
+                    <div className='m-2 flex gap-4 grid grid-cols-12'>
                       {/* Gráficos */}
-                      <div className="col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-7">
-                        <GraficoRankin data={modo? datosProdTotal : datosProd} ejeX={modo? 'total' : 'cantidad'} ejeY='name' color="#19cd9d" altura={400}/>
+                      <div className="overflow-auto col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-7">
+                        <GraficoRankin data={modo? datosProdTotal : datosProd} ejeX={modo? 'total' : 'cantidad'} ejeY='name' color="#19cd9d" altura={390}/>
                       </div>
                       {/* Tablas */}
                       <div className="col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-5 pt-4 pr-4">
@@ -353,30 +355,51 @@ export default function Graficos(){
 
           {tab === 'gastos' && (
             <div>
-              <div className=" flex items-center justify-center mx-4 overflow-auto rounded-xl h-80 border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
-                {gastos.length === 0 && !load && (
-                  <div className='ml-4 my-3 text-center'>
-                    No hay datos para mostrar
+              <div className="mx-4">
+                { gastos.length === 0 && !load && (
+                  <div className='ml-4 my-3 text-center flex justify-center items-center'>
+                    <span>No hay datos para mostrar</span>
                   </div>
                 )}
                 { load && (
-                  <div className='ml-4 my-3 text-center flex items-center'>
-                    <Loader2 size={20} className="animate-spin mr-2" /> Cargando...
+                  <div className="flex justify-center items-center my-3 h-50">
+                    <Loader2 size={20} className="animate-spin mr-2" /> 
+                    <span>Cargando...</span>
                   </div>
                 )}
+
+                
                 {gastos.length > 0 && !load && (
                   <>
-                    <GraficoGastos
-                      data={gastos}
-                      dataKey='total'
-                      nameKey='name'
-                      altura={300}
-                      colores={tema != 'dark'? 
-                          ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'] 
-                        : 
-                          ['#144f83', '#02604f', '#b68416', '#822e04']
-                      }
-                    />
+                    <div className='gap-4 grid grid-cols-12'>
+                      <div className='col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-8 flex items-center overflow-auto rounded-xl h-80 border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border'>
+                        <GraficoGastos
+                          data={gastos}
+                          dataKey='total'
+                          nameKey='name'
+                          altura={350}
+                          colores={tema != 'dark'? 
+                              ['#0088FE', '#1f629e', '#02111e', '#033c6d', '#555d63'] 
+                            : 
+                              ['#0c85ef', '#265782', '#0d3557', '#4b6378', '#144f83']
+                          }
+                        />
+                      </div>
+                      <div className='col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-4 flex flex-col justify-center'>
+                        <div className="bg-gray-200 dark:bg-gray-800 border p-3 text-center mb-4 flex flex-col items-center">
+                          <h3 className="text-sm text-gray-800 dark:text-white">Cantidad</h3>
+                          <p className="text-2xl font-bold text-blue-800 dark:text-blue-400 flex justify-center items-center h-10">
+                            {load ? <Loader2 size={25} className="animate-spin" /> : cantGastos}
+                          </p>
+                        </div>
+                        <div className="bg-gray-200 dark:bg-gray-800 border p-3 text-center flex flex-col items-center">
+                          <h3 className="text-sm text-gray-800 dark:text-white">Total</h3>
+                          <p className="text-2xl font-bold text-teal-700 dark:text-teal-400 flex justify-center items-center h-10">
+                            {load ? <Loader2 size={25} className="animate-spin" /> : convertirNumberPlata(String(totalGastos))}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                   </>
                 )}
               </div>

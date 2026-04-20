@@ -33,7 +33,7 @@ export default function GraficoLineas({tipo, modo, data, name, valor, color}:Pro
   return (
     <ResponsiveContainer width="100%" height={300}>
       <LineChart data={data}
-        margin={{ left: modo ? 50 : 0, top: 10 }}
+        margin={{ left: modo ? 50 : 0, top: 10, right:10 }}
       >
         <XAxis dataKey={name} />
         <YAxis 

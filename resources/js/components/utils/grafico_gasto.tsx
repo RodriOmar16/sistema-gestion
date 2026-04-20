@@ -16,7 +16,7 @@ const CustomTooltip = ({ active, payload }: any) => {
       <div className="rounded-lg shadow-md bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 p-3">
         <p>Categoría: <strong>{punto.name}</strong></p>
         <p>Cantidad: <strong>{punto.cantidad}</strong></p>
-        <p>Ganancia: <strong>{convertirNumberPlata(String(punto.total))}</strong></p>
+        <p>Total: <strong>{convertirNumberPlata(String(punto.total))}</strong></p>
       </div>
     );
   }

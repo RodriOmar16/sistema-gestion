@@ -61,7 +61,7 @@ export default function Graficos(){
   const [totalGastos, setTotalGastos] = useState(0);
   const [cantGastos, setCantGastos] = useState(0);
   //
-  const [tab, setTab] = useState<'ventas' | 'productos' | 'gastos'>('ventas');
+  const [tab, setTab] = useState<'ventas' | 'productos' | 'gastos' | 'balances'>('ventas');
 
   //useEffect
   useEffect(() => {
@@ -132,16 +132,22 @@ export default function Graficos(){
               Ventas
             </button>
             <button
+              className={`pb-2 ${tab === 'gastos' ? 'border-b-2 border-blue-500 font-bold' : ''}`}
+              onClick={() => setTab('gastos')}
+            >
+              Gastos
+            </button>
+            <button
               className={`pb-2 ${tab === 'productos' ? 'border-b-2 border-blue-500 font-bold' : ''}`}
               onClick={() => setTab('productos')}
             >
               Productos
             </button>
             <button
-              className={`pb-2 ${tab === 'gastos' ? 'border-b-2 border-blue-500 font-bold' : ''}`}
-              onClick={() => setTab('gastos')}
+              className={`pb-2 ${tab === 'balances' ? 'border-b-2 border-blue-500 font-bold' : ''}`}
+              onClick={() => setTab('balances')}
             >
-              Gastos
+              Balances
             </button>
           </div>
 
@@ -357,7 +363,7 @@ export default function Graficos(){
             <div>
               <div className="mx-4">
                 { gastos.length === 0 && !load && (
-                  <div className='ml-4 my-3 text-center flex justify-center items-center'>
+                  <div className='h-50 ml-4 my-3 text-center flex justify-center items-center'>
                     <span>No hay datos para mostrar</span>
                   </div>
                 )}

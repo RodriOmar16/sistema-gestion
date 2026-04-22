@@ -2,13 +2,13 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Venta registrada</title>
+    <title>Compra registrada</title>
 </head>
 <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px;">
     <table width="100%" cellpadding="0" cellspacing="0">
         <tr>
             <td align="center">
-                <table width="600" cellpadding="20" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                <table cellpadding="20" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); max-width:600px; width:100%;">
                     <tr>
                         <td>
                             <h1 style="color: #2c3e50; text-align: center;">✅ Compra realizada</h1>

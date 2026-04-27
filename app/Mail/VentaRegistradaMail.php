@@ -9,52 +9,42 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
+use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\Venta;
+
 class VentaRegistradaMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
-    public $venta;
+    protected $venta_id;
+    protected $conPdf;
 
-    /**
-     * Create a new message instance.
-     */
-    public function __construct($venta)
+    public function __construct($venta_id, $conPdf=false)
     {
-        $this->venta = $venta;
+        $this->venta_id = $venta_id;
+        $this->conPdf   = $conPdf;
     }
 
     public function build(){
-        return $this->subject('Compra nueva realizada')
-                    ->view('emails.venta_registrada');
+        $venta = Venta::with(['cliente','detalles.producto','pagos'])
+                      ->find($this->venta_id);
+
+        if (!$venta) {
+            \Log::error("VentaRegistradaMail: venta_id {$this->venta_id} no encontrada");
+            return $this->subject('Error en venta')
+                        ->view('emails.error')
+                        ->with(['mensaje' => 'No se encontró la venta']);
+        }
+
+        $mail = $this->subject('Compra nueva realizada')
+                     ->view('emails.venta_registrada')
+                     ->with(['venta' => $venta]);
+
+        if ($this->conPdf) {
+            $pdf = Pdf::loadView('pdf.factura', ['venta' => $venta]);
+            $mail->attachData($pdf->output(), "factura_{$venta->venta_id}.pdf");
+        }
+
+        return $mail;
     }
-
-    /**
-     * Get the message envelope.
-     */
-    /*public function envelope(): Envelope
-    {
-        return new Envelope(
-            subject: 'Venta Registrada Mail',
-        );
-    }*/
-
-    /**
-     * Get the message content definition.
-     */
-    /*public function content(): Content
-    {
-        return new Content(
-            view: 'view.name',
-        );
-    }*/
-
-    /**
-     * Get the attachments for the message.
-     *
-     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
-     */
-    /*public function attachments(): array
-    {
-        return [];
-    }*/
 }

@@ -416,12 +416,8 @@ class VentaController extends Controller
       // al final del store, antes de enviar el mail
       $venta->load(['cliente', 'detalles.producto', 'pagos']);
 
-      //mando mail al cliente
-      //Mail::to($cliente->email)->send(new VentaRegistradaMail($venta));
-      Mail::to($cliente->email)->queue(new VentaRegistradaMail($venta));
+      Mail::to($cliente->email)->queue(new VentaRegistradaMail($venta->venta_id, $venta->cliente_id != 12));
 
-      //mando mail al dueño
-      //Mail::to('rodrigoomarmiranda1@gmail.com')->send(new VentaRegistradaDuenioMail($venta));
       Mail::to('rodrigoomarmiranda1@gmail.com')->queue(new VentaRegistradaDuenioMail($venta));
 
       return response()->json([
@@ -429,19 +425,13 @@ class VentaController extends Controller
         'mensaje'   => 'Venta grabado correctamente',
         'venta_id'  => $venta->venta_id,
         'timestamp' => now()->timestamp,
-      ]);
+      ], 200, [], JSON_UNESCAPED_UNICODE);
 
     } catch (\Throwable $e) {
       DB::rollBack();
-      /*return inertia('ventas/createView',[
-        'resultado' => 0,
-        'mensaje'   => 'Ocurrió un error al grabar la venta: '.$e->getMessage(),
-        'mode'      => 'create',
-        'timestamp' => now()->timestamp,
-      ]);*/
       return response()->json([
         'resultado' => 0,
-        'mensaje'   => 'Ocurrió un error al grabar la venta: '.$e->getMessage(),
+        'mensaje'   => 'Ocurrió un error al grabar la venta: '. mb_convert_encoding($e->getMessage(), 'UTF-8', 'UTF-8'),
         'mode'      => 'create',
         'timestamp' => now()->timestamp,
       ]);

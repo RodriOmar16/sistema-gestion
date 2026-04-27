@@ -12,8 +12,14 @@ export interface AuthProps {
 }
 
 export interface Autocomplete{
-  value:number;
+  value: number;
   label: string;
+};
+
+export interface AutocompleteProd{
+  value: number;
+  label: string;
+  price: number;
 };
 
 export interface Banner {

@@ -21,6 +21,40 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class ProductoController extends Controller
 {
+  //consulta usada en los demás form, devuelve productos hab y ya (sin autocomplete)
+  public function productosHabilitados(){
+    $productos = Producto::where('inhabilitado',false)->get()->map(function($prod){
+      return [
+        'id' => $prod->producto_id,
+        'nombre' => $prod->nombre,
+        'precio' => $prod->precio,
+      ];
+    });
+    return response()->json($productos);
+  }
+
+  //devuelve id y nombre de productos (con o sin stock) react-select
+  public function habilitados(Request $request)
+  {
+    try {
+      $buscar = $request->get('buscar', '');
+
+      $productos = Producto::query()
+        ->where('inhabilitado',0)
+        ->when($buscar, fn($q) => $q->where('nombre', 'LIKE', "%{$buscar}%"))
+        ->select('producto_id as id', 'nombre')
+        ->paginate(20);
+
+      return response()->json([
+          'elementos' => $productos
+      ]);
+    } catch (\Throwable $e) {
+      //Log::error('Error en buscar productos: ' . $e->getMessage());
+      return response()->json(['error' => $e->getMessage()], 500);
+    }
+  }
+
+  //devuelve información de un producto por su id
   public function getProducto($id)
   {
     try {
@@ -45,26 +79,19 @@ class ProductoController extends Controller
     }
   }
 
-  public function productosHabilitados(){
-    $productos = Producto::where('inhabilitado',false)->get()->map(function($prod){
-      return [
-        'id' => $prod->producto_id,
-        'nombre' => $prod->nombre,
-        'precio' => $prod->precio,
-      ];
-    });
-    return response()->json($productos);
-  }
-
-  public function habilitados(Request $request)
-  {
-    try {
+  //devuelve id y nombre de productos con stock 
+  public function productosStockHabilitados(Request $request){
+    /*try {
       $buscar = $request->get('buscar', '');
 
       $productos = Producto::query()
+        ->with('stock')
         ->where('inhabilitado',0)
         ->when($buscar, fn($q) => $q->where('nombre', 'LIKE', "%{$buscar}%"))
         ->select('producto_id as id', 'nombre')
+        ->whereHas('stock', function($q){ 
+          $q->where('cantidad', '>', 0); 
+        })
         ->paginate(20);
 
       return response()->json([
@@ -73,10 +100,8 @@ class ProductoController extends Controller
     } catch (\Throwable $e) {
       //Log::error('Error en buscar productos: ' . $e->getMessage());
       return response()->json(['error' => $e->getMessage()], 500);
-    }
-  }
+    }*/
 
-  public function productosStockHabilitados(Request $request){
     try {
       $buscar = $request->get('buscar', '');
 
@@ -84,7 +109,7 @@ class ProductoController extends Controller
         ->with('stock')
         ->where('inhabilitado',0)
         ->when($buscar, fn($q) => $q->where('nombre', 'LIKE', "%{$buscar}%"))
-        ->select('producto_id as id', 'nombre')
+        ->select('producto_id as id', 'nombre', 'precio')
         ->whereHas('stock', function($q){ 
           $q->where('cantidad', '>', 0); 
         })
@@ -235,26 +260,26 @@ class ProductoController extends Controller
 
   public function getImages()
   {
-      //\Log::info('Listando imágenes...');
+    //\Log::info('Listando imágenes...');
 
-      try {
-          $path = public_path('images/productos');
+    try {
+        $path = public_path('images/productos');
 
-          if (!File::exists($path)) {
-              throw new \Exception("La carpeta no existe: $path");
-          }
+        if (!File::exists($path)) {
+            throw new \Exception("La carpeta no existe: $path");
+        }
 
-          $files = File::files($path);
+        $files = File::files($path);
 
-          $urls = collect($files)->map(function ($file) {
-              return 'images/productos/' . $file->getFilename();
-          });
+        $urls = collect($files)->map(function ($file) {
+            return 'images/productos/' . $file->getFilename();
+        });
 
-          return response()->json($urls);
-      } catch (\Throwable $e) {
-          \Log::error('Error al listar imágenes: ' . $e->getMessage());
-          return response()->json(['error' => $e->getMessage()], 500);
-      }
+        return response()->json($urls);
+    } catch (\Throwable $e) {
+        \Log::error('Error al listar imágenes: ' . $e->getMessage());
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
   }
 
   public function index(Request $request)
@@ -388,12 +413,6 @@ class ProductoController extends Controller
       }
       //commit
       DB::commit();
-      /*return inertia('productos/createEdit',[
-        'resultado'   => 1,
-        'mensaje'     => 'Producto create correctamente',
-        'producto_id' => $producto_id,
-        'timestamp'   => now()->timestamp,
-      ]);*/
       return response()->json([
         'resultado'   => 1,
         'mensaje'     => 'Producto creado correctamente',
@@ -402,11 +421,6 @@ class ProductoController extends Controller
       ]);
     } catch (\Throwable $e) {
       DB::rollBack();
-      /*return inertia('productos/createEdit',[
-        'resultado' => 0,
-        'mensaje'   => 'Ocurrió un error al intentar crear el producto: '.$e->getMessage(),
-        'timestamp' => now()->timestamp,
-      ]);*/
       return response()->json([
         'resultado' => 0,
         'mensaje'   => 'Ocurrió un error al intentar crear el producto: '.$e->getMessage(),
@@ -417,8 +431,6 @@ class ProductoController extends Controller
 
   public function update(Request $request, Producto $producto)
   {
-    \Log::info('Request keys:', array_keys($request->all()));
-
     DB::beginTransaction();
     try {
       //valido los datos
@@ -434,10 +446,6 @@ class ProductoController extends Controller
         'vencimiento'     => 'string|nullable|max:255',
 
         'categorias'      => 'array|min:1',
-        //'categorias.*.id' => 'integer', 
-        //'categorias.*.nombre' => 'string',
-
-        //'file'            => 'nullable|file|mimes:jpg,jpeg,png,webp|max:2048'
       ]);
 
       //controlo que no se repita, distinto al mismo
@@ -446,14 +454,8 @@ class ProductoController extends Controller
       $existe = Producto::whereRaw('LOWER(TRIM(codigo_barra)) = ?', [$codBarras])
                         ->whereRaw('LOWER(TRIM(nombre)) = ?', [$nombre])
                         ->where('producto_id','!=',$producto->producto_id)
-                        //->where('precio', $validated['precio'])
                         ->exists();
       if($existe){
-        /*return inertia('productos/createEdit',[
-          'resultado' => 0,
-          'mensaje'   => 'Ya existe un producto con esas especificaciones',
-          'timestamp' => now()->timestamp,
-        ]);*/
         DB::rollBack();
         return response()->json([
           'resultado' => 0,
@@ -461,14 +463,6 @@ class ProductoController extends Controller
           'timestamp' => now()->timestamp,
         ]);
       }
-
-      /*if ($request->hasFile('file')) { 
-        // guarda en public/imagenes 
-        $filename = time().'_'.$request->file('file')->getClientOriginalName(); 
-        $request->file('file')->move(public_path('imagenes/productos'), $filename);
-        
-        $validated['imagen'] = 'imagenes/productos/'.$filename; // ruta relativa 
-      }*/
 
       //actualizo el producto y sus tablas intermedias
       $producto->update([
@@ -490,12 +484,6 @@ class ProductoController extends Controller
 
       //commit
       DB::commit();
-      /*return inertia('productos/createEdit',[
-        'resultado'   => 1,
-        'mensaje'     => 'Se actualizó correctamente el producto',
-        'producto_id' => $producto->producto_id,
-        'timestamp' => now()->timestamp,
-      ]);*/
       return response()->json([
         'resultado'   => 1,
         'mensaje'     => 'Se actualizó correctamente el producto',
@@ -504,11 +492,6 @@ class ProductoController extends Controller
       ]);
     } catch (\Throwable $e) {
       DB::rollBack();
-      /*return inertia('productos/createEdit',[
-        'resultado' => 0,
-        'mensaje'   => 'Ocurrió un problema al momento de actualizar el producto: '.$e->getMessage(),
-        'timestamp' => now()->timestamp,
-      ]);*/
       return response()->json([
         'resultado' => 0,
         'mensaje'   => 'Ocurrió un problema al momento de actualizar el producto: '.$e->getMessage(),
@@ -556,12 +539,7 @@ class ProductoController extends Controller
   public function toggleEstado(Producto $producto)
   {
     $producto->update(['inhabilitado' => !$producto->inhabilitado]);
-    /*return inertia('productos/index',[
-      'resultado'   => 1,
-      'mensaje'     => 'Estado modificado exitosamente',
-      'producto_id' => $producto->producto_id,
-      'timestamp' => now()->timestamp,
-    ]);*/
+
     return response()->json([
       'resultado'   => 1,
       'mensaje'     => 'Estado modificado exitosamente',

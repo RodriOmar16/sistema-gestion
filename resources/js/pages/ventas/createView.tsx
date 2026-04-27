@@ -1,5 +1,5 @@
 import AppLayout from '@/layouts/app-layout';
-import { Venta, Cliente, AuthProps } from "@/types/typeCrud";
+import { Venta, Cliente, AuthProps, AutocompleteProd } from "@/types/typeCrud";
 import { useState, useEffect } from 'react';
 import { Head, useForm, router, usePage } from '@inertiajs/react';
 import { BreadcrumbItem } from '@/types';
@@ -27,6 +27,7 @@ import { NumericFormat } from 'react-number-format';
 import Loading from '@/components/utils/loadingDialog';
 import { Checkbox } from "@/components/ui/checkbox"
 import EditarFormaPagoRow from '@/components/ventas/editarRowFormaPago';
+import SelectProducts from '@/components/utils/select-products';
 
 const breadcrumbs: BreadcrumbItem[] = [ { title: '', href: '', } ];
 const ventaVacia = {
@@ -83,65 +84,47 @@ interface PropsDet{
   setActivo: (p:boolean) => void;
 };
 export function DetallesVenta({modo, data, set, productos, setProd, setTitle, setText, setColor, setActivo }:PropsDet){
-  const [totalAux, setTotalAux]           = useState(0); 
-  const [productoId, setProdId]           = useState(0);
-  const [optionProduct, setOptionProduct] = useState<Autocomplete|null>(null);
-  const [load, setLoad]                   = useState(false);
+  const [totalAux, setTotalAux]             = useState(0); 
+  const [productoId, setProdId]             = useState(0);
+  const [optionProduct, setOptionProduct] = useState<AutocompleteProd|null>(null);
+  const [load, setLoad]                     = useState(false);
   
   const controlarTotal = (e:number) => {
     setTotalAux(e);
     set({...data, total:Number(e)})
   };
 
-  const agregarProducto = async (idSeleccionado?: number) => {
-    let id = idSeleccionado;
-    if(idSeleccionado){
-      setProdId(idSeleccionado);
-    }else{
-      return;
-    }  
+  const agregarProducto = async (producto:any) => {
 
-    setLoad(true);
-    const res  = await fetch(route('productos.getProducto', id/*productoId*/));
-    const data = await res.json();
-    setLoad(false);
-    
-    if(data.resultado == 0){
-      setTitle("Problemas al agregar");
-      setText(data?.mensaje);
-      setColor("error");
-      setActivo(true);
-      return 
-    }
-
-    const producto = data.producto;    
+    if(!producto){ return  }
 
     //si ya existe al menos 1
-    const obj = productos.find(e => e.id === id/*productoId*/)
+    setLoad(true);
+    const obj = productos.find(e => e.id === producto.value)
     if(obj){
       //si está agregado le sumo la cantidad
       setProd((prev:any) =>
         prev.map((d:any) =>
-          d.id === id /*productoId*/ ? { ...d, cantidad: d.cantidad + 1 } : d
+          d.id === producto.value ? { ...d, cantidad: d.cantidad + 1 } : d
         )
       );
     } else {
       //si no está, lo agrego con cantidad 1
-      //const producto = productosHab.find(e => e.id === productoId);
       if (producto) {
         setProd((prev:any) => [
           ...prev,
           {
-            id: producto.producto_id,
-            nombre: producto.nombre,
-            precio: Number(producto.precio),
+            id: producto.value,
+            nombre: producto.label,
+            precio: Number(producto.price),
             cantidad: 1,
           },
         ]);
       }
     }
+    setLoad(false);
 
-    setProdId(0);
+    //setProdId(0);
     setOptionProduct(null);
   };
 
@@ -152,13 +135,9 @@ export function DetallesVenta({modo, data, set, productos, setProd, setTitle, se
 
   const seleccionarProducto = (option : any) => {
     if(option){
-      //set({...data, producto_id: option.value, producto_nombre: option.label});
-      setProdId(option.value);
       setOptionProduct(option);
-      agregarProducto(option.value);
+      agregarProducto(option);
     }else{
-      //set({...data, producto_id: '', producto_nombre: ''});
-      setProdId(0);
       setOptionProduct(null);
     }
   };
@@ -189,15 +168,14 @@ export function DetallesVenta({modo, data, set, productos, setProd, setTitle, se
           <>
             <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3'>
               <label htmlFor="cliente">Productos en Stock</label>
-                <GenericSelect
-                  route="productos-stock"
+                <SelectProducts
                   value={optionProduct}
                   onChange={(option) => seleccionarProducto(option)}
                   placeHolder="Seleccionar"
                   isDisabled={modo!='create'}
                 />
             </div>
-            <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3 flex items-end'>
+            {/*<div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3 flex items-end'>
               <Button disabled={modo!='create'} type="button" onClick={() => agregarProducto(0)}>
                 {load? (
                   <Loader2 size={20} className="animate-spin mr-2" />
@@ -205,7 +183,7 @@ export function DetallesVenta({modo, data, set, productos, setProd, setTitle, se
                   <Plus size={20}/>
                 )} Agregar
               </Button>
-            </div>
+            </div>*/}
           </>
         ):(<></>) }
       </div>

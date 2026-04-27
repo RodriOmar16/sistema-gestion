@@ -38,7 +38,7 @@ class VentaRegistradaMail extends Mailable implements ShouldQueue
 
         $mail = $this->subject('Compra nueva realizada')
                      ->view('emails.venta_registrada')
-                     ->with(['venta' => $venta]);
+                     ->with([ 'venta' => $venta ]);
 
         if ($this->conPdf) {
             $pdf = Pdf::loadView('pdf.factura', ['venta' => $venta]);

@@ -24,8 +24,7 @@ class CajaCerradaMail extends Mailable implements ShouldQueue
     public function build()
     {
         return $this->subject('Caja cerrada correctamente')
-                    ->view('emails.cajaCerradaMail');
+                    ->view('emails.cajaCerradaMail')
+                    ->with([ 'caja' => $this->caja ]);
     }
-
-
 }

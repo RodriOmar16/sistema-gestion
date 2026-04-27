@@ -16,10 +16,10 @@
     </style>
 </head>
 <body>
-     <div style="text-align:center; margin-bottom:20px;">
+    <div style="text-align:center; margin-bottom:20px;">
         <img src="{{ public_path('images/logo/logo.png') }}" alt="Logo" style="height:60px; margin-bottom:10px;">
         <h1 style="margin:0;">Factura N° {{ $venta->venta_id }}</h1>
-        <p style="margin:0;">Mi Empresa S.A. - CUIT 20-12345678-9</p>
+        <p style="margin:0;">Innovartic - CUIT 20-12345678-9</p>
         <p style="margin:0;">Av. Siempre Viva 123, Salta</p>
     </div>
 

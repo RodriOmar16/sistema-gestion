@@ -58,7 +58,7 @@ export default function CreateViewCajas(){
     ingresos?:  ConcepValor[];
     egresos?:   ConcepValor[];
   };
-  breadcrumbs[0].title = (mode=='create'? 'Nueva' : 'Detalles de la')+' caja'+(mode!='create'? ` ${caja?.caja_id}` : '')//(mode=='create'? 'Nuevo' : 'Editar')+' producto';
+  breadcrumbs[0].title = (mode=='create'? 'Nueva' : 'Detalles de la')+' caja'+(mode!='create' && caja?.caja_id? ` ${caja?.caja_id}` : '')//(mode=='create'? 'Nuevo' : 'Editar')+' producto';
   const [ultimoTimestamp, setUltimoTimestamp] = useState<number | null>(null);
   const { data, setData, errors, processing } = useForm<Caja>(cajaVacia);
 

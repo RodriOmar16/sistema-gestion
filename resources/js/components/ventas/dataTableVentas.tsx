@@ -10,8 +10,6 @@ import {  Table,  TableBody,  TableCell,  TableHead,  TableHeader,  TableRow } f
 import { Venta } from "@/types/typeCrud"
 import { convertirFechaGuionesBarras, convertirNumberPlata, formatDateTime } from "@/utils"
 import { Badge } from "../ui/badge"
-import PdfButton from "../utils/pdf-button"
-import ExcelButton from "../utils/excel-button"
 import ButtonDownload from "../utils/button-download"
 import { route } from "ziggy-js"
 import { router } from "@inertiajs/react"
@@ -25,7 +23,6 @@ interface Props {
   last_page:number, 
   next_page_url: string,
   prev_page_url: string,
-  local: any;
 }
 
 //export const columns: ColumnDef<Project>[] = [
@@ -145,7 +142,7 @@ export function getColumns(openEdit: (data: Venta) => void): ColumnDef<Venta>[] 
   ]
 //]
 }
-export default function DataTableVentas({datos, openEdit, exportar,local, totalFilas, current_page, last_page, next_page_url, prev_page_url}:Props) {
+export default function DataTableVentas({datos, openEdit, exportar, totalFilas, current_page, last_page, next_page_url, prev_page_url}:Props) {
   const [sorting, setSorting]                   = useState<SortingState>([])
   const [columnFilters, setColumnFilters]       = useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})

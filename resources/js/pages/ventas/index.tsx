@@ -241,7 +241,6 @@ export default function Ventas(){
             datos={cacheados?? []} 
             openEdit={openEdit}
             exportar={payload}
-            local={data}
             totalFilas={ventas?.total ?? 0}
             current_page={ventas?.current_page ?? 0}
             last_page={ventas?.last_page ?? 0}

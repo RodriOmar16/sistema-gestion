@@ -126,7 +126,7 @@ class ProductoController extends Controller
 
   public function generarPDF(Request $request){
 
-    $query = Producto::with(['categorias', 'marca']);
+    $query = Producto::with(['categorias', 'marca', 'stock']);
 
     if ($request->filled('producto_id')) {
       $query->where('producto_id', $request->producto_id);
@@ -284,9 +284,9 @@ class ProductoController extends Controller
 
   public function index(Request $request)
   {
-    if (!$request->has('buscar')) {
+    /*if (!$request->has('buscar')) {
       return inertia('productos/index', ['productos' => []]);
-    }
+    }*/
 
     $query = Producto::query()->with(['categorias', 'marca', 'stock']);
 
@@ -321,7 +321,7 @@ class ProductoController extends Controller
       );
     }
 
-    $productos = $query->latest()->get()->map( //->paginate(10)->through(
+    /*$productos = $query->latest()->get()->map(
       function ($producto) {
         $categoria = $producto->categorias->first(); 
         return [ 
@@ -343,8 +343,35 @@ class ProductoController extends Controller
           'updated_at' => $producto->updated_at, 
         ]; 
       }
-    ); 
+    );*/
+
+    //Paginación
+    $perPage = min($request->get('per_page',10),200);
+    $productos = $query->latest()->paginate($perPage);
     
+    //Transformación a collection
+    $productos->getCollection()->transform(function($producto){
+      $categoria = $producto->categorias->first(); 
+      return [ 
+        'producto_id'      => $producto->producto_id, 
+        'producto_nombre'  => $producto->nombre, 
+        'descripcion'      => $producto->descripcion, 
+        'precio'           => $producto->precio, 
+        'categoria_id'     => $categoria?->categoria_id ?? '',
+        'categoria_nombre' => $categoria?->nombre ?? '',
+        'marca_id'         => $producto->marca->marca_id ?? '', 
+        'marca_nombre'     => $producto->marca->nombre ?? '', 
+        'codigo_barra'     => $producto->codigo_barra, 
+        'stock_minimo'     => $producto->stock_minimo,
+        'stock_actual'     => $producto->stock?->cantidad ?? 0,
+        'vencimiento'      => $producto->vencimiento, 
+        'inhabilitado'     => $producto->inhabilitado, 
+        'imagen'           => $producto->imagen, 
+        'created_at'       => $producto->created_at, 
+        'updated_at'       => $producto->updated_at, 
+      ]; 
+    });
+
     return inertia('productos/index', [
       'productos' => $productos
     ]);

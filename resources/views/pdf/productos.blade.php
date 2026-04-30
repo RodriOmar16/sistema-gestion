@@ -17,9 +17,10 @@
         <th>ID</th>
         <th>Nombre</th>
         <th>Precio</th>
-        <th>Inhabilitado</th>
+        <th>Stock</th>
         <th>Categorías</th>
-        <th>Listas</th>
+        <th>Marca</th>
+        <th>Estado</th>
       </tr>
     </thead>
     <tbody>
@@ -27,18 +28,15 @@
       <tr>
         <td>{{ $p->producto_id }}</td>
         <td>{{ $p->nombre }}</td>
-        <td>${{ $p->precio }}</td>
-        <td>{{ $p->inhabilitado ? 'Sí' : 'No' }}</td>
+        <td style="text-align: right;">${{ number_format($p->precio, 2, ',', '.') }}</td>
+        <td style="text-align: right;">{{ $p->stock->cantidad }}</td>
         <td>
           @foreach($p->categorias as $c)
             {{ $c->nombre }}@if(!$loop->last), @endif
           @endforeach
         </td>
-        <td>
-          @foreach($p->productosLista as $l)
-            {{ $l->listaPrecio->nombre ?? 'Sin nombre' }} (${{ $l->precio_lista }})@if(!$loop->last), @endif
-          @endforeach
-        </td>
+        <td>{{ $p->marca->nombre }}</td>
+        <td>{{ $p->inhabilitado ? 'Inactivo' : 'Activo' }}</td>
       </tr>
       @endforeach
     </tbody>

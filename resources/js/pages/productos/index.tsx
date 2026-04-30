@@ -207,7 +207,18 @@ export default function Productos(){
   const [title, setTitle]   = useState('');
   const [color, setColor]   = useState('');
 
-  const { productos } = usePage().props as { productos?: Producto[] }; //necesito los props de inertia
+  //const { productos } = usePage().props as { productos?: Producto[] }; //necesito los props de inertia
+  const { productos } = usePage().props as { 
+    productos?: { 
+      data:          Producto[],
+      current_page:  number, 
+      last_page:     number, 
+      total:         number,
+      next_page_url: string,
+      prev_page_url: string,
+    } 
+  };
+
   const { resultado, mensaje, producto_id, timestamp } = usePage().props as {
     resultado?: number;
     mensaje?: string;
@@ -277,8 +288,8 @@ export default function Productos(){
 
   //effect
   useEffect(() => {
-    if (productos && productos?.length > 0) {
-      setCacheados(productos);
+    if (productos && productos.data.length > 0) {
+      setCacheados(productos.data);
     } else {
       setCacheados([]);
     }
@@ -300,8 +311,13 @@ export default function Productos(){
             datos={cacheados} 
             openEdit={openEdit} 
             abrirConfirmar={confirmar}
-            dataIndex={data}
-            />
+            exportar={data}
+            totalFilas={productos?.total ?? 0}
+            current_page={productos?.current_page ?? 0}
+            last_page={productos?.last_page ?? 0}
+            next_page_url={productos?.next_page_url ?? ''}
+            prev_page_url={productos?.prev_page_url ?? ''}
+          />
         </div>
       </div>
       <ModalConfirmar

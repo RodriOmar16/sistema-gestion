@@ -23,15 +23,11 @@ use App\Http\Requests\UpdateCajaRequest;
 
 class CajaController extends Controller
 {
-  /**
-   * Display a listing of the resource.
-   */
   public function index(Request $request)
   {
-    if (!$request->has('buscar')) {
+    /*if (!$request->has('buscar')) {
       return inertia('cajas/index', ['cajas' => []]);
-    }
-    //dd($request->all());
+    }*/
 
     $query = Caja::query()->with(['turno']);
 
@@ -48,7 +44,34 @@ class CajaController extends Controller
       $query->where('fecha', '<=', $request->fecha_hasta);
     }
 
-    $cajas = $query->latest()->get()->map(function ($c) { 
+    /*$cajas = $query->latest()->get()->map(function ($c) { 
+      return [
+        'caja_id'          => $c->caja_id,
+        'fecha'            => $c->fecha,
+        'created_at'       => $c->created_at,
+        'turno_id'         => $c->turno_id,
+        'turno_nombre'     => optional($c->turno)->nombre,
+        'total_sistema'    => $c->total_sistema,
+        'total_user'       => $c->total_user,
+        'diferencia'       => $c->diferencia,
+        'inhabilitado'     => $c->inhabilitado,
+        'abierta'          => $c->abierta,
+        'monto_inicial'    => $c->monto_inicial,
+        'descripcion'      => $c->descripcion,
+        'efectivo'         => $c->efectivo,
+        'debito'           => $c->debito,
+        'transferencia'    => $c->transferencia,
+        'user_grabacion'   => $c->user_grabacion,
+        'updated_at'       => $c->updated_at,
+      ];
+    });*/
+
+    // paginación con tope máximo
+    $perPage = min($request->get('per_page', 10), 200);
+    $cajas = $query->latest()->paginate($perPage);
+
+    // transformar cada venta al formato que tu tabla espera
+    $cajas->getCollection()->transform(function ($c) {
       return [
         'caja_id'          => $c->caja_id,
         'fecha'            => $c->fecha,

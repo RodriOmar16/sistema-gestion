@@ -205,9 +205,9 @@ class VentaController extends Controller
 
   public function index(Request $request)
   {
-    if(!$request->has('buscar')){
+    /*if(!$request->has('buscar')){
       return inertia('ventas/index',['ventas' => []]);
-    }
+    }*/
 
     $query = Venta::query();
 
@@ -229,6 +229,8 @@ class VentaController extends Controller
     if($request->has('anulada')){
       $estado = filter_var($request->anulada, FILTER_VALIDATE_BOOLEAN);
       $query->where('anulada', $estado);
+    }else {
+        $query->where('anulada', 0);
     }
 
     //controlo ventas del turno
@@ -246,8 +248,26 @@ class VentaController extends Controller
             $q->where('formas_pago.forma_pago_id', '=', $formaPagoId);
         });
     }
+    // paginación con tope máximo
+    $perPage = min($request->get('per_page', 10), 200);
 
-    $ventas = $query->with(['cliente'])->latest()->get()->map(function($v){
+    $ventas = $query->with(['cliente'])
+                    ->latest()
+                    ->paginate($perPage);
+
+    // transformar cada venta al formato que tu tabla espera
+    $ventas->getCollection()->transform(function ($v) {
+        return [
+            'venta_id'       => $v->venta_id,
+            'fecha_grabacion'=> $v->fecha_grabacion,
+            'cliente_id'     => $v->cliente_id,
+            'cliente_nombre' => optional($v->cliente)->nombre,
+            'fecha_anulacion'=> $v->fecha_anulacion ?? '',
+            'anulada'        => $v->anulada,
+            'total'          => $v->total,
+        ];
+    });
+    /*$ventas = $query->with(['cliente'])->latest()->get()->map(function($v){
       return [
         'venta_id' => $v->venta_id,
         'fecha_grabacion' => $v->fecha_grabacion,
@@ -257,7 +277,7 @@ class VentaController extends Controller
         'anulada'         => $v->anulada,
         'total'           => $v->total,
       ];
-    });
+    });*/
 
     return inertia('ventas/index',[
       'ventas' => $ventas

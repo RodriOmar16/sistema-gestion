@@ -122,7 +122,7 @@ export function FiltrosForm({ data, set, setPayload }: propsForm){
       <form className='grid grid-cols-12 gap-4 px-4 pt-1 pb-4' onSubmit={handleSubmit}>
         <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-2'>
           <label htmlFor="id">Id</label>
-          <Input value={data.venta_id} onChange={(e)=>set({...data, venta_id: Number(e.target.value)})}/>	
+          <Input type='number' value={data.venta_id} onChange={(e)=>set({...data, venta_id: Number(e.target.value)})}/>	
         </div>
         <div className="col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-2">
           <label htmlFor="fechaDesde">Fecha Desde</label>
@@ -193,7 +193,17 @@ export default function Ventas(){
   //data  
   const { data, setData, errors, processing } = useForm<Venta>(ventaVacia); //formulario que busca
   const [payload, setPayload] = useState<any>({});
-  const { ventas } = usePage().props as { ventas?: Venta[] }; //necesito los props de inertia
+  //const { ventas } = usePage().props as { ventas?: Venta[] }; //necesito los props de inertia
+  const { ventas } = usePage().props as { 
+    ventas?: { 
+      data: Venta[], links: any, 
+      current_page:number, 
+      last_page:number, 
+      total: number,
+      next_page_url: string,
+      prev_page_url: string,
+    } 
+  };
   const { resultado, mensaje, venta_id } = usePage().props as {
     resultado?: number;
     mensaje?: string;
@@ -208,8 +218,8 @@ export default function Ventas(){
 
   //effect
     useEffect(() => {
-    if (ventas && ventas.length > 0) {
-      setCacheados(ventas);
+    if (ventas && ventas.data.length > 0) {
+      setCacheados(ventas.data);
     } else {
       setCacheados([]);
     }
@@ -230,8 +240,14 @@ export default function Ventas(){
           <DataTableVentas
             datos={cacheados?? []} 
             openEdit={openEdit}
-            dataIndex={payload}
-            />
+            exportar={payload}
+            local={data}
+            totalFilas={ventas?.total ?? 0}
+            current_page={ventas?.current_page ?? 0}
+            last_page={ventas?.last_page ?? 0}
+            next_page_url={ventas?.next_page_url ?? ''}
+            prev_page_url={ventas?.prev_page_url ?? ''}
+          />
         </div>
       </div>
     </AppLayout>

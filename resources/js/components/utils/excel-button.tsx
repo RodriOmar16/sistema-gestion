@@ -10,8 +10,13 @@ interface Props{
 }
 
 export default function ExcelButton({ deshabilitado, url, payload }:Props) {
-  const handleClick = () => {
+  /*const handleClick = () => {
     window.open(route(url,{...payload}), '_blank');
+  };*/
+  const handleClick = () => {
+    const query = new URLSearchParams(payload as Record<string, any>).toString();
+    const fullUrl = `${route(url)}?${query}`;
+    window.open(fullUrl, '_blank');
   };
   return (
     <Button 

@@ -10,9 +10,16 @@ interface Props{
 }
 
 export default function PdfButton({ deshabilitado, url, payload }:Props) {
-  const handleClick = () => {
+  /*const handleClick = () => {
+    console.log("payload: ", payload)
     window.open(route(url,{...payload}), '_blank');
+  };*/
+  const handleClick = () => {
+    const query = new URLSearchParams(payload as Record<string, any>).toString();
+    const fullUrl = `${route(url)}?${query}`;
+    window.open(fullUrl, '_blank');
   };
+
   return (
     <Button 
       className="p-0 bg-red-700 text-white hover:text-white hover:bg-red-800 dark:hover:bg-red-800 cursor-pointer"

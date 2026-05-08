@@ -11,8 +11,6 @@
         tr:nth-child(even) { background: #f9f9f9; }
         h1, h2 { text-align: center; }
         td.num { text-align: right; }
-    
-
     </style>
 </head>
 <body>
@@ -24,6 +22,7 @@
     </div>
 
     <p><strong>Cliente:</strong> {{ $venta->cliente->nombre }}</p>
+    <p><strong>Fecha:</strong> {{ $venta->fecha_grabacion ? \Carbon\Carbon::parse($venta->fecha_grabacion)->format('d/m/Y') : '-' }} </p>
     <p><strong>Total:</strong> ${{ number_format($venta->total, 2, ',', '.') }}
 
     <h2>Detalle de la compra</h2>

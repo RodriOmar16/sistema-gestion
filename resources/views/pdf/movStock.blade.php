@@ -25,12 +25,12 @@
     <tbody>
       @foreach($movs as $m)
       <tr>
-        <td>{{ $m->movimiento_id }}</td>
-        <td>{{ $m->fecha }}</td>
+        <td style="text-align: right;">{{ $m->movimiento_id }}</td>
+        <td> {{ $m->fecha ? \Carbon\Carbon::parse($m->fecha)->format('d/m/Y') : '-' }}</td>
         <td>{{ $m->producto_nombre }}</td>
         <td>{{ $m->tipo_nombre }}</td>
         <td>{{ $m->origen_nombre }}</td>
-        <td>{{ $m->cantidad }}</td>
+        <td style="text-align: right;">{{ $m->cantidad }}</td>
       </tr>
       @endforeach
     </tbody>

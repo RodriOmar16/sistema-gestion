@@ -118,13 +118,13 @@ class StockController extends Controller
 
   public function index(Request $request)
   {
-    if(!$request->has('buscar')){
+    /*if(!$request->has('buscar')){
       return inertia('stock/index',[
         'stock' => []
       ]);
-    }
+    }*/
 
-    $query = Stock::query();
+    $query = Stock::query()->with(['producto']);
     if($request->filled('stock_id')){
       $query->where('stock_id', $request->stock_id);
     }
@@ -139,7 +139,21 @@ class StockController extends Controller
       $q->where('inhabilitado', false);
     });
 
-    $stock = $query->with('producto')->latest()->get()->map(function($s){
+    /*$stock = $query->with('producto')->latest()->get()->map(function($s){
+      return [
+        'stock_id'        => $s->stock_id,
+        'producto_id'     => $s->producto_id,
+        'producto_nombre' => optional($s->producto)->nombre,
+        'cantidad'        => $s->cantidad,
+      ];
+    });*/
+
+    //Paginación
+    $perPage = min($request->get('per_page',10),200);
+    $stock = $query->latest()->paginate($perPage);
+
+    //transformación
+    $stock->getCollection()->transform(function($s){
       return [
         'stock_id'        => $s->stock_id,
         'producto_id'     => $s->producto_id,
@@ -166,7 +180,8 @@ class StockController extends Controller
       if (collect($productos)->contains(fn($p) => $p['cantidad'] <= 0)) {
         return inertia('stock/index', [
           'resultado' => 0,
-          'mensaje'   => 'Todas las cantidades deben ser mayores a 0.'
+          'mensaje'   => 'Todas las cantidades deben ser mayores a 0.',
+          'timestamp' => now()->timestamp
         ]);
       }
 
@@ -211,13 +226,14 @@ class StockController extends Controller
       return inertia('stock/index',[
         'resultado' => 1,
         'mensaje'   => 'El stock se generó correctamente',
-        'nuevo'     => 1
+        'timestamp' => now()->timestamp,
       ]);
     } catch (\Throwable $e) {
       DB::rollBack();
       return inertia('stock/index',[
         'resultado' => 0,
-        'mensaje'   => 'Ocurrió un error al intentar registrar el stock: '.$e->getMessage()
+        'mensaje'   => 'Ocurrió un error al intentar registrar el stock: '.$e->getMessage(),
+        'timestamp' => now()->timestamp
       ]);
     }
   }
@@ -252,7 +268,7 @@ class StockController extends Controller
         'resultado' => 1,
         'mensaje'   => 'El stock fue modificado satisfactoriamente',
         'stock_id'  => $stock->stock_id,
-        'nuevo'     => false,
+        'timestamp' => now()->timestamp
       ]);
     } catch (\Throwable $e) {
       DB::rollBack();

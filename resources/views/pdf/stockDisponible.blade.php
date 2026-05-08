@@ -22,9 +22,9 @@
     <tbody>
       @foreach($stocks as $s)
       <tr>
-        <td>{{ $s->producto_id }}</td>
+        <td style="text-align: right;">{{ $s->producto_id }}</td>
         <td>{{ $s->producto->nombre }}</td>
-        <td>{{ $s->cantidad }}</td>
+        <td style="text-align: right;">{{ $s->cantidad }}</td>
       </tr>
       @endforeach
     </tbody>

@@ -12,10 +12,18 @@ import { convertirNumberPlata } from "@/utils"
 import { Badge } from "../ui/badge"
 import PdfButton from "../utils/pdf-button"
 import ExcelButton from "../utils/excel-button"
+import ButtonDownload from "../utils/button-download"
+import { router } from "@inertiajs/react"
+import { route } from "ziggy-js"
 interface Props {
   datos:          Stock[];
   openEdit:       (data:Stock) => void;
-  dataIndex:      object
+  exportar: object;
+  totalFilas: number;
+  current_page:number, 
+  last_page:number, 
+  next_page_url: string,
+  prev_page_url: string,
 }
 
 //export const columns: ColumnDef<Project>[] = [
@@ -96,7 +104,7 @@ export function getColumns(openEdit: (data: Stock) => void): ColumnDef<Stock>[] 
   ]
 //]
 }
-export default function DataTableStock({datos, openEdit, dataIndex}:Props) {
+export default function DataTableStock({datos, openEdit,  exportar, totalFilas, current_page, last_page, next_page_url, prev_page_url}:Props) {
   const [sorting, setSorting]                   = useState<SortingState>([])
   const [columnFilters, setColumnFilters]       = useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
@@ -141,17 +149,23 @@ export default function DataTableStock({datos, openEdit, dataIndex}:Props) {
       <div className=" grid grid-cols-12 gap-4  py-2">
         <div className="col-span-3 sm:col-span-2 md:col-span-2 lg:col-span-2 flex">
           <div className="mr-2">
-            <PdfButton 
-            deshabilitado={datos.length == 0}
-            url="stock.pdf"
-            payload={dataIndex}
+            <ButtonDownload
+              deshabilitado={datos.length == 0}
+              url="stock.pdf"
+              payload={exportar}
+              clase="p-0 bg-red-700 text-white hover:text-white hover:bg-red-800 dark:hover:bg-red-800 cursor-pointer"
+              title="Generar PDF"
+              tipo="Pdf"
             />
           </div>
           <div>
-            <ExcelButton
+            <ButtonDownload
               deshabilitado={datos.length == 0}
               url="stock.excel"
-              payload={dataIndex}
+              payload={exportar}
+              clase="p-0 bg-green-700 hover:bg-green-800 dark:hover:bg-green-800 text-white dark:hover:text-white cursor-pointer "
+              title="Generar PDF"
+              tipo="Excel"
             />
           </div>
         </div>
@@ -216,24 +230,34 @@ export default function DataTableStock({datos, openEdit, dataIndex}:Props) {
       </div>
       <div className="flex items-center justify-end space-x-2 py-4">
         <div className="text-muted-foreground flex-1 text-sm">
-          {/*{table.getFilteredSelectedRowModel().rows.length} de{" "}
-          {table.getFilteredRowModel().rows.length} fila(s) selecc.*/}
-          Total de filas: {datos.length}
+          Página {current_page} de {last_page} — Total: {totalFilas}
         </div>
         <div className="space-x-2">
           <Button
             variant="outline"
             size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
+            onClick={() => {
+              router.get(route('stock.index'), { ...exportar, page: current_page - 1 },{
+                preserveState: true,
+                preserveScroll: true,
+              });
+            }}
+            //disabled={current_page <= 1}
+            disabled={!prev_page_url}
           >
             Anterior
           </Button>
           <Button
             variant="outline"
             size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
+            onClick={() => {
+              router.get(route('stock.index'), { ...exportar, page: current_page + 1 },{
+                preserveState: true,
+                preserveScroll: true,
+              });
+            }}
+            //disabled={current_page >= last_page}
+            disabled={!next_page_url}
           >
             Siguiente
           </Button>

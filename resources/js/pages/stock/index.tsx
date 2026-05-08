@@ -22,7 +22,6 @@ const breadcrumbs: BreadcrumbItem[] = [ { title: 'Stock', href: '', } ];
 type propsForm = {
   resetearStock: (data:Stock[]) => void;
   openCreate:    () => void;
-  productos:     Multiple[];
   data:          Stock;
   set:           (e:Stock) => void;
 }
@@ -34,7 +33,7 @@ const stockVacio = {
   cantidad:        ''
 }
 
-export function FiltrosForm({ openCreate, resetearStock, productos, data, set }: propsForm){
+export function FiltrosForm({ openCreate, resetearStock, data, set }: propsForm){
   //data
   const [loading, setLoading]             = useState(false);
   const [optionProduct, setOptionProduct] = useState<Autocomplete|null>(null);
@@ -90,28 +89,11 @@ export function FiltrosForm({ openCreate, resetearStock, productos, data, set }:
         <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3'>
           <label htmlFor="producto">Producto</label>
             <GenericSelect
-                      route="productos"
-                      value={optionProduct}
-                      onChange={(option) => seleccionarProducto(option)}
-                      placeHolder="Selec. producto"
-                    />
-            {/*<Select
-              value={String(data.producto_id)}
-              onValueChange={(value) => set({...data, producto_id:  Number(value)}) }
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  {productos.map((e: any) => (
-                    <SelectItem key={e.id} value={String(e.id)}>
-                      {e.nombre}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>*/}
+              route="productos"
+              value={optionProduct}
+              onChange={(option) => seleccionarProducto(option)}
+              placeHolder="Selec. producto"
+            />
         </div>
         <div className="col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3">
           <label htmlFor="fechaInicio">Cantidad</label>
@@ -146,8 +128,7 @@ export function FiltrosForm({ openCreate, resetearStock, productos, data, set }:
 
 export default function Productos(){
   //data  
-  const { data, setData, errors, processing } = useForm<Stock>(stockVacio); //formulario que busca
-  const [productoHab, setProductosHab]        = useState<Multiple[]>([]);
+  const { data, setData, errors, processing } = useForm<Stock>(stockVacio); //formulario que busc
 
   const [newOpen, setNewOpen]             = useState(false); //modal crear
   const [editOpen, setEditOpen]           = useState(false); //modal crear
@@ -164,20 +145,26 @@ export default function Productos(){
   const [title, setTitle]   = useState('');
   const [color, setColor]   = useState('');
 
-  const { stock } = usePage().props as { stock?: Stock[] }; //necesito los props de inertia
-  const { resultado, mensaje, stock_id, nuevo } = usePage().props as {
+  //const { stock } = usePage().props as { stock?: Stock[] }; //necesito los props de inertia
+  const { stock } = usePage().props as {
+    stock?: {
+      data:          Stock[],
+      current_page:  number, 
+      last_page:     number, 
+      total:         number,
+      next_page_url: string,
+      prev_page_url: string,
+    }
+  };
+
+  const { resultado, mensaje, stock_id, timestamp } = usePage().props as {
     resultado?: number;
     mensaje?: string;
     stock_id?: number;
-    nuevo?: number;
+    timestamp?: number;
   };
-  const [propsActuales, setPropsActuales] = useState<{
-    resultado: number | undefined | null;
-    mensaje: string | undefined | null | '';
-    stock_id: number | undefined | null;
-    nuevo: number | undefined | null;
-  }>({ resultado: undefined, mensaje: undefined, stock_id: undefined, nuevo: undefined });
-  const [stockCacheados, setStockCacheados] = useState<Stock[]>([]);
+  const [ultimoTimestamp, setUltimoTimestamp] = useState<number | null>(null);
+  const [cacheados, setCacheados] = useState<Stock[]>([]);
 
   //funciones
   const openCreate = () => {
@@ -236,51 +223,27 @@ export default function Productos(){
     };
 
   //effect
-  /*useEffect(() => {
-    //optengo los datos del formulario
-    fetch('/productos_habilitados')
-    .then(res => res.json())
-    .then(data => {
-      setProductosHab(ordenarPorTexto(data, 'nombre'));
-    });
-  }, []);*/
   useEffect(() => {
-    if (!activo && propsActuales.resultado !== undefined) {
-      setPropsActuales({
-        resultado: undefined,
-        mensaje:   undefined,
-        stock_id:  undefined,
-        nuevo:     undefined
-      });
-    }
-  }, [activo]);
-
-  useEffect(() => {
-    if (
-      stock &&
-      stock.length > 0 &&
-      JSON.stringify(stock) !== JSON.stringify(stockCacheados)
-    ) {
-      setStockCacheados(stock);
+    if ( stock && stock.data.length > 0 ) {
+      setCacheados(stock.data);
+    }else{
+      setCacheados([]);
     }
   }, [stock]);
 
-
   useEffect(() => {
-    const cambioDetectado =
-      (resultado && resultado  !== propsActuales.resultado)  ||
-      (mensaje && mensaje    !== propsActuales.mensaje)
+    const cambioDetectado = timestamp && timestamp !== ultimoTimestamp;
 
     if (cambioDetectado) {
-      setPropsActuales({ resultado, mensaje,stock_id, nuevo});
+      setUltimoTimestamp(timestamp)
 
       const esError = resultado === 0;
       setTitle(esError ? 'Error' : 'Stock modificado');
-      setText(esError ? ( mensaje ?? 'Error inesperado') : (nuevo? `${mensaje}` : `${mensaje} (ID: ${stock_id})`) );
+      setText(esError ? ( mensaje ?? 'Error inesperado') : `${mensaje} (ID: ${stock_id})`);
       setColor(esError ? 'error' : 'success');
       setActivo(true);
 
-      if (resultado === 1 && nuevo != undefined) {
+      if (resultado === 1 && stock_id) {
         router.get(route('stock.index'),
           { buscar: true },
           { preserveScroll: true,	preserveState: true	}
@@ -290,7 +253,8 @@ export default function Productos(){
         }else setEditOpen(false);
       }
     }
-  }, [resultado, mensaje, nuevo]);
+  }, [timestamp, ultimoTimestamp, resultado, mensaje, stock_id, modalMode]);
+
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
@@ -300,16 +264,21 @@ export default function Productos(){
           <FiltrosForm
             data={data}
             set={setData}
-            resetearStock={setStockCacheados}
+            resetearStock={setCacheados}
             openCreate={openCreate}
-            productos={productoHab}/>
+          />
         </div>
         <div className="p-4 relative flex-1 overflow-auto rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
           <DataTableStock
-            datos={stockCacheados?? []} 
+            datos={cacheados?? []} 
             openEdit={openEdit} 
-            dataIndex={data}
-            />
+            exportar={data}
+            totalFilas={stock?.total ?? 0}
+            current_page={stock?.current_page ?? 0}
+            last_page={stock?.last_page ?? 0}
+            next_page_url={stock?.next_page_url ?? ''}
+            prev_page_url={stock?.prev_page_url ?? ''}
+          />
         </div>
       </div>
       <NewStock
@@ -317,7 +286,6 @@ export default function Productos(){
         onOpenChange={setNewOpen}
         onSubmit={handleSave}
         loading={loading}
-        productosDisp={productoHab}
       />
       <EditStock
         open={editOpen}

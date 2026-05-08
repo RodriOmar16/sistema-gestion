@@ -20,7 +20,6 @@ interface Props{
   onOpenChange: (open:boolean) => void;
   onSubmit: (data:any) => void;
   loading: boolean;
-  productosDisp: Multiple[]
 }
 
 const stockVacio = {
@@ -31,7 +30,7 @@ const stockVacio = {
   cantidad:         1
 }
 
-export default function NewStock({ open, onOpenChange, onSubmit, loading, productosDisp }: Props){
+export default function NewStock({ open, onOpenChange, onSubmit, loading }: Props){
   //data
   const [activo, setActivo] = useState(false);
   const [text, setText]     = useState('');
@@ -99,13 +98,6 @@ export default function NewStock({ open, onOpenChange, onSubmit, loading, produc
     setProductos(nuevos);
   };
 
-  const controlarProducto = (value:number) => {
-    setData('producto_id', Number(value));
-    let pos = productosDisp.map(elem => elem.id).indexOf(value);
-    if(pos != -1){
-      setData('producto_nombre', productosDisp[pos].nombre);
-    }
-  };
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if(productos.length === 0){

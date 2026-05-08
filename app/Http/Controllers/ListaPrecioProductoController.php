@@ -13,11 +13,11 @@ class ListaPrecioProductoController extends Controller
   public function index(Request $request)
   {
 
-    if (!$request->has('buscar')) {
-        return inertia('listasPreciosProductos/index', [
-            'listas' => []
-        ]);
-    }
+    /*if (!$request->has('buscar')) {
+      return inertia('listasPreciosProductos/index', [
+        'listas' => []
+      ]);
+    }*/
 
     $query = ListaPrecioProducto::query()->with(['proveedor','producto']);
 
@@ -30,7 +30,7 @@ class ListaPrecioProductoController extends Controller
     }
 
 
-    $listasPrecio = $query
+    /*$listasPrecio = $query
         ->latest()
         ->get()
         ->map(function ($lista) {
@@ -45,7 +45,26 @@ class ListaPrecioProductoController extends Controller
                 'precio_sugerido'  => $lista->precio_sugerido,
                 'precio_final'     => $lista->producto->precio ?? '',
             ];
-        });
+        });*/
+    
+    //Paginación
+    $perPage = min($request->get('per_page',10),200);
+    $listasPrecio = $query->latest()->paginate($perPage);
+
+    //Transformación
+    $listasPrecio->getCollection()->transform(function($lista){
+      return [
+          'lista_precio_id'  => $lista->id,
+          'proveedor_id'     => $lista->proveedor_id,
+          'proveedor_nombre' => $lista->proveedor->nombre ?? '',
+          'producto_id'      => $lista->producto_id,
+          'producto_nombre'  => $lista->producto->nombre ?? '',
+          'precio'           => $lista->precio,
+          'porcentaje'       => $lista->porcentaje,
+          'precio_sugerido'  => $lista->precio_sugerido,
+          'precio_final'     => $lista->producto->precio ?? '',
+      ];
+    });
 
     return inertia('listasPreciosProductos/index', [
         'listas' => $listasPrecio

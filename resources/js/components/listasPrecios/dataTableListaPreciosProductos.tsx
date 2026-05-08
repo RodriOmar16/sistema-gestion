@@ -12,6 +12,9 @@ import { convertirFechaGuionesBarras, convertirNumberPlata, formatDateTime, form
 import { Badge } from "../ui/badge"
 import { NumericFormat } from 'react-number-format';
 import { Checkbox } from "@/components/ui/checkbox"
+import ButtonDownload from "../utils/button-download"
+import { route } from "ziggy-js"
+import { router } from "@inertiajs/react"
 interface Props {
   datos: ListaPrecioProducto[];
   quitar: (data:ListaPrecioProducto) => void;
@@ -19,6 +22,12 @@ interface Props {
   setDatos: React.Dispatch<React.SetStateAction<ListaPrecioProducto[]>>;
   loading: boolean;
   setLoading: (p:boolean) => void;
+  exportar: object;
+  totalFilas: number;
+  current_page:number, 
+  last_page:number, 
+  next_page_url: string,
+  prev_page_url: string,
 }
 
 //export const columns: ColumnDef<Project>[] = [
@@ -207,12 +216,12 @@ export function getColumns(
                       id={`cambiar-${fila.lista_precio_id}`}
                       name="cambiar"
                       title="Usar precio para producto"
-                      checked={fila.cambiar === 1} // 👈 si es 1 se marca, si es 0 no
+                      checked={fila.cambiar === 1} // si es 1 se marca, si es 0 no
                       onCheckedChange={(checked) => {
                         setDatos(prev =>
                           prev.map(item =>
                             item.lista_precio_id === fila.lista_precio_id
-                              ? { ...item, cambiar: checked ? 1 : 0 } // 👈 sincroniza el cambio
+                              ? { ...item, cambiar: checked ? 1 : 0 } //sincroniza el cambio
                               : item
                           )
                         );
@@ -251,12 +260,12 @@ export function getColumns(
                           id={`cambiar-${fila.lista_precio_id}`}
                           name="cambiar"
                           title="Usar precio para producto"
-                          checked={fila.cambiar === 1} // 👈 si es 1 se marca, si es 0 no
+                          checked={fila.cambiar === 1} // si es 1 se marca, si es 0 no
                           onCheckedChange={(checked) => {
                             setDatos(prev =>
                               prev.map(item =>
                                 item.lista_precio_id === fila.lista_precio_id
-                                  ? { ...item, cambiar: checked ? 1 : 0 } // 👈 sincroniza el cambio
+                                  ? { ...item, cambiar: checked ? 1 : 0 } // sincroniza el cambio
                                   : item
                               )
                             );
@@ -310,7 +319,11 @@ export function getColumns(
   ]
 //]
 }
-export default function DataTableListasPreciosProductos({datos, quitar, abrirConfirmar, setDatos, loading, setLoading}:Props) {
+export default function DataTableListasPreciosProductos({
+    datos, quitar, abrirConfirmar, setDatos, loading, setLoading,
+    exportar, totalFilas, current_page, last_page, next_page_url, prev_page_url
+  }:Props
+) {
   const [sorting, setSorting]                   = useState<SortingState>([])
   const [columnFilters, setColumnFilters]       = useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
@@ -355,10 +368,29 @@ export default function DataTableListasPreciosProductos({datos, quitar, abrirCon
   return (
     <div className="w-full">
       <div className=" grid grid-cols-12 gap-4  py-2">
-        {/*<div className="col-span-6 sm:col-span-4 md:col-span-4 lg:col-span-2">
-          <PdfButton deshabilitado={datos.length == 0}/>
-        </div>*/}
-        <div className="col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12 flex justify-end  items-center">
+        <div className="col-span-3 sm:col-span-2 md:col-span-2 lg:col-span-2 flex">
+          {/*<div className="mr-2">
+            <ButtonDownload
+              deshabilitado={datos.length == 0}
+              url="productos.pdf"
+              payload={exportar}
+              clase="p-0 bg-red-700 text-white hover:text-white hover:bg-red-800 dark:hover:bg-red-800 cursor-pointer"
+              title="Generar PDF"
+              tipo="Pdf"
+            />
+          </div>
+          <div>
+            <ButtonDownload
+              deshabilitado={datos.length == 0}
+              url="productos.excel"
+              payload={exportar}
+              clase="p-0 bg-green-700 hover:bg-green-800 dark:hover:bg-green-800 text-white dark:hover:text-white cursor-pointer "
+              title="Generar PDF"
+              tipo="Excel"
+            />
+          </div>*/}
+        </div>
+        <div className="col-span-12 sm:col-span-10 md:col-span-10 lg:col-span-10 flex justify-end  items-center">
           <Input
             placeholder="Filtrar"
             value={busqueda}
@@ -419,24 +451,34 @@ export default function DataTableListasPreciosProductos({datos, quitar, abrirCon
       </div>
       <div className="flex items-center justify-end space-x-2 py-4">
         <div className="text-muted-foreground flex-1 text-sm">
-          {/*{table.getFilteredSelectedRowModel().rows.length} de{" "}
-          {table.getFilteredRowModel().rows.length} fila(s) selecc.*/}
-          Total de filas: {datos.length}
+          Página {current_page} de {last_page} — Total: {totalFilas}
         </div>
         <div className="space-x-2">
           <Button
             variant="outline"
             size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
+            onClick={() => {
+              router.get(route('listasPrecios.index'), { ...exportar, page: current_page - 1 },{
+                preserveState: true,
+                preserveScroll: true,
+              });
+            }}
+            //disabled={current_page <= 1}
+            disabled={!prev_page_url}
           >
             Anterior
           </Button>
           <Button
             variant="outline"
             size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
+            onClick={() => {
+              router.get(route('listasPrecios.index'), { ...exportar, page: current_page + 1 },{
+                preserveState: true,
+                preserveScroll: true,
+              });
+            }}
+            //disabled={current_page >= last_page}
+            disabled={!next_page_url}
           >
             Siguiente
           </Button>

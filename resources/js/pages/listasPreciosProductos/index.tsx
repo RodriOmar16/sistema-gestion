@@ -31,49 +31,53 @@ const listaVacia = {
 }
 
 type propsForm = {
+  data: ListaPrecioProducto;
+  set: (e:any) => void;
   setOpen: () => void;
   resetearListaPrecio: (data:ListaPrecioProducto[]) => void;
 }
-export function FiltrosForm({ setOpen, resetearListaPrecio }: propsForm){
+export function FiltrosForm({ data, set, setOpen, resetearListaPrecio }: propsForm){
   //data
   const [esperandoRespuesta, setEsperandoRespuesta] = useState(false);
-  const { data, setData, errors, processing }       = useForm<ListaPrecioProducto>(listaVacia);
   const [optionProduct, setOptionProduct]           = useState<Autocomplete|null>(null);
   const [optionProv, setOptionProv]                 = useState<Autocomplete|null>(null);
+  const [processing, setProcessing]                 = useState(false);
 
   //funciones
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     resetearListaPrecio([]);
-    const payload = {      ...data/*Copia*/, buscar: true    }
+    const payload = {      ...data, buscar: true    }
+    setProcessing(true);
     router.get(route('listasPrecios.index'), payload, {
       preserveState: true,
       preserveScroll: true,
       onFinish: () => setEsperandoRespuesta(false),
     });
+    setProcessing(false);
   };
 
   const handleReset = () => {
-    setData(listaVacia);
+    set(listaVacia);
     setOptionProduct(null);
     setOptionProv(null);
   };
 
   const seleccionarProducto = (option : any) => {
     if(option){
-      setData({...data, producto_id: option.value, producto_nombre: option.label});
+      set({...data, producto_id: option.value, producto_nombre: option.label});
       setOptionProduct(option);
     }else{
-      setData({...data, producto_id: '', producto_nombre: ''});
+      set({...data, producto_id: '', producto_nombre: ''});
       setOptionProduct(null);
     }
   };
   const seleccionarProveedor = (option : any) => {
     if(option){
-      setData({...data, proveedor_id: option.value, proveedor_nombre: option.label});
+      set({...data, proveedor_id: option.value, proveedor_nombre: option.label});
       setOptionProv(option);
     }else{
-      setData({...data, proveedor_id: '', proveedor_nombre: ''});
+      set({...data, proveedor_id: '', proveedor_nombre: ''});
       setOptionProv(null);
     }
   };
@@ -220,9 +224,10 @@ function AgregarPrecioProducto({setOpen, data, setData, controlarAgregar, activa
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     //
-    const {activo, title, text, color, res} = validar();
-
     setProcessing(true);
+    const {activo, title, text, color, res} = validar();
+    setProcessing(false);
+
     //procesar en la BD y agregar por front al array
     if(res === 0){
       activarMsj(activo);
@@ -235,9 +240,6 @@ function AgregarPrecioProducto({setOpen, data, setData, controlarAgregar, activa
     setData(listaVacia);
     setOptionProduct(null);
     setOptionProv(null);
-   
-   
-    setProcessing(false);
 
   }
 
@@ -349,10 +351,7 @@ function AgregarPrecioProducto({setOpen, data, setData, controlarAgregar, activa
 
 export default function ListasPreciosProductos(){
  //data  
-  //const [modalOpen, setModalOpen]                     = useState(false); //modal editar/crear
   const [modalMode, setModalMode]                     = useState<'create' | 'edit'>('create');
-  //const [selectedListaPrecio, setSelectedListaPrecio] = useState<ListaPrecioProducto | undefined>(undefined);
-  //const [pendingData, setPendingData]                 = useState<ListaPrecioProducto | undefined>(undefined);
   const [loading, setLoading]                         = useState(false);
   
   const [openConfirmar, setConfirmar]           = useState(false); //para editar el estado
@@ -364,7 +363,19 @@ export default function ListasPreciosProductos(){
   const [title, setTitle]   = useState('');
   const [color, setColor]   = useState('');
 
-  const { listas } = usePage().props as { listas?: ListaPrecioProducto[] }; //necesito los props de inertia
+  const { data, setData, errors, processing }       = useForm<ListaPrecioProducto>(listaVacia);
+
+  //const { listas } = usePage().props as { listas?: ListaPrecioProducto[] }; //necesito los props de inertia
+  const { listas } = usePage().props as {
+    listas?: {
+      data: ListaPrecioProducto[],
+      current_page:  number, 
+      last_page:     number, 
+      total:         number,
+      next_page_url: string,
+      prev_page_url: string,
+    }
+  };
   const { resultado, mensaje, lista_precio_id, timestamp, productos } = usePage().props as {
     resultado?: number;
     mensaje?: string;
@@ -468,32 +479,10 @@ export default function ListasPreciosProductos(){
 
   //useEffect
   useEffect(() => {
-    if (listas && listas.length > 0) {
-      setListasPreciosCacheadas(listas.map(e => ({...e, editar:0, cambiar: 0, load: 0})));
+    if (listas && listas.data.length > 0) {
+      setListasPreciosCacheadas(listas.data.map(e => ({...e, editar:0, cambiar: 0, load: 0})));
     }
   }, [listas]);
-
-  /*useEffect(() => {
-    const cambioDetectado = timestamp && timestamp !== ultimoTimestamp;
-
-    if (cambioDetectado) {
-      setUltimoTimestamp(timestamp);
-
-      const esError = resultado === 0;
-      setTitle(esError ? 'Error' : 'Lista modificada');
-      setText(esError ? mensaje ?? 'Error inesperado' : `${mensaje} `);
-      setColor(esError ? 'error' : 'success');
-      setActivo(true);
-
-      *if (resultado === 1 && cliente_id) {
-        setModalOpen(false);
-        router.get(route('clientes.index'),
-          { cliente_id, buscar: true },
-          { preserveScroll: true,	preserveState: true	}
-        )
-      }*
-    }
-  }, [resultado, mensaje, timestamp, ultimoTimestamp]);*/
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
@@ -501,6 +490,8 @@ export default function ListasPreciosProductos(){
       <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
         <div className="relative flex-none flex-1 rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
           <FiltrosForm 
+            data={data}
+            set={setData}
             setOpen={() => setOpen(true)} 
             resetearListaPrecio={setListasPreciosCacheadas}
           />         
@@ -531,6 +522,12 @@ export default function ListasPreciosProductos(){
               setDatos={setListasPreciosCacheadas}
               loading={loading}
               setLoading={setLoading}
+              exportar={data}
+              totalFilas={listas?.total ?? 0}
+              current_page={listas?.current_page ?? 0}
+              last_page={listas?.last_page ?? 0}
+              next_page_url={listas?.next_page_url ?? ''}
+              prev_page_url={listas?.prev_page_url ?? ''}
             />
           </div>
         </div>

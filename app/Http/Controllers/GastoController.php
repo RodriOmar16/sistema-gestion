@@ -14,11 +14,11 @@ class GastoController extends Controller
 {
   public function index(Request $request)
   {
-    if(!$request->has('buscar')){
+    /*if(!$request->has('buscar')){
       return inertia('gastos/index',[
         'gastos' => []
       ]);
-    }
+    }*/
     
     $query = Gasto::query()->with(['proveedor', 'formaPago', 'categoria']);
 
@@ -57,7 +57,30 @@ class GastoController extends Controller
       $query->where('fecha', '<=', $request->fecha_hasta);
     }
 
-    $gastos = $query->latest()->get()->map(function ($g) {
+    /*$gastos = $query->latest()->get()->map(function ($g) {
+      return [
+        'gasto_id'               => $g->gasto_id,
+        'fecha'                  => $g->fecha,
+        'caja_id'                => $g->caja_id,
+        'proveedor_id'           => $g->proveedor_id,
+        'proveedor_nombre'       => optional($g->proveedor)->nombre,
+        'categoria_gasto_id'     => $g->categoria_gasto_id,
+        'categoria_gasto_nombre' => optional($g->categoria)->nombre??'',
+        'forma_pago_id'          => $g->forma_pago_id,
+        'forma_pago_nombre'      => optional($g->formaPago)->nombre,
+        'monto'                  => $g->monto,
+        'descripcion'            => $g->descripcion,
+        'inhabilitado'           => $g->inhabilitado,
+        'created_at'             => $g->created_at,
+      ];
+    });*/
+
+    //Paginación
+    $perPage = min($request->get('per_page',10),200);
+    $gastos = $query->latest()->paginate($perPage);
+
+    //transformación
+    $gastos->getCollection()->transform(function($g){
       return [
         'gasto_id'               => $g->gasto_id,
         'fecha'                  => $g->fecha,

@@ -250,7 +250,17 @@ export default function Gastos(){
   const [title, setTitle]   = useState('');
   const [color, setColor]   = useState('');
 
-  const { gastos } = usePage().props as { gastos?: Gasto[] }; //necesito los props de inertia
+  //const { gastos } = usePage().props as { gastos?: Gasto[] }; //necesito los props de inertia
+  const { gastos } = usePage().props as {
+    gastos?: {
+      data: Gasto[],
+      current_page:  number, 
+      last_page:     number, 
+      total:         number,
+      next_page_url: string,
+      prev_page_url: string,
+    }
+  };
   const { resultado, mensaje, gasto_id, timestamp } = usePage().props as {
     resultado?: number;
     mensaje?: string;
@@ -379,8 +389,8 @@ export default function Gastos(){
 
   //effect
   useEffect(() => {
-    if (gastos && gastos?.length > 0) {
-      setCacheados(gastos);
+    if (gastos && gastos.data.length > 0) {
+      setCacheados(gastos.data);
     } else {
       setCacheados([]);
     }
@@ -400,6 +410,11 @@ export default function Gastos(){
             datos={cacheados??[]}
             openEdit={openEdit}
             abrirConfirmar={confirmar}
+            totalFilas={gastos?.total ?? 0}
+            current_page={gastos?.current_page ?? 0}
+            last_page={gastos?.last_page ?? 0}
+            next_page_url={gastos?.next_page_url ?? ''}
+            prev_page_url={gastos?.prev_page_url ?? ''}
           />
         </div>
       </div>

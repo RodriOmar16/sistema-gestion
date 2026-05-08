@@ -227,7 +227,7 @@ export function getColumns(confirmar: (data: Producto) => void, openEdit: (data:
   ]
 //]
 }
-export default function DataTableProductos({datos, openEdit, abrirConfirmar, exportar, totalFilas, current_page, last_page, next_page_url, prev_page_url}:Props) {
+export default function DataTableProductos({datos, openEdit, abrirConfirmar, exportar, totalFilas, current_page, last_page, next_page_url, prev_page_url }:Props) {
   const [sorting, setSorting]                   = useState<SortingState>([])
   const [columnFilters, setColumnFilters]       = useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})

@@ -218,17 +218,7 @@ export default function Productos(){
       prev_page_url: string,
     } 
   };
-
-  const { resultado, mensaje, producto_id, timestamp } = usePage().props as {
-    resultado?: number;
-    mensaje?: string;
-    producto_id?: number;
-    timestamp?: number;
-  };
-  
-  const { auth }                              = usePage<{auth: AuthProps}>().props;
   const [cacheados, setCacheados]             = useState<Producto[]>([]);
-  const [ultimoTimestamp, setUltimoTimestamp] = useState<number | null>(null);
 
   const [load, setLoad]             = useState(false);
   const [openMasivo, setOpenMasivo] = useState(false);

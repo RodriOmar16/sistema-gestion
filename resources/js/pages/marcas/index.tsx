@@ -222,9 +222,7 @@ export default function Marcas(){
   //effect
   useEffect(() => {
     if (
-      marcas &&
-      marcas.length > 0 &&
-      JSON.stringify(marcas) !== JSON.stringify(marcasCacheadas)
+      marcas && marcas.length > 0
     ) {
       setMarcasCacheadas(marcas);
     }

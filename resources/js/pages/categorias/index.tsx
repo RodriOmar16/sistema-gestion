@@ -121,18 +121,26 @@ export default function Categorias(){
   const [title, setTitle]   = useState('');
   const [color, setColor]   = useState('');
 
-  const { categorias } = usePage().props as { categorias?: Categoria[] }; //necesito los props de inertia
-  const { resultado, mensaje, categoria_id } = usePage().props as {
+  //const { categorias } = usePage().props as { categorias?: Categoria[] }; //necesito los props de inertia
+  const { categorias } = usePage().props as {
+    categorias?: {
+      data: Categoria[],
+      current_page:  number, 
+      last_page:     number, 
+      total:         number,
+      next_page_url: string,
+      prev_page_url: string,
+    }
+  }
+
+  const { resultado, mensaje, categoria_id, timestamp} = usePage().props as {
     resultado?: number;
     mensaje?: string;
     categoria_id?: number;
+    timestamp?: number;
   };
-  const [propsActuales, setPropsActuales] = useState<{
-    resultado: number | undefined | null;
-    mensaje: string | undefined | null | '';
-    categoria_id: number | undefined | null;
-  }>({ resultado: undefined, mensaje: undefined, categoria_id: undefined });
-  const [categoriasCacheadas, setCategoriasCacheadas] = useState<Categoria[]>([]);
+  const [ultimoTimestamp, setUltimoTimestamp] = useState<number | null>(null);
+  const [cacheadas, setCacheadas] = useState<Categoria[]>([]);
 
   //funciones
   const confirmar = (data: Categoria) => {
@@ -229,33 +237,19 @@ export default function Categorias(){
 
   //effect
   useEffect(() => {
-    if (!activo && propsActuales.resultado !== undefined) {
-      setPropsActuales({
-        resultado: undefined,
-        mensaje: undefined,
-        categoria_id: undefined
-      });
-    }
-  }, [activo]);
-
-  useEffect(() => {
-    if (
-      categorias &&
-      categorias.length > 0 &&
-      JSON.stringify(categorias) !== JSON.stringify(categoriasCacheadas)
-    ) {
-      setCategoriasCacheadas(categorias);
+    if ( categorias && categorias.data.length > 0 ) {
+      setCacheadas(categorias.data);
+    }else{
+      setCacheadas([]);
     }
   }, [categorias]);
 
 
   useEffect(() => {
-    const cambioDetectado =
-      (resultado && resultado  !== propsActuales.resultado)  ||
-      (mensaje && mensaje    !== propsActuales.mensaje)
+    const cambioDetectado = timestamp && timestamp !== ultimoTimestamp;
 
     if (cambioDetectado) {
-      setPropsActuales({ resultado, mensaje, categoria_id });
+      setUltimoTimestamp(timestamp)
 
       const esError = resultado === 0;
       setTitle(esError ? 'Error' : modalMode === 'create' ? 'Categoría nueva' : 'Categoría modificada');
@@ -271,20 +265,25 @@ export default function Categorias(){
         )
       }
     }
-  }, [resultado, mensaje, categoria_id]);
+  }, [timestamp, ultimoTimestamp, resultado, mensaje, categoria_id, modalMode]);
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Categorías" />
       <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
         <div className="relative flex-none flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
-          <FiltrosForm openCreate={openCreate} resetearCategoria={setCategoriasCacheadas}/>
+          <FiltrosForm openCreate={openCreate} resetearCategoria={setCacheadas}/>
         </div>
         <div className="p-4 relative flex-1 overflow-auto rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
           <DataTableCategorias
-            datos={categoriasCacheadas?? []} 
+            datos={cacheadas?? []} 
             openEdit={openEdit} 
             abrirConfirmar={confirmar}
+            totalFilas={categorias?.total ?? 0}
+            current_page={categorias?.current_page ?? 0}
+            last_page={categorias?.last_page ?? 0}
+            next_page_url={categorias?.next_page_url ?? ''}
+            prev_page_url={categorias?.prev_page_url ?? ''}
             />
         </div>
       </div>

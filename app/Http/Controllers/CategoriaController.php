@@ -38,11 +38,11 @@ class CategoriaController extends Controller
   }
   public function index(Request $request)
   {
-    if(!$request->has('buscar')){
+    /*if(!$request->has('buscar')){
       return inertia('categorias/index',[
         'categorias' => []
       ]);
-    }
+    }*/
 
     $query = Categoria::query();
 
@@ -62,16 +62,27 @@ class CategoriaController extends Controller
       $query = Categoria::query();
     }
 
-    $categorias = $query->latest()->get();
+    //$categorias = $query->latest()->get();
+
+    //Paginación
+    $perPage = min($request->get('per_page',10),200);
+    $categorias = $query->latest()->paginate($perPage);
+
+    //transformación
+    $categorias->getCollection()->transform(function($c){
+      return [
+        'categoria_id' => $c->categoria_id,
+        'nombre'       => $c->nombre,
+        'inhabilitada' => $c->inhabilitada,
+        'created_at'   => $c->created_at,
+        'updated_at'   => $c->updated_at,
+      ];
+    });
 
     return inertia('categorias/index',[
       'categorias' => $categorias,
-      'resultado' => session('resultado'),
-      'mensaje' => session('mensaje'),
-      'error' => session('error'),
     ]);
 
-    //return Categoria::where('inhabilitada', false)->get();
   }
 
   public function store(Request $request)

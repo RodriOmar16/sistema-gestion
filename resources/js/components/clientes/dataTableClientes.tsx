@@ -11,11 +11,18 @@ import { Table,  TableBody,  TableCell,  TableHead,  TableHeader,  TableRow } fr
 import { Cliente } from "@/types/typeCrud"
 import { convertirFechaGuionesBarras, formatDateTime, formatearNroCompleto } from "@/utils"
 import { Badge } from "../ui/badge"
+import { route } from "ziggy-js"
+import { router } from "@inertiajs/react"
 
 interface Props {
   datos: Cliente[];
   openEdit: (data:Cliente) => void;
   abrirConfirmar: (data:Cliente) => void;
+  totalFilas: number;
+  current_page:number, 
+  last_page:number, 
+  next_page_url: string,
+  prev_page_url: string,
 }
 
 //export const columns: ColumnDef<Project>[] = [
@@ -200,7 +207,7 @@ export function getColumns(confirmar: (data: Cliente) => void, openEdit: (data: 
   ]
 //]
 }
-export default function DataTableClientes({datos, openEdit, abrirConfirmar}:Props) {
+export default function DataTableClientes({ datos, openEdit, abrirConfirmar, totalFilas, current_page, last_page, next_page_url, prev_page_url }:Props) {
   const [sorting, setSorting]                   = useState<SortingState>([])
   const [columnFilters, setColumnFilters]       = useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
@@ -249,9 +256,6 @@ export default function DataTableClientes({datos, openEdit, abrirConfirmar}:Prop
   return (
     <div className="w-full">
       <div className=" grid grid-cols-12 gap-4  py-2">
-        {/*<div className="col-span-6 sm:col-span-4 md:col-span-4 lg:col-span-2">
-          <PdfButton deshabilitado={datos.length == 0}/>
-        </div>*/}
         <div className="col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12 flex justify-end  items-center">
           <Input
             placeholder="Filtrar"
@@ -304,7 +308,7 @@ export default function DataTableClientes({datos, openEdit, abrirConfirmar}:Prop
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  No hay resultados para mostrar. Utiliza los filtros para obtener formas de pago.
+                  No hay resultados para mostrar. Utiliza los filtros para obtener clientes.
                 </TableCell>
               </TableRow>
             )}
@@ -313,24 +317,34 @@ export default function DataTableClientes({datos, openEdit, abrirConfirmar}:Prop
       </div>
       <div className="flex items-center justify-end space-x-2 py-4">
         <div className="text-muted-foreground flex-1 text-sm">
-          {/*{table.getFilteredSelectedRowModel().rows.length} de{" "}
-          {table.getFilteredRowModel().rows.length} fila(s) selecc.*/}
-          Total de filas: {datos.length}
+          Página {current_page} de {last_page} — Total: {totalFilas}
         </div>
         <div className="space-x-2">
           <Button
             variant="outline"
             size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
+            onClick={() => {
+              router.get(route('clientes.index'), { page: current_page - 1 },{
+                preserveState: true,
+                preserveScroll: true,
+              });
+            }}
+            //disabled={current_page <= 1}
+            disabled={!prev_page_url}
           >
             Anterior
           </Button>
           <Button
             variant="outline"
             size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
+            onClick={() => {
+              router.get(route('clientes.index'), { page: current_page + 1 },{
+                preserveState: true,
+                preserveScroll: true,
+              });
+            }}
+            //disabled={current_page >= last_page}
+            disabled={!next_page_url}
           >
             Siguiente
           </Button>

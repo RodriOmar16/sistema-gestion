@@ -52,9 +52,11 @@ class CategoriaController extends Controller
     if($request->filled('nombre')){
       $query->where('nombre','like','%'.$request->nombre.'%');
     }
-    if($request->filled('inhabilitada')){
+    if($request->has('inhabilitada')){
       $estado = filter_var($request->inhabilitada, FILTER_VALIDATE_BOOLEAN);
       $query->where('inhabilitada', $estado);
+    }else{
+      $query->where('inhabilitada', 0);
     }
 
     if(!$request->filled('categoria_id') && !$request->filled('nombre') && 

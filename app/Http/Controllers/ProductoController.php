@@ -81,27 +81,6 @@ class ProductoController extends Controller
 
   //devuelve id y nombre de productos con stock 
   public function productosStockHabilitados(Request $request){
-    /*try {
-      $buscar = $request->get('buscar', '');
-
-      $productos = Producto::query()
-        ->with('stock')
-        ->where('inhabilitado',0)
-        ->when($buscar, fn($q) => $q->where('nombre', 'LIKE', "%{$buscar}%"))
-        ->select('producto_id as id', 'nombre')
-        ->whereHas('stock', function($q){ 
-          $q->where('cantidad', '>', 0); 
-        })
-        ->paginate(20);
-
-      return response()->json([
-          'elementos' => $productos
-      ]);
-    } catch (\Throwable $e) {
-      //Log::error('Error en buscar productos: ' . $e->getMessage());
-      return response()->json(['error' => $e->getMessage()], 500);
-    }*/
-
     try {
       $buscar = $request->get('buscar', '');
 
@@ -186,9 +165,11 @@ class ProductoController extends Controller
     if($request->filled('vencimiento')){
       $query->where('vencimiento', $request->vencimiento);
     }
-    if ($request->filled('inhabilitado')) {
+    if ($request->has('inhabilitado')) {
       $estado = filter_var($request->inhabilitado, FILTER_VALIDATE_BOOLEAN);
       $query->where('inhabilitado', $estado);
+    }else{
+      $query->where('inhabilitado', 0);
     }
 
     // Relaciones intermedias

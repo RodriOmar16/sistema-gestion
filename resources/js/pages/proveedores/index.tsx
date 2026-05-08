@@ -154,18 +154,30 @@ export default function Proveedores(){
   const [title, setTitle]   = useState('');
   const [color, setColor]   = useState('');
 
-  const { proveedores } = usePage().props as { proveedores?: Proveedor[] }; //necesito los props de inertia
-  const { resultado, mensaje, proveedor_id } = usePage().props as {
+  //const { proveedores } = usePage().props as { proveedores?: Proveedor[] }; //necesito los props de inertia
+  const { proveedores } = usePage().props as {
+    proveedores?: {
+      data: Proveedor[],
+      current_page:  number, 
+      last_page:     number, 
+      total:         number,
+      next_page_url: string,
+      prev_page_url: string,
+    }
+  };
+  const { resultado, mensaje, proveedor_id, timestamp} = usePage().props as {
     resultado?: number;
     mensaje?: string;
     proveedor_id?: number;
+    timestamp?: number;
   };
-  const [propsActuales, setPropsActuales] = useState<{
+  /*const [propsActuales, setPropsActuales] = useState<{
     resultado: number | undefined | null;
     mensaje: string | undefined | null | '';
     proveedor_id: number | undefined | null;
-  }>({ resultado: undefined, mensaje: undefined, proveedor_id: undefined });
-  const [proveedoresCacheados, setProveedoresCacheados] = useState<Proveedor[]>([]);
+  }>({ resultado: undefined, mensaje: undefined, proveedor_id: undefined });*/
+  const [ultimoTimestamp, setUltimoTimestamp] = useState<number | null>(null);
+  const [cacheados, setCacheados] = useState<Proveedor[]>([]);
 
   //funciones
   const confirmar = (data: Proveedor) => {
@@ -260,33 +272,19 @@ export default function Proveedores(){
 
   //effect
   useEffect(() => {
-    if (!activo && propsActuales.resultado !== undefined) {
-      setPropsActuales({
-        resultado: undefined,
-        mensaje: undefined,
-        proveedor_id: undefined
-      });
-    }
-  }, [activo]);
-
-  useEffect(() => {
-    if (
-      proveedores &&
-      proveedores.length > 0 &&
-      JSON.stringify(proveedores) !== JSON.stringify(proveedoresCacheados)
-    ) {
-      setProveedoresCacheados(proveedores);
+    if ( proveedores && proveedores.data.length > 0 ) {
+      setCacheados(proveedores.data);
+    } else {
+      setCacheados([]);
     }
   }, [proveedores]);
 
 
   useEffect(() => {
-    const cambioDetectado =
-      (resultado && resultado  !== propsActuales.resultado)  ||
-      (mensaje && mensaje    !== propsActuales.mensaje)
+    const cambioDetectado = timestamp && timestamp !== ultimoTimestamp;
 
     if (cambioDetectado) {
-      setPropsActuales({ resultado, mensaje, proveedor_id });
+      setUltimoTimestamp(timestamp)
 
       const esError = resultado === 0;
       setTitle(esError ? 'Error' : modalMode === 'create' ? 'Proveedor nuevo' : 'Proveedor modificado');
@@ -302,20 +300,25 @@ export default function Proveedores(){
         )
       }
     }
-  }, [resultado, mensaje, proveedor_id]);
+  }, [timestamp, ultimoTimestamp, resultado, mensaje, proveedor_id, modalMode]);
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Proveedores" />
       <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
         <div className="relative flex-none flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
-          <FiltrosForm openCreate={openCreate} resetearProveedor={setProveedoresCacheados}/>
+          <FiltrosForm openCreate={openCreate} resetearProveedor={setCacheados}/>
         </div>
         <div className="p-4 relative flex-1 overflow-auto rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
           <DataTableProveedores
-            datos={proveedoresCacheados?? []} 
+            datos={cacheados?? []} 
             openEdit={openEdit} 
             abrirConfirmar={confirmar}
+            totalFilas={proveedores?.total ?? 0}
+            current_page={proveedores?.current_page ?? 0}
+            last_page={proveedores?.last_page ?? 0}
+            next_page_url={proveedores?.next_page_url ?? ''}
+            prev_page_url={proveedores?.prev_page_url ?? ''}
             />
         </div>
       </div>

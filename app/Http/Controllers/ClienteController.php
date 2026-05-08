@@ -46,11 +46,11 @@ class ClienteController extends Controller
 
   public function index(Request $request)
   {
-    if(!$request->has('buscar')){
+    /*if(!$request->has('buscar')){
       return inertia('clientes/index',[
         'clientes' => []
       ]);
-    }
+    }*/
 
     $query = Cliente::query();
     if($request->filled('cliente_id')){
@@ -71,12 +71,18 @@ class ClienteController extends Controller
     if($request->filled('dni')){
       $query->where('dni', 'like', '%'.$request->dni.'%');
     }
-    if ($request->filled('inhabilitado')) {
+    if ($request->has('inhabilitado')) {
       $estado = filter_var($request->inhabilitado, FILTER_VALIDATE_BOOLEAN);
       $query->where('inhabilitado', $estado);
+    }else{
+      $query->where('inhabilitado', 0);
     }
 
-    $clientes = $query->latest()->get();
+    //$clientes = $query->latest()->get();
+    //Paginación
+    $perPage = min($request->get('per_page',10),200);
+    $clientes = $query->latest()->paginate($perPage);
+
     return inertia('clientes/index',[
       'clientes' => $clientes
     ]);

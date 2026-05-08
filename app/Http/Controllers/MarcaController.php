@@ -51,9 +51,11 @@ class MarcaController extends Controller
     if($request->filled('nombre')){
       $query->where('nombre','like', '%'.$request->nombre.'%');
     }
-    if ($request->filled('inhabilitada')) {
+    if ($request->has('inhabilitada')) {
       $estado = filter_var($request->inhabilitada, FILTER_VALIDATE_BOOLEAN);
       $query->where('inhabilitada', $estado);
+    }else{
+      $query->where('inhabilitada', 0);
     }
 
     //$marcas = $query->latest()->get();

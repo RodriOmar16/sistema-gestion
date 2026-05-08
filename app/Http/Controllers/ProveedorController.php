@@ -40,16 +40,14 @@ class ProveedorController extends Controller
       return response()->json(['error' => $e->getMessage()], 500);
     }
   }
-  /**
-   * Display a listing of the resource.
-   */
+
   public function index(Request $request)
   {
-    if(!$request->has('buscar')){
+    /*if(!$request->has('buscar')){
       return inertia('proveedores/index',[
         'proveedores' => []
       ]);
-    }
+    }*/
 
     $query = Proveedor::query();
     if($request->filled('proveedor_id')){
@@ -70,9 +68,11 @@ class ProveedorController extends Controller
     if($request->filled('nro_telefono')){
       $query->where('nro_telefono', 'like','%'.$request->nro_telefono.'%');
     }
-    if($request->filled('inhabilitado')) {
+    if($request->has('inhabilitado')) {
       $estado = filter_var($request->inhabilitado, FILTER_VALIDATE_BOOLEAN);
       $query->where('inhabilitado', $estado);
+    }else{
+      $query->where('inhabilitado', 0);
     }
 
     if(!$request->filled('proveedor_id') && !$request->filled('nombre') && !$request->filled('descripcion') &&
@@ -81,15 +81,17 @@ class ProveedorController extends Controller
       $query = Proveedor::query();
     }
 
-    $proveedores = $query->latest()->get();
+    //$proveedores = $query->latest()->get();
+
+    //Paginación
+    $perPage = min($request->get('per_page',10),200);
+    $proveedores = $query->latest()->paginate($perPage);
+
     return inertia('proveedores/index',[
       'proveedores' => $proveedores
     ]);
   }
 
-  /**
-   * Store a newly created resource in storage.
-  */
   public function store(Request $request)
   {
     DB::beginTransaction();
@@ -114,7 +116,8 @@ class ProveedorController extends Controller
       if($existe){
         return inertia('proveedores/index',[
           'resultado' => 0,
-          'mensaje'   => 'Ya existe un proveedor con los mismos datos.'
+          'mensaje'   => 'Ya existe un proveedor con los mismos datos.',
+          'timestamp' => now()->timestamp
         ]);
       }
       //creo el proveedor
@@ -131,20 +134,19 @@ class ProveedorController extends Controller
       return inertia('proveedores/index',[
         'resultado'    => 1,
         'mensaje'      => 'El proveedor fue creado correctamente.',
-        'proveedor_id' => $proveedor->proveedor_id
+        'proveedor_id' => $proveedor->proveedor_id,
+        'timestamp' => now()->timestamp
       ]);
     } catch (\Throwable $e) {
       DB::rollBack();
       return inertia('proveedores/index',[
         'resultado' => 0,
-        'mensaje'   => 'Ocurrió un error al crear el proveedor: '.$e->getMessage()
+        'mensaje'   => 'Ocurrió un error al crear el proveedor: '.$e->getMessage(),
+        'timestamp' => now()->timestamp
       ]);
     }
   }
   
-  /**
-   * Update the specified resource in storage.
-  */
   public function update(Request $request, Proveedor $proveedor)
   {
     DB::beginTransaction();
@@ -170,7 +172,8 @@ class ProveedorController extends Controller
       if($existe){
         return inertia('proveedores/index',[
           'resultado' => 0,
-          'mensaje'   => 'Ya existe un proveedor con los mismos datos.'
+          'mensaje'   => 'Ya existe un proveedor con los mismos datos.',
+          'timestamp' => now()->timestamp
         ]);
       }
       //actualizo el proveedor
@@ -187,13 +190,15 @@ class ProveedorController extends Controller
       return inertia('proveedores/index',[
         'resultado'    => 1,
         'mensaje'      => 'El proveedor fue modificado correctamente.',
-        'proveedor_id' => $proveedor->proveedor_id
+        'proveedor_id' => $proveedor->proveedor_id,
+        'timestamp'    => now()->timestamp
       ]);
     } catch (\Throwable $e) {
       DB::rollBack();
       return inertia('proveedores/index',[
         'resultado' => 0,
-        'mensaje'   => 'Ocurrió un error al editar el proveedor: '.$e->getMessage()
+        'mensaje'   => 'Ocurrió un error al editar el proveedor: '.$e->getMessage(),
+        'timestamp' => now()->timestamp
       ]);
     }
   }
@@ -203,7 +208,8 @@ class ProveedorController extends Controller
     return inertia('proveedores/index',[
       'resultado'    => 1,
       'mensaje'      => 'Estado actualizado correctamente',
-      'proveedor_id' => $proveedor->proveedor_id
+      'proveedor_id' => $proveedor->proveedor_id,
+      'timestamp'    => now()->timestamp
     ]);
   }
 

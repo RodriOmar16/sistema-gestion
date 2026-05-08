@@ -143,20 +143,25 @@ export default function Clientes(){
   const [title, setTitle]   = useState('');
   const [color, setColor]   = useState('');
 
-  const { clientes } = usePage().props as { clientes?: Cliente[] }; //necesito los props de inertia
+  //const { clientes } = usePage().props as { clientes?: Cliente[] }; //necesito los props de inertia
+  const { clientes } = usePage().props as {
+    clientes?: {
+      data: Cliente[],
+      current_page:  number, 
+      last_page:     number, 
+      total:         number,
+      next_page_url: string,
+      prev_page_url: string,
+    }
+  };
   const { resultado, mensaje, cliente_id, timestamp } = usePage().props as {
     resultado?: number;
     mensaje?: string;
     cliente_id?: number;
     timestamp?: number;
   };
-  
-  /*const [propsActuales, setPropsActuales] = useState<{
-    resultado: number | undefined | null;
-    mensaje: string | undefined | null | '';
-    cliente_id: number | undefined | null;
-  }>({ resultado: undefined, mensaje: undefined, cliente_id: undefined });*/
-  const [clientesCacheados, setClientesCacheados] = useState<Cliente[]>([]);
+
+  const [cacheados, setCacheados] = useState<Cliente[]>([]);
   const [ultimoTimestamp, setUltimoTimestamp] = useState<number | null>(null);
 
   //funciones
@@ -252,12 +257,10 @@ export default function Clientes(){
 
   //effect
   useEffect(() => {
-    if (
-      clientes &&
-      clientes.length > 0 &&
-      JSON.stringify(clientes) !== JSON.stringify(clientesCacheados)
-    ) {
-      setClientesCacheados(clientes);
+    if ( clientes && clientes.data.length > 0 ) {
+      setCacheados(clientes.data);
+    }else{
+      setCacheados([]);
     }
   }, [clientes]);
 
@@ -289,14 +292,19 @@ export default function Clientes(){
       <Head title="Clientes" />
       <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
         <div className="relative flex-none flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
-          <FiltrosForm openCreate={openCreate} resetearCliente={setClientesCacheados}/>
+          <FiltrosForm openCreate={openCreate} resetearCliente={setCacheados}/>
         </div>
         <div className="p-4 relative flex-1 overflow-auto rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
           <DataTableClientes
-            datos={clientesCacheados?? []} 
+            datos={cacheados?? []} 
             openEdit={openEdit} 
             abrirConfirmar={confirmar}
-            />
+            totalFilas={clientes?.total ?? 0}
+            current_page={clientes?.current_page ?? 0}
+            last_page={clientes?.last_page ?? 0}
+            next_page_url={clientes?.next_page_url ?? ''}
+            prev_page_url={clientes?.prev_page_url ?? ''}
+          />
         </div>
       </div>
       <NewEditClientes

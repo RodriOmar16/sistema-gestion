@@ -38,11 +38,11 @@ class MarcaController extends Controller
   }
 
 	public function index(Request $request){
-		if(!$request->has('buscar')){
+		/*if(!$request->has('buscar')){
 			return inertia('marcas/index',[
 				'marcas' => [],
 			]);
-		}
+		}*/
 
 		$query = Marca::query();
     if($request->filled('marca_id')){
@@ -56,7 +56,23 @@ class MarcaController extends Controller
       $query->where('inhabilitada', $estado);
     }
 
-    $marcas = $query->latest()->get();
+    //$marcas = $query->latest()->get();
+
+    //Paginación
+    $perPage = min($request->get('per_page',10),200);
+    $marcas = $query->latest()->paginate($perPage);
+
+    //transformacion
+    $marcas->getCollection()->transform(function($m){
+      return [
+        'marca_id'     => $m->marca_id,
+        'nombre'       => $m->nombre,
+        'inhabilitada' => $m->inhabilitada,
+        'created_at'   => $m->created_at,
+        'updated_at'   => $m->updated_at, 
+      ];
+    });
+
     return inertia('marcas/index',[
       'marcas' => $marcas,
     ]);

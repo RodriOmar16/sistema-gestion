@@ -119,7 +119,17 @@ export default function Marcas(){
   const [title, setTitle]   = useState('');
   const [color, setColor]   = useState('');
 
-  const { marcas } = usePage().props as { marcas?: Marca[] }; //necesito los props de inertia
+  //const { marcas } = usePage().props as { marcas?: Marca[] }; //necesito los props de inertia
+  const { marcas } = usePage().props as {
+    marcas?: {
+      data: Marca[],
+      current_page:  number, 
+      last_page:     number, 
+      total:         number,
+      next_page_url: string,
+      prev_page_url: string,
+    }
+  };
   const { resultado, mensaje, marca_id, timestamp } = usePage().props as {
     resultado?: number;
     mensaje?: string;
@@ -127,7 +137,7 @@ export default function Marcas(){
     timestamp?: number;
   };
   const [ultimoTimestamp, setUltimoTimestamp] = useState<number | null>(null);
-  const [marcasCacheadas, setMarcasCacheadas] = useState<Marca[]>([]);
+  const [cacheadas, setCacheadas] = useState<Marca[]>([]);
   //funciones
   const confirmar = (data: Marca) => {
     if(data){
@@ -221,10 +231,8 @@ export default function Marcas(){
 
   //effect
   useEffect(() => {
-    if (
-      marcas && marcas.length > 0
-    ) {
-      setMarcasCacheadas(marcas);
+    if ( marcas && marcas.data.length > 0 ) {
+      setCacheadas(marcas.data);
     }
   }, [marcas]);
 
@@ -256,13 +264,18 @@ export default function Marcas(){
       <Head title="Marcas" />
       <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
         <div className="relative flex-none flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
-          <FiltrosForm openCreate={openCreate} resetearMarca={setMarcasCacheadas}/>
+          <FiltrosForm openCreate={openCreate} resetearMarca={setCacheadas}/>
         </div>
         <div className="p-4 relative flex-1 overflow-auto rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
           <DataTableMarcas
-            datos={marcasCacheadas?? []} 
+            datos={cacheadas?? []} 
             openEdit={openEdit} 
             abrirConfirmar={confirmar}
+            totalFilas={marcas?.total ?? 0}
+            current_page={marcas?.current_page ?? 0}
+            last_page={marcas?.last_page ?? 0}
+            next_page_url={marcas?.next_page_url ?? ''}
+            prev_page_url={marcas?.prev_page_url ?? ''}
             />
         </div>
       </div>

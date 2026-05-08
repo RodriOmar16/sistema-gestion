@@ -167,8 +167,18 @@ export default function MovimientosStock(){
   //data  
   const { data, setData, errors, processing } = useForm<MovimientoStock>(movVacio); //formulario que busca
 
-  const movs:MovimientoStock[] = [];
-  const { movimientos } = usePage().props as { movimientos?: MovimientoStock[] }; //necesito los props de inertia
+  //const movs:MovimientoStock[] = [];
+  //const { movimientos } = usePage().props as { movimientos?: MovimientoStock[] }; //necesito los props de inertia
+  const { movimientos } = usePage().props as {
+    movimientos?:{
+      data: MovimientoStock[],
+      current_page:  number, 
+      last_page:     number, 
+      total:         number,
+      next_page_url: string,
+      prev_page_url: string,
+    }
+  };
 
   //const [productoHab, setProductosHab] = useState<Multiple[]>([]);
   const [tiposHab, setTiposHab]        = useState<Multiple[]>([]);
@@ -213,8 +223,13 @@ export default function MovimientosStock(){
         </div>
         <div className="p-4 relative flex-1 overflow-auto rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
           <DataTableMovimientos
-            datos={movimientos?? []}
-            dataIndex={data}
+            datos={movimientos?.data?? []}
+            exportar={data}
+            totalFilas={movimientos?.total ?? 0}
+            current_page={movimientos?.current_page ?? 0}
+            last_page={movimientos?.last_page ?? 0}
+            next_page_url={movimientos?.next_page_url ?? ''}
+            prev_page_url={movimientos?.prev_page_url ?? ''}
             />
         </div>
       </div>

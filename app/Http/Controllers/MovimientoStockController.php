@@ -24,11 +24,11 @@ class MovimientoStockController extends Controller
    */
   public function index(Request $request)
   {
-    if(!$request->has('buscar')){
+    /*if(!$request->has('buscar')){
       return inertia('movimientosStock/index',[
         'movimientos' => []
       ]);
-    }
+    }*/
     $query = MovimientoStock::query();
     if($request->filled('movimiento_id')){
       $query->where('movimiento_id',$request->movimiento_id);
@@ -48,7 +48,7 @@ class MovimientoStockController extends Controller
       $query->whereBetween('fecha', [$inicio, $fin]);
     }
 
-    $movimientos = $query->with(['producto', 'tipoMovimiento', 'origenMovimiento'])->latest()
+    /*$movimientos = $query->with(['producto', 'tipoMovimiento', 'origenMovimiento'])->latest()
                    ->get()->map(function($m){
                     return [
                       'movimiento_id'   => $m->movimiento_id,
@@ -61,7 +61,26 @@ class MovimientoStockController extends Controller
                       'fecha'           => $m->fecha,
                       'cantidad'        => $m->cantidad,
                     ];
-                  });
+                  });*/
+
+    //Paginación
+    $perPage = min($request->get('per_page',10),200);
+    $movimientos = $query->latest()->paginate($perPage);
+
+    $movimientos->getCollection()->transform(function($m){
+      return [
+        'movimiento_id'   => $m->movimiento_id,
+        'producto_id'     => $m->producto_id,
+        'producto_nombre' => optional($m->producto)->nombre,
+        'tipo_id'         => $m->tipo_id,
+        'tipo_nombre'     => optional($m->tipoMovimiento)->nombre,
+        'origen_id'       => $m->origen_id,
+        'origen_nombre'   => optional($m->origenMovimiento)->nombre,
+        'fecha'           => $m->fecha,
+        'cantidad'        => $m->cantidad,
+      ];
+    });
+
     return inertia('movimientosStock/index',[
       'movimientos' => $movimientos
     ]);

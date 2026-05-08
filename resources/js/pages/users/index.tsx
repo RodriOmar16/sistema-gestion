@@ -132,20 +132,27 @@ export default function Usuarios(){
   const [color, setColor]   = useState('');
 
   const { auth } = usePage<{auth: AuthProps}>().props;
-  const { users } = usePage().props as { users?: User[] }; //necesito los props de inertia
+  //const { users } = usePage().props as { users?: User[] }; //necesito los props de inertia
+  const { users } = usePage().props as {
+    users?:{
+      data: User[],
+      current_page:  number, 
+      last_page:     number, 
+      total:         number,
+      next_page_url: string,
+      prev_page_url: string,
+    }
+  };
+
   const { resultado, mensaje, id, timestamp } = usePage().props as {
     resultado?: number;
     mensaje?: string;
     id?: number;
     timestamp?: number;
   };
-  /*const [propsActuales, setPropsActuales] = useState<{
-    resultado: number | undefined | null;
-    mensaje: string | undefined | null | '';
-    id: number | undefined | null;
-  }>({ resultado: undefined, mensaje: undefined, id: undefined });*/
+
   const [ultimoTimestamp, setUltimoTimestamp] = useState<number | null>(null);
-  const [usersCacheados, setUsersCacheados] = useState<User[]>([]);
+  const [cacheados, setCacheados] = useState<User[]>([]);
   const [permisoGestionar, setPermisoGestionar] = useState(false);
 
 
@@ -243,35 +250,19 @@ export default function Usuarios(){
   };
 
   //effect
-  /*useEffect(() => {
-    if (!activo && propsActuales.resultado !== undefined) {
-      setPropsActuales({
-        resultado: undefined,
-        mensaje: undefined,
-        id: undefined
-      });
-    }
-  }, [activo]);*/
-
   useEffect(() => {
-    if (
-      users &&
-      users.length > 0 &&
-      JSON.stringify(users) !== JSON.stringify(usersCacheados)
-    ) {
-      setUsersCacheados(users);
+    if ( users && users.data.length > 0 ) {
+      setCacheados(users.data);
+    }else{
+      setCacheados([]);
     }
   }, [users]);
 
 
   useEffect(() => {
-    /*const cambioDetectado =
-      (resultado && resultado  !== propsActuales.resultado)  ||
-      (mensaje && mensaje    !== propsActuales.mensaje)*/
       const cambioDetectado = timestamp && timestamp !== ultimoTimestamp;
 
     if (cambioDetectado) {
-      //setPropsActuales({ resultado, mensaje, id });
       setUltimoTimestamp(timestamp)
 
       const esError = resultado === 0;
@@ -302,16 +293,21 @@ export default function Usuarios(){
         <div className="relative flex-none flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
           <FiltrosForm 
             openCreate={openCreate} 
-            resetearUser={setUsersCacheados}
+            resetearUser={setCacheados}
             permiso={permisoGestionar}/>
         </div>
         <div className="p-4 relative flex-1 overflow-auto rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
           <DataTableUsers
-            datos={usersCacheados?? []} 
+            datos={cacheados?? []} 
             openEdit={openEdit} 
             abrirConfirmar={confirmar}
             permiso={permisoGestionar}
-            />
+            totalFilas={users?.total ?? 0}
+            current_page={users?.current_page ?? 0}
+            last_page={users?.last_page ?? 0}
+            next_page_url={users?.next_page_url ?? ''}
+            prev_page_url={users?.prev_page_url ?? ''}
+          />
         </div>
       </div>
       <NewEditUser

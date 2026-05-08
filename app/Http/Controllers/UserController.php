@@ -45,11 +45,11 @@ class UserController extends Controller
   public function index(Request $request)
   {
     //al abrir el formulario
-    if(!$request->has('buscar')){
+    /*if(!$request->has('buscar')){
       return inertia('users/index',[
         'users' => []
       ]);
-    }
+    }*/
     //si hay filtros
     $query = User::query();
     if($request->filled('id')){
@@ -71,7 +71,24 @@ class UserController extends Controller
       $query = User::query();
     }
 
-    $users = $query->latest()->get();
+    //$users = $query->latest()->get();
+
+    //Paginación
+    $perPage = min($request->get('per_page',10),200);
+    $users = $query->latest()->paginate($perPage);
+
+    //Transformación
+    $users->getCollection()->transform(function($u){
+      return [
+        'id' => $u->id,
+        'name' => $u->name,
+        'email' => $u->email,
+        'inhabilitado' => $u->inhabilitado,
+        'created_at' => $u->created_at,
+        'updated_at' => $u->updated_at,
+      ];
+    });
+
     return inertia('users/index',[
       'users' => $users
     ]);

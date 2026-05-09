@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Switch } from '@/components/ui/switch';
 import { useForm } from "@inertiajs/react"
 import React, { useState, useEffect, useRef } from "react"
-import { Loader2, Save, Sheet, File, X } from 'lucide-react';
+import { Loader2, Save, Sheet, File, X, FileInput } from 'lucide-react';
 import ShowMessage from "@/components/utils/showMessage";
 import { Producto } from "@/types/typeCrud";
 import ModalConfirmar from "../modalConfirmar";
@@ -23,13 +23,11 @@ interface PropsTable {
 }
 
 function DataTableMasivo({ data, setData}: PropsTable) {
+
   const quitar = (index: number) => {
     const newData = [...data];
     newData.splice(index, 1);
     setData(newData);
-    /*if(data.length == 0){
-      console.log("entro");
-    }*/
   };
 
   return (
@@ -106,6 +104,9 @@ export default function CargaMasiva({ open, onOpenChange }: Props){
 
   const [fileName, setFileName] = useState('');
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const [problemas, setProblemas] = useState(false);
+  const [arrErrores, setArrErrores] = useState([]);
   
   //useEffect
   useEffect(() => {
@@ -132,8 +133,7 @@ export default function CargaMasiva({ open, onOpenChange }: Props){
 
   const grabar = async () => {
     setOpenConfirmar(false);
-    setLoad(true);
-
+    
     const payload = prods.map(e => {
       return {
         ...e,
@@ -141,8 +141,8 @@ export default function CargaMasiva({ open, onOpenChange }: Props){
         categoria_nombre: e.categoria_nombre.split(', ')
       };
     });
-
     
+    setLoad(true);
     const res  = await fetch(route('productos.storeMasivo'),{
       method: 'POST',
       headers: {
@@ -152,6 +152,7 @@ export default function CargaMasiva({ open, onOpenChange }: Props){
       body: JSON.stringify({ productos: payload }),
     });
     setLoad(false);
+
     const resp = await res.json();
 
     if(resp.resultado == 0){
@@ -162,7 +163,7 @@ export default function CargaMasiva({ open, onOpenChange }: Props){
       return 
     }
 
-    if(resp.errores.length > 0){
+    /*if(resp.errores.length > 0){
       setTitle("Errores en carga masiva");
       setText(resp.errores);
       setColor('error');
@@ -173,7 +174,12 @@ export default function CargaMasiva({ open, onOpenChange }: Props){
     setTitle("Carga masiva exitosa");
     setText(resp.mensaje);
     setColor('success');
-    setActivo(true);
+    setActivo(true);*/
+    if(resp.errores.length > 0){
+      setArrErrores(resp.errores);
+      setProblemas(true);
+      return 
+    }
 
     onOpenChange(false);
   };
@@ -211,7 +217,9 @@ export default function CargaMasiva({ open, onOpenChange }: Props){
         const productos: Producto[] = [];
 
         rows.slice(1).forEach((row) => { // ignoro fila 1 y 2
-          const key = `${row[0]}-${row[1]}-${row[2]}-${row[3]}`; // nombre + código barras
+          const key = `${row[0].toLowerCase().trim()}-${row[3].toString().toLowerCase().trim()}`;
+          //const key = `${row[3]}`; // nombre + código barras //${row[0]}-${row[1]}-${row[2]}-
+          console.log("key: ", key)
           if (seen.has(key)) {
             // ya existe, no lo agrego
             return;
@@ -284,7 +292,7 @@ export default function CargaMasiva({ open, onOpenChange }: Props){
                 title="Subir archivo"
                 className="bg-blue-700 hover:bg-blue-800 dark:hover:bg-blue-800 text-white dark:hover:text-white cursor-pointer"
                 onClick={subirArchivo} type='button'>
-                <File size={20} className=""/> Subir archivo
+                <FileInput size={20} className=""/> Selecc. archivo
               </Button> 
               <input 
                 type="file" 
@@ -305,7 +313,28 @@ export default function CargaMasiva({ open, onOpenChange }: Props){
                 </div>  
               </>
             ) : (<></> )
-          }  
+          }
+          {problemas && (
+            <div className="col-span-12">
+              <div className="bg-red-100 border border-red-400 text-red-700 p-3 rounded">
+                <strong>⚠️ Hubo problemas con estos productos:</strong>
+                <ul className="list-disc list-inside mt-2">
+                  {arrErrores.map((err: string, idx: number) => (
+                    <li key={idx}>{err}</li>
+                  ))}
+                </ul>
+                <p className="mt-2 text-sm">
+                  Los que no estén en el listado se agregaron correctamente ✅
+                </p>
+              </div>
+              <Button type="button" className="mt-2" onClick={() => {
+                onOpenChange(false);
+                setArrErrores([]);
+                setProblemas(false);
+              }}>Terminar</Button>
+            </div>
+          )}
+
         </form>
         <DialogFooter>
           <DialogClose asChild>

@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 
-
+use App\Models\Marca;
 use App\Models\Producto;
 use App\Models\Categoria;
 use App\Models\Stock;
@@ -125,9 +125,11 @@ class ProductoController extends Controller
     if($request->filled('vencimiento')){
       $query->where('vencimiento', $request->vencimiento);
     }
-    if ($request->filled('inhabilitado')) {
+    if ($request->has('inhabilitado')) {
       $estado = filter_var($request->inhabilitado, FILTER_VALIDATE_BOOLEAN);
       $query->where('inhabilitado', $estado);
+    }else{
+      $query->where('inhabilitado', 0);
     }
 
     // Relaciones intermedias
@@ -290,9 +292,11 @@ class ProductoController extends Controller
     if($request->filled('vencimiento')){
       $query->where('vencimiento', $request->vencimiento);
     }
-    if ($request->filled('inhabilitado')) {
+    if ($request->has('inhabilitado')) {
       $estado = filter_var($request->inhabilitado, FILTER_VALIDATE_BOOLEAN);
       $query->where('inhabilitado', $estado);
+    }else{
+      $query->where('inhabilitado', 0);
     }
 
     // Relaciones intermedias
@@ -618,7 +622,7 @@ class ProductoController extends Controller
     return response()->download($tempFile, $filename)->deleteFileAfterSend(true);
   }
 
-  public function storeMasivo(Request $request)
+  /*public function storeMasivo(Request $request)
   {
     DB::beginTransaction();
     try {
@@ -676,12 +680,12 @@ class ProductoController extends Controller
         }
       }
 
-      $erroresStr = [];
+      /*$erroresStr = [];
       if (!empty($errores)) {
         $erroresStr = collect($errores)
           ->map(fn($e) => "Producto: {$e['producto']} - {$e['error']}")
           ->implode("\n");
-      }
+      }*
 
       //commit
       DB::commit();
@@ -689,7 +693,7 @@ class ProductoController extends Controller
         'resultado'   => 1,
         'mensaje'     => 'Carga masiva de Productos creada correctamente',
         'timestamp'   => now()->timestamp,
-        'errores'     => $erroresStr,
+        'errores'     => $errores//$erroresStr,
       ]);
     } catch (\Throwable $e) {
       DB::rollBack();
@@ -697,8 +701,105 @@ class ProductoController extends Controller
         'resultado' => 0,
         'mensaje'   => 'Ocurrió un error al intentar grabar de forma masiva productos: '.$e->getMessage(),
         'timestamp' => now()->timestamp,
-        'errores'     => $erroresStr,
+        'errores'     => $errores,
+      ]);
+    }
+  }*/
+  public function storeMasivo(Request $request)
+  {
+    DB::beginTransaction();
+    try {
+      // 1. Validación básica: debe venir un array con al menos 1 producto
+      $validated = $request->validate([
+          'productos' => 'required|array|min:1',
+      ]);
+
+      $productos = collect($validated['productos']);
+
+      // 2. Normalizar claves para detectar duplicados (nombre + código de barras)
+      $codigos = $productos->pluck('codigo_barra')->filter()->map(fn($c) => strtolower(trim($c)));
+      $nombres = $productos->pluck('producto_nombre')->filter()->map(fn($n) => strtolower(trim($n)));
+
+      // 3. Consultar en la base si ya existen productos con esos códigos o nombres
+      $existentes = Producto::query()
+          ->whereIn(DB::raw('LOWER(TRIM(codigo_barra))'), $codigos)
+          ->orWhereIn(DB::raw('LOWER(TRIM(nombre))'), $nombres)
+          ->get(['codigo_barra','nombre'])
+          ->map(fn($p) => [
+              'codigo_barra' => strtolower(trim($p->codigo_barra)),
+              'nombre'       => strtolower(trim($p->nombre)),
+          ]);
+
+      $errores = [];
+      $rows = [];
+
+      // 4. Armar array de inserción, excluyendo repetidos
+      foreach ($productos as $prod) {
+          $codigo = strtolower(trim($prod['codigo_barra'] ?? ''));
+          $nombre = strtolower(trim($prod['producto_nombre'] ?? ''));
+
+          $yaExiste = $existentes->contains(fn($e) =>
+              $e['codigo_barra'] === $codigo || $e['nombre'] === $nombre
+          );
+
+          if ($yaExiste) {
+              $errores[] = [
+                  'producto' => $nombre,
+                  'error'    => 'Este producto se detectó como repetido.'
+              ];
+              continue;
+          }
+
+          // Buscar marca si viene por nombre
+          $marca = null;
+          if (!empty($prod['marca_nombre'])) {
+              $marca = Marca::where('nombre', $prod['marca_nombre'])->first();
+          }
+
+          $rows[] = [
+              'nombre'       => $prod['producto_nombre'],
+              'descripcion'  => $prod['descripcion'],
+              'inhabilitado' => $prod['inhabilitado'] ? 1 : 0,
+              'precio'       => $prod['precio'],
+              'marca_id'     => $marca?->marca_id ?? 14,
+              'stock_minimo' => $prod['stock_minimo'],
+              'codigo_barra' => $prod['codigo_barra'] ?? $this->generarCodigoInterno(),
+              'imagen'       => $prod['imagen'],
+              'vencimiento'  => $prod['vencimiento'],
+              'created_at'   => now(),
+              'updated_at'   => now(),
+          ];
+      }
+
+      // 5. Inserción masiva en una sola query
+      if (!empty($rows)) {
+          Producto::insert($rows);
+      }
+
+      // 6. Preparar errores como string para el front
+      /*$erroresStr = collect($errores)
+          ->map(fn($e) => "Producto: {$e['producto']} - {$e['error']}")
+          ->implode("\n");*/
+      
+      $erroresArr = collect($errores)
+        ->map(fn($e) => "Producto: {$e['producto']} - {$e['error']}")
+        ->values();
+
+      DB::commit();
+      return response()->json([
+        'resultado' => 1,
+        'mensaje'   => 'Carga masiva de Productos creada correctamente',
+        'timestamp' => now()->timestamp,
+        'errores'   => $erroresArr//$erroresStr,
+      ]);
+    } catch (\Throwable $e) {
+      DB::rollBack();
+      return response()->json([
+        'resultado' => 0,
+        'mensaje'   => 'Ocurrió un error al intentar grabar de forma masiva productos: '.$e->getMessage(),
+        'timestamp' => now()->timestamp,
       ]);
     }
   }
+
 }

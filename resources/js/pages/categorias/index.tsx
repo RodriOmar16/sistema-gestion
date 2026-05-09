@@ -14,10 +14,13 @@ import PdfButton from '@/components/utils/pdf-button';
 import ShowMessage from '@/components/utils/showMessage';
 import { Select,  SelectContent,  SelectItem,  SelectTrigger,  SelectValue } from "@/components/ui/select"
 import { route } from 'ziggy-js';
+import { getCsrfToken } from '@/utils';
 
 const breadcrumbs: BreadcrumbItem[] = [ { title: 'Categorias', href: '', } ];
 
 type propsForm = {
+  data: Categoria;
+  set: (e:any) => void;
   openCreate: () => void;
   resetearCategoria: (categoria:Categoria[]) => void;
 }
@@ -28,22 +31,25 @@ const categoriaVacia = {
   inhabilitada: false,
 }
 
-export function FiltrosForm({ openCreate, resetearCategoria }: propsForm){
+export function FiltrosForm({ data, set, openCreate, resetearCategoria }: propsForm){
   const [esperandoRespuesta, setEsperandoRespuesta] = useState(false);
-  const { data, setData, errors, processing } = useForm(categoriaVacia);
+  const [processing, setProcessing] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     resetearCategoria([]);
     const payload = {      ...data, buscar: true    }
+
+    setProcessing(true);
     router.get(route('categorias.index'), payload, {
       preserveState: true,
       preserveScroll: true,
       onFinish: () => setEsperandoRespuesta(false),
     });
+    setProcessing(false);
   };
   const handleReset = () => {
-    setData(categoriaVacia);
+    set(categoriaVacia);
   };
 
   return (
@@ -64,17 +70,15 @@ export function FiltrosForm({ openCreate, resetearCategoria }: propsForm){
       <form className='grid grid-cols-12 gap-4 px-4 pt-1 pb-4' onSubmit={handleSubmit}>
         <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-2'>
           <label htmlFor="id">Id</label>
-          <Input value={data.categoria_id} onChange={(e)=>setData('categoria_id',e.target.value)}/>	
-          { errors.categoria_id && <p className='text-red-500	'>{ errors.categoria_id }</p> }
+          <Input value={data.categoria_id} onChange={(e)=>set({...data, 'categoria_id': e.target.value})}/>	
         </div>
         <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-4'>
           <label htmlFor="nombre">Nombre</label>
-          <Input value={data.nombre} onChange={(e)=>setData('nombre',e.target.value)}/>	
-          { errors.nombre && <p className='text-red-500	'>{ errors.nombre }</p> }
+          <Input value={data.nombre} onChange={(e)=>set({...data, 'nombre': e.target.value})}/>	
         </div>
         <div className='col-span-6 sm:col-span-4 md:col-span-4 lg:col-span-2 flex flex-col'>
           <label className='mr-2'>Inhabilitada</label>
-          <Switch checked={data.inhabilitada} onCheckedChange={(val) => setData('inhabilitada', val)} />
+          <Switch checked={Boolean(data.inhabilitada)} onCheckedChange={(val) => set({...data, 'inhabilitada': val})} />
         </div>
         <div className='col-span-6 sm:col-span-8 md:col-span-8 lg:col-span-4 flex justify-end items-center'>
           <Button 
@@ -103,6 +107,9 @@ export function FiltrosForm({ openCreate, resetearCategoria }: propsForm){
 
 export default function Categorias(){
   //data
+  const { data, setData, errors, processing } = useForm(categoriaVacia);
+  const [respuesta, setResp]= useState<{resultado: number, categoria_id: number}>({resultado: 0, categoria_id: 0});
+
   const [confirmOpen, setConfirOpen] = useState(false); //modal para confirmar acciones para cuado se crea o edita
   const [textConfir, setTextConfirm] = useState('');
   
@@ -132,14 +139,6 @@ export default function Categorias(){
       prev_page_url: string,
     }
   }
-
-  const { resultado, mensaje, categoria_id, timestamp} = usePage().props as {
-    resultado?: number;
-    mensaje?: string;
-    categoria_id?: number;
-    timestamp?: number;
-  };
-  const [ultimoTimestamp, setUltimoTimestamp] = useState<number | null>(null);
   const [cacheadas, setCacheadas] = useState<Categoria[]>([]);
 
   //funciones
@@ -151,7 +150,7 @@ export default function Categorias(){
       setConfirmar(true);
     }
   };
-  const inhabilitarHabilitar = () => {
+  const inhabilitarHabilitar = async () => {
     if (!categoriaCopia || !categoriaCopia.categoria_id) return;
     setLoading(true);
     router.put(
@@ -159,9 +158,39 @@ export default function Categorias(){
       {
         preserveScroll: true,
         preserveState: true,
+        onError: (errors) => {
+          // errors es un objeto { campo: "mensaje de error" }
+          console.log("Errores:", errors);
+          setTitle("Error en cambio de estado");
+          setText(Object.values(errors).join("\n"));
+          setColor("error");
+          setActivo(true);
+        },
+        onSuccess: (page) => {
+          const id = page.props.categoria_id;
+          const msj = page.props.mensaje;
+          
+          setTitle("Estado de categoría cambiado");
+          setText(`${msj} ✅ (ID: ${id})`);
+          setColor("success");
+          setActivo(true);
+
+          setData({
+            ...data, 
+            categoria_id: String(categoriaCopia.categoria_id),
+            inhabilitada: !categoriaCopia.inhabilitada
+          });
+          router.get(route('categorias.index'), {
+            categoria_id: categoriaCopia.categoria_id,
+            inhabilitada: !categoriaCopia.inhabilitada
+          }, {
+            preserveScroll: true,
+            preserveState: true,
+          });
+        },
         onFinish: () => {
           setLoading(false);
-          setTextConfirmar('');
+          setTextConfirmar("");
           setConfirmar(false);
           setCategoriaCopia(categoriaVacia);
         }
@@ -203,13 +232,42 @@ export default function Categorias(){
 
     if (modalMode === 'create') {
       router.post(
-        route('categorias.store'), payload,
+        route('categorias.store'),
+        payload,
         {
           preserveScroll: true,
           preserveState: true,
+          onError: (errors) => {
+            // errors es un objeto { campo: "mensaje de error" }
+            console.log("Errores:", errors);
+            setTitle("Error en carga de categoría");
+            setText(Object.values(errors).join("\n"));
+            setColor("error");
+            setActivo(true);
+          },
+          onSuccess: (page) => {
+            const nuevaCategoriaId = page.props.categoria_id;
+            
+            setTitle("Categoría creada");
+            setText(`La categoría se creó correctamente ✅ (ID: ${nuevaCategoriaId})`);
+            setColor("success");
+            setActivo(true);
+
+            // refrescar listado
+            router.get(route("categorias.index"), {}, {
+              preserveScroll: true,
+              preserveState: true,
+            });
+            router.get(route('categorias.index'), {
+              categoria_id: Number(nuevaCategoriaId)
+            }, {
+              preserveScroll: true,
+              preserveState: true,
+            });
+          },
           onFinish: () => {
             setLoading(false);
-            setTextConfirmar('');
+            setTextConfirmar("");
             setConfirmar(false);
             setCategoriaCopia(categoriaVacia);
           }
@@ -217,18 +275,47 @@ export default function Categorias(){
       );
     } else {
       router.put(
-        route('categorias.update',{categoria: pendingData.categoria_id}), payload,
+        route('categorias.update', {categoria: pendingData.categoria_id},),
+        payload,
         {
           preserveScroll: true,
           preserveState: true,
+          onError: (errors) => {
+            // errors es un objeto { campo: "mensaje de error" }
+            console.log("Errores:", errors);
+            setTitle("Error en modificar la categoría");
+            setText(Object.values(errors).join("\n"));
+            setColor("error");
+            setActivo(true);
+          },
+          onSuccess: (page) => {
+            const id = page.props.categoria_id;
+            
+            setTitle("Categoría actualizada");
+            setText(`La categoría se modificó correctamente ✅ (ID: ${id})`);
+            setColor("success");
+            setActivo(true);
+
+            // refrescar listado
+            router.get(route("categorias.index"), {
+              categoria_id: Number(id)
+            }, {
+              preserveScroll: true,
+              preserveState: true,
+            });
+          },
           onFinish: () => {
             setLoading(false);
-            setPendingData(undefined);
+            setTextConfirmar("");
+            setConfirmar(false);
+            setCategoriaCopia(categoriaVacia);
           }
         }
       );
+
     }
     setConfirOpen(false);
+    setModalOpen(false);
   };
 
   const cancelarConfirmacion = () => {
@@ -244,35 +331,17 @@ export default function Categorias(){
     }
   }, [categorias]);
 
-
-  useEffect(() => {
-    const cambioDetectado = timestamp && timestamp !== ultimoTimestamp;
-
-    if (cambioDetectado) {
-      setUltimoTimestamp(timestamp)
-
-      const esError = resultado === 0;
-      setTitle(esError ? 'Error' : modalMode === 'create' ? 'Categoría nueva' : 'Categoría modificada');
-      setText(esError ? mensaje ?? 'Error inesperado' : `${mensaje} (ID: ${categoria_id})`);
-      setColor(esError ? 'error' : 'success');
-      setActivo(true);
-
-      if (resultado === 1 && categoria_id) {
-        setModalOpen(false);
-        router.get(route('categorias.index'),
-          { categoria_id, buscar: true },
-          { preserveScroll: true,	preserveState: true	}
-        )
-      }
-    }
-  }, [timestamp, ultimoTimestamp, resultado, mensaje, categoria_id, modalMode]);
-
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Categorías" />
       <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
         <div className="relative flex-none flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
-          <FiltrosForm openCreate={openCreate} resetearCategoria={setCacheadas}/>
+          <FiltrosForm 
+            data={data}
+            set={setData}
+            openCreate={openCreate} 
+            resetearCategoria={setCacheadas}
+          />
         </div>
         <div className="p-4 relative flex-1 overflow-auto rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
           <DataTableCategorias
@@ -312,7 +381,9 @@ export default function Categorias(){
         title={title}
         text={text}
         color={color}
-        onClose={() => setActivo(false)}
+        onClose={() => {
+          setActivo(false);
+        }}
       />
     </AppLayout>
   );

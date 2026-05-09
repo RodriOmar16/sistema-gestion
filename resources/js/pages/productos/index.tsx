@@ -246,6 +246,7 @@ export default function Productos(){
     const resp  = await res.json();
     setLoad(false);
     setResp({resultado: resp.resultado, producto_id: resp.producto_id});
+    setData({...data, producto_id: resp.producto_id, inhabilitado: !productoCopia.inhabilitado});
     
     if (resp.resultado === 0) {
       setTitle('Error');
@@ -325,7 +326,8 @@ export default function Productos(){
           setActivo(false);
           if (respuesta.resultado === 1 && respuesta.producto_id) {
             router.get(route('productos.index'),
-              { producto_id: respuesta.producto_id, buscar: true },
+              {...data},
+              //{ producto_id: respuesta.producto_id, buscar: true },
               { preserveScroll: true,	preserveState: true	}
             )
           }

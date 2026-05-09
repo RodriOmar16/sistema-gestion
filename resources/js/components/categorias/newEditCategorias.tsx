@@ -81,7 +81,7 @@ export default function NewEditCategoria({ open, onOpenChange, mode, categoria, 
           </DialogDescription>
           <hr />
         </DialogHeader>
-        <form className="grid grid-cols-12 gap-4 px-4 pt-1 pb-4">
+        <div className="grid grid-cols-12 gap-4 px-4 pt-1 pb-4">
           { mode !== 'create' ? 
             (
               <div className="col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12">
@@ -107,7 +107,7 @@ export default function NewEditCategoria({ open, onOpenChange, mode, categoria, 
             <label htmlFor="inhabilitado" className='mr-2'>Inhabilitado</label>
             <Switch checked={data.inhabilitada?true:false} onCheckedChange={(val) => setData('inhabilitada', val)} />
           </div>
-        </form>
+        </div>
         <DialogFooter>
           <DialogClose asChild>
             <Button type="button" variant="outline">Cancelar</Button>

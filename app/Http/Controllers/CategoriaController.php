@@ -125,8 +125,6 @@ class CategoriaController extends Controller
         'mensaje' => 'Ocurrió un error al crear la categoria: '.$e->getMessage(),
       ]);
     }
-    /*$validated = $request->validate(['nombre' => 'required|string|max:255']);
-    return Categoria::create($validated);*/
   }
 
   public function update(Request $request, Categoria $categoria)
@@ -169,9 +167,6 @@ class CategoriaController extends Controller
         'mensaje' => 'Ocurrió un error al actualizar: '.$e->getMessage(),
       ]);
     }
-    /*$validated = $request->validate(['nombre' => 'required|string|max:255']);
-    $categoria->update($validated);
-    return $categoria;*/
   }
 
   public function toggleEstado(Categoria $categoria){

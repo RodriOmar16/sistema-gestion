@@ -9,7 +9,7 @@ use App\Models\Cliente;
 
 class ClienteController extends Controller
 {
-  public function clientesHabilitados(){
+  /*public function clientesHabilitados(){
     $clientes = Cliente::where('inhabilitado', false)->get()->map(function($c){
       return [
         'id'     => $c->cliente_id,
@@ -17,7 +17,7 @@ class ClienteController extends Controller
       ];
     });
     return response()->json($clientes);
-  }
+  }*/
 
   public function habilitados(Request $request)
   {
@@ -38,6 +38,25 @@ class ClienteController extends Controller
       return response()->json(['error' => $e->getMessage()], 500);
     }
   }
+
+  public function habilitadosCampos(Request $request)
+  {
+    try {
+        $buscar = $request->get('buscar', '');
+
+        $clientes = Cliente::query()
+            ->where('inhabilitado', 0)
+            ->when($buscar, fn($q) => $q->where('nombre', 'LIKE', "%{$buscar}%"))
+            ->paginate(20); // sin select, trae todas las columnas
+
+        return response()->json([
+            'elementos' => $clientes
+        ]);
+    } catch (\Throwable $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
+  }
+
 
   public function clientesPorDni(Request $request){
     $cliente = Cliente::where('inhabilitado', false)->where('dni',$request->dni)->get();

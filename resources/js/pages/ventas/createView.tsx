@@ -27,7 +27,7 @@ import { NumericFormat } from 'react-number-format';
 import Loading from '@/components/utils/loadingDialog';
 import { Checkbox } from "@/components/ui/checkbox"
 import EditarFormaPagoRow from '@/components/ventas/editarRowFormaPago';
-import SelectProducts from '@/components/utils/select-products';
+import SelectAutocomplete from '@/components/utils/select-autocomplete';
 
 const breadcrumbs: BreadcrumbItem[] = [ { title: '', href: '', } ];
 const ventaVacia = {
@@ -84,10 +84,8 @@ interface PropsDet{
   setActivo: (p:boolean) => void;
 };
 export function DetallesVenta({modo, data, set, productos, setProd, setTitle, setText, setColor, setActivo }:PropsDet){
-  const [totalAux, setTotalAux]             = useState(0); 
-  const [productoId, setProdId]             = useState(0);
-  const [optionProduct, setOptionProduct] = useState<AutocompleteProd|null>(null);
-  const [load, setLoad]                     = useState(false);
+  const [totalAux, setTotalAux]           = useState(0); 
+  const [optionProduct, setOptionProduct] = useState<any|null>(null);
   
   const controlarTotal = (e:number) => {
     setTotalAux(e);
@@ -95,11 +93,9 @@ export function DetallesVenta({modo, data, set, productos, setProd, setTitle, se
   };
 
   const agregarProducto = async (producto:any) => {
-
     if(!producto){ return  }
 
     //si ya existe al menos 1
-    setLoad(true);
     const obj = productos.find(e => e.id === producto.value)
     if(obj){
       //si está agregado le sumo la cantidad
@@ -116,15 +112,12 @@ export function DetallesVenta({modo, data, set, productos, setProd, setTitle, se
           {
             id: producto.value,
             nombre: producto.label,
-            precio: Number(producto.price),
+            precio: Number(producto.precio),
             cantidad: 1,
           },
         ]);
       }
     }
-    setLoad(false);
-
-    //setProdId(0);
     setOptionProduct(null);
   };
 
@@ -168,12 +161,15 @@ export function DetallesVenta({modo, data, set, productos, setProd, setTitle, se
           <>
             <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3'>
               <label htmlFor="cliente">Productos en Stock</label>
-                <SelectProducts
-                  value={optionProduct}
-                  onChange={(option) => seleccionarProducto(option)}
-                  placeHolder="Seleccionar"
-                  isDisabled={modo!='create'}
-                />
+              <SelectAutocomplete
+                value={optionProduct}
+                onChange={(option) => seleccionarProducto(option)}
+                placeHolder="Seleccionar"
+                isDisabled={modo!='create'}
+                url='productos-stock'
+                labelKey="nombre" 
+                valueKey="producto_id"
+              />
             </div>
             {/*<div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3 flex items-end'>
               <Button disabled={modo!='create'} type="button" onClick={() => agregarProducto(0)}>
@@ -217,10 +213,11 @@ interface PropsCli{
 }
 
 export function DatosCliente({modo, data, set, setActivo, setTitle, setText, setColor, cf, setCf}:PropsCli){
-  const [dni, setDni]           = useState('');
-  const [bloquear, setBloquear] = useState(false);
-  const [found, setFound]       = useState(0);
-  const [load, setLoad]         = useState(false);
+  const [dni, setDni]                     = useState('');
+  const [bloquear, setBloquear]           = useState(false);
+  const [found, setFound]                 = useState(0);
+  const [load, setLoad]                   = useState(false);
+  const [optionCliente, setOptionCliente] = useState<any|null>(null);
 
   const buscarCliente = async (cfOverride?: boolean) => {
     const cfValue = cfOverride ?? cf; // usa el override si lo hay
@@ -252,6 +249,7 @@ export function DatosCliente({modo, data, set, setActivo, setTitle, setText, set
       setText("");
       setColor("warning");
       setActivo(false);
+      setOptionCliente(null);
     } else {
       setFound(-1);
       setBloquear(false);
@@ -262,6 +260,18 @@ export function DatosCliente({modo, data, set, setActivo, setTitle, setText, set
       setActivo(true);
     }
     setDni("");
+  };
+
+  const seleccionarCliente = (option: any) => {
+    if(option){
+      setOptionCliente(option);
+      set({ ...option, fecha_nacimiento: convertirFechaGuionesBarras(option.fecha_nacimiento) });
+      setBloquear(true);
+    }else{
+      set(clienteVacio);
+      setOptionCliente(null);
+      setBloquear(false);
+    }
   };
 
   return (
@@ -282,13 +292,25 @@ export function DatosCliente({modo, data, set, setActivo, setTitle, setText, set
                     buscarCliente(false);
                   }}/>
               </div>
+              <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3'>
+                <label htmlFor="cliente">Cliente</label>
+                <SelectAutocomplete
+                  value={optionCliente}
+                  onChange={(option) => seleccionarCliente(option)}
+                  placeHolder="Seleccionar"
+                  isDisabled={modo!='create'}
+                  url='clientes-campos'
+                  labelKey="nombre" 
+                  valueKey="cliente_id"
+                />
+              </div>              
               <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-2 flex items-end'>
                 <Button disabled={modo!='create'} type="button" onClick={() => buscarCliente()}>
                   { load ? (<Loader2 size={20} className="animate-spin mr-2" />) :  (<Search size={20}/>) }
                   Buscar         
                 </Button>
               </div>
-              <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-6 flex items-center justify-end'>
+              <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-4 flex items-center justify-end'>
                 <Checkbox
                   checked={cf}
                   onCheckedChange={(checked) => {

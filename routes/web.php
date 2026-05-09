@@ -206,6 +206,7 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
     //Clientes
     //Route::get('/clientes_habilitados', [ClienteController::class, 'clientesHabilitados'])->name('clientes.habilitados');
     Route::get('/clientes/habilitados', [ClienteController::class, 'habilitados'])->name('clientes.habilitados');
+    Route::get('/clientes-campos/habilitados', [ClienteController::class, 'habilitadosCampos'])->name('clientes.habilitadosCampos');
     Route::get('/clientes-habilitados-ventas', [ClienteController::class, 'clientesPorDni'])->name('clientes.porDni');
     Route::get('/clientes', [ClienteController::class, 'index'])->name('clientes.index');
     Route::post('/cliente/nuevo', [ClienteController::class, 'store'])->name('clientes.store');

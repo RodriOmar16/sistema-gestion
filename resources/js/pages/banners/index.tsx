@@ -137,7 +137,18 @@ export default function Banners(){
 	const [title, setTitle]   = useState('');
 	const [color, setColor]   = useState('');
 
-	const { banners } = usePage().props as { banners?: Banner[] }; //necesito los props de inertia
+	//const { banners } = usePage().props as { banners?: Banner[] }; //necesito los props de inertia
+	const { banners } = usePage().props as {
+		banners?: {
+			data: Banner[],
+      current_page:  number, 
+      last_page:     number, 
+      total:         number,
+      next_page_url: string,
+      prev_page_url: string,
+		}
+	};
+
 	const { resultado, mensaje, id, timestamp } = usePage().props as {
 		resultado?: number;
 		mensaje?: string;
@@ -146,7 +157,7 @@ export default function Banners(){
 	};
 	
 	const [ultimoTimestamp, setUltimoTimestamp] = useState<number | null>(null);
-	const [bannersCacheados, setBannersCacheados] = useState<Banner[]>([]);
+	const [cacheados, setCacheados] = useState<Banner[]>([]);
 
 	//funciones
 	const confirmar = (data: Banner) => {
@@ -241,12 +252,10 @@ export default function Banners(){
 
 	//effect
 	useEffect(() => {
-		if (
-			banners &&
-			banners.length > 0 &&
-			JSON.stringify(banners) !== JSON.stringify(bannersCacheados)
-		) {
-			setBannersCacheados(banners);
+		if (banners && banners.data.length > 0) {
+			setCacheados(banners.data);
+		}else{
+			setCacheados([]);
 		}
 	}, [banners]);
 
@@ -278,14 +287,19 @@ export default function Banners(){
 			<Head title="Banners" />
 			<div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
 				<div className="relative flex-none flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
-					<FiltrosForm openCreate={openCreate} resetearBanner={setBannersCacheados}/>
+					<FiltrosForm openCreate={openCreate} resetearBanner={setCacheados}/>
 				</div>
 				<div className="p-4 relative flex-1 overflow-auto rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
 					<DataTableBanners
-						datos={bannersCacheados?? []} 
+						datos={cacheados?? []} 
 						openEdit={openEdit} 
 						abrirConfirmar={confirmar}
-						/>
+						totalFilas={banners?.total ?? 0}
+            current_page={banners?.current_page ?? 0}
+            last_page={banners?.last_page ?? 0}
+            next_page_url={banners?.next_page_url ?? ''}
+            prev_page_url={banners?.prev_page_url ?? ''}
+					/>
 				</div>
 			</div>
 			<NewEditBanner

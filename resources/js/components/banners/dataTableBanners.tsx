@@ -11,11 +11,18 @@ import { Table,  TableBody,  TableCell,  TableHead,  TableHeader,  TableRow } fr
 import { Banner } from "@/types/typeCrud"
 import { convertirFechaGuionesBarras, formatDateTime, formatearNroCompleto } from "@/utils"
 import { Badge } from "../ui/badge"
+import { router } from "@inertiajs/react"
+import { route } from "ziggy-js"
 
 interface Props {
   datos: Banner[];
   openEdit: (data:Banner) => void;
   abrirConfirmar: (data:Banner) => void;
+  totalFilas: number;
+  current_page:number;
+  last_page:number;
+  next_page_url: string;
+  prev_page_url: string;
 }
 
 //export const columns: ColumnDef<Project>[] = [
@@ -160,7 +167,7 @@ export function getColumns(confirmar: (data: Banner) => void, openEdit: (data: B
   ]
 //]
 }
-export default function DataTableBanners({datos, openEdit, abrirConfirmar}:Props) {
+export default function DataTableBanners({ datos, openEdit, abrirConfirmar, totalFilas, current_page, last_page, next_page_url, prev_page_url }:Props) {
   const [sorting, setSorting]                   = useState<SortingState>([])
   const [columnFilters, setColumnFilters]       = useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
@@ -272,24 +279,34 @@ export default function DataTableBanners({datos, openEdit, abrirConfirmar}:Props
       </div>
       <div className="flex items-center justify-end space-x-2 py-4">
         <div className="text-muted-foreground flex-1 text-sm">
-          {/*{table.getFilteredSelectedRowModel().rows.length} de{" "}
-          {table.getFilteredRowModel().rows.length} fila(s) selecc.*/}
-          Total de filas: {datos.length}
+          Página {current_page} de {last_page} — Total: {totalFilas}
         </div>
         <div className="space-x-2">
           <Button
             variant="outline"
             size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
+            onClick={() => {
+              router.get(route('productos.index'), { page: current_page - 1 },{
+                preserveState: true,
+                preserveScroll: true,
+              });
+            }}
+            //disabled={current_page <= 1}
+            disabled={!prev_page_url}
           >
             Anterior
           </Button>
           <Button
             variant="outline"
             size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
+            onClick={() => {
+              router.get(route('productos.index'), { page: current_page + 1 },{
+                preserveState: true,
+                preserveScroll: true,
+              });
+            }}
+            //disabled={current_page >= last_page}
+            disabled={!next_page_url}
           >
             Siguiente
           </Button>

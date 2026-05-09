@@ -239,40 +239,40 @@ export default function DataTableMarcas({ datos, openEdit, abrirConfirmar, total
         </Table>
       </div>
       <div className="flex items-center justify-end space-x-2 py-4">
-              <div className="text-muted-foreground flex-1 text-sm">
-                Página {current_page} de {last_page} — Total: {totalFilas}
-              </div>
-              <div className="space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    router.get(route('marcas.index'), { page: current_page - 1 },{
-                      preserveState: true,
-                      preserveScroll: true,
-                    });
-                  }}
-                  //disabled={current_page <= 1}
-                  disabled={!prev_page_url}
-                >
-                  Anterior
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    router.get(route('marcas.index'), { page: current_page + 1 },{
-                      preserveState: true,
-                      preserveScroll: true,
-                    });
-                  }}
-                  //disabled={current_page >= last_page}
-                  disabled={!next_page_url}
-                >
-                  Siguiente
-                </Button>
-              </div>
-            </div>
+        <div className="text-muted-foreground flex-1 text-sm">
+          Página {current_page} de {last_page} — Total: {totalFilas}
+        </div>
+        <div className="space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              router.get(route('marcas.index'), { page: current_page - 1 },{
+                preserveState: true,
+                preserveScroll: true,
+              });
+            }}
+            //disabled={current_page <= 1}
+            disabled={!prev_page_url}
+          >
+            Anterior
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              router.get(route('marcas.index'), { page: current_page + 1 },{
+                preserveState: true,
+                preserveScroll: true,
+              });
+            }}
+            //disabled={current_page >= last_page}
+            disabled={!next_page_url}
+          >
+            Siguiente
+          </Button>
+        </div>
+      </div>
     </div>
   )
 }

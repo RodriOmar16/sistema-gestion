@@ -129,7 +129,17 @@ export default function BancosBilleteras(){
   const [title, setTitle]   = useState('');
   const [color, setColor]   = useState('');
 
-  const { bancosBilleteras } = usePage().props as { bancosBilleteras?: BancoBilletera[] }; //necesito los props de inertia
+  //const { bancosBilleteras } = usePage().props as { bancosBilleteras?: BancoBilletera[] }; //necesito los props de inertia
+  const { bancosBilleteras } = usePage().props as {
+    bancosBilleteras?:{
+      data: BancoBilletera[],
+      current_page:  number, 
+      last_page:     number, 
+      total:         number,
+      next_page_url: string,
+      prev_page_url: string,
+    }
+  };
   const { resultado, mensaje, banco_billetera_id, timestamp } = usePage().props as {
     resultado?:          number;
     mensaje?:            string;
@@ -264,8 +274,8 @@ export default function BancosBilleteras(){
 
   //effect
   useEffect(() => {
-    if (bancosBilleteras && bancosBilleteras?.length > 0) {
-      setCacheados(bancosBilleteras);
+    if (bancosBilleteras && bancosBilleteras.data.length > 0) {
+      setCacheados(bancosBilleteras.data);
     } else {
       setCacheados([]);
     }
@@ -285,6 +295,11 @@ export default function BancosBilleteras(){
             datos={cacheados??[]}
             openEdit={openEdit}
             abrirConfirmar={confirmar}
+            totalFilas={bancosBilleteras?.total ?? 0}
+            current_page={bancosBilleteras?.current_page ?? 0}
+            last_page={bancosBilleteras?.last_page ?? 0}
+            next_page_url={bancosBilleteras?.next_page_url ?? ''}
+            prev_page_url={bancosBilleteras?.prev_page_url ?? ''}
           />
         </div>
       </div>

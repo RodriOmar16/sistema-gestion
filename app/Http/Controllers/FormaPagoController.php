@@ -41,9 +41,9 @@ class FormaPagoController extends Controller
 
   public function index(Request $request)
   {
-    if(!$request->has('buscar')){
+    /*if(!$request->has('buscar')){
       return inertia('formasPago/index',[ 'formasPago' => [] ]);
-    }
+    }*/
     
     $query = FormaPago::query();
     if($request->filled('forma_pago_id')){
@@ -58,9 +58,14 @@ class FormaPagoController extends Controller
     if ($request->filled('inhabilitada')) {
       $estado = filter_var($request->inhabilitada, FILTER_VALIDATE_BOOLEAN);
       $query->where('inhabilitada', $estado);
-    }
+    }else { $query->where('inhabilitada', 0); }
 
-    $formasPago = $query->latest()->get();
+    //$formasPago = $query->latest()->get();
+
+    //Paginación
+    $perPage = min($request->get('per_page',10),200);
+    $formasPago = $query->latest()->paginate($perPage);
+
     return inertia('formasPago/index',[
       'formasPago' => $formasPago
     ]);
@@ -96,14 +101,16 @@ class FormaPagoController extends Controller
       return inertia('formasPago/index',[
         'resultado'     => 1,
         'mensaje'       => 'La forma de pago se creó correctamente',
-        'forma_pago_id' => $formaPago->forma_pago_id
+        'forma_pago_id' => $formaPago->forma_pago_id,
+        'timestamp'     => now()->timestamp,
       ]);
 
     } catch (\Throwable $e) {
       DB::rollBack();
       return inertia('formasPago/index',[
         'resultado' => 0,
-        'mensaje'   => 'Ocurrió un error al intentar crear la forma de pago: '.$e->getMessage()
+        'mensaje'   => 'Ocurrió un error al intentar crear la forma de pago: '.$e->getMessage(),
+        'timestamp'     => now()->timestamp,
       ]);
     }
   }
@@ -126,7 +133,8 @@ class FormaPagoController extends Controller
       if($existe){
         return inertia('formasPago/index',[
           'resultado' => 0,
-          'mensaje'   => 'Ya existe una forma de pago con el mismo nombre.'
+          'mensaje'   => 'Ya existe una forma de pago con el mismo nombre.',
+          'timestamp'     => now()->timestamp,
         ]);
       }
       //creo la forma de pago
@@ -140,14 +148,16 @@ class FormaPagoController extends Controller
       return inertia('formasPago/index',[
         'resultado'     => 1,
         'mensaje'       => 'La forma de pago se modificó correctamente',
-        'forma_pago_id' => $fp->forma_pago_id
+        'forma_pago_id' => $fp->forma_pago_id,
+        'timestamp'     => now()->timestamp,
       ]);
 
     } catch (\Throwable $e) {
       DB::rollBack();
       return inertia('formasPago/index',[
         'resultado' => 0,
-        'mensaje'   => 'Ocurrió un error al intentar actualizar la forma de pago: '.$e->getMessage()
+        'mensaje'   => 'Ocurrió un error al intentar actualizar la forma de pago: '.$e->getMessage(),
+        'timestamp'     => now()->timestamp,
       ]);
     }
   }
@@ -158,7 +168,8 @@ class FormaPagoController extends Controller
     return inertia('formasPago/index',[
       'mensaje'       => 'Estado modificado exitosamente',
       'resultado'     => 1,
-      'forma_pago_id' => $fp->forma_pago_id
+      'forma_pago_id' => $fp->forma_pago_id,
+      'timestamp'     => now()->timestamp,
     ]);
   }
 }

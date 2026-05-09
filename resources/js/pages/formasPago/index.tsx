@@ -128,18 +128,26 @@ export default function FormasPago(){
   const [title, setTitle]   = useState('');
   const [color, setColor]   = useState('');
 
-  const { formasPago } = usePage().props as { formasPago?: FormaPago[] }; //necesito los props de inertia
-  const { resultado, mensaje, forma_pago_id } = usePage().props as {
+  //const { formasPago } = usePage().props as { formasPago?: FormaPago[] }; //necesito los props de inertia
+  const { formasPago } = usePage().props as {
+    formasPago?:{
+      data: FormaPago[],
+      current_page:  number, 
+      last_page:     number, 
+      total:         number,
+      next_page_url: string,
+      prev_page_url: string,
+    }
+  };
+
+  const { resultado, mensaje, forma_pago_id, timestamp } = usePage().props as {
     resultado?: number;
     mensaje?: string;
     forma_pago_id?: number;
+    timestamp?: number;
   };
-  const [propsActuales, setPropsActuales] = useState<{
-    resultado: number | undefined | null;
-    mensaje: string | undefined | null | '';
-    forma_pago_id: number | undefined | null;
-  }>({ resultado: undefined, mensaje: undefined, forma_pago_id: undefined });
-  const [formasPagoCacheados, setFormasPagoCacheados] = useState<FormaPago[]>([]);
+  const [ultimoTimestamp, setUltimoTimestamp] = useState<number | null>(null);
+  const [cacheados, setCacheados] = useState<FormaPago[]>([]);
 
   //funciones
   const confirmar = (data: FormaPago) => {
@@ -233,33 +241,17 @@ export default function FormasPago(){
 
   //effect
   useEffect(() => {
-    if (!activo && propsActuales.resultado !== undefined) {
-      setPropsActuales({
-        resultado: undefined,
-        mensaje: undefined,
-        forma_pago_id: undefined
-      });
-    }
-  }, [activo]);
-
-  useEffect(() => {
-    if (
-      formasPago &&
-      formasPago.length > 0 &&
-      JSON.stringify(formasPago) !== JSON.stringify(formasPagoCacheados)
-    ) {
-      setFormasPagoCacheados(formasPago);
-    }
+    if ( formasPago && formasPago.data.length > 0 ) {
+      setCacheados(formasPago.data);
+    }else{ setCacheados([]); }
   }, [formasPago]);
 
 
   useEffect(() => {
-    const cambioDetectado =
-      (resultado && resultado !== propsActuales.resultado)  ||
-      (mensaje && mensaje !== propsActuales.mensaje)
+    const cambioDetectado = timestamp && timestamp !== ultimoTimestamp;
 
     if (cambioDetectado) {
-      setPropsActuales({ resultado, mensaje, forma_pago_id });
+      setUltimoTimestamp(timestamp)
 
       const esError = resultado === 0;
       setTitle(esError ? 'Error' : modalMode === 'create' ? 'Forma de pago nueva' : 'Forma de pago modificada');
@@ -275,20 +267,24 @@ export default function FormasPago(){
         )
       }
     }
-  }, [resultado, mensaje, forma_pago_id]);
-
+    }, [timestamp, ultimoTimestamp, resultado, mensaje, forma_pago_id, modalMode]);
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Formas de Pago" />
       <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
         <div className="relative flex-none flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
-          <FiltrosForm openCreate={openCreate} resetearFormaPago={setFormasPagoCacheados}/>
+          <FiltrosForm openCreate={openCreate} resetearFormaPago={setCacheados}/>
         </div>
         <div className="p-4 relative flex-1 overflow-auto rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
           <DataTableFormasPago
-            datos={formasPagoCacheados?? []} 
+            datos={cacheados?? []} 
             openEdit={openEdit} 
             abrirConfirmar={confirmar}
+            totalFilas={formasPago?.total ?? 0}
+            current_page={formasPago?.current_page ?? 0}
+            last_page={formasPago?.last_page ?? 0}
+            next_page_url={formasPago?.next_page_url ?? ''}
+            prev_page_url={formasPago?.prev_page_url ?? ''}
             />
         </div>
       </div>

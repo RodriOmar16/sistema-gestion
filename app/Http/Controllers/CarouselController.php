@@ -16,11 +16,11 @@ class CarouselController extends Controller
    */
   public function index(Request $request)
   {
-    if(!$request->has('buscar')){
+    /*if(!$request->has('buscar')){
       return inertia('banners/index',[
           'banners' => [],
       ]);
-    }
+    }*/
 
     $query = Carousel::query();
 
@@ -28,26 +28,32 @@ class CarouselController extends Controller
         $query->where('id', $request->id);
     }
     if($request->filled('url')){
-        $query->where('url','like','%'.$request->url.'%');
+      $query->where('url','like','%'.$request->url.'%');
     }
     if ($request->filled('title')) {
-        $query->where('title', 'like', '%' . $request->title . '%');
+      $query->where('title', 'like', '%' . $request->title . '%');
     }
     if ($request->filled('description')) {
-        $query->where('description', 'like', '%' . $request->description . '%');
+      $query->where('description', 'like', '%' . $request->description . '%');
     }
     if ($request->filled('priority')) {
-        $query->where('priority', $request->priority);
+      $query->where('priority', $request->priority);
     }
-    if ($request->filled('inhabilitado')) {
-        $estado = filter_var($request->inhabilitado, FILTER_VALIDATE_BOOLEAN);
-        $query->where('inhabilitado', $estado);
+    if ($request->has('inhabilitado')) {
+      $estado = filter_var($request->inhabilitado, FILTER_VALIDATE_BOOLEAN);
+      $query->where('inhabilitado', $estado);
+    }else{
+      $query->where('inhabilitado', 0);
     }
 
-    $banners = $query->latest()->get();
+    //$banners = $query->latest()->get();
+
+    //Paginación
+    $perPage = min($request->get('per_page',10),200);
+    $banners = $query->latest()->paginate($perPage);
 
     return inertia('banners/index',[
-        'banners' => $banners
+      'banners' => $banners
     ]);
   }
 

@@ -32,11 +32,11 @@ class BancoBilleteraController extends Controller
     
   public function index(Request $request)
   {
-    if(!$request->has('buscar')){
+    /*if(!$request->has('buscar')){
       return inertia('bancosBilleteras/index',[
         'bancosBilleteras' => []
       ]);
-    }
+    }*/
     
     $query = BancoBilletera::query();
 
@@ -46,15 +46,20 @@ class BancoBilleteraController extends Controller
     if ($request->filled('nombre')) {
         $query->where('nombre', 'like', '%'.$request->nombre.'%');
     }
-    if ($request->filled('inhabilitado')) {
-        $estado = filter_var($request->inhabilitado, FILTER_VALIDATE_BOOLEAN);
-        $query->where('inhabilitado', $estado);
+    if ($request->has('inhabilitado')) {
+      $estado = filter_var($request->inhabilitado, FILTER_VALIDATE_BOOLEAN);
+      $query->where('inhabilitado', $estado);
+    }else{
+      $query->where('inhabilitado', 0);
     }
 
-    $bancosBilleteras = $query->latest()->get();
+    //$bancosBilleteras = $query->latest()->get();
+    // paginación 
+    $perPage = min($request->get('per_page', 10), 200);
+    $bancosBilleteras = $query->latest()->paginate($perPage);
 
     return inertia('bancosBilleteras/index', [
-        'bancosBilleteras' => $bancosBilleteras
+      'bancosBilleteras' => $bancosBilleteras
     ]);
 
   }

@@ -42,6 +42,7 @@ export default function NewEditBancoBilletera({ open, onOpenChange, mode, banco,
   const [title, setTitle]   = useState('');
   const { data, setData, get, post, processing, errors } = useForm<BancoBilletera>(bancoBilleteraVacio);
   const [load, setLoad]     = useState(false);
+  const [requerido, setRequerido] = useState(false);
 
   //useEffect
   useEffect(() => {
@@ -65,9 +66,7 @@ export default function NewEditBancoBilletera({ open, onOpenChange, mode, banco,
     e.preventDefault();
 
     if(!data.nombre){
-      setTitle('¡Campo faltante!');
-      setText('Se requiere que ingreses un nombre');
-      setActivo(true);
+      setRequerido(true);
       return 
     }
 
@@ -104,9 +103,13 @@ export default function NewEditBancoBilletera({ open, onOpenChange, mode, banco,
             <label htmlFor="nombre">Nombre</label>
             <Input
               value={data.nombre}
-              onChange={(e) => setData({ ...data, nombre: e.target.value })}
-              placeholder=""
+              placeholder="Ingresar un nombre"
+              onChange={(e) => {
+                setData({ ...data, nombre: e.target.value });
+                if(e.target.value){ setRequerido(false); }
+              }}
             />
+            {requerido && (<p className="mt-1 text-sm text-red-600 font-medium">⚠️Campo requerido</p>)}
           </div>
           <div className='col-span-6 sm:col-span-4 md:col-span-4 lg:col-span-3 flex flex-col'>
             <label className='mr-2'>Inhabilitado</label>

@@ -38,9 +38,6 @@ const erroresVacio = {
 
 export default function NewEditBanner({ open, onOpenChange, mode, banner, onSubmit }: Props){
   //data
-  const [activo, setActivo] = useState(false);
-  const [text, setText]     = useState('');
-  const [title, setTitle]   = useState('');
   const { data, setData, get, processing, errors } = useForm<Banner>(bannerVacio);
   const [errores, setErrores] = useState<{
     id:    				boolean,
@@ -192,13 +189,6 @@ export default function NewEditBanner({ open, onOpenChange, mode, banner, onSubm
           </Button>
         </DialogFooter>
       </DialogContent>
-      <ShowMessage 
-        open={activo}
-        title={title}
-        text={text}
-        color="warning"
-        onClose={() => setActivo(false)}
-      />
     </Dialog>
   );
 }

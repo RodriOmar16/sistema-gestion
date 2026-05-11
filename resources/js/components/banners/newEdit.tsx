@@ -28,6 +28,13 @@ const bannerVacio = {
   priority:     '',
   inhabilitado: false,
 }
+const erroresVacio = {
+  id:    				false,
+  url:   				false,
+  title: 				false,
+  description:  false,
+  priority:     false,
+};
 
 export default function NewEditBanner({ open, onOpenChange, mode, banner, onSubmit }: Props){
   //data
@@ -35,50 +42,62 @@ export default function NewEditBanner({ open, onOpenChange, mode, banner, onSubm
   const [text, setText]     = useState('');
   const [title, setTitle]   = useState('');
   const { data, setData, get, processing, errors } = useForm<Banner>(bannerVacio);
+  const [errores, setErrores] = useState<{
+    id:    				boolean,
+    url:   				boolean,
+    title: 				boolean,
+    description:  boolean,
+    priority:     boolean,
+  }>(erroresVacio);
 
   //useEffect
   useEffect(() => {
-    if (!open && mode === 'create') {
+    if (mode === 'create' && !open) {
       setData(bannerVacio);
-    }
-  }, [open, mode]);
-
-  useEffect(() => {
-    if (banner && mode === 'edit') {
+    } else if (mode === 'edit' && banner) {
+      // si está en modo editar y hay banner 
       setData({
-        id:    				banner.id,
-        url:   				banner.url,
-        title: 				banner.title,
+        id:           banner.id,
+        url:          banner.url,
+        title:        banner.title,
         description:  banner.description,
         priority:     banner.priority,
         inhabilitado: banner.inhabilitado,
-      });      
+      });
     } else {
+      // cualquier otro caso
       setData(bannerVacio);
     }
-  }, [banner, mode]);
+  }, [open, mode, banner]);
+
+  useEffect(() => {
+    if (!open) {
+      setErrores(erroresVacio);
+    }
+  }, [open]);
 
   //funciones
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if(!data.url){
-      setTitle('¡Campo faltante!');
-      setText('Se requiere que ingreses una url');
-      setActivo(true);
-      return 
+    const nuevosErrores = {
+      url:      !data.url,
+      title:    !data.title,
+      priority: !data.priority,
+      id:       false,
+      description: false,
+    };
+
+    setErrores(nuevosErrores);
+
+    // Si todos los valores de errores son false, no hay errores
+    const hayErrores = Object.values(nuevosErrores).some(e => e);
+
+    if (hayErrores) {
+      console.log("faltan campos");
+      return;
     }
-    if(!data.title){
-      setTitle('¡Campo faltante!');
-      setText('Se requiere que ingreses un título');
-      setActivo(true);
-      return 
-    }
-    if(!data.priority){
-      setTitle('¡Campo faltante!');
-      setText('Se requiere que ingreses la prioridad');
-      setActivo(true);
-      return 
-    }
+
+    console.log("sigue");
     onSubmit(data);
   }
 
@@ -111,17 +130,25 @@ export default function NewEditBanner({ open, onOpenChange, mode, banner, onSubm
             <label htmlFor="url">Url</label>
             <Input
               value={data.url}
-              onChange={(e) => setData({ ...data, url: e.target.value })}
+              onChange={(e) => {
+                setData({ ...data, url: e.target.value })
+                if(e.target.value){ errores.url = false; }
+              }}
               placeholder="Ingresar url"
             />
+            {errores.url && (<p className="mt-1 text-sm text-red-600 font-medium">⚠️Campo requerido</p>)}
           </div>
           <div className="col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12">
             <label htmlFor="title">Título</label>
             <Input
               value={data.title}
-              onChange={(e) => setData({ ...data, title: e.target.value })}
               placeholder="Ingresar título"
+              onChange={(e) => {
+                setData({ ...data, title: e.target.value });
+                if(e.target.value){ errores.title = false; }
+              }}
             />
+            {errores.title && (<p className="mt-1 text-sm text-red-600 font-medium">⚠️Campo requerido</p>)}
           </div>
           <div className="col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12">
             <label htmlFor="priority">Prioridad</label>
@@ -129,9 +156,13 @@ export default function NewEditBanner({ open, onOpenChange, mode, banner, onSubm
               type="number"
               min={0}
               value={data.priority}
-              onChange={(e) => setData({ ...data, priority: Number(e.target.value) })}
+              onChange={(e) => {
+                setData({ ...data, priority: Number(e.target.value) });
+                if(e.target.value){ errores.priority = false; }
+              }}
               placeholder="Ingresar prioridad"
             />
+            {errores.priority && (<p className="mt-1 text-sm text-red-600 font-medium">⚠️Campo requerido</p>)}
           </div>
           <div className="col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12">
             <label htmlFor="description">Descripción</label>

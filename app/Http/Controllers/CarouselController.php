@@ -174,7 +174,7 @@ class CarouselController extends Controller
 
       return inertia('banners/index',[
         'resultado' => 1,
-        'mensaje'   => 'Estado modificado correctamente',
+        'mensaje'   => 'Se modificó correctamente',
         'id'        => $carousel->id,
         'timestamp' => now()->timestamp,
       ]);

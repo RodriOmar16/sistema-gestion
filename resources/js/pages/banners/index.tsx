@@ -16,6 +16,8 @@ import ShowMessage from '@/components/utils/showMessage';
 const breadcrumbs: BreadcrumbItem[] = [ { title: 'Banners', href: '', } ];
 
 type propsForm = {
+	data: Banner;
+	set: (e:any) => void;
 	openCreate: () => void;
 	resetearBanner: (data:Banner[]) => void;
 }
@@ -29,9 +31,8 @@ const bannerVacio = {
   inhabilitado: false,
 }
 
-export function FiltrosForm({ openCreate, resetearBanner }: propsForm){
+export function FiltrosForm({ data, set, openCreate, resetearBanner }: propsForm){
 	const [esperandoRespuesta, setEsperandoRespuesta] = useState(false);
-	const { data, setData, errors, processing }       = useForm<Banner>(bannerVacio);
 	const [load, setLoad]                             = useState(false);
 
 	const handleSubmit = (e: React.FormEvent) => {
@@ -47,7 +48,7 @@ export function FiltrosForm({ openCreate, resetearBanner }: propsForm){
 		});
 	};
 	const handleReset = () => {
-		setData(bannerVacio);
+		set(bannerVacio);
 	};
 
 	return (
@@ -68,32 +69,27 @@ export function FiltrosForm({ openCreate, resetearBanner }: propsForm){
 			<form className='grid grid-cols-12 gap-4 px-4 pt-1 pb-4' onSubmit={handleSubmit}>
 				<div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-2'>
 					<label htmlFor="id">Id</label>
-					<Input className='text-right' value={data.id} onChange={(e)=>setData('id',Number(e.target.value))}/>	
-					{ errors.id && <p className='text-red-500	'>{ errors.id }</p> }
+					<Input className='text-right' value={data.id} onChange={(e)=>set({...data, 'id': Number(e.target.value)})}/>	
 				</div>
 				<div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-5'>
 					<label htmlFor="url">Url</label>
-					<Input value={data.url} onChange={(e)=>setData('url',e.target.value)}/>	
-					{ errors.url && <p className='text-red-500	'>{ errors.url }</p> }
+					<Input value={data.url} onChange={(e)=>set({...data, 'url': e.target.value})}/>	
 				</div>  
 				<div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-5'>
 					<label htmlFor="title">Título</label>
-					<Input value={data.title} onChange={(e)=>setData('title',e.target.value)}/>	
-					{ errors.title && <p className='text-red-500	'>{ errors.title }</p> }
+					<Input value={data.title} onChange={(e)=>set({...data, 'title': e.target.value})}/>
 				</div>  
 				<div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-4'>
 					<label htmlFor="description">Descripción</label>
-					<Input value={data.description} onChange={(e)=>setData('description',e.target.value)}/>	
-					{ errors.description && <p className='text-red-500	'>{ errors.description }</p> }
+					<Input value={data.description} onChange={(e)=>set({ ...data, 'description': e.target.value})}/>	
 				</div>
 				<div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
 					<label htmlFor="priority">Prioridad</label>
-					<Input value={data.priority} onChange={(e)=>setData('priority',e.target.value)}/>	
-					{ errors.priority && <p className='text-red-500	'>{ errors.priority }</p> }
+					<Input value={data.priority} onChange={(e)=>set({...data, 'priority': e.target.value})}/>	
 				</div>        
 				<div className='col-span-6 sm:col-span-4 md:col-span-4 lg:col-span-2 flex flex-col'>
 					<label className='mr-2'>Inhabilitado</label>
-					<Switch checked={data.inhabilitado==0 ? false: true} onCheckedChange={(val) => setData('inhabilitado', val)} />
+					<Switch checked={data.inhabilitado==0 ? false: true} onCheckedChange={(val) => set({...data, 'inhabilitado': val})} />
 				</div>
 				<div className='col-span-6 sm:col-span-12 md:col-span-12 lg:col-span-3 flex justify-end items-center'>
 					<Button 
@@ -119,6 +115,8 @@ export function FiltrosForm({ openCreate, resetearBanner }: propsForm){
 
 export default function Banners(){
 	//data
+	const { data, setData, errors, processing }       = useForm<Banner>(bannerVacio);
+
 	const [confirmOpen, setConfirOpen] = useState(false); //modal para confirmar acciones para cuado se crea o edita
 	const [textConfir, setTextConfirm] = useState('');
 	
@@ -149,14 +147,14 @@ export default function Banners(){
 		}
 	};
 
-	const { resultado, mensaje, id, timestamp } = usePage().props as {
+	/*const { resultado, mensaje, id, timestamp } = usePage().props as {
 		resultado?: number;
 		mensaje?: string;
 		id?: number;
 		timestamp?: number;
-	};
+	};*/
 	
-	const [ultimoTimestamp, setUltimoTimestamp] = useState<number | null>(null);
+	//const [ultimoTimestamp, setUltimoTimestamp] = useState<number | null>(null);
 	const [cacheados, setCacheados] = useState<Banner[]>([]);
 
 	//funciones
@@ -178,11 +176,37 @@ export default function Banners(){
 			{
 				preserveScroll: true,
 				preserveState: true,
+				onError: (errors) => {
+					// errors es un objeto { campo: "mensaje de error" }
+					setTitle("Error en cambio de estado");
+					setText(Object.values(errors).join("\n"));
+					setColor("error");
+					setActivo(true);
+				},
+				onSuccess: (page) => {
+					const id = page.props.id;
+					const msj = page.props.mensaje;
+					
+					setTitle("Estado del banner");
+					setText(`${msj} ✅ (ID: ${id})`);
+					setColor("success");
+					setActivo(true);
+				},
 				onFinish: () => {
 					setLoading(false);
 					setTextConfirmar('');
 					setConfirmar(false);
 					setBannerCopia(bannerVacio);
+
+					//al momento de buscar
+					setData(bannerVacio);
+					router.get(
+						route('banners.index'), 
+						{}, {
+							preserveScroll: true,
+							preserveState: true,
+						}
+					);
 				}
 			}
 		);
@@ -211,39 +235,57 @@ export default function Banners(){
 		setConfirOpen(true);
 	};
 
+	const manejarError = (titulo: string) => (errors: any) => {
+		console.log("Errores:", errors);
+		setTitle(titulo);
+		setText(Object.values(errors).join("\n"));
+		setColor("error");
+		setActivo(true);
+	};
+	const manejarExito = (titulo: string) => (page: any) => {
+		const id = page.props.id;
+		setTitle(titulo);
+		setText(`${titulo} correctamente ✅ (ID: ${id})`);
+		setColor("success");
+		setActivo(true);
+	};
+	const finalizarAccion = () => {
+		setLoading(false);
+		setPendingData(bannerVacio);
+		setData(bannerVacio);
+		router.get(route("banners.index"), {}, {
+			preserveScroll: true,
+			preserveState: true,
+		});
+	};
+
 	const accionar = () => {
 		if (!pendingData) return;
 		setLoading(true);
 
-		const payload = JSON.parse(JSON.stringify(pendingData));
+		const payload = { ...pendingData };
+
 		if (modalMode === 'create') {
-			router.post(
-				route('banners.store'), payload,
-				{
-					preserveScroll: true,
-					preserveState: true,
-					onFinish: () => {
-						setLoading(false);
-						setTextConfirmar('');
-						setConfirmar(false);
-						setBannerCopia(bannerVacio);
-					}
-				}
-			);
+			router.post(route('banners.store'), payload, {
+				preserveScroll: true,
+				preserveState: true,
+				onError:   manejarError("Error en carga del banner"),
+				onSuccess: manejarExito("Banner creado"),
+				onFinish:  finalizarAccion,
+			});
 		} else {
-			router.put(
-				route('banners.update',{carousel: pendingData.id}), payload,
-				{
-					preserveScroll: true,
-					preserveState: true,
-					onFinish: () => {
-						setLoading(false);
-						setPendingData(undefined);
-					}
-				}
-			);
+			router.put(route('banners.update', { carousel: pendingData.id }), payload, {
+				preserveScroll: true,
+				preserveState: true,
+				onError:   manejarError("Error en modificar el banner"),
+				onSuccess: manejarExito("Banner actualizado"),
+				onFinish:  finalizarAccion,
+			});
 		}
+
+		setTextConfirm('');
 		setConfirOpen(false);
+		setModalOpen(false);
 	};
 
 	const cancelarConfirmacion = () => {
@@ -259,35 +301,17 @@ export default function Banners(){
 		}
 	}, [banners]);
 
-
-	useEffect(() => {
-		const cambioDetectado = timestamp && timestamp !== ultimoTimestamp;
-
-		if (cambioDetectado) {
-			setUltimoTimestamp(timestamp)
-
-			const esError = resultado === 0;
-			setTitle(esError ? 'Error' : modalMode === 'create' ? 'Banner nuevo' : 'Banner modificado');
-			setText(esError ? mensaje ?? 'Error inesperado' : `${mensaje} (ID: ${id})`);
-			setColor(esError ? 'error' : 'success');
-			setActivo(true);
-
-			if (resultado === 1 && id) {
-				setModalOpen(false);
-				router.get(route('banners.index'),
-					{ id, buscar: true },
-					{ preserveScroll: true,	preserveState: true	}
-				)
-			}
-		}
-	}, [timestamp]);
-
 	return (
 		<AppLayout breadcrumbs={breadcrumbs}>
 			<Head title="Banners" />
 			<div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
 				<div className="relative flex-none flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
-					<FiltrosForm openCreate={openCreate} resetearBanner={setCacheados}/>
+					<FiltrosForm 
+						data={data}
+						set={setData}
+						openCreate={openCreate} 
+						resetearBanner={setCacheados}
+					/>
 				</div>
 				<div className="p-4 relative flex-1 overflow-auto rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
 					<DataTableBanners

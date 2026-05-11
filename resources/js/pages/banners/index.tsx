@@ -243,20 +243,34 @@ export default function Banners(){
 		setActivo(true);
 	};
 	const manejarExito = (titulo: string) => (page: any) => {
-		const id = page.props.id;
-		setTitle(titulo);
-		setText(`${titulo} correctamente ✅ (ID: ${id})`);
+		const { resultado, mensaje, id } = page.props;
+		const title = resultado === 0 ? 'Error': titulo ;
+		console.log("page.props: ", page.props)
+		
+		if (resultado === 0) {
+			// error lógico
+			setTitle(title);
+			setText(mensaje);
+			setColor("error");
+			setActivo(true);
+			return;
+		}
+
+		// éxito
+		setTitle(title);
+		setText(`${mensaje} ✅ (ID: ${id})`);
 		setColor("success");
 		setActivo(true);
-	};
-	const finalizarAccion = () => {
-		setLoading(false);
-		setPendingData(bannerVacio);
+
 		setData(bannerVacio);
 		router.get(route("banners.index"), {}, {
 			preserveScroll: true,
 			preserveState: true,
 		});
+	};
+	const finalizarAccion = () => {
+		setLoading(false);
+		setPendingData(bannerVacio);
 	};
 
 	const accionar = () => {

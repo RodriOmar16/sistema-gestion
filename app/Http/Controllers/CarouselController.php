@@ -160,7 +160,7 @@ class CarouselController extends Controller
       DB::rollBack();
       return inertia('banners/index',[
         'resultado' => 0,
-        'mensaje'   => 'Ocurrió un proble al actualizar el banner: '.$e->getMessage(),
+        'mensaje'   => 'Ocurrió un problema al actualizar el banner: '.$e->getMessage(),
         'timestamp' => now()->timestamp,
       ]);
     }

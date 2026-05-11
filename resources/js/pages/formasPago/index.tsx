@@ -16,6 +16,8 @@ import ShowMessage from '@/components/utils/showMessage';
 const breadcrumbs: BreadcrumbItem[] = [ { title: 'Formas de Pago', href: '', } ];
 
 type propsForm = {
+  data: FormaPago;
+  set: (e:any) => void;
   openCreate: () => void;
   resetearFormaPago: (data:FormaPago[]) => void;
 }
@@ -27,9 +29,8 @@ const formaPagoVacio = {
   inhabilitada:  false,
 }
 
-export function FiltrosForm({ openCreate, resetearFormaPago }: propsForm){
+export function FiltrosForm({ data, set, openCreate, resetearFormaPago }: propsForm){
   const [esperandoRespuesta, setEsperandoRespuesta] = useState(false);
-  const { data, setData, errors, processing }       = useForm<FormaPago>(formaPagoVacio);
   const [load, setLoad]                             = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -45,7 +46,7 @@ export function FiltrosForm({ openCreate, resetearFormaPago }: propsForm){
     });
   };
   const handleReset = () => {
-    setData(formaPagoVacio);
+    set(formaPagoVacio);
   };
 
   return (
@@ -66,22 +67,19 @@ export function FiltrosForm({ openCreate, resetearFormaPago }: propsForm){
       <form className='grid grid-cols-12 gap-4 px-4 pt-1 pb-4' onSubmit={handleSubmit}>
         <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-2'>
           <label htmlFor="id">Id</label>
-          <Input className='text-right' value={data.forma_pago_id} onChange={(e)=>setData('forma_pago_id',Number(e.target.value))}/>	
-          { errors.forma_pago_id && <p className='text-red-500	'>{ errors.forma_pago_id }</p> }
+          <Input className='text-right' value={data.forma_pago_id} onChange={(e)=>set({...data, 'forma_pago_id': Number(e.target.value)})}/>	
         </div>
         <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
           <label htmlFor="nombre">Nombre</label>
-          <Input value={data.nombre} onChange={(e)=>setData('nombre',e.target.value)}/>	
-          { errors.nombre && <p className='text-red-500	'>{ errors.nombre }</p> }
+          <Input value={data.nombre} onChange={(e)=>set({...data, 'nombre': e.target.value})}/>	
         </div>
         <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-4'>
           <label htmlFor="descripcion">Descripcion</label>
-          <Input value={data.descripcion} onChange={(e)=>setData('descripcion',e.target.value)}/>	
-          { errors.descripcion && <p className='text-red-500	'>{ errors.descripcion }</p> }
+          <Input value={data.descripcion} onChange={(e)=>set({ ...data, 'descripcion': e.target.value })}/>	
         </div>        
         <div className='col-span-6 sm:col-span-4 md:col-span-4 lg:col-span-2 flex flex-col'>
           <label className='mr-2'>Inhabilitada</label>
-          <Switch checked={data.inhabilitada==0 ? false: true} onCheckedChange={(val) => setData('inhabilitada', val)} />
+          <Switch checked={data.inhabilitada==0 ? false: true} onCheckedChange={(val) => set({ ...data, 'inhabilitada': val})} />
         </div>
         <div className='col-span-6 sm:col-span-8 md:col-span-8 lg:col-span-1 flex justify-end items-center'>
           <Button 
@@ -110,6 +108,8 @@ export function FiltrosForm({ openCreate, resetearFormaPago }: propsForm){
 
 export default function FormasPago(){
   //data
+  const { data, setData, errors, processing }       = useForm<FormaPago>(formaPagoVacio);
+
   const [confirmOpen, setConfirOpen] = useState(false); //modal para confirmar acciones para cuado se crea o edita
   const [textConfir, setTextConfirm] = useState('');
   
@@ -140,13 +140,13 @@ export default function FormasPago(){
     }
   };
 
-  const { resultado, mensaje, forma_pago_id, timestamp } = usePage().props as {
+  /*const { resultado, mensaje, forma_pago_id, timestamp } = usePage().props as {
     resultado?: number;
     mensaje?: string;
     forma_pago_id?: number;
     timestamp?: number;
   };
-  const [ultimoTimestamp, setUltimoTimestamp] = useState<number | null>(null);
+  const [ultimoTimestamp, setUltimoTimestamp] = useState<number | null>(null);*/
   const [cacheados, setCacheados] = useState<FormaPago[]>([]);
 
   //funciones
@@ -161,17 +161,52 @@ export default function FormasPago(){
   };
   const inhabilitarHabilitar = () => {
     if (!formaPagoCopia || !formaPagoCopia.forma_pago_id) return;
+
     setLoading(true);
     router.put(
       route('formasPago.toggleEstado', { fp: formaPagoCopia.forma_pago_id }),{},
       {
-        preserveScroll: true,
+        /*preserveScroll: true,
         preserveState: true,
         onFinish: () => {
           setLoading(false);
           setTextConfirmar('');
           setConfirmar(false);
           setFormaPagoCopia(formaPagoVacio);
+        }*/
+        preserveScroll: true,
+        preserveState: true,
+        onError: (errors) => {
+          // errors es un objeto { campo: "mensaje de error" }
+          setTitle("Error en cambio de estado");
+          setText(Object.values(errors).join("\n"));
+          setColor("error");
+          setActivo(true);
+        },
+        onSuccess: (page) => {
+          const id = page.props.forma_pago_id;
+          const msj = page.props.mensaje;
+          
+          setTitle("Estado de la forma de pago");
+          setText(`${msj} ✅ (ID: ${id})`);
+          setColor("success");
+          setActivo(true);
+        },
+        onFinish: () => {
+          setLoading(false);
+          setTextConfirmar('');
+          setConfirmar(false);
+          setFormaPagoCopia(formaPagoVacio);
+  
+          //al momento de buscar
+          setData(formaPagoVacio);
+          router.get(
+            route('formasPago.index'), 
+            {}, {
+              preserveScroll: true,
+              preserveState: true,
+            }
+          );
         }
       }
     );
@@ -200,39 +235,59 @@ export default function FormasPago(){
     setConfirOpen(true);
   };
 
+  const manejarError = (titulo: string) => (errors: any) => {
+    console.log("Errores:", errors);
+    setTitle(titulo);
+    setText(Object.values(errors).join("\n"));
+    setColor("error");
+    setActivo(true);
+  };
+  const manejarExito = (titulo: string) => (page: any) => {
+    const id = page.props.forma_pago_id;
+    const msj = page.props.mensaje;
+
+    setTitle(titulo);
+    setText(`${msj} ✅ (ID: ${id})`);
+    setColor("success");
+    setActivo(true);
+
+    setData(formaPagoVacio);
+    router.get(route("formasPago.index"), {}, {
+      preserveScroll: true,
+      preserveState: true,
+    });
+  };
+  const finalizarAccion = () => {
+    setLoading(false);
+    setPendingData(formaPagoVacio);
+  };
+
   const accionar = () => {
     if (!pendingData) return;
     setLoading(true);
+    const payload = { ...pendingData };
 
-    const payload = JSON.parse(JSON.stringify(pendingData));
-    if (modalMode === 'create') {
-      router.post(
-        route('formasPago.store'), payload,
-        {
-          preserveScroll: true,
-          preserveState: true,
-          onFinish: () => {
-            setLoading(false);
-            setTextConfirmar('');
-            setConfirmar(false);
-            setFormaPagoCopia(formaPagoVacio);
-          }
-        }
-      );
-    } else {
-      router.put(
-        route('formasPago.update',{fp: pendingData.forma_pago_id}), payload,
-        {
-          preserveScroll: true,
-          preserveState: true,
-          onFinish: () => {
-            setLoading(false);
-            setPendingData(undefined);
-          }
-        }
-      );
-    }
-    setConfirOpen(false);
+		if (modalMode === 'create') {
+			router.post(route('formasPago.store'), payload, {
+				preserveScroll: true,
+				preserveState: true,
+				onError:   manejarError("Error en la creación de la forma de pago"),
+				onSuccess: manejarExito("Forma de pago creada"),
+				onFinish:  finalizarAccion,
+			});
+		} else {
+			router.put(route('formasPago.update',{fp: pendingData.forma_pago_id}), payload, {
+				preserveScroll: true,
+				preserveState: true,
+				onError:   manejarError("Error en la creación de la forma de pago"),
+				onSuccess: manejarExito("Forma de pago actualizada"),
+				onFinish:  finalizarAccion,
+			});
+		}
+
+		setTextConfirm('');
+		setConfirOpen(false);
+		setModalOpen(false);
   };
 
   const cancelarConfirmacion = () => {
@@ -245,35 +300,18 @@ export default function FormasPago(){
       setCacheados(formasPago.data);
     }else{ setCacheados([]); }
   }, [formasPago]);
-
-
-  useEffect(() => {
-    const cambioDetectado = timestamp && timestamp !== ultimoTimestamp;
-
-    if (cambioDetectado) {
-      setUltimoTimestamp(timestamp)
-
-      const esError = resultado === 0;
-      setTitle(esError ? 'Error' : modalMode === 'create' ? 'Forma de pago nueva' : 'Forma de pago modificada');
-      setText(esError ? mensaje ?? 'Error inesperado' : `${mensaje} (ID: ${forma_pago_id})`);
-      setColor(esError ? 'error' : 'success');
-      setActivo(true);
-
-      if (resultado === 1 && forma_pago_id) {
-        setModalOpen(false);
-        router.get(route('formasPago.index'),
-          { forma_pago_id, buscar: true },
-          { preserveScroll: true,	preserveState: true	}
-        )
-      }
-    }
-    }, [timestamp, ultimoTimestamp, resultado, mensaje, forma_pago_id, modalMode]);
+  
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Formas de Pago" />
       <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
         <div className="relative flex-none flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
-          <FiltrosForm openCreate={openCreate} resetearFormaPago={setCacheados}/>
+          <FiltrosForm 
+            data={data}
+            set={setData}
+            openCreate={openCreate} 
+            resetearFormaPago={setCacheados}
+          />
         </div>
         <div className="p-4 relative flex-1 overflow-auto rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
           <DataTableFormasPago

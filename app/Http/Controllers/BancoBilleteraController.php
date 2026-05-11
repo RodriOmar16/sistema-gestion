@@ -91,7 +91,7 @@ class BancoBilleteraController extends Controller
 
       //éxito
       DB::commit();
-      return response()->json([
+      return inertia('bancosBilleteras/index', [
         'resultado'          => 1,
         'mensaje'            => 'El banco/ billetera se creó correctamente',
         'banco_billetera_id' => $bancoBilletera->banco_billetera_id,
@@ -99,7 +99,7 @@ class BancoBilleteraController extends Controller
       ]);
     } catch (\Throwable $e) {
       DB::rollBack();
-      return response()->json([
+      return inertia('bancosBilleteras/index', [
         'resultado' => 0,
         'mensaje'   => 'Ocurrió un error al intentar crear el banco o billetera: '.$e->getMessage(),
         'timestamp' => now()->timestamp
@@ -135,7 +135,7 @@ class BancoBilleteraController extends Controller
 
       //éxito
       DB::commit();
-      return response()->json([
+      return inertia('bancosBilleteras/index',[
         'resultado'          => 1,
         'mensaje'            => 'El banco/ billetera se modificó correctamente',
         'banco_billetera_id' => $bancoBilletera->banco_billetera_id,
@@ -143,7 +143,7 @@ class BancoBilleteraController extends Controller
       ]);
     } catch (\Throwable $e) {
       DB::rollBack();
-      return response()->json([
+      return inertia('bancosBilleteras/index',[
         'resultado' => 0,
         'mensaje'   => 'Ocurrió un error al intentar actualizar el banco/ billetera: '.$e->getMessage(),
         'timestamp' => now()->timestamp
@@ -162,7 +162,7 @@ class BancoBilleteraController extends Controller
 
       //éxito
       DB::commit();
-      return response()->json([
+      return inertia('bancosBilleteras/index',[
         'resultado'          => 1,
         'mensaje'            => 'Se modificó el estado correctamente',
         'banco_billetera_id' => $bancoBilletera->banco_billetera_id,
@@ -170,7 +170,7 @@ class BancoBilleteraController extends Controller
       ]);
     } catch (\Throwable $e) {
       DB::rollBack();
-      return response()->json([
+      return inertia('bancosBilleteras/index',[
         'resultado' => 0,
         'mensaje'   => 'Ocurrió un error al intentar actualizar estado del banco o billetera: '.$e->getMessage(),
         'timestamp' => now()->timestamp

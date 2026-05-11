@@ -174,25 +174,20 @@ export default function Categorias(){
           setText(`${msj} ✅ (ID: ${id})`);
           setColor("success");
           setActivo(true);
-
-          setData({
-            ...data, 
-            categoria_id: String(categoriaCopia.categoria_id),
-            inhabilitada: !categoriaCopia.inhabilitada
-          });
-          router.get(route('categorias.index'), {
-            categoria_id: categoriaCopia.categoria_id,
-            inhabilitada: !categoriaCopia.inhabilitada
-          }, {
-            preserveScroll: true,
-            preserveState: true,
-          });
         },
         onFinish: () => {
           setLoading(false);
           setTextConfirmar("");
           setConfirmar(false);
           setCategoriaCopia(categoriaVacia);
+
+          //actualizo la lista
+          setData(categoriaVacia);
+          router.get(route('categorias.index'), 
+          {} , {
+            preserveScroll: true,
+            preserveState: true,
+          });
         }
       }
     );
@@ -226,6 +221,7 @@ export default function Categorias(){
 
   const accionar = () => {
     if (!pendingData) return;
+
     setLoading(true);
 
     const payload = JSON.parse(JSON.stringify(pendingData));
@@ -252,24 +248,19 @@ export default function Categorias(){
             setText(`La categoría se creó correctamente ✅ (ID: ${nuevaCategoriaId})`);
             setColor("success");
             setActivo(true);
-
-            // refrescar listado
-            router.get(route("categorias.index"), {}, {
-              preserveScroll: true,
-              preserveState: true,
-            });
-            router.get(route('categorias.index'), {
-              categoria_id: Number(nuevaCategoriaId)
-            }, {
-              preserveScroll: true,
-              preserveState: true,
-            });
           },
           onFinish: () => {
+            //apago la carga
             setLoading(false);
-            setTextConfirmar("");
-            setConfirmar(false);
+            //reseteo la copia
             setCategoriaCopia(categoriaVacia);
+            //actualizo la lista
+            setData(categoriaVacia);
+            router.get(route('categorias.index'), 
+            {} , {
+              preserveScroll: true,
+              preserveState: true,
+            });
           }
         }
       );
@@ -295,26 +286,26 @@ export default function Categorias(){
             setText(`La categoría se modificó correctamente ✅ (ID: ${id})`);
             setColor("success");
             setActivo(true);
-
-            // refrescar listado
-            router.get(route("categorias.index"), {
-              categoria_id: Number(id)
-            }, {
+          },
+          onFinish: () => {
+            //apago la carga
+            setLoading(false);
+            //reseteo la copia
+            setCategoriaCopia(categoriaVacia);
+            //actualizo la lista
+            setData(categoriaVacia);
+            router.get(route('categorias.index'), 
+            {} , {
               preserveScroll: true,
               preserveState: true,
             });
-          },
-          onFinish: () => {
-            setLoading(false);
-            setTextConfirmar("");
-            setConfirmar(false);
-            setCategoriaCopia(categoriaVacia);
           }
         }
       );
-
     }
+    setTextConfirm("");
     setConfirOpen(false);
+    //cierro el modal
     setModalOpen(false);
   };
 

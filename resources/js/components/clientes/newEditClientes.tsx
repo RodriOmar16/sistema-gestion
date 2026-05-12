@@ -23,6 +23,15 @@ interface Props{
   onSubmit: (data:any) => void;
 }
 
+let requeridosReset = {
+  cliente_id:       false,
+  nombre:           false,
+  fecha_nacimiento: false,
+  domicilio:        false,
+  email:            false,
+  dni:              false,
+};
+
 const clienteVacio = {
   cliente_id:       '',
   nombre:           '',
@@ -31,64 +40,62 @@ const clienteVacio = {
   email:            '',
   dni:              '',
   inhabilitado:     false,
-}
+};
 
 export default function NewEditClientes({ open, onOpenChange, mode, cliente, onSubmit }: Props){
   //data
-  const [activo, setActivo] = useState(false);
-  const [text, setText]     = useState('');
-  const [title, setTitle]   = useState('');
   const { data, setData, get, processing, errors } = useForm<Cliente>(clienteVacio);
+  const [requeridos, setRequeridos]                = useState<{
+    cliente_id:       boolean,
+    nombre:           boolean,
+    fecha_nacimiento: boolean,
+    domicilio:        boolean,
+    email:            boolean,
+    dni:              boolean,
+  }>(requeridosReset);
 
   //useEffect
-  useEffect(() => {
-    if (!open && mode === 'create') {
-      setData(clienteVacio);
-    }
-  }, [open, mode]);
+   useEffect(() => {
+      if (mode === 'create' && !open) {
+        setData(clienteVacio);
+      } else if (cliente && mode === 'edit') {
+        setData({
+          cliente_id:       cliente.cliente_id,
+          nombre:           cliente.nombre,
+          fecha_nacimiento: convertirFechaGuionesBarras(cliente.fecha_nacimiento??''),
+          domicilio:        cliente.domicilio,
+          email:            cliente.email,
+          dni:              cliente.dni,
+          inhabilitado:     cliente.inhabilitado,
+        });     
+      } else {
+        setData(clienteVacio);
+      }
+    }, [open, cliente, mode]);
 
   useEffect(() => {
-    if (cliente && mode === 'edit') {
-      setData({
-        cliente_id:       cliente.cliente_id,
-        nombre:           cliente.nombre,
-        fecha_nacimiento: convertirFechaGuionesBarras(cliente.fecha_nacimiento??''),
-        domicilio:        cliente.domicilio,
-        email:            cliente.email,
-        dni:              cliente.dni,
-        inhabilitado:     cliente.inhabilitado,
-      });      
-    } else {
-      setData(clienteVacio);
+    if (!open) {
+      setRequeridos(requeridosReset);
     }
-  }, [cliente, mode]);
+  }, [open, mode]);
 
   //funciones
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if(!data.nombre){
-      setTitle('¡Campo faltante!');
-      setText('Se requiere que ingreses un nombre válido');
-      setActivo(true);
-      return 
-    }
-    if(!data.fecha_nacimiento){
-      setTitle('¡Campo faltante!');
-      setText('Se requiere que indiques fecha de nacimiento');
-      setActivo(true);
-      return 
-    }
-    if(!data.email){
-      setTitle('¡Campo faltante!');
-      setText('Se requiere que ingreses un email válido');
-      setActivo(true);
-      return 
-    }
-    if(!data.dni){
-      setTitle('¡Campo faltante!');
-      setText('Se requiere que ingreses un documento');
-      setActivo(true);
-      return 
+
+    const nuevosErrores = {
+      cliente_id:       false,
+      nombre:           !data.nombre,
+      fecha_nacimiento: !data.fecha_nacimiento,
+      domicilio:        false,
+      email:            !data.email,
+      dni:              !data.dni,
+    };
+    setRequeridos(nuevosErrores);
+    const hayErrores = Object.values(nuevosErrores).some(e => e);
+
+    if (hayErrores) {
+      return;
     }
     const dataCopia = JSON.parse(JSON.stringify(data));
     dataCopia.fecha_nacimiento = convertirFechaBarrasGuiones(data.fecha_nacimiento);
@@ -124,9 +131,13 @@ export default function NewEditClientes({ open, onOpenChange, mode, cliente, onS
             <label htmlFor="nombre">Nombre</label>
             <Input
               value={data.nombre}
-              onChange={(e) => setData({ ...data, nombre: e.target.value })}
               placeholder="Ingresar nombre"
+              onChange={(e) => {
+                setData({ ...data, nombre: e.target.value })
+                if(e.target.value){ requeridos.nombre = false; }
+              }}
             />
+              { requeridos.nombre && (<p className="mt-1 text-sm text-red-600 font-medium">⚠️Campo requerido</p>)}
           </div>
           <div className="col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12">
             <label htmlFor="domicilio">Domicilio</label>
@@ -139,16 +150,33 @@ export default function NewEditClientes({ open, onOpenChange, mode, cliente, onS
             <label htmlFor="email">Email</label>
             <Input 
               value={data.email} 
-              onChange={(e) => setData({ ...data, email: e.target.value })}
-              placeholder="Ingresar un email" />
+              placeholder="Ingresar un email"
+              onChange={(e) => {
+                setData({ ...data, email: e.target.value })
+                if(e.target.value){ requeridos.email = false }
+              }}
+            />
+            {requeridos.email && (<p className="mt-1 text-sm text-red-600 font-medium">⚠️Campo requerido</p>)}
           </div>
           <div className="col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-6">
             <label htmlFor="fechaNac">Fecha Nac.</label>
-            <DatePicker fecha={(data.fecha_nacimiento)} setFecha={ (fecha:string) => {setData('fecha_nacimiento',fecha)} }/>
+            <DatePicker fecha={(data.fecha_nacimiento)} 
+              setFecha={ (fecha:string) => {
+                setData('fecha_nacimiento',fecha);
+                if(fecha){ requeridos.fecha_nacimiento = false; }
+              }}
+            />
+            {requeridos.fecha_nacimiento && (<p className="mt-1 text-sm text-red-600 font-medium">⚠️Campo requerido</p>)}
           </div>
           <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-6'>
             <label htmlFor="dni">Documento</label>
-            <InputDni data={String(data.dni)} setData={(data) => setData('dni', data)}/>
+            <InputDni data={String(data.dni)} 
+              setData={(dato) => {
+                setData('dni', dato);
+                if(dato){ requeridos.dni = false; }
+              }}
+            />
+            {requeridos.dni && (<p className="mt-1 text-sm text-red-600 font-medium">⚠️Campo requerido</p>)}
           </div>
           <div className="col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-6 flex flex-col">
             <label htmlFor="inhabilitado" className='mr-2'>Inhabilitado</label>
@@ -160,6 +188,7 @@ export default function NewEditClientes({ open, onOpenChange, mode, cliente, onS
           <DialogClose asChild>
             <Button type="button" variant="outline">Cancelar</Button>
           </DialogClose>
+
           <Button 
             onClick={handleSubmit} 
             type="button" 
@@ -170,13 +199,6 @@ export default function NewEditClientes({ open, onOpenChange, mode, cliente, onS
           </Button>
         </DialogFooter>
       </DialogContent>
-      <ShowMessage 
-        open={activo}
-        title={title}
-        text={text}
-        color="warning"
-        onClose={() => setActivo(false)}
-      />
     </Dialog>
   );
 }

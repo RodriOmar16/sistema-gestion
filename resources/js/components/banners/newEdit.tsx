@@ -94,7 +94,7 @@ export default function NewEditBanner({ open, onOpenChange, mode, banner, onSubm
       return;
     }
 
-    console.log("sigue");
+    //console.log("sigue");
     onSubmit(data);
   }
 

@@ -215,12 +215,5 @@ class FormaPagoController extends Controller
         'timestamp' => now()->timestamp
       ]);
     }
-    /*$fp->update(['inhabilitada' => !$fp->inhabilitada]);
-    return inertia('formasPago/index',[
-      'mensaje'       => 'Estado modificado exitosamente',
-      'resultado'     => 1,
-      'forma_pago_id' => $fp->forma_pago_id,
-      'timestamp'     => now()->timestamp,
-    ]);*/
   }
 }

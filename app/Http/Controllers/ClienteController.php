@@ -125,6 +125,7 @@ class ClienteController extends Controller
       $fecha_nacimiento = $validated['fecha_nacimiento'];
       $existe = Cliente::whereRaw('LOWER(TRIM(dni)) = ?',[$dni])
                        ->where('fecha_nacimiento',$fecha_nacimiento)
+                       ->where('inhabilitado',0)
                        ->exists();
       if($existe){
         return inertia('clientes/index',[
@@ -179,6 +180,7 @@ class ClienteController extends Controller
       $existe = Cliente::whereRaw('LOWER(TRIM(dni)) = ?',[$dni])
                        ->where('fecha_nacimiento',$fecha_nacimiento)
                        ->where('cliente_id','!=',$cliente->cliente_id)
+                       ->where('inhabilitado',0)
                        ->exists();
       if($existe){
         return inertia('clientes/index',[
@@ -212,14 +214,55 @@ class ClienteController extends Controller
 
   public function destroy(Cliente $cliente)
   {
-    $cliente->update(['inhabilitado' => !$cliente->inhabilitado]);
-    return inertia('clientes/index',[
-      'resultado'  => 1,
-      'mensaje'    => 'El estado se actualizó correctamente',
-      'timestamp'  => now()->timestamp,
-      'cliente_id' => $cliente->cliente_id
-    ]);
-    
-    //return redirect()->back()->with('success', 'El estado se actualizó correctamente.');
+    DB::beginTransaction();
+    try {
+      $nuevoEstado = !$cliente->inhabilitado;
+
+      if ($nuevoEstado === false) {
+        // si lo vas a habilitar, controlar duplicados
+        $dni              = strtolower(trim($cliente->dni));
+        $fecha_nacimiento = $cliente->fecha_nacimiento;
+        $existe = Cliente::whereRaw('LOWER(TRIM(dni)) = ?',[$dni])
+                    ->where('fecha_nacimiento',$fecha_nacimiento)
+                    ->where('cliente_id','!=',$cliente->cliente_id)
+                    ->where('inhabilitado',0)
+                    ->exists();
+
+        if ($existe) {
+          $cliente->update([
+            'nombre'       => $cliente->nombre.'-copia',
+            'email'        => $cliente->email.' - copia',
+            'inhabilitado' => $nuevoEstado,
+            'updated_at'   => now(),
+          ]);
+        } else {
+          $cliente->update([
+            'inhabilitado' => $nuevoEstado,
+            'updated_at'   => now(),
+          ]);
+        }
+      } else {
+        // si lo vas a deshabilitar, no hace falta controlar duplicados
+        $cliente->update([
+          'inhabilitado' => $nuevoEstado,
+          'updated_at'   => now(),
+        ]);
+      }
+      //éxito
+      DB::commit();
+      return inertia('clientes/index',[
+        'resultado'  => 1,
+        'mensaje'    => 'Se modificó el estado correctamente',
+        'cliente_id' => $cliente->cliente_id,
+        'timestamp'  => now()->timestamp
+      ]);
+    } catch (\Throwable $e) {
+      DB::rollBack();
+      return inertia('clientes/index',[
+        'resultado' => 0,
+        'mensaje'   => 'Ocurrió un error al intentar actualizar estado del cliente: '.$e->getMessage(),
+        'timestamp' => now()->timestamp
+      ]);
+    }
   }
 }

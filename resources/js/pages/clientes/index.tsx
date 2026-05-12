@@ -14,10 +14,13 @@ import ModalConfirmar from '@/components/modalConfirmar';
 import ShowMessage from '@/components/utils/showMessage';
 import { DatePicker } from '@/components/utils/date-picker';
 import InputDni from '@/components/utils/input-dni';
+import Loading from '@/components/utils/loadingDialog';
 
 const breadcrumbs: BreadcrumbItem[] = [ { title: 'Clientes', href: '', } ];
 
 type propsForm = {
+  data: Cliente;
+  set: (e:any) => void;
   openCreate: () => void;
   resetearCliente: (data:Cliente[]) => void;
 }
@@ -32,9 +35,8 @@ const clienteVacio = {
   inhabilitado:     false,
 }
 
-export function FiltrosForm({ openCreate, resetearCliente }: propsForm){
+export function FiltrosForm({ data, set, openCreate, resetearCliente }: propsForm){
   const [esperandoRespuesta, setEsperandoRespuesta] = useState(false);
-  const { data, setData, errors, processing }       = useForm<Cliente>(clienteVacio);
   const [load, setLoad]                             = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -50,7 +52,7 @@ export function FiltrosForm({ openCreate, resetearCliente }: propsForm){
     });
   };
   const handleReset = () => {
-    setData(clienteVacio);
+    set(clienteVacio);
   };
 
   return (
@@ -71,35 +73,31 @@ export function FiltrosForm({ openCreate, resetearCliente }: propsForm){
       <form className='grid grid-cols-12 gap-4 px-4 pt-1 pb-4' onSubmit={handleSubmit}>
         <div className='col-span-12 sm:col-span-3 md:col-span-3 lg:col-span-2'>
           <label htmlFor="id">Id</label>
-          <Input className='text-right' value={data.cliente_id} onChange={(e)=>setData('cliente_id',Number(e.target.value))}/>	
-          { errors.cliente_id && <p className='text-red-500	'>{ errors.cliente_id }</p> }
+          <Input className='text-right' value={data.cliente_id} onChange={(e)=>set({...data, 'cliente_id': Number(e.target.value)})}/>	
         </div>
         <div className='col-span-12 sm:col-span-5 md:col-span-5 lg:col-span-4'>
           <label htmlFor="nombre">Nombre</label>
-          <Input value={data.nombre} onChange={(e)=>setData('nombre',e.target.value)}/>	
-          { errors.nombre && <p className='text-red-500	'>{ errors.nombre }</p> }
+          <Input value={data.nombre} onChange={(e)=>set({...data, 'nombre': e.target.value})}/>	
         </div>
         <div className="col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3">
           <label htmlFor="fechaNac">Fecha Nac.</label>
-          <DatePicker fecha={(data.fecha_nacimiento)} setFecha={ (fecha:string) => {setData('fecha_nacimiento',fecha)} }/>
+          <DatePicker fecha={(data.fecha_nacimiento)} setFecha={ (fecha:string) => {set({...data, 'fecha_nacimiento': fecha})} }/>
         </div>
         <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3'>
           <label htmlFor="dni">Documento</label>
-          <InputDni data={String(data.dni)} setData={(data) => setData('dni', data)}/>
+          <InputDni data={String(data.dni)} setData={(dato) => set({...data, 'dni': dato})}/>
         </div>
         <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-4'>
           <label htmlFor="domicilio">Domicilio</label>
-          <Input value={data.domicilio} onChange={(e)=>setData('domicilio',e.target.value)}/>	
-          { errors.domicilio && <p className='text-red-500	'>{ errors.domicilio }</p> }
+          <Input value={data.domicilio} onChange={(e)=>set({...data, 'domicilio': e.target.value})}/>	
         </div>
         <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-4'>
           <label htmlFor="email">Email</label>
-          <Input type='email' value={data.email} onChange={(e)=>setData('email',e.target.value)}/>	
-          { errors.email && <p className='text-red-500	'>{ errors.email }</p> }
+          <Input type='email' value={data.email} onChange={(e)=>set({...data, 'email': e.target.value})}/>	
         </div>        
         <div className='col-span-6 sm:col-span-4 md:col-span-4 lg:col-span-2 flex flex-col'>
           <label className='mr-2'>Inhabilitado</label>
-          <Switch checked={data.inhabilitado==0 ? false: true} onCheckedChange={(val) => setData('inhabilitado', val)} />
+          <Switch checked={data.inhabilitado==0 ? false: true} onCheckedChange={(val) => set({...data, 'inhabilitado': val})} />
         </div>
         <div className='col-span-6 sm:col-span-2 md:col-span-2 lg:col-span-2 flex justify-end items-center'>
           <Button 
@@ -125,6 +123,8 @@ export function FiltrosForm({ openCreate, resetearCliente }: propsForm){
 
 export default function Clientes(){
   //data
+  const { data, setData, errors, processing }       = useForm<Cliente>(clienteVacio);
+
   const [confirmOpen, setConfirOpen] = useState(false); //modal para confirmar acciones para cuado se crea o edita
   const [textConfir, setTextConfirm] = useState('');
   
@@ -154,22 +154,15 @@ export default function Clientes(){
       prev_page_url: string,
     }
   };
-  const { resultado, mensaje, cliente_id, timestamp } = usePage().props as {
-    resultado?: number;
-    mensaje?: string;
-    cliente_id?: number;
-    timestamp?: number;
-  };
 
   const [cacheados, setCacheados] = useState<Cliente[]>([]);
-  const [ultimoTimestamp, setUltimoTimestamp] = useState<number | null>(null);
 
   //funciones
   const confirmar = (data: Cliente) => {
     if(data){
       setClienteCopia( JSON.parse(JSON.stringify(data)) );
       const texto : string = data.inhabilitado === 0 ? 'inhabilitar': 'habilitar';
-      setTextConfirmar('Estás seguro de querer '+texto+' la forma de pago?');
+      setTextConfirmar('Estás seguro de querer '+texto+' el cliente?');
       setConfirmar(true);
       setModalMode('edit');
     }
@@ -177,16 +170,49 @@ export default function Clientes(){
   const inhabilitarHabilitar = () => {
     if (!clienteCopia || !clienteCopia.cliente_id) return;
     setLoading(true);
+
     router.put(
       route('clientes.toggleEstado', { cliente: clienteCopia.cliente_id }),{},
       {
         preserveScroll: true,
         preserveState: true,
+        onError: (errors) => {
+          // errors es un objeto { campo: "mensaje de error" }
+          setTitle("Error en cambio de estado");
+          setText(Object.values(errors).join("\n"));
+          setColor("error");
+          setActivo(true);
+        },
+        onSuccess: (page) => {
+          const { resultado, mensaje, cliente_id } = page.props;
+          
+          if(resultado === 0){
+            setTitle("Error inesperado");
+            setText(`${mensaje} ❌ (ID: ${cliente_id})`);
+            setColor("error");
+            setActivo(true);
+          }
+
+          setTitle("Cliente actualizado");
+          setText(`${mensaje} ✅ (ID: ${cliente_id})`);
+          setColor("success");
+          setActivo(true);
+        },
         onFinish: () => {
           setLoading(false);
           setTextConfirmar('');
           setConfirmar(false);
-          setClienteCopia(clienteVacio);
+          setClienteCopia(clienteCopia);
+  
+          //al momento de buscar
+          setData(clienteCopia);
+          router.get(
+            route('clientes.index'), 
+            {}, {
+              preserveScroll: true,
+              preserveState: true,
+            }
+          );
         }
       }
     );
@@ -215,11 +241,47 @@ export default function Clientes(){
     setConfirOpen(true);
   };
 
+  const manejarError = (titulo: string) => (errors: any) => {
+    console.log("Errores:", errors);
+    setTitle(titulo);
+    setText(Object.values(errors).join("\n"));
+    setColor("error");
+    setActivo(true);
+  };
+  const manejarExito = (titulo: string) => (page: any) => {
+    const { resultado, mensaje, cliente_id } = page.props;
+    const title = resultado === 0 ? 'Error inesperado': titulo ;
+
+    if(resultado === 0){
+      setTitle(title);
+      setText(mensaje);
+      setColor("error");
+      setActivo(true);
+      return;
+    }
+
+    setTitle(title);
+    setText(`${mensaje} ✅ (ID: ${cliente_id})`);
+    setColor("success");
+    setActivo(true);
+
+    setModalOpen(false);
+  };
+  const finalizarAccion = () => {
+    setLoading(false);
+    setPendingData(clienteVacio);
+    setData(clienteVacio);
+    router.get(route("clientes.index"), {}, {
+      preserveScroll: true,
+      preserveState: true,
+    });
+  };
+
   const accionar = () => {
     if (!pendingData) return;
     setLoading(true);
 
-    const payload = JSON.parse(JSON.stringify(pendingData));
+    /*const payload = JSON.parse(JSON.stringify(pendingData));
     
     if (modalMode === 'create') {
       router.post(
@@ -247,7 +309,27 @@ export default function Clientes(){
           }
         }
       );
-    }
+    }*/
+   const payload = { ...pendingData };
+
+		if (modalMode === 'create') {
+			router.post(route('clientes.store'), payload, {
+				preserveScroll: true,
+				preserveState: true,
+				onError:   manejarError("Error al crear el cliente"),
+				onSuccess: manejarExito("Cliente creada"),
+				onFinish:  finalizarAccion,
+			});
+		} else {
+			router.put(route('clientes.update',{cliente: pendingData.cliente_id}), payload, {
+				preserveScroll: true,
+				preserveState: true,
+				onError:   manejarError("Error al modificar el cliente"),
+				onSuccess: manejarExito("Cliente actualizado"),
+				onFinish:  finalizarAccion,
+			});
+		}
+    setTextConfirm('');
     setConfirOpen(false);
   };
 
@@ -264,35 +346,16 @@ export default function Clientes(){
     }
   }, [clientes]);
 
-
-  useEffect(() => {
-    const cambioDetectado = timestamp && timestamp !== ultimoTimestamp;
-
-    if (cambioDetectado) {
-      setUltimoTimestamp(timestamp);
-
-      const esError = resultado === 0;
-      setTitle(esError ? 'Error' : modalMode === 'create' ? 'Cliente nuevo' : 'Cliente modificado');
-      setText(esError ? mensaje ?? 'Error inesperado' : `${mensaje} (ID: ${cliente_id})`);
-      setColor(esError ? 'error' : 'success');
-      setActivo(true);
-
-      if (resultado === 1 && cliente_id) {
-        setModalOpen(false);
-        router.get(route('clientes.index'),
-          { cliente_id, buscar: true },
-          { preserveScroll: true,	preserveState: true	}
-        )
-      }
-    }
-  }, [resultado, mensaje, cliente_id, timestamp, ultimoTimestamp]);
-
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Clientes" />
       <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
         <div className="relative flex-none flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
-          <FiltrosForm openCreate={openCreate} resetearCliente={setCacheados}/>
+          <FiltrosForm 
+            data={data}
+            set={setData}
+            openCreate={openCreate} 
+            resetearCliente={setCacheados}/>
         </div>
         <div className="p-4 relative flex-1 overflow-auto rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
           <DataTableClientes
@@ -332,6 +395,10 @@ export default function Clientes(){
         text={text}
         color={color}
         onClose={() => setActivo(false)}
+      />
+      <Loading
+        open={loading}
+        onClose={() => {}}
       />
     </AppLayout>
   );

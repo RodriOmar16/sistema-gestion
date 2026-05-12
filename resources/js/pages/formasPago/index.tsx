@@ -141,13 +141,6 @@ export default function FormasPago(){
     }
   };
 
-  /*const { resultado, mensaje, forma_pago_id, timestamp } = usePage().props as {
-    resultado?: number;
-    mensaje?: string;
-    forma_pago_id?: number;
-    timestamp?: number;
-  };
-  const [ultimoTimestamp, setUltimoTimestamp] = useState<number | null>(null);*/
   const [cacheados, setCacheados] = useState<FormaPago[]>([]);
 
   //funciones

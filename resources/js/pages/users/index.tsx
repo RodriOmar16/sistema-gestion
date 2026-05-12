@@ -14,10 +14,13 @@ import PdfButton from '@/components/utils/pdf-button';
 import ShowMessage from '@/components/utils/showMessage';
 import { Select,  SelectContent,  SelectItem,  SelectTrigger,  SelectValue } from "@/components/ui/select"
 import { route } from 'ziggy-js';
+import Loading from '@/components/utils/loadingDialog';
 
 const breadcrumbs: BreadcrumbItem[] = [ { title: 'Usuarios', href: '', } ];
 
 type propsForm = {
+  data: User;
+  set: (e:any) => void;
   openCreate: () => void;
   resetearUser: (ruta:User[]) => void;
   permiso: boolean;
@@ -30,9 +33,8 @@ const userVacio = {
   inhabilitado: false,
 }
 
-export function FiltrosForm({ openCreate, resetearUser, permiso }: propsForm){
-  const [esperandoRespuesta, setEsperandoRespuesta] = useState(false);
-  const { data, setData, errors, processing } = useForm(userVacio);
+export function FiltrosForm({ data, set, openCreate, resetearUser, permiso }: propsForm){
+  const [processing, setProcessing] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,11 +43,10 @@ export function FiltrosForm({ openCreate, resetearUser, permiso }: propsForm){
     router.get(route('users.index'), payload, {
       preserveState: true,
       preserveScroll: true,
-      onFinish: () => setEsperandoRespuesta(false),
     });
   };
   const handleReset = () => {
-    setData(userVacio);
+    set(userVacio);
   };
 
   return (
@@ -69,22 +70,19 @@ export function FiltrosForm({ openCreate, resetearUser, permiso }: propsForm){
       <form className='grid grid-cols-12 gap-4 px-4 pt-1 pb-4' onSubmit={handleSubmit}>
         <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-2'>
           <label htmlFor="id">Id</label>
-          <Input value={data.id} onChange={(e)=>setData('id',e.target.value)}/>	
-          { errors.id && <p className='text-red-500	'>{ errors.id }</p> }
+          <Input value={data.id} onChange={(e)=>set({...data, 'id': e.target.value})}/>	
         </div>
         <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-4'>
           <label htmlFor="nombre">Nombre</label>
-          <Input value={data.name} onChange={(e)=>setData('name',e.target.value)}/>	
-          { errors.name && <p className='text-red-500	'>{ errors.name }</p> }
+          <Input value={data.name} onChange={(e)=>set({...data, 'name': e.target.value})}/>	
         </div>
         <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-4'>
           <label htmlFor="nombre">Email</label>
-          <Input value={data.email} onChange={(e)=>setData('email',e.target.value)}/>	
-          { errors.email && <p className='text-red-500	'>{ errors.email }</p> }
+          <Input value={data.email} onChange={(e)=>set({...data, 'email': e.target.value})}/>	
         </div>
         <div className='col-span-6 sm:col-span-4 md:col-span-4 lg:col-span-2 flex flex-col'>
           <label className='mr-2'>Inhabilitado</label>
-          <Switch checked={data.inhabilitado} onCheckedChange={(val) => setData('inhabilitado', val)} />
+          <Switch checked={Boolean(data.inhabilitado)} onCheckedChange={(val) => set({...data, 'inhabilitado': val})} />
         </div>
         <div className='col-span-6 sm:col-span-8 md:col-span-8 lg:col-span-12 flex justify-end items-center'>
           <Button 
@@ -113,6 +111,8 @@ export function FiltrosForm({ openCreate, resetearUser, permiso }: propsForm){
 
 export default function Usuarios(){
   //data
+  const { data, setData, errors, processing } = useForm(userVacio);
+
   const [confirmOpen, setConfirOpen] = useState(false); //modal para confirmar acciones para cuado se crea o edita
   const [textConfir, setTextConfirm] = useState('');
   
@@ -144,14 +144,14 @@ export default function Usuarios(){
     }
   };
 
-  const { resultado, mensaje, id, timestamp } = usePage().props as {
+  /*const { resultado, mensaje, id, timestamp } = usePage().props as {
     resultado?: number;
     mensaje?: string;
     id?: number;
     timestamp?: number;
   };
 
-  const [ultimoTimestamp, setUltimoTimestamp] = useState<number | null>(null);
+  const [ultimoTimestamp, setUltimoTimestamp] = useState<number | null>(null);*/
   const [cacheados, setCacheados] = useState<User[]>([]);
   const [permisoGestionar, setPermisoGestionar] = useState(false);
 
@@ -173,6 +173,51 @@ export default function Usuarios(){
       {
         preserveScroll: true,
         preserveState: true,
+        onError: (errors) => {
+          // errors es un objeto { campo: "mensaje de error" }
+          setTitle("Error en cambio de estado");
+          setText(Object.values(errors).join("\n"));
+          setColor("error");
+          setActivo(true);
+        },
+        onSuccess: (page) => {
+          const { resultado, mensaje, id } = page.props;
+          
+          if(resultado === 0){
+            setTitle("Error inesperado");
+            setText(`${mensaje} ❌ (ID: ${id})`);
+            setColor("error");
+            setActivo(true);
+          }
+
+          setTitle("Usuario actualizado");
+          setText(`${mensaje} ✅ (ID: ${id})`);
+          setColor("success");
+          setActivo(true);
+        },
+        onFinish: () => {
+          setLoading(false);
+          setTextConfirmar('');
+          setConfirmar(false);
+          setUserCopia(userVacio);
+  
+          //al momento de buscar
+          setData(userVacio);
+          router.get(
+            route('users.index'), 
+            {}, {
+              preserveScroll: true,
+              preserveState: true,
+            }
+          );
+        }
+      }
+    );
+    /*router.put(
+      route('users.toggleEstado', { user: userCopia.id }),{},
+      {
+        preserveScroll: true,
+        preserveState: true,
         onFinish: () => {
           setLoading(false);
           setTextConfirmar('');
@@ -180,7 +225,7 @@ export default function Usuarios(){
           setUserCopia(userVacio);
         }
       }
-    );
+    );*/
   };
 
   const cancelarInhabilitarHabilitar = () => { 
@@ -209,11 +254,47 @@ export default function Usuarios(){
     setConfirOpen(true);
   };
 
+  const manejarError = (titulo: string) => (errors: any) => {
+    console.log("Errores:", errors);
+    setTitle(titulo);
+    setText(Object.values(errors).join("\n"));
+    setColor("error");
+    setActivo(true);
+  };
+  const manejarExito = (titulo: string) => (page: any) => {
+    const { resultado, mensaje, id } = page.props;
+    const title = resultado === 0 ? 'Error inesperado': titulo ;
+
+    if(resultado === 0){
+      setTitle(title);
+      setText(mensaje);
+      setColor("error");
+      setActivo(true);
+      return;
+    }
+
+    setTitle(title);
+    setText(`${mensaje} ✅ (ID: ${id})`);
+    setColor("success");
+    setActivo(true);
+
+    setModalOpen(false);
+  };
+  const finalizarAccion = () => {
+    setLoading(false);
+    setPendingData(userVacio);
+    setData(userVacio);
+    router.get(route("users.index"), {}, {
+      preserveScroll: true,
+      preserveState: true,
+    });
+  };
+
   const accionar = () => {
     if (!pendingData) return;
     setLoading(true);
 
-    const payload = JSON.parse(JSON.stringify(pendingData));
+    /*const payload = JSON.parse(JSON.stringify(pendingData));
 
     if (modalMode === 'create') {
       router.post(
@@ -241,7 +322,27 @@ export default function Usuarios(){
           }
         }
       );
-    }
+    }*/
+    const payload = { ...pendingData };
+
+		if (modalMode === 'create') {
+			router.post(route('users.store'), payload, {
+				preserveScroll: true,
+				preserveState: true,
+				onError:   manejarError("Error al crear el usuario"),
+				onSuccess: manejarExito("Usuario creado"),
+				onFinish:  finalizarAccion,
+			});
+		} else {
+			router.put(route('users.update',{user: pendingData.id}), payload, {
+				preserveScroll: true,
+				preserveState: true,
+				onError:   manejarError("Error al modificar el usuario"),
+				onSuccess: manejarExito("Usuario actualizado"),
+				onFinish:  finalizarAccion,
+			});
+		}
+    setTextConfirm('');
     setConfirOpen(false);
   };
 
@@ -258,29 +359,6 @@ export default function Usuarios(){
     }
   }, [users]);
 
-
-  useEffect(() => {
-      const cambioDetectado = timestamp && timestamp !== ultimoTimestamp;
-
-    if (cambioDetectado) {
-      setUltimoTimestamp(timestamp)
-
-      const esError = resultado === 0;
-      setTitle(esError ? 'Error' : modalMode === 'create' ? 'Usuario nuevo' : 'Usuario modificado');
-      setText(esError ? mensaje ?? 'Error inesperado' : `${mensaje} (ID: ${id})`);
-      setColor(esError ? 'error' : 'success');
-      setActivo(true);
-
-      if (resultado === 1 && id) {
-        setModalOpen(false);
-        router.get(route('users.index'),
-          { id, buscar: true },
-          { preserveScroll: true,	preserveState: true	}
-        )
-      }
-    }
-  }, [resultado, mensaje, id, timestamp, ultimoTimestamp, modalMode]);
-
   useEffect(() => {
     const aux = auth?.permisos.filter((e:any) => e === 'gestionar_usuarios');
     setPermisoGestionar(aux.length != 0);
@@ -291,7 +369,9 @@ export default function Usuarios(){
       <Head title="Usuarios" />
       <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
         <div className="relative flex-none flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
-          <FiltrosForm 
+          <FiltrosForm
+            data={data}
+            set={setData}
             openCreate={openCreate} 
             resetearUser={setCacheados}
             permiso={permisoGestionar}/>
@@ -316,7 +396,6 @@ export default function Usuarios(){
         mode={modalMode}
         user={selectedUser}
         onSubmit={handleSave}
-        loading={loading}
         permiso={permisoGestionar}
       />
       <ModalConfirmar
@@ -337,6 +416,10 @@ export default function Usuarios(){
         text={text}
         color={color}
         onClose={() => setActivo(false)}
+      />
+      <Loading
+        open={loading}
+        onClose={() => {}}
       />
     </AppLayout>
   );

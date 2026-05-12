@@ -61,15 +61,15 @@ class UserController extends Controller
     if($request->filled('email')){
       $query->where('email', 'like','%'.$request->email.'%');
     }
-    if ($request->filled('inhabilitado')) {
+    if ($request->has('inhabilitado')) {
       $estado = filter_var($request->inhabilitado, FILTER_VALIDATE_BOOLEAN);
       $query->where('inhabilitado', $estado);
-    }
-    //si no hay ningùn filtro, que traiga todos
+    }else{ $query->where('inhabilitado', 0); }
+    /*//si no hay ningùn filtro, que traiga todos
     if(!$request->filled('id') && !$request->filled('name') && 
        !$request->filled('email') && !$request->filled('inhabilitado')){
       $query = User::query();
-    }
+    }*/
 
     //$users = $query->latest()->get();
 
@@ -94,17 +94,6 @@ class UserController extends Controller
     ]);
   }
 
-  /**
-   * Show the form for creating a new resource.
-   */
-  public function create()
-  {
-    
-  }
-
-  /**
-   * Store a newly created resource in storage.
-   */
   public function store(Request $request)
   {
     DB::beginTransaction();
@@ -121,6 +110,7 @@ class UserController extends Controller
       $email      = $validated['email'];
       $existe     = User::whereRaw('LOWER(TRIM(name)) = ?',[$nombreUser])
                       ->where('email',$email)
+                      ->where('inhabilitado', 0)
                       ->exists();
       if($existe){
         return inertia('users/index',[
@@ -171,9 +161,6 @@ class UserController extends Controller
     }
   }
 
-  /**
-   * Update the specified resource in storage.
-   */
   public function update(Request $request, User $user)
   {
     //inicio la transaccion con posibles commit o rollBack
@@ -190,6 +177,7 @@ class UserController extends Controller
       $nombreUser = strtolower(trim($validated['name']));
       $existe = User::whereRaw('LOWER(TRIM(name)) = ?',[$nombreUser])
                   ->where('id', '!=', $user->id)
+                  ->where('inhabilitado', 0)
                   ->exists();
       if($existe){
         return inertia('users/index',[
@@ -227,7 +215,55 @@ class UserController extends Controller
   }
 
   public function toggleEstado(User $user){
-    $user->update([
+    DB::beginTransaction();
+    try {
+      $nuevoEstado = !$user->inhabilitado;
+
+      if ($nuevoEstado === false) {
+        // si lo vas a habilitar, controlar duplicados
+        $nombreUser = strtolower(trim($user->name));
+        $existe = User::whereRaw('LOWER(TRIM(name)) = ?',[$nombreUser])
+                  ->where('id', '!=', $user->id)
+                  ->where('inhabilitado', 0)
+                  ->exists();
+
+        if ($existe) {
+          $user->update([
+            'name'         => $user->name.'-copia',
+            'email'        => $user->email.' - copia',
+            'inhabilitado' => $nuevoEstado,
+            'updated_at'   => now(),
+          ]);
+        } else {
+          $user->update([
+            'inhabilitado' => $nuevoEstado,
+            'updated_at'   => now(),
+          ]);
+        }
+      } else {
+        // si lo vas a deshabilitar, no hace falta controlar duplicados
+        $user->update([
+          'inhabilitado' => $nuevoEstado,
+          'updated_at'   => now(),
+        ]);
+      }
+      //éxito
+      DB::commit();
+      return inertia('clientes/index',[
+        'resultado'  => 1,
+        'mensaje'    => 'Se modificó el estado correctamente',
+        'id'         => $user->id,
+        'timestamp'  => now()->timestamp
+      ]);
+    } catch (\Throwable $e) {
+      DB::rollBack();
+      return inertia('clientes/index',[
+        'resultado' => 0,
+        'mensaje'   => 'Ocurrió un error al intentar actualizar estado del usuario: '.$e->getMessage(),
+        'timestamp' => now()->timestamp
+      ]);
+    }
+    /*$user->update([
       'inhabilitado' => !$user->inhabilitado,
     ]);
     return inertia('users/index',[
@@ -235,29 +271,6 @@ class UserController extends Controller
         'resultado'  => 1,
         'mensaje'		 => 'Estado actualizado correctamente.',
         'timestamp' => now()->timestamp
-      ]);
-  }
-
-  /**
-   * Display the specified resource.
-   */
-  public function show(string $id)
-  {
-    //
-  }
-
-  /**
-   * Show the form for editing the specified resource.
-   */
-  public function edit(string $id)
-  {
-    //
-  }
-  /**
-   * Remove the specified resource from storage.
-   */
-  public function destroy(string $id)
-  {
-    //
+      ]);*/
   }
 }

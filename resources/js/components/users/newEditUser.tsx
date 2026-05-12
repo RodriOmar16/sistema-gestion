@@ -23,7 +23,6 @@ interface Props{
   mode: 'create' | 'edit';
   user?: User;
   onSubmit: (data:any) => void;
-  loading: boolean;
   permiso: boolean;
 }
 
@@ -32,15 +31,23 @@ const userVacio = {
   name: '',
   email: '',
   inhabilitado: false,
-}
+};
 
-export default function NewEditUser({ open, onOpenChange, mode, user, onSubmit, loading, permiso }: Props){
+const requeridosReset = {
+  name:  false,
+  email: false,
+  roles: false
+};
+
+export default function NewEditUser({ open, onOpenChange, mode, user, onSubmit, permiso }: Props){
   //data
-  const [activo, setActivo] = useState(false);
-  const [text, setText]     = useState('');
-  const [title, setTitle]   = useState('');
-
   const { data, setData, get, processing, errors } = useForm<User>(userVacio);
+
+  const [requeridos, setRequeridos] = useState<{
+    name:  boolean,
+    email: boolean,
+    roles: boolean
+  }>(requeridosReset); 
 
   const [roles, setRoles] = useState<Multiple[]>([]);
   const [selectedRoles, setSelectedRoles] = useState<Multiple[]>([]);
@@ -54,45 +61,47 @@ export default function NewEditUser({ open, onOpenChange, mode, user, onSubmit, 
       setRoles(ordenarPorTexto(data, 'nombre'));
     });
   }, []);
- /* useEffect(() => {
-    if (!open && mode === 'create') {
-      setData(userVacio);
-      setSelectedRoles([]);
-    }
-  }, [open, mode]);*/
-
   useEffect(() => {
     if(!open){
+      setRequeridos(requeridosReset);
       setData(userVacio);
       setSelectedRoles([]);
-    }else{
-      if (user && mode === 'edit') {
-        setData({
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          inhabilitado: user.inhabilitado,
-        });
+    }   
+  }, [open]);
 
-        // Consulta de menús y rutas asignados al rol
-        fetch(`/user/${user.id}/roles_user`)
-          .then(res => res.json())
-          .then(({ roles_asignados }) => {
-            if(roles_asignados && roles_asignados.length == 0){
-              // Asegurarse que vengan en formato Multiple[]
-              setSelectedRoles([]);
-            }else{
-              setSelectedRoles(ordenarPorTexto(roles_asignados, 'nombre'));
-            }
-          });
-      }
+  useEffect(() => {
+    if(!open && mode === 'create'){
+      setData(userVacio);
+      setSelectedRoles([]);
+    }else if (user && mode === 'edit') {
+      setData({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        inhabilitado: user.inhabilitado,
+      });
+
+      // Consulta de menús y rutas asignados al rol
+      fetch(`/user/${user.id}/roles_user`)
+        .then(res => res.json())
+        .then(({ roles_asignados }) => {
+        if(roles_asignados && roles_asignados.length == 0){
+          // Asegurarse que vengan en formato Multiple[]
+          setSelectedRoles([]);
+        }else{
+          setSelectedRoles(ordenarPorTexto(roles_asignados, 'nombre'));
+        }
+      });
+    }else{
+      setData(userVacio);
+      setSelectedRoles([]);
     }
   }, [open, user, mode]);
 
   //funciones
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if(!data.name){
+    /*if(!data.name){
       setTitle('¡Campo faltante!');
       setText('Se requiere que ingreses un nombre válido');
       setActivo(true);
@@ -103,6 +112,17 @@ export default function NewEditUser({ open, onOpenChange, mode, user, onSubmit, 
       setText('Se requiere que seleccione al menos un rol');
       setActivo(true);
       return 
+    }*/
+    const nuevosErrores = {
+      name:  !data.name,
+      email: !data.email,
+      roles: selectedRoles.length == 0
+    };
+    setRequeridos(nuevosErrores);
+    const hayErrores = Object.values(nuevosErrores).some(e => e);
+
+    if (hayErrores) {
+      return;
     }
     onSubmit({
       ...data,
@@ -114,7 +134,7 @@ export default function NewEditUser({ open, onOpenChange, mode, user, onSubmit, 
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[95vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{mode === 'create' ? 'Nuevo Usuario' : 'Editar Usuario'}</DialogTitle>
+          <DialogTitle>{mode === 'create' ? 'Nuevo' : 'Editar'} usuario</DialogTitle>
           <DialogDescription>
             { mode === 'create' ? 'Completa los campos para crear un usuario' : 
                                   `Editando usuario: ${user?.id}` }
@@ -139,17 +159,25 @@ export default function NewEditUser({ open, onOpenChange, mode, user, onSubmit, 
             <label htmlFor="nombre">Nombre</label>
             <Input
               value={data.name}
-              onChange={(e) => setData({ ...data, name: e.target.value })}
               placeholder="Ingresar nombre"
+              onChange={(e) => {
+                setData({ ...data, name: e.target.value });
+                if(e.target.value){ requeridos.name = false; }
+              }}
             />
+            { requeridos.name && (<p className="mt-1 text-sm text-red-600 font-medium">⚠️Campo requerido</p>)}
           </div>
           <div className="col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12">
             <label htmlFor="email">Email</label>
             <Input
               value={data.email}
-              onChange={(e) => setData({ ...data, email: e.target.value })}
               placeholder="Ingresar email"
+              onChange={(e) => {
+                setData({ ...data, email: e.target.value });
+                if(e.target.value){ requeridos.email = false; }
+              }}
             />
+            { requeridos.email && (<p className="mt-1 text-sm text-red-600 font-medium">⚠️Campo requerido</p>)}
           </div>
           <div className="col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-6 flex flex-col">
             <label htmlFor="inhabilitado" className='mr-2'>Inhabilitado</label>
@@ -162,6 +190,7 @@ export default function NewEditUser({ open, onOpenChange, mode, user, onSubmit, 
               seleccionados={selectedRoles} 
               setSeleccionados={setSelectedRoles}
             />
+            { requeridos.roles && (<p className="mt-1 text-sm text-red-600 font-medium">⚠️Campo requerido</p>)}
           </div>
         </form>
         {permiso && (
@@ -180,13 +209,6 @@ export default function NewEditUser({ open, onOpenChange, mode, user, onSubmit, 
           </DialogFooter>
         )}
       </DialogContent>
-      <ShowMessage 
-        open={activo}
-        title={title}
-        text={text}
-        color="warning"
-        onClose={() => setActivo(false)}
-      />
     </Dialog>
   );
 }

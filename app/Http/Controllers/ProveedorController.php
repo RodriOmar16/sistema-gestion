@@ -75,11 +75,11 @@ class ProveedorController extends Controller
       $query->where('inhabilitado', 0);
     }
 
-    if(!$request->filled('proveedor_id') && !$request->filled('nombre') && !$request->filled('descripcion') &&
+    /*if(!$request->filled('proveedor_id') && !$request->filled('nombre') && !$request->filled('descripcion') &&
         !$request->filled('razon_social') && !$request->filled('cuit') && !$request->filled('nro_telefono') &&
         !$request->filled('inhabilitado')){
       $query = Proveedor::query();
-    }
+    }*/
 
     //$proveedores = $query->latest()->get();
 
@@ -112,6 +112,7 @@ class ProveedorController extends Controller
       $existe = Proveedor::whereRaw('LOWER(TRIM(nombre)) = ?', [$nombre])
                 ->whereRaw('LOWER(TRIM(razon_social)) = ?', [$razonSocial])
                 ->whereRaw('cuit = ?', [str_replace('-', '', $cuit)])
+                ->where('inhabilitado', 0)
                 ->exists();
       if($existe){
         return inertia('proveedores/index',[
@@ -135,7 +136,7 @@ class ProveedorController extends Controller
         'resultado'    => 1,
         'mensaje'      => 'El proveedor fue creado correctamente.',
         'proveedor_id' => $proveedor->proveedor_id,
-        'timestamp' => now()->timestamp
+        'timestamp'    => now()->timestamp
       ]);
     } catch (\Throwable $e) {
       DB::rollBack();
@@ -168,6 +169,7 @@ class ProveedorController extends Controller
                 ->whereRaw('LOWER(TRIM(razon_social)) = ?', [$razonSocial])
                 ->whereRaw('cuit = ?', [str_replace('-', '', $cuit)])
                 ->where('proveedor_id','!=',$proveedor->proveedor_id)
+                ->where('inhabilitado', 0)
                 ->exists();
       if($existe){
         return inertia('proveedores/index',[
@@ -204,45 +206,65 @@ class ProveedorController extends Controller
   }
 
   public function toggleEstado(Proveedor $proveedor){
-    $proveedor->update(['inhabilitado' => !$proveedor->inhabilitado]);
+    DB::beginTransaction();
+    try {
+      $nuevoEstado = !$proveedor->inhabilitado;
+
+      if ($nuevoEstado === false) {
+        // si lo vas a habilitar, controlar duplicados
+        $nombre      = strtolower(trim($proveedor->nombre));
+        $razonSocial = strtolower(trim($proveedor->razon_social));
+        $cuit        = strtolower(trim($proveedor->cuit));
+        $existe = Proveedor::whereRaw('LOWER(TRIM(nombre)) = ?', [$nombre])
+                  ->whereRaw('LOWER(TRIM(razon_social)) = ?', [$razonSocial])
+                  ->whereRaw('cuit = ?', [str_replace('-', '', $cuit)])
+                  ->where('proveedor_id','!=',$proveedor->proveedor_id)
+                  ->exists();
+
+        if ($existe) {
+          $proveedor->update([
+            'nombre'       => $proveedor->nombre.'-copia',
+            'razon_social' => $proveedor->razon_social.' - copia',
+            'inhabilitado' => $nuevoEstado,
+            'updated_at'   => now(),
+          ]);
+        } else {
+          $proveedor->update([
+            'inhabilitado' => $nuevoEstado,
+            'updated_at'   => now(),
+          ]);
+        }
+      } else {
+        // si lo vas a deshabilitar, no hace falta controlar duplicados
+        $proveedor->update([
+          'inhabilitado' => $nuevoEstado,
+          'updated_at'   => now(),
+        ]);
+      }
+      //éxito
+      DB::commit();
+      return inertia('proveedores/index',[
+        'resultado'    => 1,
+        'mensaje'      => 'Se modificó el estado correctamente',
+        'proveedor_id' => $proveedor->proveedor_id,
+        'timestamp'    => now()->timestamp
+      ]);
+    } catch (\Throwable $e) {
+      DB::rollBack();
+      return inertia('proveedores/index',[
+        'resultado' => 0,
+        'mensaje'   => 'Ocurrió un error al intentar actualizar estado del proveedor: '.$e->getMessage(),
+        'timestamp' => now()->timestamp
+      ]);
+    }
+
+    /*$proveedor->update(['inhabilitado' => !$proveedor->inhabilitado]);
     return inertia('proveedores/index',[
       'resultado'    => 1,
       'mensaje'      => 'Estado actualizado correctamente',
       'proveedor_id' => $proveedor->proveedor_id,
       'timestamp'    => now()->timestamp
-    ]);
+    ]);*/
   }
 
-  /**
-   * Show the form for creating a new resource.
-   */
-  public function create()
-  {
-      //
-  }
-  
-  /**
-   * Display the specified resource.
-   */
-  public function show(Proveedor $proveedor)
-  {
-      //
-  }
-
-  /**
-   * Show the form for editing the specified resource.
-   */
-  public function edit(Proveedor $proveedor)
-  {
-      //
-  }
-
-
-  /**
-   * Remove the specified resource from storage.
-   */
-  public function destroy(Proveedor $proveedor)
-  {
-      //
-  }
 }

@@ -32,23 +32,39 @@ const proveedorVacio = {
   inhabilitado: false,
 }
 
+const requeridosReset = {
+  proveedor_id: false,
+  nombre:       false,
+  descripcion:  false,
+  razon_social: false,
+  cuit:         false,
+  nro_telefono: false,
+}
+
 export default function NewEditProveedor({ open, onOpenChange, mode, proveedor, onSubmit, loading }: Props){
   //data
-  const [activo, setActivo] = useState(false);
-  const [text, setText]     = useState('');
-  const [title, setTitle]   = useState('');
-
   const { data, setData, get, processing, errors } = useForm<Proveedor>(proveedorVacio);
+
+  const [requeridos, setRequeridos] = useState<{
+    proveedor_id: boolean,
+    nombre:       boolean,
+    descripcion:  boolean,
+    razon_social: boolean,
+    cuit:         boolean,
+    nro_telefono: boolean,
+  }>(requeridosReset);
 
   //useEffect
   useEffect(() => {
-    if (!open && mode === 'create') {
-      setData(proveedorVacio);
+    if (!open) {
+      setRequeridos(requeridosReset);
     }
-  }, [open, mode]);
+  }, [open]);
 
   useEffect(() => {
-    if (proveedor && mode === 'edit') {
+    if(mode === 'create' && !open){
+      setData(proveedorVacio);
+    }else if (proveedor && mode === 'edit') {
       setData({
         proveedor_id: proveedor.proveedor_id,
         nombre:       proveedor.nombre,
@@ -61,12 +77,12 @@ export default function NewEditProveedor({ open, onOpenChange, mode, proveedor, 
     } else {
       setData(proveedorVacio);
     }
-  }, [proveedor, mode]);
+  }, [proveedor, mode, open]);
 
   //funciones
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if(!data.nombre){
+    /*if(!data.nombre){
       setTitle('¡Campo faltante!');
       setText('Se requiere que ingreses un nombre válido');
       setActivo(true);
@@ -83,12 +99,28 @@ export default function NewEditProveedor({ open, onOpenChange, mode, proveedor, 
       setText('Se requiere que ingreses un cuit');
       setActivo(true);
       return 
+    }*/
+    const nuevosErrores = {
+      proveedor_id: false,
+      nombre:       !data.nombre,
+      descripcion:  false,
+      razon_social: !data.razon_social,
+      cuit:         !data.cuit,
+      nro_telefono: false,
+    };
+    setRequeridos(nuevosErrores);
+    const hayErrores = Object.values(nuevosErrores).some(e => e);
+
+    if (hayErrores) {
+      return;
     }
+
     data.cuit = Number(data.cuit);
     onSubmit(data);
   }
   const guardarCuit = (nro:number|string) => {
     setData({...data, cuit: nro});
+    if(nro){ requeridos.cuit = false; }
   }
 
   return (
@@ -120,32 +152,34 @@ export default function NewEditProveedor({ open, onOpenChange, mode, proveedor, 
             <label htmlFor="nombre">Nombre</label>
             <Input
               value={data.nombre}
-              onChange={(e) => setData({ ...data, nombre: e.target.value })}
               placeholder="Ingresar nombre"
+              onChange={(e) => {
+                setData({ ...data, nombre: e.target.value });
+                if(e.target.value){ requeridos.nombre = false; }
+              }}
             />
-          </div>
-          <div className="col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12">
-            <label htmlFor="descripcion">Descripción</label>
-            <Textarea 
-              value={data.descripcion} 
-              onChange={(e) => setData({ ...data, descripcion: e.target.value })}
-              placeholder="Ingresar una descripción" />
+            { requeridos.nombre && (<p className="mt-1 text-sm text-red-600 font-medium">⚠️Campo requerido</p>)}
           </div>
           <div className="col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12">
             <label htmlFor="razonSocial">Razón social</label>
             <Input
               value={data.razon_social}
-              onChange={(e) => setData({ ...data, razon_social: e.target.value })}
               placeholder="Ingresar razón social"
+              onChange={(e) => {
+                setData({ ...data, razon_social: e.target.value });
+                if(e.target.value){ requeridos.razon_social = false }
+              }}
             />
+            { requeridos.razon_social && (<p className="mt-1 text-sm text-red-600 font-medium">⚠️Campo requerido</p>)}
           </div>
           <div className="col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12">
             <label htmlFor="cuit">Cuit</label>
             <InputCuil 
               data={String(data.cuit)}
-              setData={guardarCuit}
               placeholder='Ingresar cuit'
+              setData={guardarCuit}
             />
+            { requeridos.cuit && (<p className="mt-1 text-sm text-red-600 font-medium">⚠️Campo requerido</p>)}
           </div>
           <div className="col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12">
             <label htmlFor="razonSocial">Nro. de Teléfono</label>
@@ -154,6 +188,13 @@ export default function NewEditProveedor({ open, onOpenChange, mode, proveedor, 
               onChange={(e) => setData({ ...data, nro_telefono: e.target.value })}
               placeholder="Ingresar nro. de teléfono"
             />
+          </div>
+          <div className="col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12">
+            <label htmlFor="descripcion">Descripción</label>
+            <Textarea 
+              value={data.descripcion} 
+              onChange={(e) => setData({ ...data, descripcion: e.target.value })}
+              placeholder="Ingresar una descripción" />
           </div>
           <div className="col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12 flex flex-col">
             <label htmlFor="inhabilitado" className='mr-2'>Inhabilitado</label>
@@ -174,13 +215,6 @@ export default function NewEditProveedor({ open, onOpenChange, mode, proveedor, 
           </Button>
         </DialogFooter>
       </DialogContent>
-      <ShowMessage 
-        open={activo}
-        title={title}
-        text={text}
-        color="warning"
-        onClose={() => setActivo(false)}
-      />
     </Dialog>
   );
 }

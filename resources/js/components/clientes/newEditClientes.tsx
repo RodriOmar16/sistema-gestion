@@ -77,7 +77,7 @@ export default function NewEditClientes({ open, onOpenChange, mode, cliente, onS
     if (!open) {
       setRequeridos(requeridosReset);
     }
-  }, [open, mode]);
+  }, [open]);
 
   //funciones
   const handleSubmit = (e: React.FormEvent) => {

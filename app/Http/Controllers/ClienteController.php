@@ -57,7 +57,6 @@ class ClienteController extends Controller
     }
   }
 
-
   public function clientesPorDni(Request $request){
     $cliente = Cliente::where('inhabilitado', false)->where('dni',$request->dni)->get();
     return response()->json($cliente);

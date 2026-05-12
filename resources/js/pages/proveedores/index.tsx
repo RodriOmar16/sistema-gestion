@@ -15,12 +15,14 @@ import ShowMessage from '@/components/utils/showMessage';
 import { Select,  SelectContent,  SelectItem,  SelectTrigger,  SelectValue } from "@/components/ui/select"
 import { route } from 'ziggy-js';
 import InputCuil from '@/components/utils/input-cuil';
+import Loading from '@/components/utils/loadingDialog';
 
 const breadcrumbs: BreadcrumbItem[] = [ { title: 'Proveedores', href: '', } ];
 
 type propsForm = {
+  data: Proveedor;
+  set: (e:any) => void;
   openCreate: () => void;
-  resetearProveedor: (data:Proveedor[]) => void;
 }
 
 const proveedorVacio = {
@@ -33,26 +35,25 @@ const proveedorVacio = {
   inhabilitado: false,
 }
 
-export function FiltrosForm({ openCreate, resetearProveedor }: propsForm){
-  const [esperandoRespuesta, setEsperandoRespuesta] = useState(false);
-  const { data, setData, errors, processing } = useForm<Proveedor>(proveedorVacio);
+export function FiltrosForm({ data, set, openCreate }: propsForm){
+  const [processing, setProcessing] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    resetearProveedor([]);
+    setProcessing(true);
     const payload = {      ...data, buscar: true    }
     router.get(route('proveedores.index'), payload, {
       preserveState: true,
       preserveScroll: true,
-      onFinish: () => setEsperandoRespuesta(false),
+      onFinish: () => { setProcessing(false); }
     });
   };
   const handleReset = () => {
-    setData(proveedorVacio);
+    set(proveedorVacio);
   };
 
   const controlarCuit = (nro:number|string) => {
-    setData('cuit', Number(nro));
+    set({...data, 'cuit': Number(nro)});
   }
 
   return (
@@ -73,23 +74,19 @@ export function FiltrosForm({ openCreate, resetearProveedor }: propsForm){
       <form className='grid grid-cols-12 gap-4 px-4 pt-1 pb-4' onSubmit={handleSubmit}>
         <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-2'>
           <label htmlFor="id">Id</label>
-          <Input value={data.proveedor_id} onChange={(e)=>setData('proveedor_id',e.target.value)}/>	
-          { errors.proveedor_id && <p className='text-red-500	'>{ errors.proveedor_id }</p> }
+          <Input value={data.proveedor_id} onChange={(e)=>set({...data, 'proveedor_id': e.target.value})}/>	
         </div>
         <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
           <label htmlFor="nombre">Nombre</label>
-          <Input value={data.nombre} onChange={(e)=>setData('nombre',e.target.value)}/>	
-          { errors.nombre && <p className='text-red-500	'>{ errors.nombre }</p> }
+          <Input value={data.nombre} onChange={(e)=>set({...data, 'nombre': e.target.value})}/>	
         </div>
         <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-4'>
           <label htmlFor="descripcion">Descripcion</label>
-          <Input value={data.descripcion} onChange={(e)=>setData('descripcion',e.target.value)}/>	
-          { errors.descripcion && <p className='text-red-500	'>{ errors.descripcion }</p> }
+          <Input value={data.descripcion} onChange={(e)=>set({...data, 'descripcion': e.target.value})}/>	
         </div>
         <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
           <label htmlFor="razonSocial">Razón social</label>
-          <Input value={data.razon_social} onChange={(e)=>setData('razon_social',e.target.value)}/>	
-          { errors.razon_social && <p className='text-red-500	'>{ errors.razon_social }</p> }
+          <Input value={data.razon_social} onChange={(e)=>set({...data, 'razon_social': e.target.value})}/>	
         </div>
         <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
           <label htmlFor="cuit">Cuit</label>
@@ -98,16 +95,14 @@ export function FiltrosForm({ openCreate, resetearProveedor }: propsForm){
             setData={controlarCuit}
             placeholder=''
           />
-          { errors.cuit && <p className='text-red-500	'>{ errors.cuit }</p> }
         </div>
         <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
           <label htmlFor="nroTel">Nro. Teléfono</label>
-          <Input value={data.nro_telefono} onChange={(e)=>setData('nro_telefono',e.target.value)}/>	
-          { errors.nro_telefono && <p className='text-red-500	'>{ errors.nro_telefono }</p> }
+          <Input value={data.nro_telefono} onChange={(e)=>set({...data, 'nro_telefono': e.target.value})}/>	
         </div>
         <div className='col-span-6 sm:col-span-4 md:col-span-4 lg:col-span-2 flex flex-col'>
           <label className='mr-2'>Inhabilitado</label>
-          <Switch checked={data.inhabilitado==0 ? false: true} onCheckedChange={(val) => setData('inhabilitado', val)} />
+          <Switch checked={data.inhabilitado==0 ? false: true} onCheckedChange={(val) => set({...data, 'inhabilitado': val})} />
         </div>
         <div className='col-span-6 sm:col-span-8 md:col-span-8 lg:col-span-4 flex justify-end items-center'>
           <Button 
@@ -136,6 +131,8 @@ export function FiltrosForm({ openCreate, resetearProveedor }: propsForm){
 
 export default function Proveedores(){
   //data
+  const { data, setData, errors, processing } = useForm<Proveedor>(proveedorVacio);
+
   const [confirmOpen, setConfirOpen] = useState(false); //modal para confirmar acciones para cuado se crea o edita
   const [textConfir, setTextConfirm] = useState('');
   
@@ -165,18 +162,7 @@ export default function Proveedores(){
       prev_page_url: string,
     }
   };
-  const { resultado, mensaje, proveedor_id, timestamp} = usePage().props as {
-    resultado?: number;
-    mensaje?: string;
-    proveedor_id?: number;
-    timestamp?: number;
-  };
-  /*const [propsActuales, setPropsActuales] = useState<{
-    resultado: number | undefined | null;
-    mensaje: string | undefined | null | '';
-    proveedor_id: number | undefined | null;
-  }>({ resultado: undefined, mensaje: undefined, proveedor_id: undefined });*/
-  const [ultimoTimestamp, setUltimoTimestamp] = useState<number | null>(null);
+
   const [cacheados, setCacheados] = useState<Proveedor[]>([]);
 
   //funciones
@@ -192,7 +178,7 @@ export default function Proveedores(){
   const inhabilitarHabilitar = () => {
     if (!proveedorCopia || !proveedorCopia.proveedor_id) return;
     setLoading(true);
-    router.put(
+    /*router.put(
       route('proveedores.toggleEstado', { proveedor: proveedorCopia.proveedor_id }),{},
       {
         preserveScroll: true,
@@ -202,6 +188,51 @@ export default function Proveedores(){
           setTextConfirmar('');
           setConfirmar(false);
           setProveedorCopia(proveedorVacio);
+        }
+      }
+    );*/
+    router.put(
+      route('proveedores.toggleEstado', { proveedor: proveedorCopia.proveedor_id }),{},
+      {
+        preserveScroll: true,
+        preserveState: true,
+        onError: (errors) => {
+          // errors es un objeto { campo: "mensaje de error" }
+          setTitle("Error en cambio de estado");
+          setText(Object.values(errors).join("\n"));
+          setColor("error");
+          setActivo(true);
+        },
+        onSuccess: (page) => {
+          const { resultado, mensaje, proveedor_id } = page.props;
+          
+          if(resultado === 0){
+            setTitle("Error inesperado");
+            setText(`${mensaje} ❌ (ID: ${proveedor_id})`);
+            setColor("error");
+            setActivo(true);
+          }
+
+          setTitle("Proveedor actualizado");
+          setText(`${mensaje} ✅ (ID: ${proveedor_id})`);
+          setColor("success");
+          setActivo(true);
+        },
+        onFinish: () => {
+          setLoading(false);
+          setTextConfirmar('');
+          setConfirmar(false);
+          setProveedorCopia(proveedorVacio);
+  
+          //al momento de buscar
+          setData(proveedorVacio);
+          router.get(
+            route('proveedores.index'), 
+            {}, {
+              preserveScroll: true,
+              preserveState: true,
+            }
+          );
         }
       }
     );
@@ -230,11 +261,47 @@ export default function Proveedores(){
     setConfirOpen(true);
   };
 
+  const manejarError = (titulo: string) => (errors: any) => {
+    console.log("Errores:", errors);
+    setTitle(titulo);
+    setText(Object.values(errors).join("\n"));
+    setColor("error");
+    setActivo(true);
+  };
+  const manejarExito = (titulo: string) => (page: any) => {
+    const { resultado, mensaje, proveedor_id } = page.props;
+    const title = resultado === 0 ? 'Error inesperado': titulo ;
+
+    if(resultado === 0){
+      setTitle(title);
+      setText(mensaje);
+      setColor("error");
+      setActivo(true);
+      return;
+    }
+
+    setTitle(title);
+    setText(`${mensaje} ✅ (ID: ${proveedor_id})`);
+    setColor("success");
+    setActivo(true);
+
+    setModalOpen(false);
+  };
+  const finalizarAccion = () => {
+    setLoading(false);
+    setPendingData(proveedorVacio);
+    setData(proveedorVacio);
+    router.get(route("proveedores.index"), {}, {
+      preserveScroll: true,
+      preserveState: true,
+    });
+  };
+
   const accionar = () => {
     if (!pendingData) return;
     setLoading(true);
 
-    const payload = JSON.parse(JSON.stringify(pendingData));
+    /*const payload = JSON.parse(JSON.stringify(pendingData));
 
     if (modalMode === 'create') {
       router.post(
@@ -262,8 +329,29 @@ export default function Proveedores(){
           }
         }
       );
-    }
+    }*/
+    const payload = { ...pendingData };
+
+		if (modalMode === 'create') {
+			router.post(route('proveedores.store'), payload, {
+				preserveScroll: true,
+				preserveState: true,
+				onError:   manejarError("Error al crear el proveedor"),
+				onSuccess: manejarExito("Proveedor creado"),
+				onFinish:  finalizarAccion,
+			});
+		} else {
+			router.put(route('proveedores.update',{proveedor: pendingData.proveedor_id}), payload, {
+				preserveScroll: true,
+				preserveState: true,
+				onError:   manejarError("Error al modificar el proveedor"),
+				onSuccess: manejarExito("Proveedor actualizado"),
+				onFinish:  finalizarAccion,
+			});
+		}
+    setTextConfirm('');
     setConfirOpen(false);
+
   };
 
   const cancelarConfirmacion = () => {
@@ -279,35 +367,16 @@ export default function Proveedores(){
     }
   }, [proveedores]);
 
-
-  useEffect(() => {
-    const cambioDetectado = timestamp && timestamp !== ultimoTimestamp;
-
-    if (cambioDetectado) {
-      setUltimoTimestamp(timestamp)
-
-      const esError = resultado === 0;
-      setTitle(esError ? 'Error' : modalMode === 'create' ? 'Proveedor nuevo' : 'Proveedor modificado');
-      setText(esError ? mensaje ?? 'Error inesperado' : `${mensaje} (ID: ${proveedor_id})`);
-      setColor(esError ? 'error' : 'success');
-      setActivo(true);
-
-      if (resultado === 1 && proveedor_id) {
-        setModalOpen(false);
-        router.get(route('proveedores.index'),
-          { proveedor_id, buscar: true },
-          { preserveScroll: true,	preserveState: true	}
-        )
-      }
-    }
-  }, [timestamp, ultimoTimestamp, resultado, mensaje, proveedor_id, modalMode]);
-
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Proveedores" />
       <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
         <div className="relative flex-none flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
-          <FiltrosForm openCreate={openCreate} resetearProveedor={setCacheados}/>
+          <FiltrosForm 
+            data={data}
+            set={setData}
+            openCreate={openCreate} 
+          />
         </div>
         <div className="p-4 relative flex-1 overflow-auto rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
           <DataTableProveedores
@@ -348,6 +417,10 @@ export default function Proveedores(){
         text={text}
         color={color}
         onClose={() => setActivo(false)}
+      />
+      <Loading
+        open={loading}
+        onClose={() => {}}
       />
     </AppLayout>
   );

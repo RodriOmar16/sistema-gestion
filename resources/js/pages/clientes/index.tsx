@@ -281,43 +281,14 @@ export default function Clientes(){
     if (!pendingData) return;
     setLoading(true);
 
-    /*const payload = JSON.parse(JSON.stringify(pendingData));
-    
-    if (modalMode === 'create') {
-      router.post(
-        route('clientes.store'), payload,
-        {
-          preserveScroll: true,
-          preserveState: true,
-          onFinish: () => {
-            setLoading(false);
-            setTextConfirmar('');
-            setConfirmar(false);
-            setClienteCopia(clienteVacio);
-          }
-        }
-      );
-    } else {
-      router.put(
-        route('clientes.update',{cliente: pendingData.cliente_id}), payload,
-        {
-          preserveScroll: true,
-          preserveState: true,
-          onFinish: () => {
-            setLoading(false);
-            setPendingData(undefined);
-          }
-        }
-      );
-    }*/
-   const payload = { ...pendingData };
+    const payload = { ...pendingData };
 
 		if (modalMode === 'create') {
 			router.post(route('clientes.store'), payload, {
 				preserveScroll: true,
 				preserveState: true,
 				onError:   manejarError("Error al crear el cliente"),
-				onSuccess: manejarExito("Cliente creada"),
+				onSuccess: manejarExito("Cliente creado"),
 				onFinish:  finalizarAccion,
 			});
 		} else {

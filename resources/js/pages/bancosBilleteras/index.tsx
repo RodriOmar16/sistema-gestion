@@ -178,11 +178,18 @@ export default function BancosBilleteras(){
           setActivo(true);
         },
         onSuccess: (page) => {
-          const id = page.props.banco_billetera_id;
-          const msj = page.props.mensaje;
+          const { resultado, mensaje, banco_billetera_id } = page.props;
           
+          if(resultado === 0){
+            setTitle("Error inesperado");
+            setText(`${mensaje} ❌ (ID: ${banco_billetera_id})`);
+            setColor("success");
+            setActivo(true);
+            return
+          }
+
           setTitle("Estado de Banco/Billetera cambiado");
-          setText(`${msj} ✅ (ID: ${id})`);
+          setText(`${mensaje} ✅ (ID: ${banco_billetera_id})`);
           setColor("success");
           setActivo(true);
         },
@@ -230,6 +237,45 @@ export default function BancosBilleteras(){
     setOpenConfirmar(true);
   };
 
+  const manejarError = (titulo: string) => (errors: any) => {
+    console.log("Errores:", errors);
+    setTitle(titulo);
+    setText(Object.values(errors).join("\n"));
+    setColor("error");
+    setActivo(true);
+  };
+  const manejarExito = (titulo: string) => (page: any) => {
+    const { resultado, mensaje, banco_billetera_id } = page.props;
+    const title = resultado === 0 ? 'Error inesperado': titulo ;
+
+    if(resultado === 0){
+      setTitle(title);
+      setText(mensaje);
+      setColor("error");
+      setActivo(true);
+      return;
+    }
+
+    setTitle(title);
+    setText(`${mensaje} ✅ (ID: ${banco_billetera_id})`);
+    setColor("success");
+    setActivo(true);
+
+    //cierro modal
+    setModalOpen(false);
+  };
+  const finalizarAccion = () => {
+    setLoading(false);
+    setPendingData(bancoBilleteraVacio);
+
+    setData(bancoBilleteraVacio);
+    router.get(route("bancosBilleteras.index"), {}, {
+      preserveScroll: true,
+      preserveState: true,
+    });
+  };
+
+
   const accionar = async () => {
     if (!pendingData) return;
 
@@ -244,37 +290,9 @@ export default function BancosBilleteras(){
         {
           preserveScroll: true,
           preserveState: true,
-          onError: (errors) => {
-            // errors es un objeto { campo: "mensaje de error" }
-            console.log("Errores:", errors);
-            setTitle("Error en carga del banco/billetera");
-            setText(Object.values(errors).join("\n"));
-            setColor("error");
-            setActivo(true);
-          },
-          onSuccess: (page) => {
-            const id = page.props.banco_billetera_id;
-            
-            setTitle("Banco/billetera creada");
-            setText(`El banco/billetera se creó correctamente ✅ (ID: ${id})`);
-            setColor("success");
-            setActivo(true);
-          },
-          onFinish: () => {
-            //apago el loading
-            setLoading(false);
-            //reseteo la variable
-            setPendingData(bancoBilleteraVacio);
-            //al momento de buscar
-            setData(bancoBilleteraVacio);
-            router.get(
-              route('bancosBilleteras.index'), 
-              {}, {
-                preserveScroll: true,
-                preserveState: true,
-              }
-            );
-          }
+          onError:   manejarError("Error al crear banco/billetera"),
+          onSuccess: manejarExito("Banco/Billetera creada"),
+          onFinish:  finalizarAccion,
         }
       );
     } else {
@@ -284,45 +302,16 @@ export default function BancosBilleteras(){
         {
           preserveScroll: true,
           preserveState: true,
-          onError: (errors) => {
-            // errors es un objeto { campo: "mensaje de error" }
-            console.log("Errores:", errors);
-            setTitle("Error en modificar el banco/billetera");
-            setText(Object.values(errors).join("\n"));
-            setColor("error");
-            setActivo(true);
-          },
-          onSuccess: (page) => {
-            const id = page.props.banco_billetera_id;
-            
-            setTitle("Banco/Billetera actualizada");
-            setText(`El banco/billetera se modificó correctamente ✅ (ID: ${id})`);
-            setColor("success");
-            setActivo(true);
-          },
-          onFinish: () => {
-            //apago el loading
-            setLoading(false);
-            //reseteo la variable
-            setPendingData(bancoBilleteraVacio);
-            //al momento de buscar
-            setData(bancoBilleteraVacio);
-            router.get(
-              route('bancosBilleteras.index'), 
-              {}, {
-                preserveScroll: true,
-                preserveState: true,
-              }
-            );
-          }
+          onError:   manejarError("Error al modificar banco/billetera"),
+          onSuccess: manejarExito("Banco/Billetera modificada"),
+          onFinish:  finalizarAccion,
         }
       );
     }
     //reseteo el modal de confirmar
     setOpenConfirmar(false);
     setTextoConfirmar('');
-    //cierro modal
-    setModalOpen(false);
+    
   };
 
   const cancelarConfirmacion = () => {

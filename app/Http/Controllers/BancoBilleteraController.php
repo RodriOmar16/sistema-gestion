@@ -77,9 +77,15 @@ class BancoBilleteraController extends Controller
       
       //controlo que no se repita
       $nombre = strtolower(trim($validated['nombre']));
-      $existe = BancoBilletera::whereRaw('LOWER(TRIM(nombre)) = ?', [$nombre])->exists();
+      $existe = BancoBilletera::whereRaw('LOWER(TRIM(nombre)) = ?', [$nombre])
+                  ->where('inhabilitado', 0)
+                  ->exists();
       if($existe){
-        throw new \Exception("Ya existe un banco o billetera con el mismo nombre. No es posible continuar!");
+        //throw new \Exception("Ya existe un banco o billetera con el mismo nombre. No es posible continuar!");
+        return inertia('bancosBilleteras/index',[
+          'resultado' => 0,
+          'mensaje'   => "Ya existe un banco o billetera con el mismo nombre. No es posible continuar!"
+        ]);
       }
 
       //creo el gasto
@@ -121,9 +127,13 @@ class BancoBilleteraController extends Controller
       $nombre = strtolower(trim($validated['nombre']));
       $existe = BancoBilletera::whereRaw('LOWER(TRIM(nombre)) = ?', [$nombre])
                 ->where('banco_billetera_id','<>', $bancoBilletera->banco_billetera_id)
+                ->where('inhabilitado',0)
                 ->exists();
       if($existe){
-        throw new \Exception("Ya existe un banco o billetera con el mismo nombre. No es posible continuar!");
+        return inertia('bancosBilleteras/index',[
+          'resultado' => 0,
+          'mensaje'   => "Ya existe un banco o billetera con el mismo nombre. No es posible continuar!"
+        ]);
       }
 
       //modifico el gasto
@@ -153,13 +163,36 @@ class BancoBilleteraController extends Controller
 
   public function toggleEstado(Request $request,BancoBilletera $bancoBilletera){
     DB::beginTransaction();
-    try {      
-      //modifico el gasto
-      $bancoBilletera->update([
-        'inhabilitado' => !$bancoBilletera->inhabilitado,
-        'updated_at'  => now(),
-      ]);
+    try {
+      $nuevoEstado = !$bancoBilletera->inhabilitado;
 
+      if ($nuevoEstado === false) {
+        // si lo vas a habilitar, controlar duplicados
+        $nombre = strtolower(trim($bancoBilletera->nombre));
+        $existe = BancoBilletera::whereRaw('LOWER(TRIM(nombre)) = ?', [$nombre])
+            ->where('banco_billetera_id','!=', $bancoBilletera->banco_billetera_id)
+            ->where('inhabilitado',0)
+            ->exists();
+
+        if ($existe) {
+          $bancoBilletera->update([
+            'nombre'       => $bancoBilletera->nombre.'-copia',
+            'inhabilitado' => $nuevoEstado,
+            'updated_at'   => now(),
+          ]);
+        } else {
+          $bancoBilletera->update([
+            'inhabilitado' => $nuevoEstado,
+            'updated_at'   => now(),
+          ]);
+        }
+      } else {
+        // si lo vas a deshabilitar, no hace falta controlar duplicados
+        $bancoBilletera->update([
+          'inhabilitado' => $nuevoEstado,
+          'updated_at'   => now(),
+        ]);
+      }
       //éxito
       DB::commit();
       return inertia('bancosBilleteras/index',[

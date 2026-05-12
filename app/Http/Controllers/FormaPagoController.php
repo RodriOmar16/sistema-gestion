@@ -83,7 +83,10 @@ class FormaPagoController extends Controller
       ]);
       //controlo que no se repita
       $nombre = strtolower(trim($validated['nombre']));
-      $existe = FormaPago::whereRaw('LOWER(TRIM(nombre)) = ?',[$nombre])->exists();
+      $existe = FormaPago::whereRaw('LOWER(TRIM(nombre)) = ?',[$nombre])
+                  ->where('inhabilitada', 0)
+                  ->exists();
+
       if($existe){
         return inertia('formasPago/index',[
           'resultado' => 0,
@@ -129,6 +132,7 @@ class FormaPagoController extends Controller
       $nombre = strtolower(trim($validated['nombre']));
       $existe = FormaPago::whereRaw('LOWER(TRIM(nombre)) = ?',[$nombre])
                 ->where('forma_pago_id', '!=', $fp->forma_pago_id)
+                ->where('inhabilitada', 0)
                 ->exists();
       if($existe){
         return inertia('formasPago/index',[
@@ -164,12 +168,59 @@ class FormaPagoController extends Controller
 
   public function toggleEstado(FormaPago $fp)
   {
-    $fp->update(['inhabilitada' => !$fp->inhabilitada]);
+    DB::beginTransaction();
+    try {
+      $nuevoEstado = !$fp->inhabilitada;
+
+      if ($nuevoEstado === false) {
+        // si lo vas a habilitar, controlar duplicados
+        $nombre = strtolower(trim($validated['nombre']));
+        $existe = FormaPago::whereRaw('LOWER(TRIM(nombre)) = ?',[$nombre])
+                ->where('forma_pago_id', '!=', $fp->forma_pago_id)
+                ->where('inhabilitada', 0)
+                ->exists();
+
+        if ($existe) {
+          $fp->update([
+            'nombre'       => $fp->nombre.'-copia',
+            'inhabilitada' => $nuevoEstado,
+            'updated_at'   => now(),
+          ]);
+        } else {
+          $fp->update([
+            'inhabilitada' => $nuevoEstado,
+            'updated_at'   => now(),
+          ]);
+        }
+      } else {
+        // si lo vas a deshabilitar, no hace falta controlar duplicados
+        $fp->update([
+          'inhabilitada' => $nuevoEstado,
+          'updated_at'   => now(),
+        ]);
+      }
+      //éxito
+      DB::commit();
+      return inertia('formasPago/index',[
+        'resultado'     => 1,
+        'mensaje'       => 'Se modificó el estado correctamente',
+        'forma_pago_id' => $fp->forma_pago_id,
+        'timestamp'     => now()->timestamp
+      ]);
+    } catch (\Throwable $e) {
+      DB::rollBack();
+      return inertia('formasPago/index',[
+        'resultado' => 0,
+        'mensaje'   => 'Ocurrió un error al intentar actualizar estado del banco o billetera: '.$e->getMessage(),
+        'timestamp' => now()->timestamp
+      ]);
+    }
+    /*$fp->update(['inhabilitada' => !$fp->inhabilitada]);
     return inertia('formasPago/index',[
       'mensaje'       => 'Estado modificado exitosamente',
       'resultado'     => 1,
       'forma_pago_id' => $fp->forma_pago_id,
       'timestamp'     => now()->timestamp,
-    ]);
+    ]);*/
   }
 }

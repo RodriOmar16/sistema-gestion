@@ -75,11 +75,14 @@ class CarouselController extends Controller
       $title  = strtolower(trim($validated['title']));
       $orden  = $validated['priority'];
       $existe = Carousel::query()
-                ->where(function($q) use ($url,$orden){
+                ->where('inhabilitado', 0)
+                ->where(function($q) use ($url, $title, $orden) {
                   $q->whereRaw('LOWER(TRIM(url)) = ?', [$url])
+                    ->orWhereRaw('LOWER(TRIM(title)) = ?', [$title])
                     ->orWhere('priority', $orden);
                 })
                 ->exists();
+
       if($existe){
         DB::rollBack();
         return inertia('banners/index',[
@@ -132,11 +135,16 @@ class CarouselController extends Controller
       $url    = strtolower(trim($validated['url']));
       $title  = strtolower(trim($validated['title']));
       $orden  = $validated['priority'];
-      $existe = Carousel::whereRaw('LOWER(TRIM(url)) = ?',[$url])
-                ->whereRaw('LOWER(TRIM(title)) = ?',[$title])
-                ->where('priority', $orden)
-                ->where('id', '!=', $carousel->id)
-                ->exists();
+      $existe = Carousel::query()
+                  ->where('inhabilitado', 0)
+                  ->where('id', '!=', $carousel->id)
+                  ->where(function($q) use ($url, $title, $orden) {
+                      $q->whereRaw('LOWER(TRIM(url)) = ?', [$url])
+                        ->orWhereRaw('LOWER(TRIM(title)) = ?', [$title])
+                        ->orWhere('priority', $orden);
+                  })
+                  ->exists();
+
       if($existe){
         DB::rollBack();
         return inertia('banners/index',[
@@ -168,15 +176,60 @@ class CarouselController extends Controller
 
   public function toggleEstado(Carousel $carousel)
   {
-      $carousel->update([
-          'inhabilitado' => !$carousel->inhabilitado,
-      ]);
+    DB::beginTransaction();
+    try {
+      $nuevoEstado = !$carousel->inhabilitado;
 
+      if ($nuevoEstado === false) {
+        // si lo vas a habilitar, controlar duplicados
+        $url    = strtolower(trim($carousel->url));
+        $title  = strtolower(trim($carousel->title));
+        $orden  = $carousel->priority;
+        $existe = Carousel::query()
+                    ->where('inhabilitado', 0)
+                    ->where('id', '!=', $carousel->id)
+                    ->where(function($q) use ($url, $title, $orden) {
+                        $q->whereRaw('LOWER(TRIM(url)) = ?', [$url])
+                          ->orWhereRaw('LOWER(TRIM(title)) = ?', [$title])
+                          ->orWhere('priority', $orden);
+                    })
+                    ->exists();
+
+        if ($existe) {
+          $carousel->update([
+            'url'          => $carousel->url.' - copia',
+            'title'        => $carousel->title.' - copia',
+            'inhabilitado' => $nuevoEstado,
+            'updated_at'   => now(),
+          ]);
+        } else {
+          $carousel->update([
+            'inhabilitado' => $nuevoEstado,
+            'updated_at'   => now(),
+          ]);
+        }
+      } else {
+        // si lo vas a deshabilitar, no hace falta controlar duplicados
+        $carousel->update([
+          'inhabilitado' => $nuevoEstado,
+          'updated_at'   => now(),
+        ]);
+      }
+      //éxito
+      DB::commit();
       return inertia('banners/index',[
         'resultado' => 1,
-        'mensaje'   => 'Se modificó correctamente',
+        'mensaje'   => 'Se modificó el estado correctamente',
         'id'        => $carousel->id,
-        'timestamp' => now()->timestamp,
+        'timestamp' => now()->timestamp
       ]);
+    } catch (\Throwable $e) {
+      DB::rollBack();
+      return inertia('banners/index',[
+        'resultado' => 0,
+        'mensaje'   => 'Ocurrió un error al intentar actualizar estado del banner: '.$e->getMessage(),
+        'timestamp' => now()->timestamp
+      ]);
+    }
   }
 }

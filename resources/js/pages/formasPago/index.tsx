@@ -12,6 +12,7 @@ import NewEditFormasPago from '@/components/formasPago/newEditFormasPago';
 import DataTableFormasPago from '@/components/formasPago/dataTableFormasPago';
 import ModalConfirmar from '@/components/modalConfirmar';
 import ShowMessage from '@/components/utils/showMessage';
+import Loading from '@/components/utils/loadingDialog';
 
 const breadcrumbs: BreadcrumbItem[] = [ { title: 'Formas de Pago', href: '', } ];
 
@@ -166,14 +167,6 @@ export default function FormasPago(){
     router.put(
       route('formasPago.toggleEstado', { fp: formaPagoCopia.forma_pago_id }),{},
       {
-        /*preserveScroll: true,
-        preserveState: true,
-        onFinish: () => {
-          setLoading(false);
-          setTextConfirmar('');
-          setConfirmar(false);
-          setFormaPagoCopia(formaPagoVacio);
-        }*/
         preserveScroll: true,
         preserveState: true,
         onError: (errors) => {
@@ -184,11 +177,17 @@ export default function FormasPago(){
           setActivo(true);
         },
         onSuccess: (page) => {
-          const id = page.props.forma_pago_id;
-          const msj = page.props.mensaje;
+          const { resultado, mensaje, forma_pago_id } = page.props;
           
+          if(resultado === 0){
+            setTitle("Error inesperado");
+            setText(`${mensaje} ❌ (ID: ${forma_pago_id})`);
+            setColor("error");
+            setActivo(true);
+          }
+
           setTitle("Forma de pago modificada");
-          setText(`${msj} ✅ (ID: ${id})`);
+          setText(`${mensaje} ✅ (ID: ${forma_pago_id})`);
           setColor("success");
           setActivo(true);
         },
@@ -244,7 +243,7 @@ export default function FormasPago(){
   };
   const manejarExito = (titulo: string) => (page: any) => {
     const { resultado, mensaje, forma_pago_id } = page.props;
-    const title = resultado === 0 ? 'Error': titulo ;
+    const title = resultado === 0 ? 'Error inesperado': titulo ;
 
     if(resultado === 0){
       setTitle(title);
@@ -259,15 +258,16 @@ export default function FormasPago(){
     setColor("success");
     setActivo(true);
 
+    setModalOpen(false);
+  };
+  const finalizarAccion = () => {
+    setLoading(false);
+    setPendingData(formaPagoVacio);
     setData(formaPagoVacio);
     router.get(route("formasPago.index"), {}, {
       preserveScroll: true,
       preserveState: true,
     });
-  };
-  const finalizarAccion = () => {
-    setLoading(false);
-    setPendingData(formaPagoVacio);
   };
 
   const accionar = () => {
@@ -279,7 +279,7 @@ export default function FormasPago(){
 			router.post(route('formasPago.store'), payload, {
 				preserveScroll: true,
 				preserveState: true,
-				onError:   manejarError("Error al crearForma de Pago"),
+				onError:   manejarError("Error al crear Forma de Pago"),
 				onSuccess: manejarExito("Forma de pago creada"),
 				onFinish:  finalizarAccion,
 			});
@@ -295,7 +295,7 @@ export default function FormasPago(){
 
 		setTextConfirm('');
 		setConfirOpen(false);
-		setModalOpen(false);
+		
   };
 
   const cancelarConfirmacion = () => {
@@ -359,6 +359,10 @@ export default function FormasPago(){
         text={text}
         color={color}
         onClose={() => setActivo(false)}
+      />
+      <Loading
+        open={loading}
+        onClose={() => {}}
       />
     </AppLayout>
   );

@@ -184,11 +184,18 @@ export default function Banners(){
 					setActivo(true);
 				},
 				onSuccess: (page) => {
-					const id = page.props.id;
-					const msj = page.props.mensaje;
+					const { resultado, mensaje, id } = page.props;
 					
+					if(resultado === 0){
+						setTitle("Error inesperado");
+						setText(`${mensaje} ❌ (ID: ${id})`);
+						setColor("error");
+						setActivo(true);
+						return
+					}
+
 					setTitle("Estado del banner");
-					setText(`${msj} ✅ (ID: ${id})`);
+					setText(`${mensaje} ✅ (ID: ${id})`);
 					setColor("success");
 					setActivo(true);
 				},
@@ -244,9 +251,9 @@ export default function Banners(){
 	};
 	const manejarExito = (titulo: string) => (page: any) => {
 		const { resultado, mensaje, id } = page.props;
-		const title = resultado === 0 ? 'Error': titulo ;
+		const title = resultado === 0 ? 'Error inesperado': titulo ;
 		console.log("page.props: ", page.props)
-		
+
 		if (resultado === 0) {
 			// error lógico
 			setTitle(title);
@@ -261,16 +268,18 @@ export default function Banners(){
 		setText(`${mensaje} ✅ (ID: ${id})`);
 		setColor("success");
 		setActivo(true);
-
+		//se cierra cuando hay éxito
+		setModalOpen(false);
+	};
+	const finalizarAccion = () => {
+		setLoading(false);
+		setPendingData(bannerVacio);
+		//recargo
 		setData(bannerVacio);
 		router.get(route("banners.index"), {}, {
 			preserveScroll: true,
 			preserveState: true,
 		});
-	};
-	const finalizarAccion = () => {
-		setLoading(false);
-		setPendingData(bannerVacio);
 	};
 
 	const accionar = () => {
@@ -283,7 +292,7 @@ export default function Banners(){
 			router.post(route('banners.store'), payload, {
 				preserveScroll: true,
 				preserveState: true,
-				onError:   manejarError("Error en carga del banner"),
+				onError:   manejarError("Error al carga del banner"),
 				onSuccess: manejarExito("Banner creado"),
 				onFinish:  finalizarAccion,
 			});
@@ -291,7 +300,7 @@ export default function Banners(){
 			router.put(route('banners.update', { carousel: pendingData.id }), payload, {
 				preserveScroll: true,
 				preserveState: true,
-				onError:   manejarError("Error en modificar el banner"),
+				onError:   manejarError("Error al modificar el banner"),
 				onSuccess: manejarExito("Banner actualizado"),
 				onFinish:  finalizarAccion,
 			});
@@ -299,7 +308,6 @@ export default function Banners(){
 
 		setTextConfirm('');
 		setConfirOpen(false);
-		setModalOpen(false);
 	};
 
 	const cancelarConfirmacion = () => {

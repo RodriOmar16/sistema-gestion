@@ -59,13 +59,6 @@ class CategoriaController extends Controller
       $query->where('inhabilitada', 0);
     }
 
-    if(!$request->filled('categoria_id') && !$request->filled('nombre') && 
-        !$request->filled('inhabilitada')){
-      $query = Categoria::query();
-    }
-
-    //$categorias = $query->latest()->get();
-
     //Paginación
     $perPage = min($request->get('per_page',10),200);
     $categorias = $query->latest()->paginate($perPage);
@@ -98,6 +91,7 @@ class CategoriaController extends Controller
 
       $nombre = strtolower(trim($validated['nombre']));
       $existe = Categoria::whereRaw('LOWER(TRIM(nombre)) = ?', [$nombre])
+                            ->where('inhabilitada', 0)
                             ->exists();
       if($existe){
         return inertia('categorias/index',[
@@ -140,6 +134,7 @@ class CategoriaController extends Controller
       $nombre = strtolower(trim($validated['nombre']));
       $existe = Categoria::whereRaw('LOWER(TRIM(nombre)) = ?', [$nombre])
                             ->where('categoria_id','!=',$request->categoria_id)
+                            ->where('inhabilitada', 0)
                             ->exists();
       if($existe){
         return inertia('categorias/index',[
@@ -170,16 +165,59 @@ class CategoriaController extends Controller
   }
 
   public function toggleEstado(Categoria $categoria){
-    $categoria->update(['inhabilitada' => !$categoria->inhabilitada]);
+    DB::beginTransaction();
+    try {
+      $nuevoEstado = !$categoria->inhabilitada;
+
+      if ($nuevoEstado === false) {
+        // si lo vas a habilitar, controlar duplicados
+        $nombre = strtolower(trim($categoria->nombre));
+        $existe = Categoria::whereRaw('LOWER(TRIM(nombre)) = ?', [$nombre])
+                              ->where('categoria_id','!=',$categoria->categoria_id)
+                              ->where('inhabilitada', 0)
+                              ->exists();
+
+        if ($existe) {
+          $categoria->update([
+            'nombre'       => $categoria->nombre.'-copia',
+            'inhabilitada' => $nuevoEstado,
+            'updated_at'   => now(),
+          ]);
+        } else {
+          $categoria->update([
+            'inhabilitada' => $nuevoEstado,
+            'updated_at'   => now(),
+          ]);
+        }
+      } else {
+        // si lo vas a deshabilitar, no hace falta controlar duplicados
+        $categoria->update([
+          'inhabilitada' => $nuevoEstado,
+          'updated_at'   => now(),
+        ]);
+      }
+      //éxito
+      DB::commit();
+      return inertia('categorias/index',[
+        'resultado'    => 1,
+        'mensaje'      => 'Se modificó el estado correctamente',
+        'categoria_id' => $categoria->categoria_id,
+        'timestamp'    => now()->timestamp
+      ]);
+    } catch (\Throwable $e) {
+      DB::rollBack();
+      return inertia('categorias/index',[
+        'resultado' => 0,
+        'mensaje'   => 'Ocurrió un error al intentar actualizar estado de la categoria: '.$e->getMessage(),
+        'timestamp' => now()->timestamp
+      ]);
+    }
+    /*$categoria->update(['inhabilitada' => !$categoria->inhabilitada]);
     return inertia('categorias/index',[
       'resultado' => 1,
       'mensaje'   => 'Estado cambiado exitosamente.',
       'categoria_id' => $categoria->categoria_id
-    ]);
+    ]);*/
   }
 
-  public function destroy(Categoria $categoria)
-  {
-
-  }
 }

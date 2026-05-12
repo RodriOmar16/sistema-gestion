@@ -22,7 +22,6 @@ interface Props{
   mode: 'create' | 'edit';
   categoria?: Categoria;
   onSubmit: (data:any) => void;
-  loading: boolean;
 }
 
 const categoriaVacia = {
@@ -31,23 +30,17 @@ const categoriaVacia = {
   inhabilitada: false,
 }
 
-export default function NewEditCategoria({ open, onOpenChange, mode, categoria, onSubmit, loading }: Props){
+export default function NewEditCategoria({ open, onOpenChange, mode, categoria, onSubmit }: Props){
   //data
-  const [activo, setActivo] = useState(false);
-  const [text, setText]     = useState('');
-  const [title, setTitle]   = useState('');
-
   const { data, setData, get, processing, errors } = useForm<Categoria>(categoriaVacia);
+
+  const [requerido, setRequerido] = useState(false);
 
   //useEffect
   useEffect(() => {
-    if (!open && mode === 'create') {
+    if(mode === 'create' && !open){
       setData(categoriaVacia);
-    }
-  }, [open, mode]);
-
-  useEffect(() => {
-    if (categoria && mode === 'edit') {
+    }else if (categoria && mode === 'edit') {
       setData({
         categoria_id: categoria.categoria_id,
         nombre: categoria.nombre,
@@ -56,16 +49,14 @@ export default function NewEditCategoria({ open, onOpenChange, mode, categoria, 
     } else {
       setData(categoriaVacia);
     }
-  }, [categoria, mode]);
+  }, [open, categoria, mode]);
 
   //funciones
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if(!data.nombre){
-      setTitle('¡Campo faltante!');
-      setText('Se requiere que ingreses un nombre válido');
-      setActivo(true);
-      return 
+      setRequerido(true);
+      return
     }
     onSubmit(data);
   }
@@ -99,9 +90,13 @@ export default function NewEditCategoria({ open, onOpenChange, mode, categoria, 
             <label htmlFor="nombre">Nombre</label>
             <Input
               value={data.nombre}
-              onChange={(e) => setData({ ...data, nombre: e.target.value })}
               placeholder="Ingresar nombre"
+              onChange={(e) => {
+                setData({ ...data, nombre: e.target.value });
+                if(e.target.value){ setRequerido(false); }
+              }}
             />
+            {requerido && (<p className="mt-1 text-sm text-red-600 font-medium">⚠️Campo requerido</p>)}
           </div>
           <div className="col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12 flex flex-col">
             <label htmlFor="inhabilitado" className='mr-2'>Inhabilitado</label>
@@ -122,13 +117,6 @@ export default function NewEditCategoria({ open, onOpenChange, mode, categoria, 
           </Button>
         </DialogFooter>
       </DialogContent>
-      <ShowMessage 
-        open={activo}
-        title={title}
-        text={text}
-        color="warning"
-        onClose={() => setActivo(false)}
-      />
     </Dialog>
   );
 }

@@ -15,6 +15,7 @@ import ShowMessage from '@/components/utils/showMessage';
 import { Select,  SelectContent,  SelectItem,  SelectTrigger,  SelectValue } from "@/components/ui/select"
 import { route } from 'ziggy-js';
 import { getCsrfToken } from '@/utils';
+import Loading from '@/components/utils/loadingDialog';
 
 const breadcrumbs: BreadcrumbItem[] = [ { title: 'Categorias', href: '', } ];
 
@@ -32,7 +33,6 @@ const categoriaVacia = {
 }
 
 export function FiltrosForm({ data, set, openCreate, resetearCategoria }: propsForm){
-  const [esperandoRespuesta, setEsperandoRespuesta] = useState(false);
   const [processing, setProcessing] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -41,12 +41,12 @@ export function FiltrosForm({ data, set, openCreate, resetearCategoria }: propsF
     const payload = {      ...data, buscar: true    }
 
     setProcessing(true);
+    
     router.get(route('categorias.index'), payload, {
       preserveState: true,
       preserveScroll: true,
-      onFinish: () => setEsperandoRespuesta(false),
+      onFinish: () => setProcessing(false)
     });
-    setProcessing(false);
   };
   const handleReset = () => {
     set(categoriaVacia);
@@ -167,11 +167,18 @@ export default function Categorias(){
           setActivo(true);
         },
         onSuccess: (page) => {
-          const id = page.props.categoria_id;
-          const msj = page.props.mensaje;
+          const {resultado, mensaje, categoria_id} = page.props;
           
+          if(resultado === 0){
+            setTitle("Error inesperado");
+            setText(`${mensaje} ❌ (ID: ${categoria_id})`);
+            setColor("error");
+            setActivo(true);
+            return
+          }
+
           setTitle("Estado de categoría cambiado");
-          setText(`${msj} ✅ (ID: ${id})`);
+          setText(`${mensaje} ✅ (ID: ${categoria_id})`);
           setColor("success");
           setActivo(true);
         },
@@ -219,94 +226,68 @@ export default function Categorias(){
     setConfirOpen(true);
   };
 
+  const manejarError = (titulo: string) => (errors: any) => {
+      console.log("Errores:", errors);
+      setTitle(titulo);
+      setText(Object.values(errors).join("\n"));
+      setColor("error");
+      setActivo(true);
+    };
+    const manejarExito = (titulo: string) => (page: any) => {
+      const { resultado, mensaje, categoria_id } = page.props;
+      const title = resultado === 0 ? 'Error inesperado': titulo ;
+  
+      if(resultado === 0){
+        setTitle(title);
+        setText(mensaje);
+        setColor("error");
+        setActivo(true);
+        return;
+      }
+  
+      setTitle(title);
+      setText(`${mensaje} ✅ (ID: ${categoria_id})`);
+      setColor("success");
+      setActivo(true);
+  
+      setModalOpen(false);
+    };
+    const finalizarAccion = () => {
+      setLoading(false);
+      setPendingData(categoriaVacia);
+      setData(categoriaVacia);
+      router.get(route("categorias.index"), {}, {
+        preserveScroll: true,
+        preserveState: true,
+      });
+    };
+
   const accionar = () => {
     if (!pendingData) return;
 
     setLoading(true);
 
-    const payload = JSON.parse(JSON.stringify(pendingData));
+   const payload = { ...pendingData };
 
-    if (modalMode === 'create') {
-      router.post(
-        route('categorias.store'),
-        payload,
-        {
-          preserveScroll: true,
-          preserveState: true,
-          onError: (errors) => {
-            // errors es un objeto { campo: "mensaje de error" }
-            console.log("Errores:", errors);
-            setTitle("Error en carga de categoría");
-            setText(Object.values(errors).join("\n"));
-            setColor("error");
-            setActivo(true);
-          },
-          onSuccess: (page) => {
-            const nuevaCategoriaId = page.props.categoria_id;
-            
-            setTitle("Categoría creada");
-            setText(`La categoría se creó correctamente ✅ (ID: ${nuevaCategoriaId})`);
-            setColor("success");
-            setActivo(true);
-          },
-          onFinish: () => {
-            //apago la carga
-            setLoading(false);
-            //reseteo la copia
-            setCategoriaCopia(categoriaVacia);
-            //actualizo la lista
-            setData(categoriaVacia);
-            router.get(route('categorias.index'), 
-            {} , {
-              preserveScroll: true,
-              preserveState: true,
-            });
-          }
-        }
-      );
-    } else {
-      router.put(
-        route('categorias.update', {categoria: pendingData.categoria_id},),
-        payload,
-        {
-          preserveScroll: true,
-          preserveState: true,
-          onError: (errors) => {
-            // errors es un objeto { campo: "mensaje de error" }
-            console.log("Errores:", errors);
-            setTitle("Error en modificar la categoría");
-            setText(Object.values(errors).join("\n"));
-            setColor("error");
-            setActivo(true);
-          },
-          onSuccess: (page) => {
-            const id = page.props.categoria_id;
-            
-            setTitle("Categoría actualizada");
-            setText(`La categoría se modificó correctamente ✅ (ID: ${id})`);
-            setColor("success");
-            setActivo(true);
-          },
-          onFinish: () => {
-            //apago la carga
-            setLoading(false);
-            //reseteo la copia
-            setCategoriaCopia(categoriaVacia);
-            //actualizo la lista
-            setData(categoriaVacia);
-            router.get(route('categorias.index'), 
-            {} , {
-              preserveScroll: true,
-              preserveState: true,
-            });
-          }
-        }
-      );
-    }
+		if (modalMode === 'create') {
+			router.post(route('categorias.store'), payload, {
+				preserveScroll: true,
+				preserveState: true,
+				onError:   manejarError("Error al crear la categoría"),
+				onSuccess: manejarExito("Categoría creada"),
+				onFinish:  finalizarAccion,
+			});
+		} else {
+			router.put(route('categorias.update', {categoria: pendingData.categoria_id},), payload, {
+				preserveScroll: true,
+				preserveState: true,
+				onError:   manejarError("Error al modificar la categoría"),
+				onSuccess: manejarExito("Categoría actualizada"),
+				onFinish:  finalizarAccion,
+			});
+		}
     setTextConfirm("");
     setConfirOpen(false);
-    //cierro el modal
-    setModalOpen(false);
   };
 
   const cancelarConfirmacion = () => {
@@ -353,7 +334,6 @@ export default function Categorias(){
         mode={modalMode}
         categoria={selectedCategoria}
         onSubmit={handleSave}
-        loading={loading}
       />
       <ModalConfirmar
         open={confirmOpen}
@@ -375,6 +355,10 @@ export default function Categorias(){
         onClose={() => {
           setActivo(false);
         }}
+      />
+      <Loading
+        open={loading}
+        onClose={() => {}}
       />
     </AppLayout>
   );

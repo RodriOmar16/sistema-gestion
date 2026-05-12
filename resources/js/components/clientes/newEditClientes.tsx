@@ -137,14 +137,7 @@ export default function NewEditClientes({ open, onOpenChange, mode, cliente, onS
                 if(e.target.value){ requeridos.nombre = false; }
               }}
             />
-              { requeridos.nombre && (<p className="mt-1 text-sm text-red-600 font-medium">⚠️Campo requerido</p>)}
-          </div>
-          <div className="col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12">
-            <label htmlFor="domicilio">Domicilio</label>
-            <Input 
-              value={data.domicilio} 
-              onChange={(e) => setData({ ...data, domicilio: e.target.value })}
-              placeholder="Ingresar una domicilio" />
+            { requeridos.nombre && (<p className="mt-1 text-sm text-red-600 font-medium">⚠️Campo requerido</p>)}
           </div>
           <div className="col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12">
             <label htmlFor="email">Email</label>
@@ -177,6 +170,13 @@ export default function NewEditClientes({ open, onOpenChange, mode, cliente, onS
               }}
             />
             {requeridos.dni && (<p className="mt-1 text-sm text-red-600 font-medium">⚠️Campo requerido</p>)}
+          </div>
+          <div className="col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12">
+            <label htmlFor="domicilio">Domicilio</label>
+            <Input 
+              value={data.domicilio} 
+              onChange={(e) => setData({ ...data, domicilio: e.target.value })}
+              placeholder="Ingresar una domicilio" />
           </div>
           <div className="col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-6 flex flex-col">
             <label htmlFor="inhabilitado" className='mr-2'>Inhabilitado</label>

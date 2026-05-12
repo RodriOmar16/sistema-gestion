@@ -92,7 +92,9 @@ class MarcaController extends Controller
 
       //verifico que no se repita
       $nombre = strtolower(trim($validated['nombre']));
-      $existe = Marca::whereRaw('LOWER(TRIM(nombre)) = ?', [$nombre])->exists();
+      $existe = Marca::whereRaw('LOWER(TRIM(nombre)) = ?', [$nombre])
+                  ->where('inhabilitada', 0)
+                  ->exists();
       if($existe){
         DB::rollBack();
         return inertia('marcas/index',[
@@ -141,6 +143,7 @@ class MarcaController extends Controller
       $nombre = strtolower(trim($validated['nombre']));
       $existe = Marca::whereRaw('LOWER(TRIM(nombre)) = ?', [$nombre])
                 ->where('marca_id','!=',$marca->marca_id)
+                ->where('inhabilitada', 0)
                 ->exists();
       if($existe){
         DB::rollBack();
@@ -178,12 +181,60 @@ class MarcaController extends Controller
 
   public function toggleEstado(Request $request, Marca $marca)
   {
-    $marca->update(['inhabilitada' => !$marca->inhabilitada]);
+    DB::beginTransaction();
+    try {
+      $nuevoEstado = !$marca->inhabilitada;
+
+      if ($nuevoEstado === false) {
+        // si lo vas a habilitar, controlar duplicados
+        $nombre = strtolower(trim($marca->nombre));
+        $existe = Marca::whereRaw('LOWER(TRIM(nombre)) = ?', [$nombre])
+                  ->where('marca_id','!=',$marca->marca_id)
+                  ->where('inhabilitada', 0)
+                  ->exists();
+
+        if ($existe) {
+          $marca->update([
+            'nombre'       => $marca->nombre.'-copia',
+            'inhabilitada' => $nuevoEstado,
+            'updated_at'   => now(),
+          ]);
+        } else {
+          $marca->update([
+            'inhabilitada' => $nuevoEstado,
+            'updated_at'   => now(),
+          ]);
+        }
+      } else {
+        // si lo vas a deshabilitar, no hace falta controlar duplicados
+        $marca->update([
+          'inhabilitada' => $nuevoEstado,
+          'updated_at'   => now(),
+        ]);
+      }
+      //éxito
+      DB::commit();
+      return inertia('marcas/index',[
+        'resultado' => 1,
+        'mensaje'   => 'Se modificó el estado correctamente',
+        'marca_id'  => $marca->marca_id,
+        'timestamp' => now()->timestamp
+      ]);
+    } catch (\Throwable $e) {
+      DB::rollBack();
+      return inertia('marcas/index',[
+        'resultado' => 0,
+        'marca_id'  => $marca->marca_id,
+        'mensaje'   => 'Ocurrió un error al intentar actualizar estado de la marca: '.$e->getMessage(),
+        'timestamp' => now()->timestamp
+      ]);
+    }
+    /*$marca->update(['inhabilitada' => !$marca->inhabilitada]);
     return inertia('marcas/index',[
       'resultado' => 1,
       'mensaje'   => 'Estado modificado existosamente',
       'marca_id'  => $marca->marca_id,
       'timestamp' => now()->timestamp,
-    ]);
+    ]);*/
   }
 }

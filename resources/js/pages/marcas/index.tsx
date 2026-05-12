@@ -12,10 +12,13 @@ import DataTableMarcas from '@/components/marcas/dataTableMarcas';
 import NewEditMarca from '@/components/marcas/newEditMarca';
 import ModalConfirmar from '@/components/modalConfirmar';
 import ShowMessage from '@/components/utils/showMessage';
+import Loading from '@/components/utils/loadingDialog';
 
 const breadcrumbs: BreadcrumbItem[] = [ { title: 'Marcas', href: '', } ];
 
 type propsForm = {
+  data: Marca;
+  set: (e:any) => void;
   openCreate: () => void;
   resetearMarca: (data:Marca[]) => void;
 }
@@ -26,9 +29,7 @@ const marcaVacia = {
   inhabilitada: false,
 }
 
-export function FiltrosForm({ openCreate, resetearMarca }: propsForm){
-  const [esperandoRespuesta, setEsperandoRespuesta] = useState(false);
-  const { data, setData, errors, processing }       = useForm<Marca>(marcaVacia);
+export function FiltrosForm({ data, set, openCreate, resetearMarca }: propsForm){
   const [load, setLoad]                             = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -44,7 +45,7 @@ export function FiltrosForm({ openCreate, resetearMarca }: propsForm){
     });
   };
   const handleReset = () => {
-    setData(marcaVacia);
+    set(marcaVacia);
   };
 
   return (
@@ -65,17 +66,15 @@ export function FiltrosForm({ openCreate, resetearMarca }: propsForm){
       <form className='grid grid-cols-12 gap-4 px-4 pt-1 pb-4' onSubmit={handleSubmit}>
         <div className='col-span-12 sm:col-span-3 md:col-span-3 lg:col-span-2'>
           <label htmlFor="id">Id</label>
-          <Input className='text-right' value={data.marca_id} onChange={(e)=>setData('marca_id',Number(e.target.value))}/>	
-          { errors.marca_id && <p className='text-red-500	'>{ errors.marca_id }</p> }
+          <Input className='text-right' value={data.marca_id} onChange={(e)=>set({...data, 'marca_id': Number(e.target.value)})}/>	
         </div>
         <div className='col-span-12 sm:col-span-5 md:col-span-5 lg:col-span-4'>
           <label htmlFor="nombre">Nombre</label>
-          <Input value={data.nombre} onChange={(e)=>setData('nombre',e.target.value)}/>	
-          { errors.nombre && <p className='text-red-500	'>{ errors.nombre }</p> }
+          <Input value={data.nombre} onChange={(e)=>set({...data, 'nombre': e.target.value})}/>	
         </div>        
         <div className='col-span-6 sm:col-span-4 md:col-span-4 lg:col-span-3 flex flex-col'>
           <label className='mr-2'>Inhabilitada</label>
-          <Switch checked={data.inhabilitada==0 ? false: true} onCheckedChange={(val) => setData('inhabilitada', val)} />
+          <Switch checked={data.inhabilitada==0 ? false: true} onCheckedChange={(val) => set({...data, 'inhabilitada': val})} />
         </div>
         <div className='col-span-6 sm:col-span-2 md:col-span-2 lg:col-span-2 flex justify-end items-center'>
           <Button 
@@ -101,6 +100,7 @@ export function FiltrosForm({ openCreate, resetearMarca }: propsForm){
 
 export default function Marcas(){
   //data
+  const { data, setData, errors, processing }       = useForm<Marca>(marcaVacia);
   const [confirmOpen, setConfirOpen] = useState(false); //modal para confirmar acciones para cuado se crea o edita
   const [textConfir, setTextConfirm] = useState('');
   
@@ -130,14 +130,9 @@ export default function Marcas(){
       prev_page_url: string,
     }
   };
-  const { resultado, mensaje, marca_id, timestamp } = usePage().props as {
-    resultado?: number;
-    mensaje?: string;
-    marca_id?: number;
-    timestamp?: number;
-  };
-  const [ultimoTimestamp, setUltimoTimestamp] = useState<number | null>(null);
+
   const [cacheadas, setCacheadas] = useState<Marca[]>([]);
+
   //funciones
   const confirmar = (data: Marca) => {
     if(data){
@@ -157,11 +152,43 @@ export default function Marcas(){
       {
         preserveScroll: true,
         preserveState: true,
+        onError: (errors) => {
+          // errors es un objeto { campo: "mensaje de error" }
+          console.log("Errores:", errors);
+          setTitle("Error en cambio de estado");
+          setText(Object.values(errors).join("\n"));
+          setColor("error");
+          setActivo(true);
+        },
+        onSuccess: (page) => {
+          const {resultado, mensaje, marca_id} = page.props;
+          
+          if(resultado === 0){
+            setTitle("Error inesperado");
+            setText(`${mensaje} ❌ (ID: ${marca_id})`);
+            setColor("error");
+            setActivo(true);
+            return
+          }
+
+          setTitle("Estado de marca cambiado");
+          setText(`${mensaje} ✅ (ID: ${marca_id})`);
+          setColor("success");
+          setActivo(true);
+        },
         onFinish: () => {
           setLoading(false);
-          setTextConfirmar('');
+          setTextConfirmar("");
           setConfirmar(false);
           setMarcaCopia(marcaVacia);
+
+          //actualizo la lista
+          setData(marcaVacia);
+          router.get(route('marcas.index'), 
+          {} , {
+            preserveScroll: true,
+            preserveState: true,
+          });
         }
       }
     );
@@ -190,11 +217,47 @@ export default function Marcas(){
     setConfirOpen(true);
   };
 
+  const manejarError = (titulo: string) => (errors: any) => {
+    console.log("Errores:", errors);
+    setTitle(titulo);
+    setText(Object.values(errors).join("\n"));
+    setColor("error");
+    setActivo(true);
+  };
+  const manejarExito = (titulo: string) => (page: any) => {
+    const { resultado, mensaje, marca_id } = page.props;
+    const title = resultado === 0 ? 'Error inesperado': titulo ;
+
+    if(resultado === 0){
+      setTitle(title);
+      setText(mensaje);
+      setColor("error");
+      setActivo(true);
+      return;
+    }
+
+    setTitle(title);
+    setText(`${mensaje} ✅ (ID: ${marca_id})`);
+    setColor("success");
+    setActivo(true);
+
+    setModalOpen(false);
+  };
+  const finalizarAccion = () => {
+    setLoading(false);
+    setPendingData(marcaVacia);
+    setData(marcaVacia);
+    router.get(route("marcas.index"), {}, {
+      preserveScroll: true,
+      preserveState: true,
+    });
+  };
+
   const accionar = () => {
     if (!pendingData) return;
     setLoading(true);
 
-    const payload = JSON.parse(JSON.stringify(pendingData));
+    /*const payload = JSON.parse(JSON.stringify(pendingData));
     if (modalMode === 'create') {
       router.post(
         route('marcas.store'), payload,
@@ -221,7 +284,27 @@ export default function Marcas(){
           }
         }
       );
-    }
+    }*/
+    const payload = { ...pendingData };
+
+		if (modalMode === 'create') {
+			router.post(route('marcas.store'), payload, {
+				preserveScroll: true,
+				preserveState: true,
+				onError:   manejarError("Error al crear la marca"),
+				onSuccess: manejarExito("Marca creada"),
+				onFinish:  finalizarAccion,
+			});
+		} else {
+			router.put(route('marcas.update', {marca: pendingData.marca_id},), payload, {
+				preserveScroll: true,
+				preserveState: true,
+				onError:   manejarError("Error al modificar la marca"),
+				onSuccess: manejarExito("Marca actualizada"),
+				onFinish:  finalizarAccion,
+			});
+		}
+    setTextConfirm('');
     setConfirOpen(false);
   };
 
@@ -236,35 +319,16 @@ export default function Marcas(){
     }
   }, [marcas]);
 
-
-  useEffect(() => {
-    const cambioDetectado = timestamp && timestamp !== ultimoTimestamp;
-
-    if (cambioDetectado) {
-      setUltimoTimestamp(timestamp)
-
-      const esError = resultado === 0;
-      setTitle(esError ? 'Error' : modalMode === 'create' ? 'Marca nueva' : 'Marca modificada');
-      setText(esError ? mensaje ?? 'Error inesperado' : `${mensaje} (ID: ${marca_id})`);
-      setColor(esError ? 'error' : 'success');
-      setActivo(true);
-
-      if (resultado === 1 && marca_id) {
-        setModalOpen(false);
-        router.get(route('marcas.index'),
-          { marca_id, buscar: true },
-          { preserveScroll: true,	preserveState: true	}
-        )
-      }
-    }
-  }, [timestamp, ultimoTimestamp, resultado, mensaje, marca_id, modalMode]);
-
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Marcas" />
       <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
         <div className="relative flex-none flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
-          <FiltrosForm openCreate={openCreate} resetearMarca={setCacheadas}/>
+          <FiltrosForm 
+            data={data}
+            set={setData}
+            openCreate={openCreate} resetearMarca={setCacheadas}
+          />
         </div>
         <div className="p-4 relative flex-1 overflow-auto rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
           <DataTableMarcas
@@ -299,12 +363,15 @@ export default function Marcas(){
         onCancel={cancelarInhabilitarHabilitar}
       />
       <ShowMessage
-        key={timestamp}
         open={activo}
         title={title}
         text={text}
         color={color}
         onClose={() => setActivo(false)}
+      />
+      <Loading
+        open={loading}
+        onClose={() => {}}
       />
     </AppLayout>
   );

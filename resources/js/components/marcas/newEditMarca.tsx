@@ -28,10 +28,8 @@ const marcaVacia = {
 
 export default function NewEditMarca({ open, onOpenChange, mode, marca, onSubmit }: Props){
   //data
-  const [activo, setActivo] = useState(false);
-  const [text, setText]     = useState('');
-  const [title, setTitle]   = useState('');
   const { data, setData, get, processing, errors } = useForm<Marca>(marcaVacia);
+  const [requerido, setRequerido] = useState(false);
 
   //useEffect
   useEffect(() => {
@@ -55,9 +53,7 @@ export default function NewEditMarca({ open, onOpenChange, mode, marca, onSubmit
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if(!data.nombre){
-      setTitle('¡Campo faltante!');
-      setText('Se requiere que ingreses un nombre válido');
-      setActivo(true);
+      setRequerido(true);
       return 
     }
     onSubmit(data);
@@ -92,9 +88,13 @@ export default function NewEditMarca({ open, onOpenChange, mode, marca, onSubmit
             <label htmlFor="nombre">Nombre</label>
             <Input
               value={data.nombre}
-              onChange={(e) => setData({ ...data, nombre: e.target.value })}
               placeholder="Ingresar nombre"
+              onChange={(e) => {
+                setData({ ...data, nombre: e.target.value });
+                if(e.target.value){setRequerido(false);}
+              }}
             />
+            {requerido && (<p className="mt-1 text-sm text-red-600 font-medium">⚠️Campo requerido</p>)}
           </div>
           <div className="col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-6 flex flex-col">
             <label htmlFor="inhabilitada" className='mr-2'>Inhabilitada</label>
@@ -116,13 +116,6 @@ export default function NewEditMarca({ open, onOpenChange, mode, marca, onSubmit
           </Button>
         </DialogFooter>
       </DialogContent>
-      <ShowMessage 
-        open={activo}
-        title={title}
-        text={text}
-        color="warning"
-        onClose={() => setActivo(false)}
-      />
     </Dialog>
   );
 }

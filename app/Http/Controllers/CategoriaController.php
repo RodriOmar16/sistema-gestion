@@ -212,12 +212,6 @@ class CategoriaController extends Controller
         'timestamp' => now()->timestamp
       ]);
     }
-    /*$categoria->update(['inhabilitada' => !$categoria->inhabilitada]);
-    return inertia('categorias/index',[
-      'resultado' => 1,
-      'mensaje'   => 'Estado cambiado exitosamente.',
-      'categoria_id' => $categoria->categoria_id
-    ]);*/
   }
 
 }

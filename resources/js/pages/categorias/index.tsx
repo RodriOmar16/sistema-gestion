@@ -227,47 +227,47 @@ export default function Categorias(){
   };
 
   const manejarError = (titulo: string) => (errors: any) => {
-      console.log("Errores:", errors);
-      setTitle(titulo);
-      setText(Object.values(errors).join("\n"));
+    console.log("Errores:", errors);
+    setTitle(titulo);
+    setText(Object.values(errors).join("\n"));
+    setColor("error");
+    setActivo(true);
+  };
+  const manejarExito = (titulo: string) => (page: any) => {
+    const { resultado, mensaje, categoria_id } = page.props;
+    const title = resultado === 0 ? 'Error inesperado': titulo ;
+
+    if(resultado === 0){
+      setTitle(title);
+      setText(mensaje);
       setColor("error");
       setActivo(true);
-    };
-    const manejarExito = (titulo: string) => (page: any) => {
-      const { resultado, mensaje, categoria_id } = page.props;
-      const title = resultado === 0 ? 'Error inesperado': titulo ;
-  
-      if(resultado === 0){
-        setTitle(title);
-        setText(mensaje);
-        setColor("error");
-        setActivo(true);
-        return;
-      }
-  
-      setTitle(title);
-      setText(`${mensaje} ✅ (ID: ${categoria_id})`);
-      setColor("success");
-      setActivo(true);
-  
-      setModalOpen(false);
-    };
-    const finalizarAccion = () => {
-      setLoading(false);
-      setPendingData(categoriaVacia);
-      setData(categoriaVacia);
-      router.get(route("categorias.index"), {}, {
-        preserveScroll: true,
-        preserveState: true,
-      });
-    };
+      return;
+    }
+
+    setTitle(title);
+    setText(`${mensaje} ✅ (ID: ${categoria_id})`);
+    setColor("success");
+    setActivo(true);
+
+    setModalOpen(false);
+  };
+  const finalizarAccion = () => {
+    setLoading(false);
+    setPendingData(categoriaVacia);
+    setData(categoriaVacia);
+    router.get(route("categorias.index"), {}, {
+      preserveScroll: true,
+      preserveState: true,
+    });
+  };
 
   const accionar = () => {
     if (!pendingData) return;
 
     setLoading(true);
 
-   const payload = { ...pendingData };
+    const payload = { ...pendingData };
 
 		if (modalMode === 'create') {
 			router.post(route('categorias.store'), payload, {

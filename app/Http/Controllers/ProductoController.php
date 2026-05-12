@@ -306,30 +306,6 @@ class ProductoController extends Controller
       );
     }
 
-    /*$productos = $query->latest()->get()->map(
-      function ($producto) {
-        $categoria = $producto->categorias->first(); 
-        return [ 
-          'producto_id' => $producto->producto_id, 
-          'producto_nombre' => $producto->nombre, 
-          'descripcion' => $producto->descripcion, 
-          'precio' => $producto->precio, 
-          'categoria_id' => $categoria?->categoria_id ?? '',
-          'categoria_nombre' => $categoria?->nombre ?? '',
-          'marca_id' => $producto->marca->marca_id ?? '', 
-          'marca_nombre' => $producto->marca->nombre ?? '', 
-          'codigo_barra' => $producto->codigo_barra, 
-          'stock_minimo' => $producto->stock_minimo,
-          'stock_actual' => $producto->stock?->cantidad ?? 0,
-          'vencimiento' => $producto->vencimiento, 
-          'inhabilitado' => $producto->inhabilitado, 
-          'imagen' => $producto->imagen, 
-          'created_at' => $producto->created_at, 
-          'updated_at' => $producto->updated_at, 
-        ]; 
-      }
-    );*/
-
     //Paginación
     $perPage = min($request->get('per_page',10),200);
     $productos = $query->latest()->paginate($perPage);
@@ -392,6 +368,7 @@ class ProductoController extends Controller
       $nombre       = strtolower(trim($validated['producto_nombre']));
       $existe = Producto::whereRaw('LOWER(TRIM(codigo_barra)) = ?', [$codigoBarras])
                         ->whereRaw('LOWER(TRIM(nombre)) = ?', [$nombre])
+                        ->where('inhabilitado', 0)
                         ->exists();
       if($existe){
         DB::rollBack();
@@ -466,6 +443,7 @@ class ProductoController extends Controller
       $existe = Producto::whereRaw('LOWER(TRIM(codigo_barra)) = ?', [$codBarras])
                         ->whereRaw('LOWER(TRIM(nombre)) = ?', [$nombre])
                         ->where('producto_id','!=',$producto->producto_id)
+                        ->where('inhabilitado', 0)
                         ->exists();
       if($existe){
         DB::rollBack();
@@ -526,7 +504,7 @@ class ProductoController extends Controller
     ]);
 
     return inertia('productos/createEdit',[
-      'mode'          => 'edit',
+      'mode'     => 'edit',
       'producto' => [
         'producto_id'         => $producto->producto_id,
         'producto_nombre'     => $producto->nombre,
@@ -550,14 +528,65 @@ class ProductoController extends Controller
 
   public function toggleEstado(Producto $producto)
   {
-    $producto->update(['inhabilitado' => !$producto->inhabilitado]);
+    DB::beginTransaction();
+    try {
+      $nuevoEstado = !$producto->inhabilitado;
+
+      if ($nuevoEstado === false) {
+        // si lo vas a habilitar, controlar duplicados
+        $codBarras = strtolower(trim($producto->codigo_barra));
+        $nombre = strtolower(trim($producto->producto_nombre));
+        $existe = Producto::whereRaw('LOWER(TRIM(codigo_barra)) = ?', [$codBarras])
+                        ->whereRaw('LOWER(TRIM(nombre)) = ?', [$nombre])
+                        ->where('producto_id','!=',$producto->producto_id)
+                        ->where('inhabilitado', 0)
+                        ->exists();
+
+        if ($existe) {
+          $producto->update([
+            'nombre'       => $producto->nombre.'-copia',
+            'codigo_barra' => $producto->codigo_barra.' - copia',
+            'inhabilitado' => $nuevoEstado,
+            'updated_at'   => now(),
+          ]);
+        } else {
+          $producto->update([
+            'inhabilitado' => $nuevoEstado,
+            'updated_at'   => now(),
+          ]);
+        }
+      } else {
+        // si lo vas a deshabilitar, no hace falta controlar duplicados
+        $producto->update([
+          'inhabilitado' => $nuevoEstado,
+          'updated_at'   => now(),
+        ]);
+      }
+      //éxito
+      DB::commit();
+      return inertia('productos/index',[
+        'resultado'   => 1,
+        'mensaje'     => 'Se modificó el estado correctamente',
+        'producto_id' => $producto->producto_id,
+        'timestamp'   => now()->timestamp
+      ]);
+    } catch (\Throwable $e) {
+      DB::rollBack();
+      return inertia('productos/index',[
+        'resultado'   => 0,
+        'producto_id' => $producto->producto_id,
+        'mensaje'     => 'Ocurrió un error al intentar actualizar estado del producto: '.$e->getMessage(),
+        'timestamp'   => now()->timestamp
+      ]);
+    }
+    /*$producto->update(['inhabilitado' => !$producto->inhabilitado]);
 
     return response()->json([
       'resultado'   => 1,
       'mensaje'     => 'Estado modificado exitosamente',
       'producto_id' => $producto->producto_id,
       'timestamp' => now()->timestamp,
-    ]);
+    ]);*/
   }
 
   // Método interno que devuelve solo el string

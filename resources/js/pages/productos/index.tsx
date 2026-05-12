@@ -218,11 +218,11 @@ export default function Productos(){
       prev_page_url: string,
     } 
   };
-  const [cacheados, setCacheados]             = useState<Producto[]>([]);
+  const [cacheados, setCacheados] = useState<Producto[]>([]);
 
   const [load, setLoad]             = useState(false);
   const [openMasivo, setOpenMasivo] = useState(false);
-  const [respuesta, setResp]= useState<{resultado: number, producto_id: number}>({resultado: 0, producto_id: 0});
+  //const [respuesta, setResp]= useState<{resultado: number, producto_id: number}>({resultado: 0, producto_id: 0});
 
   //funciones
   const confirmar = (data: Producto) => {
@@ -236,34 +236,51 @@ export default function Productos(){
   const inhabilitarHabilitar = async () => {
     if (!productoCopia || !productoCopia.producto_id) return;
     setLoad(true);
-    const res = await fetch(route('productos.toggleEstado', { producto: productoCopia.producto_id }), {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRF-TOKEN': getCsrfToken(),
-      },
-    });
-    const resp  = await res.json();
-    setLoad(false);
-    setResp({resultado: resp.resultado, producto_id: resp.producto_id});
-    setData({...data, producto_id: resp.producto_id, inhabilitado: !productoCopia.inhabilitado});
-    
-    if (resp.resultado === 0) {
-      setTitle('Error');
-      setText(resp.mensaje ?? 'Error inesperado');
-      setColor('error');
-      setActivo(true);
-      return;
-    }
+    router.put(
+      route('productos.toggleEstado', { producto: productoCopia.producto_id }),{},
+      {
+        preserveScroll: true,
+        preserveState: true,
+        onError: (errors) => {
+          // errors es un objeto { campo: "mensaje de error" }
+          setTitle("Error en cambio de estado");
+          setText(Object.values(errors).join("\n"));
+          setColor("error");
+          setActivo(true);
+        },
+        onSuccess: (page) => {
+          const { resultado, mensaje, producto_id } = page.props;
+          
+          if(resultado === 0){
+            setTitle("Error inesperado");
+            setText(`${mensaje} ❌ (ID: ${producto_id})`);
+            setColor("error");
+            setActivo(true);
+          }
 
-    setTitle('Estado modificado');
-    setText(resp.mensaje);
-    setColor('success');
-    setActivo(true);
-
-    setTextConfirmar('');
-    setConfirmar(false);
-    setProductoCopia(productoVacio)
+          setTitle("Estado actualizado");
+          setText(`${mensaje} ✅ (ID: ${producto_id})`);
+          setColor("success");
+          setActivo(true);
+        },
+        onFinish: () => {
+          setLoad(false);
+          setTextConfirmar('');
+          setConfirmar(false);
+          setProductoCopia(productoVacio);
+  
+          //al momento de buscar
+          setData(productoVacio);
+          router.get(
+            route('productos.index'), 
+            {}, {
+              preserveScroll: true,
+              preserveState: true,
+            }
+          );
+        }
+      }
+    );
   };
 
   const cancelarInhabilitarHabilitar = () => { 
@@ -322,16 +339,7 @@ export default function Productos(){
         title={title}
         text={text}
         color={color}
-        onClose={() => {
-          setActivo(false);
-          if (respuesta.resultado === 1 && respuesta.producto_id) {
-            router.get(route('productos.index'),
-              {...data},
-              //{ producto_id: respuesta.producto_id, buscar: true },
-              { preserveScroll: true,	preserveState: true	}
-            )
-          }
-        }}
+        onClose={() => setActivo(false)}
       />
       <Loading
         open={load}

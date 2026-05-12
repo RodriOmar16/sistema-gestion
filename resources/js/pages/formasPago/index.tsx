@@ -187,7 +187,7 @@ export default function FormasPago(){
           const id = page.props.forma_pago_id;
           const msj = page.props.mensaje;
           
-          setTitle("Estado de la forma de pago");
+          setTitle("Forma de pago modificada");
           setText(`${msj} ✅ (ID: ${id})`);
           setColor("success");
           setActivo(true);
@@ -243,11 +243,19 @@ export default function FormasPago(){
     setActivo(true);
   };
   const manejarExito = (titulo: string) => (page: any) => {
-    const id = page.props.forma_pago_id;
-    const msj = page.props.mensaje;
+    const { resultado, mensaje, forma_pago_id } = page.props;
+    const title = resultado === 0 ? 'Error': titulo ;
 
-    setTitle(titulo);
-    setText(`${msj} ✅ (ID: ${id})`);
+    if(resultado === 0){
+      setTitle(title);
+			setText(mensaje);
+			setColor("error");
+			setActivo(true);
+			return;
+    }
+
+    setTitle(title);
+    setText(`${mensaje} ✅ (ID: ${forma_pago_id})`);
     setColor("success");
     setActivo(true);
 
@@ -271,7 +279,7 @@ export default function FormasPago(){
 			router.post(route('formasPago.store'), payload, {
 				preserveScroll: true,
 				preserveState: true,
-				onError:   manejarError("Error en la creación de la forma de pago"),
+				onError:   manejarError("Error al crearForma de Pago"),
 				onSuccess: manejarExito("Forma de pago creada"),
 				onFinish:  finalizarAccion,
 			});
@@ -279,7 +287,7 @@ export default function FormasPago(){
 			router.put(route('formasPago.update',{fp: pendingData.forma_pago_id}), payload, {
 				preserveScroll: true,
 				preserveState: true,
-				onError:   manejarError("Error en la creación de la forma de pago"),
+				onError:   manejarError("Error al modificar la forma de pago"),
 				onSuccess: manejarExito("Forma de pago actualizada"),
 				onFinish:  finalizarAccion,
 			});

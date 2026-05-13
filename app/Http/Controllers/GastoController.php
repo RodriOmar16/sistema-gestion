@@ -136,7 +136,13 @@ class GastoController extends Controller
 
       //éxito
       DB::commit();
-      return response()->json([
+      /*return response()->json([
+        'resultado' => 1,
+        'mensaje'   => 'El gasto se creó correctamente',
+        'gasto_id'  => $gasto->gasto_id,
+        'timestamp' => now()->timestamp
+      ]);*/
+      return inertia('gastos/index',[
         'resultado' => 1,
         'mensaje'   => 'El gasto se creó correctamente',
         'gasto_id'  => $gasto->gasto_id,
@@ -144,7 +150,12 @@ class GastoController extends Controller
       ]);
     } catch (\Throwable $e) {
       DB::rollBack();
-      return response()->json([
+      /*return response()->json([
+        'resultado' => 0,
+        'mensaje'   => 'Ocurrió un error al intentar crear el gasto: '.$e->getMessage(),
+        'timestamp' => now()->timestamp
+      ]);*/
+      return inertia('gastos/index',[
         'resultado' => 0,
         'mensaje'   => 'Ocurrió un error al intentar crear el gasto: '.$e->getMessage(),
         'timestamp' => now()->timestamp
@@ -158,22 +169,30 @@ class GastoController extends Controller
     try {
       //controlo los datos
       $validated = $request->validate([
-        'fecha'       => 'required|date',
-        'monto'       => 'required|numeric',
-        'descripcion' => 'string|max:255',
+        'fecha'             => 'required|date',
+        'monto'             => 'required|numeric',
+        'categoria_gasto_id'=> 'required|integer',
+        'descripcion'       => 'string|max:255',
       ]);
       
       //modifico el gasto
       $gasto->update([
-        'descripcion' => $validated['descripcion'],
-        'fecha'       => $validated['fecha'],
-        'monto'       => $validated['monto'],
-        'updated_at'  => now(),
+        'descripcion'       => $validated['descripcion'],
+        'fecha'             => $validated['fecha'],
+        'monto'             => $validated['monto'],
+        'categoria_gasto_id'=> $validated['categoria_gasto_id'],
+        'updated_at'        => now(),
       ]);
 
       //éxito
       DB::commit();
-      return response()->json([
+      /*return response()->json([
+        'resultado' => 1,
+        'mensaje'   => 'El gasto se modificó correctamente',
+        'gasto_id'  => $gasto->gasto_id,
+        'timestamp' => now()->timestamp
+      ]);*/
+      return inertia('gastos/index',[
         'resultado' => 1,
         'mensaje'   => 'El gasto se modificó correctamente',
         'gasto_id'  => $gasto->gasto_id,
@@ -181,8 +200,14 @@ class GastoController extends Controller
       ]);
     } catch (\Throwable $e) {
       DB::rollBack();
-      return response()->json([
+      /*return response()->json([
         'resultado' => 0,
+        'mensaje'   => 'Ocurrió un error al intentar actualizar el gasto: '.$e->getMessage(),
+        'timestamp' => now()->timestamp
+      ]);*/
+      return inertia('gastos/index',[
+        'resultado' => 0,
+        'gasto_id'  => $gasto->gasto_id,
         'mensaje'   => 'Ocurrió un error al intentar actualizar el gasto: '.$e->getMessage(),
         'timestamp' => now()->timestamp
       ]);
@@ -200,17 +225,29 @@ class GastoController extends Controller
 
       //éxito
       DB::commit();
-      return response()->json([
+      return inertia('gastos/index', [
         'resultado' => 1,
         'mensaje'   => 'Se borró el gasto correctamente',
         'gasto_id'  => $gasto->gasto_id,
         'timestamp' => now()->timestamp
       ]);
+      /*return response()->json([
+        'resultado' => 1,
+        'mensaje'   => 'Se borró el gasto correctamente',
+        'gasto_id'  => $gasto->gasto_id,
+        'timestamp' => now()->timestamp
+      ]);*/
     } catch (\Throwable $e) {
       DB::rollBack();
-      return response()->json([
+      /*return response()->json([
         'resultado' => 0,
         'mensaje'   => 'Ocurrió un error al intentar actualizar estado del gasto: '.$e->getMessage(),
+        'timestamp' => now()->timestamp
+      ]);*/
+      return response()->json([
+        'resultado' => 0,
+        'gasto_id'  => $gasto->gasto_id,
+        'mensaje'   => 'Ocurrió un error al intentar eliminar el gasto: '.$e->getMessage(),
         'timestamp' => now()->timestamp
       ]);
     }

@@ -23,6 +23,8 @@ import CategoriaGastos from '@/components/gastos/categoriaGastos';
 const breadcrumbs: BreadcrumbItem[] = [ { title: 'Gastos', href: '', } ];
 
 type propsForm = {
+  data: Gasto;
+  set: (e:any) => void;
   openCreate:   () => void;
   setCatGastos: (p:Boolean) => void;
 }
@@ -44,8 +46,7 @@ const gastoVacio = {
   inhabilitado:           0
 };
 
-export function FiltrosForm({ openCreate, setCatGastos }: propsForm){
-  const { data, setData, errors, processing } = useForm<Gasto>(gastoVacio);
+export function FiltrosForm({ data, set, openCreate, setCatGastos }: propsForm){
   const [load, setLoad]                       = useState(false);
   const [optionProv, setOptionProv]           = useState<Autocomplete|null>(null);
   const [optionFp, setOptionFp]               = useState<Autocomplete|null>(null);
@@ -71,7 +72,7 @@ export function FiltrosForm({ openCreate, setCatGastos }: propsForm){
   };
 
   const handleReset = () => {
-    setData(gastoVacio);
+    set(gastoVacio);
     setOptionProv(null);
     setOptionFp(null);
     setOptionCg(null);
@@ -79,30 +80,30 @@ export function FiltrosForm({ openCreate, setCatGastos }: propsForm){
 
   const seleccionarProveedor = (option : any) => {
     if(option){
-      setData({...data, proveedor_id: option.value, proveedor_nombre: option.label});
+      set({...data, proveedor_id: option.value, proveedor_nombre: option.label});
       setOptionProv(option);
     }else{
-      setData({...data, proveedor_id: '', proveedor_nombre: ''});
+      set({...data, proveedor_id: '', proveedor_nombre: ''});
       setOptionProv(null);
     }
   };
   const seleccionarFp = (option : any) => {
     if(option){
       //setFpId(option.value);
-      setData({...data, forma_pago_id: option.value, forma_pago_nombre: option.label});
+      set({...data, forma_pago_id: option.value, forma_pago_nombre: option.label});
       setOptionFp(option);
     }else{
       //setFpId(0);
-      setData({...data, forma_pago_id: '', forma_pago_nombre: ''});
+      set({...data, forma_pago_id: '', forma_pago_nombre: ''});
       setOptionFp(null);
     }
   };
   const seleccionarCategoria = (option : any) => {
     if(option){
-      setData({...data, categoria_gasto_id: option.value, categoria_gasto_nombre: option.label});
+      set({...data, categoria_gasto_id: option.value, categoria_gasto_nombre: option.label});
       setOptionCg(option);
     }else{
-      setData({...data, categoria_gasto_id: '', categoria_gasto_nombre: ''});
+      set({...data, categoria_gasto_id: '', categoria_gasto_nombre: ''});
       setOptionCg(null);
     }
   };
@@ -137,8 +138,7 @@ export function FiltrosForm({ openCreate, setCatGastos }: propsForm){
       <form className='grid grid-cols-12 gap-4 px-4 pt-1 pb-4' onSubmit={handleSubmit}>
         <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-1'>
           <label htmlFor="id">Id</label>
-          <Input className='text-right' value={data.gasto_id} onChange={(e)=>setData('gasto_id',Number(e.target.value))}/>	
-          { errors.gasto_id && <p className='text-red-500	'>{ errors.gasto_id }</p> }
+          <Input className='text-right' value={data.gasto_id} onChange={(e)=>set({...data, 'gasto_id': Number(e.target.value)})}/>	
         </div>
         <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
           Proveedores
@@ -171,7 +171,7 @@ export function FiltrosForm({ openCreate, setCatGastos }: propsForm){
           <label htmlFor="padre">Caja</label>
           <Select
             value={String(data.caja_id)}
-            onValueChange={(value) => setData('caja_id', Number(value))}
+            onValueChange={(value) => set({...data, 'caja_id': Number(value)})}
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="" />
@@ -189,11 +189,11 @@ export function FiltrosForm({ openCreate, setCatGastos }: propsForm){
         </div>
         <div className="col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-2">
           <label htmlFor="fechaDesde">Fecha Desde</label>
-          <DatePicker fecha={(data.fecha_desde)} setFecha={ (fecha:string) => {setData({...data,fecha_desde: fecha})} }/>
+          <DatePicker fecha={(data.fecha_desde)} setFecha={ (fecha:string) => {set({...data,fecha_desde: fecha})} }/>
         </div>
         <div className="col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-2">
           <label htmlFor="fechaHasta">Fecha Hasta</label>
-          <DatePicker fecha={(data.fecha_hasta)} setFecha={ (fecha:string) => {setData({...data,fecha_hasta: fecha})} }/>
+          <DatePicker fecha={(data.fecha_hasta)} setFecha={ (fecha:string) => {set({...data,fecha_hasta: fecha})} }/>
         </div>        
         <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
           <div className='flex flex-col'>
@@ -204,7 +204,7 @@ export function FiltrosForm({ openCreate, setCatGastos }: propsForm){
               decimalSeparator="," 
               prefix="$" 
               className="text-right border rounded px-2 py-1" 
-              onValueChange={(values) => { setData({...data,monto: values.floatValue || 0}) }}
+              onValueChange={(values) => { set({...data,monto: values.floatValue || 0}) }}
             />
           </div>	
         </div>
@@ -232,6 +232,7 @@ export function FiltrosForm({ openCreate, setCatGastos }: propsForm){
 
 export default function Gastos(){
   //data
+  const { data, setData, errors, processing } = useForm<Gasto>(gastoVacio);
   const [confirmOpen, setConfirOpen] = useState(false); //modal para confirmar acciones para cuado se crea o edita
   const [textConfir, setTextConfirm] = useState('');
   
@@ -284,7 +285,52 @@ export default function Gastos(){
     if (!gastoCopia || !gastoCopia.gasto_id) return;
     setLoading(true);
 
-    try {
+    router.put(
+      route('gasto.toggleEstado',{ gasto: gastoCopia.gasto_id }),{},
+      {
+        preserveScroll: true,
+        preserveState: true,
+        onError: (errors) => {
+          // errors es un objeto { campo: "mensaje de error" }
+          setTitle("Error en cambio de estado");
+          setText(Object.values(errors).join("\n"));
+          setColor("error");
+          setActivo(true);
+        },
+        onSuccess: (page) => {
+          const { resultado, mensaje, gasto_id } = page.props;
+          
+          if(resultado === 0){
+            setTitle("Error inesperado");
+            setText(`${mensaje} ❌ (ID: ${gasto_id})`);
+            setColor("error");
+            setActivo(true);
+          }
+
+          setTitle("Gasto eliminado");
+          setText(`${mensaje} ✅ (ID: ${gasto_id})`);
+          setColor("success");
+          setActivo(true);
+        },
+        onFinish: () => {
+          setLoading(false);
+          setTextConfirmar('');
+          setConfirmar(false);
+          setGastoCopia(gastoVacio);
+  
+          //al momento de buscar
+          setData(gastoVacio);
+          router.get(
+            route('gastos.index'), 
+            {}, {
+              preserveScroll: true,
+              preserveState: true,
+            }
+          );
+        }
+      }
+    );
+    /*try {
       let resp : {resultado: number, gasto_id: number, mensaje?:string} ;
 
       resp = await apiRequest(route('gasto.toggleEstado',{ gasto: gastoCopia.gasto_id }), 'PUT');
@@ -314,7 +360,7 @@ export default function Gastos(){
       setGastoCopia(gastoVacio);
       setTextConfirmar('');
       setConfirmar(false);
-    }
+    }*/
   };
 
   const cancelarInhabilitarHabilitar = () => { 
@@ -340,9 +386,46 @@ export default function Gastos(){
     setConfirOpen(true);
   };
 
+  const manejarError = (titulo: string) => (errors: any) => {
+    console.log("Errores:", errors);
+    setTitle(titulo);
+    setText(Object.values(errors).join("\n"));
+    setColor("error");
+    setActivo(true);
+  };
+  const manejarExito = (titulo: string) => (page: any) => {
+    const { resultado, mensaje, gasto_id } = page.props;
+    const title = resultado === 0 ? 'Error inesperado': titulo ;
+
+    if(resultado === 0){
+      setTitle(title);
+      setText(mensaje);
+      setColor("error");
+      setActivo(true);
+      return;
+    }
+
+    setTitle(title);
+    setText(`${mensaje} ✅ (ID: ${gasto_id})`);
+    setColor("success");
+    setActivo(true);
+
+    setModalOpen(false);
+  };
+  const finalizarAccion = () => {
+    setLoading(false);
+    setPendingData(gastoVacio);
+    setData(gastoVacio);
+    router.get(route("gastos.index"), {}, {
+      preserveScroll: true,
+      preserveState: true,
+    });
+  };
+
   const accionar = async () => {
     if (!pendingData) return;
-    setConfirOpen(false);
+    /*setConfirOpen(false);
+    setTextConfirm('');
     setLoading(true);
 
     const payload = { ...pendingData, fecha: convertirFechaBarrasGuiones(pendingData.fecha) };
@@ -380,7 +463,30 @@ export default function Gastos(){
       setActivo(true);
     } finally {
       setLoading(false);
-    }
+    }*/
+    setLoading(true);
+
+    const payload = { ...pendingData, fecha: convertirFechaBarrasGuiones(pendingData.fecha) };
+
+		if (modalMode === 'create') {
+			router.post(route('gastos.store'), payload, {
+				preserveScroll: true,
+				preserveState: true,
+				onError:   manejarError("Error al grabar el gasto"),
+				onSuccess: manejarExito("Gasto creado"),
+				onFinish:  finalizarAccion,
+			});
+		} else {
+			router.put(route('gasto.update', { gasto: pendingData.gasto_id }), payload, {
+				preserveScroll: true,
+				preserveState: true,
+				onError:   manejarError("Error al modificar el gasto"),
+				onSuccess: manejarExito("Gasto actualizado"),
+				onFinish:  finalizarAccion,
+			});
+		}
+    setTextConfirm('');
+    setConfirOpen(false);
   };
 
   const cancelarConfirmacion = () => {
@@ -402,6 +508,8 @@ export default function Gastos(){
       <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
         <div className="relative flex-none flex-1 rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
           <FiltrosForm 
+            data={data}
+            set={setData}
             openCreate={openCreate}
             setCatGastos={(p:Boolean) => setVerCatGastos(Boolean(p))}/>
         </div>

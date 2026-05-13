@@ -44,15 +44,43 @@ const gastoVacio = {
   inhabilitado:           0
 };
 
+const requeridosReset = {
+  gasto_id:               false,
+  fecha:                  false,
+  fecha_desde:            false,
+  fecha_hasta:            false,
+  caja_id:                false,
+  proveedor_id:           false,
+  proveedor_nombre:       false,
+  categoria_gasto_id:     false,
+  categoria_gasto_nombre: false,
+  forma_pago_id:          false,
+  forma_pago_nombre:      false,
+  monto:                  false,
+  descripcion:            false,
+}
+
 export default function NewEditGasto({ open, onOpenChange, mode, gasto, onSubmit }: Props){
   //data
-  const [activo, setActivo] = useState(false);
-  const [text, setText]     = useState('');
-  const [title, setTitle]   = useState('');
   const { data, setData, get, post, processing, errors } = useForm<Gasto>(gastoVacio);
   const [optionProv, setOptionProv]           = useState<Autocomplete|null>(null);
   const [optionFp, setOptionFp]               = useState<Autocomplete|null>(null);
   const [optionCg, setOptionCg]               = useState<Autocomplete|null>(null);
+  const [requeridos, setRequeridos]           = useState<{
+    gasto_id:               boolean,
+    fecha:                  boolean,
+    fecha_desde:            boolean,
+    fecha_hasta:            boolean,
+    caja_id:                boolean,
+    proveedor_id:           boolean,
+    proveedor_nombre:       boolean,
+    categoria_gasto_id:     boolean,
+    categoria_gasto_nombre: boolean,
+    forma_pago_id:          boolean,
+    forma_pago_nombre:      boolean,
+    monto:                  boolean,
+    descripcion:            boolean,
+  }>(requeridosReset);
 
   const tipoCajas = [ {id:0, nombre: 'Sin caja'}, {id: -1, nombre: 'Principal'} ];
 
@@ -63,6 +91,7 @@ export default function NewEditGasto({ open, onOpenChange, mode, gasto, onSubmit
       setOptionProv(null);
       setOptionFp(null);
       setOptionCg(null);
+      setRequeridos(requeridosReset);
     }else{
       if(gasto && mode === 'edit'){
         setData({
@@ -80,7 +109,8 @@ export default function NewEditGasto({ open, onOpenChange, mode, gasto, onSubmit
           monto:                  gasto.monto,
           descripcion:            gasto.descripcion,
           inhabilitado:           gasto.inhabilitado
-        });        
+        });
+        setOptionCg({value: Number(gasto.categoria_gasto_id), label: String(gasto.categoria_gasto_nombre)})     ;
       }
     }
   }, [open, mode, gasto]);
@@ -88,48 +118,28 @@ export default function NewEditGasto({ open, onOpenChange, mode, gasto, onSubmit
   //funciones
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if(!data.proveedor_id){
-      setTitle('¡Campo faltante!');
-      setText('Se requiere que selecciones un proveedor');
-      setActivo(true);
-      return 
+    const nuevosErrores = {
+      gasto_id:               false,
+      fecha:                  (data.fecha === '' || !data.fecha),
+      fecha_desde:            false,
+      fecha_hasta:            false,
+      caja_id:                data.caja_id === '',
+      proveedor_id:           !data.proveedor_id,
+      proveedor_nombre:       false,
+      categoria_gasto_id:     !data.categoria_gasto_id,
+      categoria_gasto_nombre: false,
+      forma_pago_id:          !data.forma_pago_id,
+      forma_pago_nombre:      false,
+      monto:                  Boolean(!data.monto || (Number(data.monto) && Number(data.monto) <= 0)),
+      descripcion:            !data.descripcion,
+    };
+    setRequeridos(nuevosErrores);
+    const hayErrores = Object.values(nuevosErrores).some(e => e);
+
+    if (hayErrores) {
+      return;
     }
-    if(!data.categoria_gasto_id){
-      setTitle('¡Campo faltante!');
-      setText('Se requiere que selecciones una categoría');
-      setActivo(true);
-      return 
-    }
-    if(!data.forma_pago_id){
-      setTitle('¡Campo faltante!');
-      setText('Se requiere que selecciones una forma de pago');
-      setActivo(true);
-      return 
-    }
-    if(!data.monto || (Number(data.monto) && Number(data.monto) <= 0)){
-      setTitle('¡Campo faltante!');
-      setText('Se requiere que ingreses un monto');
-      setActivo(true);
-      return 
-    }
-    if(!data.descripcion){
-      setTitle('¡Campo faltante!');
-      setText('Se requiere que ingreses una descripcion');
-      setActivo(true);
-      return 
-    }
-    if(data.caja_id === ''){
-      setTitle('¡Campo faltante!');
-      setText('Se requiere que selecciones la caja');
-      setActivo(true);
-      return 
-    }
-    if(data.fecha === '' || !data.fecha){
-      setTitle('¡Campo faltante!');
-      setText('Se requiere que ingreses una fecha');
-      setActivo(true);
-      return 
-    }
+    //return console.log("data: ", data)
     onSubmit(data);
   }
 
@@ -137,6 +147,7 @@ export default function NewEditGasto({ open, onOpenChange, mode, gasto, onSubmit
     if(option){
       setData({...data, proveedor_id: option.value, proveedor_nombre: option.label});
       setOptionProv(option);
+      setRequeridos({...requeridos, proveedor_id: false});
     }else{
       setData({...data, proveedor_id: '', proveedor_nombre: ''});
       setOptionProv(null);
@@ -147,6 +158,7 @@ export default function NewEditGasto({ open, onOpenChange, mode, gasto, onSubmit
       //setFpId(option.value);
       setData({...data, forma_pago_id: option.value, forma_pago_nombre: option.label});
       setOptionFp(option);
+      setRequeridos({...requeridos, forma_pago_id: false});
     }else{
       //setFpId(0);
       setData({...data, forma_pago_id: '', forma_pago_nombre: ''});
@@ -157,6 +169,7 @@ export default function NewEditGasto({ open, onOpenChange, mode, gasto, onSubmit
     if(option){
       setData({...data, categoria_gasto_id: option.value, categoria_gasto_nombre: option.label});
       setOptionCg(option);
+      setRequeridos({...requeridos, categoria_gasto_id: false});
     }else{
       setData({...data, categoria_gasto_id: '', categoria_gasto_nombre: ''});
       setOptionCg(null);
@@ -194,19 +207,26 @@ export default function NewEditGasto({ open, onOpenChange, mode, gasto, onSubmit
             <label htmlFor="fecha">Fecha</label>
             <DatePicker 
               fecha={(data.fecha)} 
-              setFecha={ (fecha:string) => {setData({...data, fecha})} }
+              setFecha={ (fecha:string) => {
+                setData({...data, fecha});
+                if(fecha){ requeridos.fecha = false; }
+              }}
             />
+            { requeridos.fecha && (<p className="mt-1 text-sm text-red-600 font-medium">⚠️Campo requerido</p>)}
           </div>
           <div className="col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-12">
             <label htmlFor="proveedor">Proveedor</label>
             {
               mode === 'create' ? (
-                <GenericSelect
-                  route="proveedores"
-                  value={optionProv}
-                  onChange={(option) => seleccionarProveedor(option)}
-                  placeHolder='Seleccionar'
-                />
+                <>
+                  <GenericSelect
+                    route="proveedores"
+                    value={optionProv}
+                    onChange={(option) => seleccionarProveedor(option)}
+                    placeHolder='Seleccionar'
+                  />
+                  { requeridos.proveedor_id && (<p className="mt-1 text-sm text-red-600 font-medium">⚠️Campo requerido</p>)}
+                </>
               ) :(
                 <>
                   <Input
@@ -220,14 +240,17 @@ export default function NewEditGasto({ open, onOpenChange, mode, gasto, onSubmit
           </div>
           <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-12'>
             <label htmlFor="categoria">Categoría</label>
-            {
+            {/*
               mode === 'create' ? (
-                <GenericSelect
-                  route="categoria-gastos"
-                  value={optionCg}
-                  onChange={(option) => seleccionarCategoria(option)}
-                  placeHolder='Seleccionar'
-                />
+                <>
+                  <GenericSelect
+                    route="categoria-gastos"
+                    value={optionCg}
+                    onChange={(option) => seleccionarCategoria(option)}
+                    placeHolder='Seleccionar'
+                  />
+                  { requeridos.categoria_gasto_id && (<p className="mt-1 text-sm text-red-600 font-medium">⚠️Campo requerido</p>)}
+                </>
               ) :(
                 <>
                   <Input
@@ -237,18 +260,28 @@ export default function NewEditGasto({ open, onOpenChange, mode, gasto, onSubmit
                   />
                 </>
               )
-            }
+            */}
+            <GenericSelect
+              route="categoria-gastos"
+              value={optionCg}
+              onChange={(option) => seleccionarCategoria(option)}
+              placeHolder='Seleccionar'
+            />
+            { requeridos.categoria_gasto_id && (<p className="mt-1 text-sm text-red-600 font-medium">⚠️Campo requerido</p>)}
           </div>
           <div className="col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-12">
             <label htmlFor="fp">Forma de Pago</label>
             {
               mode === 'create' ? (
-                <GenericSelect
-                  route="formas-pago"
-                  value={optionFp}
-                  onChange={(option) => seleccionarFp(option)}
-                  placeHolder='Seleccionar'
-                />
+                <>
+                  <GenericSelect
+                    route="formas-pago"
+                    value={optionFp}
+                    onChange={(option) => seleccionarFp(option)}
+                    placeHolder='Seleccionar'
+                  />
+                  { requeridos.forma_pago_id && (<p className="mt-1 text-sm text-red-600 font-medium">⚠️Campo requerido</p>)}
+                </>
               ) :(
                 <>
                   <Input
@@ -265,7 +298,10 @@ export default function NewEditGasto({ open, onOpenChange, mode, gasto, onSubmit
               <label htmlFor="padre">Caja</label>
               <Select
                 value={String(data.caja_id)}
-                onValueChange={(value) => setData('caja_id', Number(value))}
+                onValueChange={(value) => {
+                  setData('caja_id', Number(value));
+                  if(value){ requeridos.caja_id = false; }
+                }}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="" />
@@ -280,6 +316,7 @@ export default function NewEditGasto({ open, onOpenChange, mode, gasto, onSubmit
                   </SelectGroup>
                 </SelectContent>
               </Select>
+              { requeridos.caja_id && (<p className="mt-1 text-sm text-red-600 font-medium">⚠️Campo requerido</p>)}
             </div>
           ) : (
             <></>
@@ -293,8 +330,12 @@ export default function NewEditGasto({ open, onOpenChange, mode, gasto, onSubmit
                 decimalSeparator="," 
                 prefix="$" 
                 className="text-right border rounded px-2 py-1" 
-                onValueChange={(values) => { setData({...data,monto: values.floatValue || 0}) }}
+                onValueChange={(values) => { 
+                  setData({...data, monto: values.floatValue || 0});
+                  if(values.floatValue){ requeridos.monto = false }
+                }}
               />
+              { requeridos.monto && (<p className="mt-1 text-sm text-red-600 font-medium">⚠️Campo requerido</p>)}
             </div>
           </div>
           <div className='col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>
@@ -303,8 +344,12 @@ export default function NewEditGasto({ open, onOpenChange, mode, gasto, onSubmit
               id="descripcion" 
               placeholder="Escribe una detalle..." 
               value={data.descripcion}
-              onChange={(e) => setData({...data, descripcion: e.target.value})}
+              onChange={(e) => {
+                setData({...data, descripcion: e.target.value});
+                if(e.target.value){ requeridos.descripcion = false; }
+              }}
             />
+            { requeridos.descripcion && (<p className="mt-1 text-sm text-red-600 font-medium">⚠️Campo requerido</p>)}
           </div>
         </form>
         <DialogFooter>
@@ -321,13 +366,6 @@ export default function NewEditGasto({ open, onOpenChange, mode, gasto, onSubmit
           </Button>
         </DialogFooter>
       </DialogContent>
-      <ShowMessage 
-        open={activo}
-        title={title}
-        text={text}
-        color="warning"
-        onClose={() => setActivo(false)}
-      />
     </Dialog>
   );
 }

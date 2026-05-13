@@ -136,6 +136,7 @@ export default function NewEditProductos(){
         stock_minimo:        producto.stock_minimo,
         vencimiento:         producto.vencimiento? convertirFechaGuionesBarras(producto.vencimiento) : '',
       });
+      setOptionMarca({ value: Number(producto.marca_id), label: producto.marca_nombre });
     }
   }, [mode, producto]);
 
@@ -182,7 +183,6 @@ export default function NewEditProductos(){
     setResp({resultado: resultado, producto_id: producto_id});
 
     if(resultado === 0){
-      console.log("mode: ", mode);
       setTitle(title);
       setText(mensaje);
       setColor("error");

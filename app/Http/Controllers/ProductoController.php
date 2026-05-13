@@ -745,8 +745,11 @@ class ProductoController extends Controller
 
       // 3. Consultar en la base si ya existen productos con esos códigos o nombres
       $existentes = Producto::query()
-          ->whereIn(DB::raw('LOWER(TRIM(codigo_barra))'), $codigos)
-          ->orWhereIn(DB::raw('LOWER(TRIM(nombre))'), $nombres)
+          ->where('inhabilitado', 0)
+          ->where(function($q) use ($codigos, $nombres) {
+              $q->whereIn(DB::raw('LOWER(TRIM(codigo_barra))'), $codigos)
+                ->orWhereIn(DB::raw('LOWER(TRIM(nombre))'), $nombres);
+          })
           ->get(['codigo_barra','nombre'])
           ->map(fn($p) => [
               'codigo_barra' => strtolower(trim($p->codigo_barra)),

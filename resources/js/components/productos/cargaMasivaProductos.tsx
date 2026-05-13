@@ -16,6 +16,7 @@ import { route } from 'ziggy-js';
 import { router } from "@inertiajs/react";
 import * as XLSX from "xlsx";
 import { convertirFechaBarrasGuiones, convertirNumberPlata } from "@/utils";
+import Loading from "../utils/loadingDialog";
 
 interface PropsTable {
   data: Producto[];
@@ -180,6 +181,10 @@ export default function CargaMasiva({ open, onOpenChange }: Props){
       setProblemas(true);
       return 
     }
+    router.get(route('productos.index'), {}, {
+      preserveState: true,
+      preserveScroll: true,
+    });
 
     onOpenChange(false);
   };
@@ -217,7 +222,7 @@ export default function CargaMasiva({ open, onOpenChange }: Props){
         const productos: Producto[] = [];
 
         rows.slice(1).forEach((row) => { // ignoro fila 1 y 2
-          const key = `${row[0].toLowerCase().trim()}-${row[3].toString().toLowerCase().trim()}`;
+          const key = `${row[0].toLowerCase().trim()}-${(row[3]??'').toString().toLowerCase().trim()}`;
           //const key = `${row[3]}`; // nombre + código barras //${row[0]}-${row[1]}-${row[2]}-
           console.log("key: ", key)
           if (seen.has(key)) {
@@ -273,7 +278,7 @@ export default function CargaMasiva({ open, onOpenChange }: Props){
         <DialogHeader>
           <DialogTitle>Carga Masiva de productos</DialogTitle>
           <DialogDescription>
-            Descarga el modelo, llena el excel con los datos de nuevos productos y grabalos.
+            Descarga el modelo. Rellena con los datos de nuevos productos y subilo.
           </DialogDescription>
           <hr />
         </DialogHeader>
@@ -300,7 +305,7 @@ export default function CargaMasiva({ open, onOpenChange }: Props){
                 onChange={handleFile} 
                 className="hidden" // oculta el input 
               /> 
-              {fileName}
+              {prods.length > 0 && fileName}
             </div>
           </div>
           { prods.length > 0 ? (
@@ -362,6 +367,10 @@ export default function CargaMasiva({ open, onOpenChange }: Props){
         text={textConfirmar}
         onSubmit={grabar}
         onCancel={cancelarGrabar}
+      />
+      <Loading
+        open={load}
+        onClose={() => {}}
       />
     </Dialog>
   );

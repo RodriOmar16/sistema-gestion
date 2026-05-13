@@ -47,7 +47,6 @@ const productoVacio = {
 }
 
 export function FiltrosForm({ data, set, setMasivo }: propsForm){
-  const [esperandoRespuesta, setEsperandoRespuesta] = useState(false)
   const [loading, setLoading]                       = useState(false);
   const [optionMarca, setOptionMarca]               = useState<Autocomplete|null>(null);
   const [optionCateg, setOptionCateg]               = useState<Autocomplete|null>(null);
@@ -60,7 +59,6 @@ export function FiltrosForm({ data, set, setMasivo }: propsForm){
       preserveState: true,
       preserveScroll: true,
       onFinish: () => {
-        setEsperandoRespuesta(false);
         setLoading(false);
       }
     });
@@ -222,7 +220,6 @@ export default function Productos(){
 
   const [load, setLoad]             = useState(false);
   const [openMasivo, setOpenMasivo] = useState(false);
-  //const [respuesta, setResp]= useState<{resultado: number, producto_id: number}>({resultado: 0, producto_id: 0});
 
   //funciones
   const confirmar = (data: Producto) => {

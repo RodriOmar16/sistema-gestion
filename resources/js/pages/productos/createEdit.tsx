@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { Loader2, Save, Barcode, File } from 'lucide-react';
+import { Loader2, Save, Barcode, File, Image } from 'lucide-react';
 import {  Table,  TableBody,  TableCaption,  TableCell,  TableHead,  TableHeader,  TableRow,
 } from "@/components/ui/table";
 import { Select,  SelectContent, SelectGroup,  SelectItem,  SelectTrigger,  SelectValue } from "@/components/ui/select"
@@ -40,143 +40,34 @@ const productoVacio = {
   inhabilitado:        false,
 };
 
-interface Props{
-  data: Producto;
-  set: (e:any) => void;
-  modo: string;
-  //marcas: Multiple[];
-}
-
-export function DetallesProducto({modo, data, set, /*marcas*/}:Props){
-  const [load , setLoad]              = useState(false);
-  const [optionMarca, setOptionMarca] = useState<Autocomplete|null>(null);
-  
-  const generarCodigo = async () => {
-    try {
-      setLoad(true);
-      const res = await fetch(route('productos.generarCodigo'));
-      if (!res.ok) throw new Error("Error al generar código");
-      const json = await res.json();
-      set({...data, codigo_barra: json.codigo_barra});
-    } catch (error) {
-      console.warn("Ocurrió un error al intentar generar el código: ", error);
-    } finally{
-      setLoad(false);
-    }
-  };
-
-  const seleccionarMarca = (option : any) => {
-    if(option){
-      set({...data, marca_id: option.value, marca_nombre: option.label});
-      setOptionMarca(option);
-    }else{
-      set({...data, marca_id: '', marca_nombre: ''});
-      setOptionMarca(null);
-    }
-  };
-
-  useEffect(() => {
-    if (data.marca_id && data.marca_nombre) {
-      setOptionMarca({ value: Number(data.marca_id), label: data.marca_nombre });
-    } else {
-      setOptionMarca(null);
-    }
-  }, [data.marca_id, data.marca_nombre]);
-
-
-  return (
-    <div className='px-4'>
-      <div className='grid grid-cols-12 gap-4'>
-        <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
-          <label htmlFor="nombre">Nombre</label>
-          <Input value={data.producto_nombre} onChange={(e)=>set({...data, producto_nombre:e.target.value})}/>	
-        </div>
-        {/*<div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-9'>
-          <label htmlFor="descripcion">Descripcion</label>
-          <Input value={data.descripcion} onChange={(e)=>set({...data, descripcion:e.target.value})}/>	
-        </div>*/}
-        <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
-          <div className='flex flex-col'>
-            <label htmlFor="precio">Precio</label>
-            <NumericFormat 
-              value={data.precio} 
-              thousandSeparator="." 
-              decimalSeparator="," 
-              prefix="$" 
-              className="text-right border rounded px-2 py-1" 
-              onValueChange={(values) => {
-                set({...data, precio: values.floatValue || 0});
-              }}
-            />
-          </div>
-        </div>
-        <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
-          <label htmlFor="cliente">Marcas</label>
-            <GenericSelect
-              route="marcas"
-              value={optionMarca}
-              onChange={(option) => seleccionarMarca(option)}
-              placeHolder='Selec. marca'
-            />
-        </div>
-        <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
-          <label htmlFor="codigoBarras">Código de barras</label>
-          <div className='flex items-center'>
-            <Input className='' value={data.codigo_barra} onChange={(e)=>set({...data, codigo_barra:e.target.value})}/>	
-            <Button 
-              className="p-0 hover:bg-transparent cursor-pointer"
-              type="button"
-              title="Generar código" 
-              variant="ghost" 
-              size="icon"
-              onClick={() => generarCodigo()}
-            >
-              { load ? ( <Loader2 size={20} className="animate-spin"/> ) : 
-                         (<Barcode size={20} color="blue"/>)  }
-            </Button>
-          </div>
-        </div>
-        <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
-          <label htmlFor="stockMinimo">Stock Mínimo</label>
-          <Input type='number' className='text-right' value={data.stock_minimo} onChange={(e)=>set({...data, stock_minimo:Number(e.target.value)})}/>	
-        </div>
-        <div className="col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3">
-          <label htmlFor="vencimiento">Vencimiento</label>
-          <DatePicker fecha={(data.vencimiento??'')} setFecha={ (fecha:string) => {set({...data, vencimiento: fecha})} }/>
-        </div>  
-        <div className='col-span-6 sm:col-span-4 md:col-span-4 lg:col-span-2 flex flex-col'>
-          <label className='mr-2'>Inhabilitado</label>
-          <Switch checked={data.inhabilitado==0 ? false: true} onCheckedChange={(val) => set({...data, inhabilitado: Boolean(val)})} />
-        </div>
-        <div className='col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>
-          Descripción
-          <Textarea 
-            id="descripcion" 
-            placeholder="Escribe una comentario..." 
-            value={data.descripcion}
-            onChange={(e) => set({...data, descripcion: e.target.value})}
-          />
-        </div>
-      </div>
-    </div>
-  );
-}
-
+const requeridosReset = {
+  producto_id:      false,
+  producto_nombre:  false,
+  descripcion:      false,
+  categoria_id:     false,
+  categoria_nombre: false,
+  marca_id:         false,
+  marca_nombre:     false, 
+  codigo_barra:     false,
+  stock_minimo:     false,
+  stock_actual:     false,
+  vencimiento:      false,
+  precio:           false,
+  categorias:       false
+};
 export default function NewEditProductos(){
   //data
-  const [ load, setLoad ] = useState(false);
-  const { mode, producto, categorias, resultado, mensaje, producto_id, timestamp } = usePage().props as { 
+  const { data, setData, errors, processing } = useForm<Producto>(productoVacio);
+  const [optionMarca, setOptionMarca] = useState<Autocomplete|null>(null);
+
+  const { mode, producto, categorias } = usePage().props as { 
     mode?:          string | 'create' | 'edit';
     producto?:      Producto;
     categorias?:    {id: number, nombre:string }[];
-    resultado?:     number;
-    mensaje?:       string;
-    producto_id?:   number;
-    timestamp?:     number;
   };
   breadcrumbs[0].title = (mode=='create'? 'Nuevo' : 'Editar')+' producto'+(mode!='create'? ` ${producto?.producto_id}` : '')//(mode=='create'? 'Nuevo' : 'Editar')+' producto';
-  const [ultimoTimestamp, setUltimoTimestamp] = useState<number | null>(null);
-  const { data, setData, errors, processing } = useForm<Producto>(productoVacio);
+
+  const [ load, setLoad ] = useState(false);
   const [categoriaHab, setCatHab]             = useState<Multiple[]>([]);
   const [catSelected, setCatSelected]         = useState<Multiple[]>(categorias??[]);
 
@@ -191,130 +82,21 @@ export default function NewEditProductos(){
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const [respuesta, setResp]= useState<{resultado: number, producto_id: number}>({resultado: 0, producto_id: 0});
-
-  //funciones
-  const handleSubmit = (e:React.FormEvent) => {
-    e.preventDefault();
-    if(!data.producto_nombre){
-      setTitle('Campo requerido!');
-      setText('Se requiere ingresar un nombre para el producto.');
-      setColor('warning');
-      setActivo(true);
-      return 
-    }
-    if(!data.codigo_barra){
-      setTitle('Campo requerido!');
-      setText('Se requiere ingresar un código de barras para el producto.');
-      setColor('warning');
-      setActivo(true);
-      return 
-    }
-    if(!data.precio || data.precio === 0){
-      setTitle('Campo requerido!');
-      setText('Se requiere ingresar un precio para el producto.');
-      setColor('warning');
-      setActivo(true);
-      return 
-    }
-    if(!data.stock_minimo || data.stock_minimo === 0){
-      setTitle('Campo requerido!');
-      setText('Se requiere ingresar un valor de stock mínimo para el producto.');
-      setColor('warning');
-      setActivo(true);
-      return 
-    }
-    if(!data.marca_id){
-      setTitle('Campo requerido!');
-      setText('Se requiere ingresar una marca para el producto.');
-      setColor('warning');
-      setActivo(true);
-      return 
-    }
-    if(catSelected.length === 0){
-      setTitle('Categoría requerida!');
-      setText('Se requiere seleccionar al menos una categoría.');
-      setColor('warning');
-      setActivo(true);
-      return 
-    }
-    setTextConfirm("Estás seguro de "+(mode==='create'?'crear':'actualizar')+' este producto?');
-    setConfirOpen(true);
-  };
-
-  const grabarGuardar = async () => {
-    //reseteo el confirmar    
-    setConfirOpen(false);
-    setTextConfirm('');
-    
-    const payload = {
-      ...data,
-      categorias: catSelected,
-      vencimiento: data.vencimiento?convertirFechaBarrasGuiones(data.vencimiento) : '',
-      imagen: data.imagen ?? 'por definir'
-    };
-
-    //muestro el cargando...
-    setLoad(true); 
-    let resp;
-    let title = '';
-
-    if (mode === 'create') {
-      const res  = await fetch(route('productos.store'),{
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json', 
-          'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement).content,
-        },
-        body: JSON.stringify(payload),
-      });
-      resp = await res.json();
-
-      title = 'Producto nuevo';
-    } else {
-      const res = await fetch(route('productos.update', {producto: data.producto_id}), {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': getCsrfToken(),
-        },
-        body: JSON.stringify(payload),
-      });
-      resp  = await res.json();
-      title = 'Producto modificado';
-    }
-    setLoad(false);
-
-    setResp({resultado: resp.resultado, producto_id: resp.producto_id});
-
-    if (resp.resultado === 0) {
-      setTitle('Error');
-      setText(resp.mensaje ?? 'Error inesperado');
-      setColor('error');
-      setActivo(true);
-      return;
-    }
-
-    setTitle(title);
-    setText(resp.mensaje);
-    setColor('success');
-    setActivo(true);   
-
-  };
-  
-  const cancelar = () => {
-    setConfirOpen(false);
-  };
-
-  const handleClick = () => {
-    fileInputRef.current?.click(); // dispara el input oculto
-  };
-
-  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setData({...data, imagen: `images/productos/${file.name}`})
-    }
-  };
+  const [requeridos, setRequeridos] = useState<{
+    producto_id:      boolean,
+    producto_nombre:  boolean,
+    descripcion:      boolean,
+    categoria_id:     boolean,
+    categoria_nombre: boolean,
+    marca_id:         boolean,
+    marca_nombre:     boolean, 
+    codigo_barra:     boolean,
+    stock_minimo:     boolean,
+    stock_actual:     boolean,
+    vencimiento:      boolean,
+    precio:           boolean,
+    categorias:       boolean
+  }>(requeridosReset);
 
   //Effect
   useEffect(() => {
@@ -357,6 +139,139 @@ export default function NewEditProductos(){
     }
   }, [mode, producto]);
 
+  //funciones
+  const handleSubmit = (e:React.FormEvent) => {
+    e.preventDefault();
+
+    const nuevosErrores = {
+      producto_id:      false,
+      producto_nombre:  !data.producto_nombre,
+      descripcion:      false,
+      categoria_id:     false,
+      categoria_nombre: false,
+      marca_id:         !data.marca_id,
+      marca_nombre:     false, 
+      codigo_barra:     !data.codigo_barra,
+      stock_minimo:     !data.stock_minimo || data.stock_minimo === 0,
+      stock_actual:     false,
+      vencimiento:      false,
+      precio:           !data.precio || data.precio === 0,
+      categorias:       catSelected.length === 0,
+    };
+    setRequeridos(nuevosErrores);
+    const hayErrores = Object.values(nuevosErrores).some(e => e);
+
+    if (hayErrores) {
+      return;
+    }
+    setTextConfirm("Estás seguro de "+(mode==='create'?'crear':'actualizar')+' este producto?');
+    setConfirOpen(true);
+  };
+
+  const manejarError = (titulo: string) => (errors: any) => {
+    console.log("Errores:", errors);
+    setTitle(titulo);
+    setText(Object.values(errors).join("\n"));
+    setColor("error");
+    setActivo(true);
+  };
+  const manejarExito = (titulo: string) => (page: any) => {
+    const { resultado, mensaje, producto_id } = page.props;
+    const title = resultado === 0 ? 'Error inesperado': titulo ;
+    
+    setResp({resultado: resultado, producto_id: producto_id});
+
+    if(resultado === 0){
+      console.log("mode: ", mode);
+      setTitle(title);
+      setText(mensaje);
+      setColor("error");
+      setActivo(true);
+      return;
+    }
+
+    setTitle(title);
+    setText(`${mensaje} ✅ (ID: ${producto_id})`);
+    setColor("success");
+    setActivo(true);
+
+  };
+  const finalizarAccion = () => {
+    setLoad(false);
+  };
+
+  const grabarGuardar = async () => {
+    setLoad(true);
+
+    const payload = {
+      ...data,
+      categorias: catSelected,
+      vencimiento: data.vencimiento?convertirFechaBarrasGuiones(data.vencimiento) : '',
+      imagen: data.imagen ?? 'por definir'
+    };
+    
+		if (mode === 'create') {
+			router.post(route('productos.store'), payload, {
+				preserveScroll: true,
+				preserveState: true,
+				onError:   manejarError("Error al crear el producto"),
+				onSuccess: manejarExito("Producto creado"),
+				onFinish:  finalizarAccion,
+			});
+		} else {
+			router.put(route('productos.update', {producto: data.producto_id}), payload, {
+				preserveScroll: true,
+				preserveState: true,
+				onError:   manejarError("Error al modificar el producto"),
+				onSuccess: manejarExito("Producto actualizado"),
+				onFinish:  finalizarAccion,
+			});
+		}
+    //reseteo el confirmar    
+    setConfirOpen(false);
+    setTextConfirm('');
+
+  };
+  
+  const cancelar = () => {
+    setConfirOpen(false);
+  };
+
+  const handleClick = () => {
+    fileInputRef.current?.click(); // dispara el input oculto
+  };
+
+  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setData({...data, imagen: `images/productos/${file.name}`})
+    }
+  };
+
+  const seleccionarMarca = (option : any) => {
+    if(option){
+      setData({...data, marca_id: option.value, marca_nombre: option.label});
+      setOptionMarca(option);
+    }else{
+      setData({...data, marca_id: '', marca_nombre: ''});
+      setOptionMarca(null);
+    }
+  };
+
+  const generarCodigo = async () => {
+    try {
+      setLoad(true);
+      const res = await fetch(route('productos.generarCodigo'));
+      if (!res.ok) throw new Error("Error al generar código");
+      const json = await res.json();
+      setData({...data, codigo_barra: json.codigo_barra});
+    } catch (error) {
+      console.warn("Ocurrió un error al intentar generar el código: ", error);
+    } finally{
+      setLoad(false);
+    }
+  };
+
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title={(mode=='create'? 'Nuevo' : 'Editar')+' producto'} />
@@ -370,10 +285,107 @@ export default function NewEditProductos(){
                 Detalles del producto
                 <hr />
               </div>
-              <DetallesProducto 
-                modo={mode??'create'}
-                data={data}
-                set={setData}/>
+              <div className='px-4'>
+                <div className='grid grid-cols-12 gap-4'>
+                  <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
+                    <label htmlFor="nombre">Nombre</label>
+                    <Input 
+                      value={data.producto_nombre} 
+                      onChange={(e)=>{
+                        setData({...data, producto_nombre: e.target.value});
+                        if(e.target.value){requeridos.producto_nombre = false}
+                      }}
+                    />	
+                    { requeridos.producto_nombre && (<p className="mt-1 text-sm text-red-600 font-medium">⚠️Campo requerido</p>)}
+                  </div>
+                  <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
+                    <div className='flex flex-col'>
+                      <label htmlFor="precio">Precio</label>
+                      <NumericFormat 
+                        value={data.precio} 
+                        thousandSeparator="." 
+                        decimalSeparator="," 
+                        prefix="$" 
+                        className="text-right border rounded px-2 py-1" 
+                        onValueChange={(values) => {
+                          setData({...data, precio: values.floatValue || 0});
+                          if(values.floatValue){ requeridos.precio = false; }
+                        }}
+                      />
+                      { requeridos.precio && (<p className="mt-1 text-sm text-red-600 font-medium">⚠️Campo requerido</p>)}
+                    </div>
+                  </div>
+                  <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
+                    <label htmlFor="cliente">Marcas</label>
+                    <GenericSelect
+                      route="marcas"
+                      value={optionMarca}
+                      onChange={(option) => {
+                        seleccionarMarca(option);
+                        if(option){ requeridos.marca_id = false; }
+                      }}
+                      placeHolder='Selec. marca'
+                    />
+                    { requeridos.marca_id && (<p className="mt-1 text-sm text-red-600 font-medium">⚠️Campo requerido</p>)}
+                  </div>
+                  <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
+                    <label htmlFor="codigoBarras">Código de barras</label>
+                    <div className='flex items-center'>
+                      <Input 
+                        className='' 
+                        value={data.codigo_barra} 
+                        onChange={(e)=> {
+                          setData({...data, codigo_barra: e.target.value});
+                          if(e.target.value){ requeridos.codigo_barra = false;}
+                        }}
+                      />	
+                      <Button 
+                        className="p-0 hover:bg-transparent cursor-pointer"
+                        type="button"
+                        title="Generar código" 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => {
+                          generarCodigo();
+                          requeridos.codigo_barra = false;
+                        }}
+                      >
+                        { load ? ( <Loader2 size={20} className="animate-spin"/> ) : 
+                                  (<Barcode size={20} color="blue"/>)  }
+                      </Button>
+                    </div>
+                    { requeridos.codigo_barra && (<p className="mt-1 text-sm text-red-600 font-medium">⚠️Campo requerido</p>)}
+                  </div>
+                  <div className='col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3'>
+                    <label htmlFor="stockMinimo">Stock Mínimo</label>
+                    <Input type='number' className='text-right' 
+                      value={data.stock_minimo} 
+                      onChange={(e)=> {
+                        setData({...data, stock_minimo:Number(e.target.value)});
+                        if(e.target.value){ requeridos.stock_minimo = false }
+                      }}
+                    />
+                    { requeridos.stock_minimo && (<p className="mt-1 text-sm text-red-600 font-medium">⚠️Campo requerido</p>)}
+                  </div>
+                  <div className="col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-3">
+                    <label htmlFor="vencimiento">Vencimiento</label>
+                    <DatePicker fecha={(data.vencimiento??'')} setFecha={ (fecha:string) => {setData({...data, vencimiento: fecha})} }/>
+                  </div>  
+                  <div className='col-span-6 sm:col-span-4 md:col-span-4 lg:col-span-2 flex flex-col'>
+                    <label className='mr-2'>Inhabilitado</label>
+                    <Switch checked={data.inhabilitado==0 ? false: true} onCheckedChange={(val) => setData({...data, inhabilitado: Boolean(val)})} />
+                  </div>
+                  <div className='col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>
+                    Descripción
+                    <Textarea 
+                      id="descripcion" 
+                      placeholder="Escribe una comentario..." 
+                      value={data.descripcion}
+                      onChange={(e) => setData({...data, descripcion: e.target.value})}
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
             <div className='px-4 pb-1 col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>
               <div className='py-4'>
@@ -385,15 +397,13 @@ export default function NewEditProductos(){
                 seleccionados={catSelected}
                 setSeleccionados={setCatSelected}
               />
+              { (requeridos.categorias && catSelected.length === 0) && (<p className="mt-1 text-sm text-red-600 font-medium">⚠️Campo requerido</p>)}
             </div>
             <div className='px-4 pb-1 col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12'>
               <div className='py-4'>
                 Imagen
                 <hr />
               </div>
-              {/*<SubirImagen
-                set={(e)=> setFile(e)}
-              />*/}
               { data.imagen && (
                 <div className='flex justify-center mb-3'>
                   <figure className='flex flex-col items-center text-center'>
@@ -406,7 +416,7 @@ export default function NewEditProductos(){
               ) }
               <div> 
                 <Button onClick={handleClick} type='button'>
-                  <File size={20} className=""/>  { data.imagen ? 'Cambiar imagen' : 'Seleccionar archivo' }
+                  <Image size={20} className=""/>  { data.imagen ? 'Cambiar imagen' : 'Seleccionar archivo' }
                 </Button> 
                 <input 
                   type="file" 
@@ -422,7 +432,7 @@ export default function NewEditProductos(){
           <Button type="button" onClick={handleSubmit}>
             { load ? ( <Loader2 size={20} className="animate-spin"/> ) : 
                       (<Save size={20} className=""/>)  }
-            { ( mode === 'create' ? 'Grabar' : 'Actualizar')  }          
+            { ( mode === 'create' ? 'Grabar' : 'Actualizar')  }    
           </Button>
         </div>
       </div>

@@ -352,7 +352,7 @@ class ProductoController extends Controller
       //validar los datos
       $validated = $request->validate([
         'producto_nombre' => 'required|string|max:255',
-        'descripcion'     => 'required|string|max:255',
+        'descripcion'     => 'nullable|string|max:255',
         'inhabilitado'    => 'boolean',
         'precio'          => 'required|numeric',
         'marca_id'        => 'required|numeric',
@@ -372,10 +372,11 @@ class ProductoController extends Controller
                         ->exists();
       if($existe){
         DB::rollBack();
-        return response()->json([
+        return inertia('productos/createEdit',[
           'resultado' => 0,
           'mensaje'   => 'El producto que intentas registrar ya existe',
           'timestamp' => now()->timestamp,
+          'mode'      => 'create'
         ]);
       }
 
@@ -402,7 +403,7 @@ class ProductoController extends Controller
       }
       //commit
       DB::commit();
-      return response()->json([
+      return inertia('productos/createEdit', [
         'resultado'   => 1,
         'mensaje'     => 'Producto creado correctamente',
         'producto_id' => $producto_id,
@@ -410,7 +411,7 @@ class ProductoController extends Controller
       ]);
     } catch (\Throwable $e) {
       DB::rollBack();
-      return response()->json([
+      return inertia('productos/createEdit',[
         'resultado' => 0,
         'mensaje'   => 'Ocurrió un error al intentar crear el producto: '.$e->getMessage(),
         'timestamp' => now()->timestamp,
@@ -425,7 +426,7 @@ class ProductoController extends Controller
       //valido los datos
       $validated = $request->validate([
         'producto_nombre' => 'required|string|max:255',
-        'descripcion'     => 'required|string|max:255',
+        'descripcion'     => 'nullable|string|max:255',
         'inhabilitado'    => 'boolean',
         'precio'          => 'required|numeric',
         'marca_id'        => 'required|integer',
@@ -447,10 +448,11 @@ class ProductoController extends Controller
                         ->exists();
       if($existe){
         DB::rollBack();
-        return response()->json([
+        return inertia('productos/createEdit', [
           'resultado' => 0,
           'mensaje'   => 'Ya existe un producto con esas especificaciones',
           'timestamp' => now()->timestamp,
+          'mode'      => 'edit'
         ]);
       }
 
@@ -474,7 +476,7 @@ class ProductoController extends Controller
 
       //commit
       DB::commit();
-      return response()->json([
+      return inertia('productos/createEdit',[
         'resultado'   => 1,
         'mensaje'     => 'Se actualizó correctamente el producto',
         'producto_id' => $producto->producto_id,
@@ -482,7 +484,7 @@ class ProductoController extends Controller
       ]);
     } catch (\Throwable $e) {
       DB::rollBack();
-      return response()->json([
+      return inertia('productos/createEdit',[
         'resultado' => 0,
         'mensaje'   => 'Ocurrió un problema al momento de actualizar el producto: '.$e->getMessage(),
         'timestamp' => now()->timestamp,
@@ -508,7 +510,7 @@ class ProductoController extends Controller
       'producto' => [
         'producto_id'         => $producto->producto_id,
         'producto_nombre'     => $producto->nombre,
-        'descripcion'         => $producto->descripcion,
+        'descripcion'         => $producto->descripcion??'',
         'precio'              => $producto->precio,
         'inhabilitado'        => $producto->inhabilitado,
         'categoria_id'        => '',
@@ -579,14 +581,6 @@ class ProductoController extends Controller
         'timestamp'   => now()->timestamp
       ]);
     }
-    /*$producto->update(['inhabilitado' => !$producto->inhabilitado]);
-
-    return response()->json([
-      'resultado'   => 1,
-      'mensaje'     => 'Estado modificado exitosamente',
-      'producto_id' => $producto->producto_id,
-      'timestamp' => now()->timestamp,
-    ]);*/
   }
 
   // Método interno que devuelve solo el string

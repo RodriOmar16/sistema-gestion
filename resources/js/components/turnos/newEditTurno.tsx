@@ -28,22 +28,34 @@ const turnoVacio = {
   inhabilitado: false 
 }
 
+const requeridosReset = {
+  turno_id: false,
+  nombre:   false,
+  apertura: false,
+  cierre:   false, 
+}
+
 export default function NewEditTurno({ open, onOpenChange, mode, turno, onSubmit }: Props){
   //data
-  const [activo, setActivo] = useState(false);
-  const [text, setText]     = useState('');
-  const [title, setTitle]   = useState('');
   const { data, setData, get, processing, errors } = useForm<Turno>(turnoVacio);
+  const [requeridos, setRequeridos] = useState<{
+    turno_id: boolean,
+    nombre:   boolean,
+    apertura: boolean,
+    cierre:   boolean, 
+  }>(requeridosReset);
 
   //useEffect
   useEffect(() => {
-    if (!open && mode === 'create') {
-      setData(turnoVacio);
+    if(!open){
+      setRequeridos(requeridosReset);
     }
-  }, [open, mode]);
+  }, [open]);
 
   useEffect(() => {
-    if (turno && mode === 'edit') {
+    if (!open && mode === 'create') {
+      setData(turnoVacio);
+    }else if (turno && mode === 'edit') {
       setData({
         turno_id:     turno.turno_id,
         nombre:       turno.nombre,
@@ -54,12 +66,12 @@ export default function NewEditTurno({ open, onOpenChange, mode, turno, onSubmit
     } else {
       setData(turnoVacio);
     }
-  }, [turno, mode]);
+  }, [open, turno, mode]);
 
   //funciones
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if(!data.nombre){
+    /*if(!data.nombre){
       setTitle('¡Campo faltante!');
       setText('Se requiere que ingreses un nombre válido');
       setActivo(true);
@@ -76,6 +88,18 @@ export default function NewEditTurno({ open, onOpenChange, mode, turno, onSubmit
       setText('Se requiere que ingreses un horario de cierre válido');
       setActivo(true);
       return 
+    }*/
+    const nuevosErrores = {
+      turno_id: false,
+      nombre:   !data.nombre,
+      apertura: (!data.apertura || data.apertura.length < 5),
+      cierre:   (!data.cierre || data.cierre.length < 5),
+    };
+    setRequeridos(nuevosErrores);
+    const hayErrores = Object.values(nuevosErrores).some(e => e);
+
+    if (hayErrores) {
+      return;
     }
     onSubmit(data);
   }
@@ -109,29 +133,41 @@ export default function NewEditTurno({ open, onOpenChange, mode, turno, onSubmit
             <label htmlFor="nombre">Nombre</label>
             <Input
               value={data.nombre}
-              onChange={(e) => setData({ ...data, nombre: e.target.value })}
               placeholder="Ingresar nombre"
+              onChange={(e) => {
+                setData({ ...data, nombre: e.target.value });
+                if(e.target.value){ requeridos.nombre = false; }
+              }}
             />
+            { requeridos.nombre && (<p className="mt-1 text-sm text-red-600 font-medium">⚠️Campo requerido</p>)}
           </div>
           <div className="col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-4">
             <label htmlFor="apertura" className='mr-2'>Hora apertura</label>
             <Input
               type="time"
               value={data.apertura}
-              onChange={(e) => setData('apertura',e.target.value)}
+              onChange={(e) => {
+                setData('apertura',e.target.value);
+                if(e.target.value){ requeridos.apertura = false }
+              }}
               step="1"
               className="bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
             />
+            { requeridos.apertura && (<p className="mt-1 text-sm text-red-600 font-medium">⚠️Requerido</p>)}
           </div>
           <div className="col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-4">
             <label htmlFor="cierre" className='mr-2'>Hora cierre</label>
             <Input
               type="time"
               value={data.cierre}
-              onChange={(e) => setData('cierre',e.target.value)}
+              onChange={(e) => {
+                setData('cierre',e.target.value);
+                if(e.target.value){ requeridos.cierre = false }
+              }}
               step="1"
               className="bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
             />
+            { requeridos.cierre && (<p className="mt-1 text-sm text-red-600 font-medium">⚠️Requerido</p>)}
           </div>
           <div className="col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-6 flex flex-col">
             <label htmlFor="inhabilitado" className='mr-2'>Inhabilitado</label>
@@ -153,13 +189,6 @@ export default function NewEditTurno({ open, onOpenChange, mode, turno, onSubmit
           </Button>
         </DialogFooter>
       </DialogContent>
-      <ShowMessage 
-        open={activo}
-        title={title}
-        text={text}
-        color="warning"
-        onClose={() => setActivo(false)}
-      />
     </Dialog>
   );
 }

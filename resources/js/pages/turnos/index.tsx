@@ -12,12 +12,14 @@ import DataTableTurnos from '@/components/turnos/dataTableTurnos';
 import NewEditTurno from '@/components/turnos/newEditTurno';
 import ModalConfirmar from '@/components/modalConfirmar';
 import ShowMessage from '@/components/utils/showMessage';
+import Loading from '@/components/utils/loadingDialog';
 
 const breadcrumbs: BreadcrumbItem[] = [ { title: 'Turnos', href: '', } ];
 
 type propsForm = {
+  data: Turno;
+  set: (e:any) => void;
   openCreate: () => void;
-  resetearTurno: (data:Turno[]) => void;
 }
 
 const turnoVacio = {
@@ -28,14 +30,11 @@ const turnoVacio = {
   inhabilitado: false,
 }
 
-export function FiltrosForm({ openCreate, resetearTurno }: propsForm){
-  const [esperandoRespuesta, setEsperandoRespuesta] = useState(false);
-  const { data, setData, errors, processing }       = useForm<Turno>(turnoVacio);
+export function FiltrosForm({ data, set, openCreate }: propsForm){
   const [load, setLoad]                             = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    resetearTurno([]);
     setLoad(true);
     const payload = {      ...data, buscar: true    }
     
@@ -46,7 +45,7 @@ export function FiltrosForm({ openCreate, resetearTurno }: propsForm){
     });
   };
   const handleReset = () => {
-    setData(turnoVacio);
+    set(turnoVacio);
   };
 
   return (
@@ -67,17 +66,15 @@ export function FiltrosForm({ openCreate, resetearTurno }: propsForm){
       <form className='grid grid-cols-12 gap-4 px-4 pt-1 pb-4' onSubmit={handleSubmit}>
         <div className='col-span-12 sm:col-span-3 md:col-span-3 lg:col-span-2'>
           <label htmlFor="id">Id</label>
-          <Input className='text-right' value={data.turno_id} onChange={(e)=>setData('turno_id',Number(e.target.value))}/>	
-          { errors.turno_id && <p className='text-red-500	'>{ errors.turno_id }</p> }
+          <Input className='text-right' value={data.turno_id} onChange={(e)=>set({...data, 'turno_id': Number(e.target.value)})}/>	
         </div>
         <div className='col-span-12 sm:col-span-5 md:col-span-5 lg:col-span-4'>
           <label htmlFor="nombre">Nombre</label>
-          <Input value={data.nombre} onChange={(e)=>setData('nombre',e.target.value)}/>	
-          { errors.nombre && <p className='text-red-500	'>{ errors.nombre }</p> }
+          <Input value={data.nombre} onChange={(e)=>set({...data, 'nombre': e.target.value})}/>	
         </div>        
         <div className='col-span-6 sm:col-span-4 md:col-span-4 lg:col-span-3 flex flex-col'>
           <label className='mr-2'>Inhabilitado</label>
-          <Switch checked={data.inhabilitado==0 ? false: true} onCheckedChange={(val) => setData('inhabilitado', val)} />
+          <Switch checked={Boolean(data.inhabilitado)} onCheckedChange={(val) => set({...data, 'inhabilitado': val})} />
         </div>
         <div className='col-span-6 sm:col-span-2 md:col-span-2 lg:col-span-2 flex justify-end items-center'>
           <Button 
@@ -103,6 +100,7 @@ export function FiltrosForm({ openCreate, resetearTurno }: propsForm){
 
 export default function Turnos(){
   //data
+  const { data, setData, errors, processing }       = useForm<Turno>(turnoVacio);
   const [confirmOpen, setConfirOpen] = useState(false); //modal para confirmar acciones para cuado se crea o edita
   const [textConfir, setTextConfirm] = useState('');
   
@@ -122,13 +120,6 @@ export default function Turnos(){
   const [color, setColor]   = useState('');
 
   const { turnos } = usePage().props as { turnos?: Turno[] }; //necesito los props de inertia
-  const { resultado, mensaje, turno_id, timestamp } = usePage().props as {
-    resultado?: number;
-    mensaje?: string;
-    turno_id?: number;
-    timestamp?: number;
-  };
-  const [ultimoTimestamp, setUltimoTimestamp] = useState<number | null>(null);
   const [turnosCacheados, setTurnosCacheados] = useState<Turno[]>([]);
 
   //funciones
@@ -143,18 +134,50 @@ export default function Turnos(){
   };
   const inhabilitarHabilitar = () => {
     if (!turnoCopia || !turnoCopia.turno_id) return;
-    
     setLoading(true);
+    
     router.put(
       route('turnos.toggleEstado', { turno: turnoCopia.turno_id }),{},
       {
         preserveScroll: true,
         preserveState: true,
+        onError: (errors) => {
+          // errors es un objeto { campo: "mensaje de error" }
+          setTitle("Error en cambio de estado");
+          setText(Object.values(errors).join("\n"));
+          setColor("error");
+          setActivo(true);
+        },
+        onSuccess: (page) => {
+          const { resultado, mensaje, turno_id } = page.props;
+          
+          if(resultado === 0){
+            setTitle("Error inesperado");
+            setText(`${mensaje} ❌ (ID: ${turno_id})`);
+            setColor("error");
+            setActivo(true);
+          }
+
+          setTitle("Turno actualizado");
+          setText(`${mensaje} ✅ (ID: ${turno_id})`);
+          setColor("success");
+          setActivo(true);
+        },
         onFinish: () => {
           setLoading(false);
           setTextConfirmar('');
           setConfirmar(false);
-          setTurnoCopia(turnoVacio);
+          setTurnoCopia(turnoCopia);
+  
+          //al momento de buscar
+          setData(turnoCopia);
+          router.get(
+            route('turnos.index'), 
+            {}, {
+              preserveScroll: true,
+              preserveState: true,
+            }
+          );
         }
       }
     );
@@ -183,11 +206,47 @@ export default function Turnos(){
     setConfirOpen(true);
   };
 
+  const manejarError = (titulo: string) => (errors: any) => {
+    console.log("Errores:", errors);
+    setTitle(titulo);
+    setText(Object.values(errors).join("\n"));
+    setColor("error");
+    setActivo(true);
+  };
+  const manejarExito = (titulo: string) => (page: any) => {
+    const { resultado, mensaje, turno_id } = page.props;
+    const title = resultado === 0 ? 'Error inesperado': titulo ;
+
+    if(resultado === 0){
+      setTitle(title);
+      setText(mensaje);
+      setColor("error");
+      setActivo(true);
+      return;
+    }
+
+    setTitle(title);
+    setText(`${mensaje} ✅ (ID: ${turno_id})`);
+    setColor("success");
+    setActivo(true);
+
+    setModalOpen(false);
+  };
+  const finalizarAccion = () => {
+    setLoading(false);
+    setPendingData(turnoVacio);
+    setData(turnoVacio);
+    router.get(route("turnos.index"), {}, {
+      preserveScroll: true,
+      preserveState: true,
+    });
+  };
+
   const accionar = () => {
     if (!pendingData) return;
     setLoading(true);
 
-    const payload = JSON.parse(JSON.stringify(pendingData));
+    /*const payload = JSON.parse(JSON.stringify(pendingData));
     if (modalMode === 'create') {
       router.post(
         route('turnos.store'), payload,
@@ -215,6 +274,27 @@ export default function Turnos(){
         }
       );
     }
+    setConfirOpen(false);*/
+    const payload = { ...pendingData };
+
+		if (modalMode === 'create') {
+			router.post(route('turnos.store'), payload, {
+				preserveScroll: true,
+				preserveState: true,
+				onError:   manejarError("Error al crear el turno"),
+				onSuccess: manejarExito("Turno creado"),
+				onFinish:  finalizarAccion,
+			});
+		} else {
+			router.put(route('turnos.update',{turno: pendingData.turno_id}), payload, {
+				preserveScroll: true,
+				preserveState: true,
+				onError:   manejarError("Error al modificar el turno"),
+				onSuccess: manejarExito("Turno actualizado"),
+				onFinish:  finalizarAccion,
+			});
+		}
+    setTextConfirm('');
     setConfirOpen(false);
   };
 
@@ -224,44 +304,21 @@ export default function Turnos(){
 
   //effect
   useEffect(() => {
-    if (
-      turnos &&
-      turnos.length > 0 &&
-      JSON.stringify(turnos) !== JSON.stringify(turnosCacheados)
-    ) {
+    if ( turnos && turnos.length > 0 ) {
       setTurnosCacheados(turnos);
-    }
+    }else { setTurnosCacheados([]); }
   }, [turnos]);
-
-
-  useEffect(() => {
-    const cambioDetectado = timestamp && timestamp !== ultimoTimestamp;
-
-    if (cambioDetectado) {
-      setUltimoTimestamp(timestamp)
-
-      const esError = resultado === 0;
-      setTitle(esError ? 'Error' : modalMode === 'create' ? 'Turno nuevo' : 'Turno modificado');
-      setText(esError ? mensaje ?? 'Error inesperado' : `${mensaje} (ID: ${turno_id})`);
-      setColor(esError ? 'error' : 'success');
-      setActivo(true);
-
-      if (resultado === 1 && turno_id) {
-        setModalOpen(false);
-        router.get(route('turnos.index'),
-          { turno_id, buscar: true },
-          { preserveScroll: true,	preserveState: true	}
-        )
-      }
-    }
-  }, [timestamp, ultimoTimestamp, resultado, mensaje, turno_id, modalMode]);
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Turnos" />
       <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
         <div className="relative flex-none flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
-          <FiltrosForm openCreate={openCreate} resetearTurno={setTurnosCacheados}/>
+          <FiltrosForm 
+            data={data}
+            set={setData}
+            openCreate={openCreate}
+          />
         </div>
         <div className="p-4 relative flex-1 overflow-auto rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
           <DataTableTurnos
@@ -296,6 +353,10 @@ export default function Turnos(){
         text={text}
         color={color}
         onClose={() => setActivo(false)}
+      />
+      <Loading
+        open={loading}
+        onClose={() => {}}
       />
     </AppLayout>
   );

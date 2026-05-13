@@ -44,11 +44,11 @@ class TurnoController extends Controller
    */
   public function index(Request $request)
   {
-    if(!$request->has('buscar')){
+    /*if(!$request->has('buscar')){
       return inertia('turnos/index',[
         'turnos' => [],
       ]);
-    }
+    }*/
 
     $query = Turno::query();
     if($request->filled('turno_id')){
@@ -60,7 +60,7 @@ class TurnoController extends Controller
     if ($request->filled('inhabilitado')) {
       $estado = filter_var($request->inhabilitado, FILTER_VALIDATE_BOOLEAN);
       $query->where('inhabilitado', $estado);
-    }
+    }else{ $query->where('inhabilitado', 0); }
 
     $turnos = $query->latest()->get();
     return inertia('turnos/index',[
@@ -123,7 +123,9 @@ class TurnoController extends Controller
 
       // Verifico nombre duplicado
       $nombre = strtolower(trim($validated['nombre']));
-      $existe = Turno::whereRaw('LOWER(TRIM(nombre)) = ?', [$nombre])->exists();
+      $existe = Turno::whereRaw('LOWER(TRIM(nombre)) = ?', [$nombre])
+                  ->where('inhabilitado', 0)
+                  ->exists();
       if ($existe) {
         DB::rollBack();
         return inertia('turnos/index', [
@@ -184,6 +186,7 @@ class TurnoController extends Controller
       $nombre = strtolower(trim($validated['nombre']));
       $existe = Turno::whereRaw('LOWER(TRIM(nombre)) = ?', [$nombre])
         ->where('turno_id', '!=', $turno->turno_id)
+        ->where('inhabilitado', 0)
         ->exists();
       if ($existe) {
         DB::rollBack();
@@ -220,18 +223,74 @@ class TurnoController extends Controller
     }
   }
 
-
-
-
-
   public function toggleEstado(Request $request, Turno $turno)
   {
-    $turno->update(['inhabilitado' => !$turno->inhabilitado]);
+    DB::beginTransaction();
+    try {
+      $nuevoEstado = !$turno->inhabilitado;
+
+      if ($nuevoEstado === false) {
+        // si lo vas a habilitar, controlar duplicados
+        // Verifico solapamiento contra otros turnos habilitados
+        if ($this->verificarSolapados($turno->apertura, $turno->cierre, $turno->turno_id)) {
+          DB::rollBack();
+          return inertia('turnos/index', [
+            'resultado' => 0,
+            'mensaje'   => 'Habilitar este curso va a provocar un solapamiento, no es posible modificarlo.',
+            'timestamp' => now()->timestamp,
+          ]);
+        }
+
+        // Verifico nombre duplicado
+        $nombre = strtolower(trim($turno->nombre));
+        $existe = Turno::whereRaw('LOWER(TRIM(nombre)) = ?', [$nombre])
+          ->where('turno_id', '!=', $turno->turno_id)
+          ->where('inhabilitado', 0)
+          ->exists();
+
+        if ($existe) {
+          $turno->update([
+            'nombre'       => $turno->nombre.'-copia',
+            'inhabilitado' => $nuevoEstado,
+            'updated_at'   => now(),
+          ]);
+        } else {
+          $turno->update([
+            'inhabilitado' => $nuevoEstado,
+            'updated_at'   => now(),
+          ]);
+        }
+      } else {
+        // si lo vas a deshabilitar, no hace falta controlar duplicados
+        $turno->update([
+          'inhabilitado' => $nuevoEstado,
+          'updated_at'   => now(),
+        ]);
+      }
+      //éxito
+      DB::commit();
+      return inertia('turnos/index',[
+        'resultado'  => 1,
+        'mensaje'    => 'Se modificó el estado correctamente',
+        'turno_id'  => $turno->turno_id,
+        'timestamp'  => now()->timestamp
+      ]);
+    } catch (\Throwable $e) {
+      DB::rollBack();
+      return inertia('turnos/index',[
+        'resultado' => 0,
+        'turno_id'  => $turno->turno_id,
+        'mensaje'   => 'Ocurrió un error al intentar actualizar estado del turno: '.$e->getMessage(),
+        'timestamp' => now()->timestamp
+      ]);
+    }
+    /*$turno->update(['inhabilitado' => !$turno->inhabilitado]);
     return inertia('turnos/index',[
       'resultado' => 1,
       'mensaje'   => 'Estado modificado existosamente',
       'turno_id'  => $turno->turno_id,
       'timestamp' => now()->timestamp,
-    ]);
+    ]);*/
+
   }
 }

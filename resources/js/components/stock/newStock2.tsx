@@ -12,9 +12,10 @@ import { useForm } from "@inertiajs/react"
 import React, { useState, useEffect } from "react"
 import { Loader2, Pen, Save, X } from 'lucide-react';
 import ShowMessage from "@/components/utils/showMessage";
-import { Stock } from "@/types/typeCrud";
+import { Stock, ListaPrecioProducto } from "@/types/typeCrud";
 import { Multiple, Autocomplete } from "@/types/typeCrud";
 import GenericSelectDialog from "../utils/genericSelectDialog"
+import { NumericFormat } from "react-number-format"
 interface Props{
   open: boolean;
   onOpenChange: (open:boolean) => void;
@@ -27,8 +28,17 @@ const stockVacio = {
   producto_nombre:  '',
   proveedor_id:     0,
   proveedor_nombre: '',
-  cantidad:         1
+  cantidad:         1,
+  precio_compra:    0,
 }
+
+const requeridosReset = {
+  producto_id:   false,
+  proveedor_id:  false,
+  cantidad:      false,
+  precio_compra: false,
+  productos:     false
+};
 
 export default function NewStock({ open, onOpenChange, onSubmit, loading }: Props){
   //data
@@ -36,21 +46,31 @@ export default function NewStock({ open, onOpenChange, onSubmit, loading }: Prop
   const [text, setText]     = useState('');
   const [title, setTitle]   = useState('');
   const [optionProduct, setOptionProduct] = useState<Autocomplete|null>(null);
+  const [optionProv, setOptionProv]       = useState<Autocomplete|null>(null);
+  const [requeridos, setRequeridos]       = useState<{
+    producto_id:   boolean;
+    proveedor_id:  boolean;
+    cantidad:      boolean;
+    precio_compra: boolean;
+    productos:     boolean;
+  }>(requeridosReset);
 
   const { data, setData, get, processing, errors } = useForm<{
-    producto_id:      number,
+    producto_id:      number|'',
     producto_nombre:  string,
-    proveedor_id:     number,
+    proveedor_id:     number|'',
     proveedor_nombre: string,
-    cantidad:         number
+    cantidad:         number,
+    precio_compra:    number,
   }>(stockVacio);
 
   const [productos, setProductos] = useState<{
-    producto_id:      number,
-    producto_nombre:  string,
-    proveedor_id:     number,
-    proveedor_nombre: string,
-    cantidad:         number
+    producto_id:      number;
+    producto_nombre:  string;
+    proveedor_id:     number;
+    proveedor_nombre: string;
+    cantidad:         number;
+    precio_compra:    number;
   }[]>([]);
 
   //useEffect
@@ -59,39 +79,45 @@ export default function NewStock({ open, onOpenChange, onSubmit, loading }: Prop
       setData(stockVacio);
       setProductos([]);
       setOptionProduct(null);
+      setOptionProv(null);
+      setRequeridos(requeridosReset);
     }
   }, [open]);
 
   //funciones
   const agregarElementos = () => {
-    if(!data.producto_id){
-      setTitle('¡Campo faltante!');
-      setText('Se requiere que selecciones un producto');
-      setActivo(true);
-      return 
+    const nuevosErrores = {
+      producto_id:   !data.producto_id,
+      proveedor_id:  !data.proveedor_id,
+      cantidad:      Boolean(!data.cantidad || (data.cantidad && data.cantidad <= 0)),
+      precio_compra: Boolean(!data.precio_compra || (data.precio_compra && data.precio_compra <= 0)),
+      productos:     false
+    };
+    setRequeridos(nuevosErrores);
+    const hayErrores = Object.values(nuevosErrores).some(e => e);
+
+    if (hayErrores) {
+      return;
     }
-    if(!data.cantidad){
-      setTitle('¡Campo faltante!');
-      setText('Se requiere que ingreses la cantidad');
-      setActivo(true);
-      return 
-    }
-    if(data.cantidad && data.cantidad <= 0){
-      setTitle('¡Campo faltante!');
-      setText('Se requiere que ingreses una cantidad positiva');
-      setActivo(true);
-      return 
-    }
-    let pos = productos.map(e => e.producto_id).indexOf(data.producto_id);
+
+    let pos = productos.map(e => e.producto_id).indexOf(Number(data.producto_id));
     if (pos !== -1) {
       const nuevos = [...productos];
       nuevos[pos].cantidad += Number(data.cantidad);
       setProductos(nuevos);
     } else {
-      setProductos([...productos, data]);
+      setProductos([...productos, {
+        producto_id:      Number(data.producto_id),
+        producto_nombre:  data.producto_nombre,
+        proveedor_id:     Number(data.proveedor_id),
+        proveedor_nombre: data.proveedor_nombre,
+        cantidad:         data.cantidad,
+        precio_compra:    data.precio_compra,
+      }]);
     }
     setData(stockVacio);
     setOptionProduct(null);
+    setOptionProv(null);
   };
   const eliminar = (e: any) => {
     const nuevos = productos.filter(p => p.producto_id !== e.producto_id);
@@ -101,11 +127,13 @@ export default function NewStock({ open, onOpenChange, onSubmit, loading }: Prop
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if(productos.length === 0){
-      setTitle('¡Faltan productos!');
+      /*setTitle('¡Faltan productos!');
       setText('Es necesario agregar al menos un producto a la lista.');
-      setActivo(true);
+      setActivo(true);*/
+      setRequeridos({...requeridos, productos: true});
       return 
     }
+    return console.log("prods: ", productos);
     onSubmit(productos);
   }
 
@@ -113,15 +141,28 @@ export default function NewStock({ open, onOpenChange, onSubmit, loading }: Prop
     if(option){
       setData({...data, producto_id: option.value, producto_nombre: option.label});
       setOptionProduct(option);
+      setRequeridos({...requeridos, producto_id: false});
     }else{
       setData({...data, producto_id: 0, producto_nombre: ''});
       setOptionProduct(null);
     }
   };
 
+  const seleccionarProveedor = (option : any) => {
+    if(option){
+      setData({...stockVacio, proveedor_id: option.value, proveedor_nombre: option.label});
+      setOptionProv(option);
+      setRequeridos({...requeridos, proveedor_id: false});
+    }else{
+      setData({...stockVacio, proveedor_id: '', proveedor_nombre: ''});
+      setOptionProv(null);
+    }
+    setOptionProduct(null);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange} >
-      <DialogContent className="max-h-[95vh] overflow-y-auto">
+      <DialogContent className="max-h-[95vh] overflow-y-auto w-auto !max-w-[90vw]" onInteractOutside={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle>Nuevo Stock</DialogTitle>
           <DialogDescription>
@@ -130,56 +171,17 @@ export default function NewStock({ open, onOpenChange, onSubmit, loading }: Prop
           <hr />
         </DialogHeader>
         <form className="grid grid-cols-12 gap-4 pt-1 pb-4">
-          <div className="col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12">
-            <label htmlFor="proveedor_id">Productos</label>
+          <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-12'>
+            <label htmlFor="preveedores">Proveedores</label>
             <GenericSelectDialog
-              route="productos"
-              value={optionProduct}
-              onChange={(option) => seleccionarProducto(option)}
-              placeHolder="Seleccionar"
+              route="proveedores"
+              value={optionProv}
+              onChange={(option) => seleccionarProveedor(option)}
+              placeHolder='Seleccionar'
             />
-            {/*<Select
-              value={String(data.producto_id)}
-              onValueChange={(value) => controlarProducto(Number(value)) }
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Seleccionar un proveedor" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  {productosDisp.map((e: any) => (
-                    <SelectItem key={e.id} value={String(e.id)}>
-                      {e.nombre}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>*/}
+            {requeridos.proveedor_id && (<p className="mt-1 text-sm text-red-600 font-medium">⚠️Campo requerido</p>)}
           </div>
-          <div className="col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-6">
-            <label htmlFor="nombre">Cantidad</label>
-            <Input
-              className="text-right"
-              type="number"
-              value={data.cantidad}
-              min={1}
-              onChange={(e) => {
-                  const nro = Number(e.target.value);
-                  if(nro > 0){
-                    setData({ ...data, cantidad: nro })
-                  }
-                }
-              }
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === 'Tab') {
-                  e.preventDefault();
-                  agregarElementos();
-                }
-              }}
-
-            />
-          </div>
-          <div className="flex flex-col items-end justify-end col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-6">
+          <div className="flex flex-col items-end justify-end col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-12">
             <Button type="button" onClick={agregarElementos}>Agregar</Button>
           </div>
         </form>
@@ -187,8 +189,10 @@ export default function NewStock({ open, onOpenChange, onSubmit, loading }: Prop
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="">Proveedor</TableHead>
                 <TableHead className="">Producto</TableHead>
                 <TableHead className="text-right">Cantidad</TableHead>
+                <TableHead className="text-right">Precio</TableHead>
                 <TableHead className="text-center">Acciones</TableHead>
               </TableRow>
             </TableHeader>
@@ -197,8 +201,9 @@ export default function NewStock({ open, onOpenChange, onSubmit, loading }: Prop
                 productos.length != 0? (
                   productos.map(e => (
                     <TableRow key={e.producto_id}>
-                      <TableCell className='w-1/2'>{e.producto_nombre}</TableCell>
-                      <TableCell className="w-1/2 text-right">
+                      <TableCell className=''>{e.proveedor_nombre}</TableCell>
+                      <TableCell className=''>{e.producto_nombre}</TableCell>
+                      <TableCell className="text-right">
                         <Input
                         type='number'
                           value={e.cantidad}
@@ -214,7 +219,25 @@ export default function NewStock({ open, onOpenChange, onSubmit, loading }: Prop
                         >
                         </Input>
                       </TableCell>
-                      <TableCell className="w-1/2 text-right">
+                      <TableCell className="text-right">
+                        <NumericFormat 
+                          value={e.precio_compra} 
+                          thousandSeparator="." 
+                          decimalSeparator="," 
+                          prefix="$" 
+                          className="text-right border rounded px-2 py-1" 
+                          onValueChange={(values) => {
+                            const precioNuevo = values.floatValue || 0;
+                            const nuevos = productos.map(p =>
+                              p.producto_id === e.producto_id
+                                ? { ...p, precio_compra: precioNuevo }
+                                : p
+                            );
+                            setProductos(nuevos);
+                          }}
+                        />
+                      </TableCell>
+                      <TableCell className=" text-right">
                         <Button 
                           className="p-0 hover:bg-transparent cursor-pointer"
                           title="Quitar" 
@@ -229,7 +252,7 @@ export default function NewStock({ open, onOpenChange, onSubmit, loading }: Prop
                 ):(
                   <TableRow>
                     <TableCell
-                      colSpan={3}
+                      colSpan={5}
                       className="w-full h-24 text-center"
                     >
                       No hay productos agregados
@@ -239,6 +262,7 @@ export default function NewStock({ open, onOpenChange, onSubmit, loading }: Prop
               }
             </TableBody>
           </Table>
+          {requeridos.productos && (<p className="mt-1 text-sm text-red-600 font-medium">⚠️Requerido. No es posible continuar sin productos.</p>)}
         </div>
         <DialogFooter>
           <DialogClose asChild>

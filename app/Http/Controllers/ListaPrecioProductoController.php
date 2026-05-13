@@ -21,11 +21,11 @@ class ListaPrecioProductoController extends Controller
 
     $query = ListaPrecioProducto::query()->with(['proveedor','producto']);
 
-    if ($request->has('proveedor_id') && !in_array((string) $request->proveedor_id, ['0', ''])) {
+    if ($request->filled('proveedor_id')) {
       $query->where('proveedor_id', $request->proveedor_id);
     }
 
-    if ($request->has('producto_id') && !in_array((string) $request->producto_id, ['0', ''])) {
+    if ($request->filled('producto_id') ) {
       $query->where('producto_id', $request->producto_id);
     }
     

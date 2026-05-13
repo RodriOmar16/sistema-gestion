@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 use App\Models\Stock;
+use App\Models\ListaPrecioProducto;
 use App\Models\MovimientoStock;
 use App\Models\TipoMovimiento;
 use App\Models\OrigenMovimiento;
@@ -167,20 +168,30 @@ class StockController extends Controller
     ]);
   }
 
+  public function create(){
+    return inertia('stock/newStock',[
+      'mode' => 'create',
+      'stock' => null
+    ]);
+  }
+
   public function store(Request $request)
   {
     DB::beginTransaction();
     try {
       //valido el request (el array de productos no puede venir vacio)
       $validated = $request->validate([
-        'productos' => 'required|array|min:1'
+        'proveedor_id' => 'required|integer',
+        'productos'    => 'required|array|min:1'
       ]);
-      //controlo que cada producto del array tenga cantidad mayor a cero
+      //controlo que cada producto del array tenga cantidad y precio mayor a cero
       $productos = $request->productos;
-      if (collect($productos)->contains(fn($p) => $p['cantidad'] <= 0)) {
+      //$productos = json_decode($request->productos, true);
+
+      if (collect($productos)->contains(fn($p) => $p['cantidad'] <= 0 || $p['precio'] <=0)) {
         return inertia('stock/index', [
           'resultado' => 0,
-          'mensaje'   => 'Todas las cantidades deben ser mayores a 0.',
+          'mensaje'   => 'Todas las cantidades y/o precios deben ser mayores a 0',
           'timestamp' => now()->timestamp
         ]);
       }
@@ -188,20 +199,18 @@ class StockController extends Controller
       //variables de movimiento
       $tipo   = TipoMovimiento::where('nombre','=','Ingreso')->first();
       $origen = OrigenMovimiento::where('nombre','=','Stock')->first();
-      //$tipoUp   = TipoMovimiento::where('nombre','=','Modificacion')->first();
-      //$origenUp = OrigenMovimiento::where('nombre','=','Stock')->first();
 
       //recorro todos los productos que vinieron
       foreach($productos as $elem){
-        $registro = Stock::where('producto_id', $elem['producto_id'])->first();
+        $registro = Stock::where('producto_id', $elem['id'])->first();
         if(!$registro){
           //si no existe en la tabla creo o inserto
           $nuevo = Stock::create([
-            'producto_id' => $elem['producto_id'],
+            'producto_id' => $elem['id'],
             'cantidad'    => $elem['cantidad']
           ]);
           MovimientoStock::create([
-            'producto_id' => $elem['producto_id'],
+            'producto_id' => $elem['id'],
             'tipo_id'     => $tipo->tipo_id,
             'origen_id'   => $origen->origen_id,
             'fecha'       => now()->toDateString(),
@@ -213,24 +222,44 @@ class StockController extends Controller
             'cantidad' => $registro->cantidad + $elem['cantidad']
           ]);
           MovimientoStock::create([
-            'producto_id' => $elem['producto_id'],
+            'producto_id' => $elem['id'],
             'tipo_id'     => $tipo->tipo_id,
             'origen_id'   => $origen->origen_id,
             'fecha'       => now()->toDateString(),
             'cantidad'    => $elem['cantidad']
           ]);
         }
+        //controlo la lista de precios
+        $lista = ListaPrecioProducto::where('producto_id', $elem['id'])
+                    ->where('proveedor_id', $request->proveedor_id)
+                    ->first();
+        if(!$lista){
+          ListaPrecioProducto::create([
+            'proveedor_id'    => $request->proveedor_id,
+            'producto_id'     => $elem['id'],
+            'inhabilitada'    => 0,
+            'precio'          => $elem['precio'],
+            'porcentaje'      => 50,
+            'precio_sugerido' => $elem['precio'] * (1+0.5)
+          ]);
+        }else{
+          $lista->update([
+            'precio'          => $elem['precio'],
+            'precio_sugerido' => $elem['precio'] * (1+($lista->porcentaje/100))
+          ]);
+        }
       }
+
       //commit
       DB::commit();
-      return inertia('stock/index',[
+      return inertia('stock/newStock',[
         'resultado' => 1,
         'mensaje'   => 'El stock se generó correctamente',
         'timestamp' => now()->timestamp,
       ]);
     } catch (\Throwable $e) {
       DB::rollBack();
-      return inertia('stock/index',[
+      return inertia('stock/newStock',[
         'resultado' => 0,
         'mensaje'   => 'Ocurrió un error al intentar registrar el stock: '.$e->getMessage(),
         'timestamp' => now()->timestamp
@@ -279,23 +308,4 @@ class StockController extends Controller
     }
   }
 
-    public function show(Stock $stock)
-    {
-      //
-    }
-
-    public function edit(Stock $stock)
-    {
-      //
-    }
-
-    public function create()
-    {
-      //
-    }
-
-    public function destroy(Stock $stock)
-    {
-        //
-    }
 }

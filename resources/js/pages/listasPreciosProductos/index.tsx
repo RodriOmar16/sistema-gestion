@@ -18,11 +18,11 @@ import { NumericFormat } from 'react-number-format';
 const breadcrumbs: BreadcrumbItem[] = [ { title: 'Listas de Precio', href: '', } ];
 
 const listaVacia = {
-  lista_precio_id:     0,
+  lista_precio_id:     '',
   lista_precio_nombre: '',
-  proveedor_id:        0,
+  proveedor_id:        '',
   proveedor_nombre:    '',
-  producto_id:         0,
+  producto_id:         '',
   producto_nombre:     '',
   precio:              0,
   porcentaje:          0,
@@ -199,66 +199,8 @@ function AgregarPrecioProducto({setOpen, data, setData, controlarAgregar, activa
       setOptionProv(null);
     }
   };
-  function validar() : any{
-    let obj = { text: '',  title  : '',  color  : '',  activo : true, res    : 1 };
-    
-    if(!data.producto_id){
-      obj.title  = 'Producto faltante';
-      obj.text   = 'Se requiere seleccionar el producto para continuar.'
-      obj.color  = 'warning',
-      obj.activo = true;
-      obj.res    = 0;
-      return obj;
-    }
-    if(!data.proveedor_id){
-      obj.title  = 'Proveedor faltante';
-      obj.text   = 'Se requiere seleccionar el proveedor para continuar.'
-      obj.color  = 'warning',
-      obj.activo = true;
-      obj.res    = 0;
-      return obj;
-    }
-    if(data.precio <= 0){
-      obj.title  = 'Precio incorrecto';
-      obj.text   = 'Se requiere ingresar un precio válido para continuar.'
-      obj.color  = 'warning',
-      obj.activo = true;
-      obj.res    = 0;
-      return obj;
-    }
-    if(data.porcentaje <= 0){
-      obj.title  = 'Porcentaje incorrecto';
-      obj.text   = 'Se requiere ingresar un porcentaje válido para continuar.'
-      obj.color  = 'warning',
-      obj.activo = true;
-      obj.res    = 0;
-      return obj;
-    }
-    if(data.precio_final && data.precio_final <= 0){
-      obj.title  = 'Precio Final incorrecto';
-      obj.text   = 'Se requiere ingresar un precio válido para continuar.'
-      obj.color  = 'warning',
-      obj.activo = true;
-      obj.res    = 0;
-      return obj;
-    }
-    return obj;
-  }
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    //
-    
-    /*const {activo, title, text, color, res} = validar();
-    
-
-    //procesar en la BD y agregar por front al array
-    if(res === 0){
-      activarMsj(activo);
-      titleNuevo(title);
-      textNuevo(text);
-      colorNuevo(color);
-      return ;
-    }*/
     const nuevosErrores = {
       lista_precio_id:     false,
       lista_precio_nombre: false,
@@ -533,6 +475,8 @@ export default function ListasPreciosProductos(){
   useEffect(() => {
     if (listas && listas.data.length > 0) {
       setListasPreciosCacheadas(listas.data.map(e => ({...e, editar:0, cambiar: 0, load: 0})));
+    }else{
+      setListasPreciosCacheadas([]);
     }
   }, [listas]);
 

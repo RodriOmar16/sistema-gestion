@@ -12,7 +12,7 @@ import ShowMessage from '@/components/utils/showMessage';
 import { Select,  SelectContent, SelectGroup,  SelectItem,  SelectTrigger,  SelectValue } from "@/components/ui/select"
 import { route } from 'ziggy-js';
 import { ordenarPorTexto } from '@/utils';
-import NewStock from '@/components/stock/newStock';
+import NewStock from '@/components/stock/newStock2';
 import EditStock from '@/components/stock/editStock';
 import DataTableStock from '@/components/stock/dataTableStock';
 import GenericSelect from '@/components/utils/genericSelect';
@@ -70,7 +70,18 @@ export function FiltrosForm({ openCreate, resetearStock, data, set }: propsForm)
     <div>
       <div className='flex items-center justify-between px-3 pt-3'>
         <div className='flex'> <Filter size={20} />  Filtros</div>
-        <Button 
+        <a href={route('stock.create')} target='_blank'>
+          <Button 
+            className="p-0 hover:bg-transparent cursor-pointer"
+            type="button"
+            title="Nuevo" 
+            variant="ghost" 
+            size="icon"
+          >
+            <CirclePlus size={30} className="text-green-600 scale-200" />
+          </Button>
+        </a>
+        {/*<Button 
           className="p-0 hover:bg-transparent cursor-pointer"
           type="button"
           title="Nuevo" 
@@ -79,7 +90,7 @@ export function FiltrosForm({ openCreate, resetearStock, data, set }: propsForm)
           onClick={openCreate}
         >
           <CirclePlus size={30} className="text-green-600 scale-200" />
-        </Button>
+        </Button>*/}
       </div>
       <form className='grid grid-cols-12 gap-4 px-4 pt-1 pb-4' onSubmit={handleSubmit}>
         <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-2'>
@@ -157,13 +168,6 @@ export default function Productos(){
     }
   };
 
-  const { resultado, mensaje, stock_id, timestamp } = usePage().props as {
-    resultado?: number;
-    mensaje?: string;
-    stock_id?: number;
-    timestamp?: number;
-  };
-  const [ultimoTimestamp, setUltimoTimestamp] = useState<number | null>(null);
   const [cacheados, setCacheados] = useState<Stock[]>([]);
 
   //funciones
@@ -180,47 +184,86 @@ export default function Productos(){
   };
 
   const handleSave = (data: Stock) => {
-      setPendingData(data);
-      let texto = modalMode === 'create' ? 'grabar' : 'guardar cambios a';
-      setTextConfirm('¿Estás seguro de '+texto+' este stock?');
-      setConfirOpen(true);
-    };
-  
-    const accionar = () => {
-      if (!pendingData) return;
-      setLoading(true);
-      const payload = JSON.parse(JSON.stringify(pendingData));
+    setPendingData(data);
+    let texto = modalMode === 'create' ? 'grabar' : 'guardar cambios a';
+    setTextConfirm('¿Estás seguro de '+texto+' este stock?');
+    setConfirOpen(true);
+  };
 
-      if (modalMode === 'create') {
-        router.post(
-          route('stock.store'), {productos: payload},
-          {
-            preserveScroll: true,
-            preserveState: true,
-            onFinish: () => {
-              setLoading(false);
-            }
-          }
-        );
-      } else {
-        router.put(
-          route('stock.update',{stock: pendingData.stock_id}), payload,
-          {
-            preserveScroll: true,
-            preserveState: true,
-            onFinish: () => {
-              setLoading(false);
-              setPendingData(undefined);
-            }
-          }
-        );
-      }
-      setConfirOpen(false);
-    };
+  const manejarError = (titulo: string) => (errors: any) => {
+    console.log("Errores:", errors);
+    setTitle(titulo);
+    setText(Object.values(errors).join("\n"));
+    setColor("error");
+    setActivo(true);
+  };
+  const manejarExito = (titulo: string) => (page: any) => {
+    const { resultado, mensaje, stock_id } = page.props;
+    const title = resultado === 0 ? 'Error inesperado': titulo ;
+
+    if(resultado === 0){
+      setTitle(title);
+      setText(mensaje);
+      setColor("error");
+      setActivo(true);
+      return;
+    }
+
+    setTitle(title);
+    setText(`${mensaje} ✅ (ID: ${stock_id})`);
+    setColor("success");
+    setActivo(true);
+
+    setEditOpen(false);
+  };
+  const finalizarAccion = () => {
+    setLoading(false);
+    setPendingData(stockVacio);
+    setData(stockVacio);
+    router.get(route("stock.index"), {}, {
+      preserveScroll: true,
+      preserveState: true,
+    });
+  };
   
-    const cancelarConfirmacion = () => {
-      setConfirOpen(false);
-    };
+  const accionar = () => {
+    if (!pendingData) return;
+    setLoading(true);
+    const payload = JSON.parse(JSON.stringify(pendingData));
+
+    if (modalMode === 'create') {
+      /*router.post(
+        route('stock.store'), {productos: payload},
+        {
+          preserveScroll: true,
+          preserveState: true,
+          onFinish: () => {
+            setLoading(false);
+          }
+        }
+      );*/
+    } else {
+      router.put(
+        route('stock.update',{stock: pendingData.stock_id}), payload,
+        {
+          preserveScroll: true,
+          preserveState: true,
+          onError:   manejarError("Error al modificar el stock"),
+          onSuccess: manejarExito("Stock actualizado"),
+          onFinish:  finalizarAccion,
+          /*onFinish: () => {
+            setLoading(false);
+            setPendingData(undefined);
+          }*/
+        }
+      );
+    }
+    setConfirOpen(false);
+  };
+
+  const cancelarConfirmacion = () => {
+    setConfirOpen(false);
+  };
 
   //effect
   useEffect(() => {
@@ -230,31 +273,6 @@ export default function Productos(){
       setCacheados([]);
     }
   }, [stock]);
-
-  useEffect(() => {
-    const cambioDetectado = timestamp && timestamp !== ultimoTimestamp;
-
-    if (cambioDetectado) {
-      setUltimoTimestamp(timestamp)
-
-      const esError = resultado === 0;
-      setTitle(esError ? 'Error' : 'Stock modificado');
-      setText(esError ? ( mensaje ?? 'Error inesperado') : `${mensaje} (ID: ${stock_id})`);
-      setColor(esError ? 'error' : 'success');
-      setActivo(true);
-
-      if (resultado === 1 && stock_id) {
-        router.get(route('stock.index'),
-          { buscar: true },
-          { preserveScroll: true,	preserveState: true	}
-        )
-        if(modalMode === 'create'){
-          setNewOpen(false);
-        }else setEditOpen(false);
-      }
-    }
-  }, [timestamp, ultimoTimestamp, resultado, mensaje, stock_id, modalMode]);
-
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
@@ -281,12 +299,6 @@ export default function Productos(){
           />
         </div>
       </div>
-      <NewStock
-        open={newOpen}
-        onOpenChange={setNewOpen}
-        onSubmit={handleSave}
-        loading={loading}
-      />
       <EditStock
         open={editOpen}
         onOpenChange={setEditOpen}

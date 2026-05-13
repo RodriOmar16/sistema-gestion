@@ -179,6 +179,7 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
     Route::get('/stock/excel', [StockController::class, 'exportarExcelManual'])->name('stock.excel');
     Route::get('/stock/pdf', [StockController::class, 'generarPDF'])->name('stock.pdf');
     Route::get('/stock', [StockController::class, 'index'])->name('stock.index');
+    Route::get('stock/nuevo', [StockController::class, 'create'])->name('stock.create');
     Route::post('/stock/stock-nuevo', [StockController::class, 'store'])->name('stock.store');
     Route::put('/stock/update/{stock}', [StockController::class, 'update'])->name('stock.update');
 

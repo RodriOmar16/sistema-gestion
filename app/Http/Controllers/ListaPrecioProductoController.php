@@ -28,24 +28,6 @@ class ListaPrecioProductoController extends Controller
     if ($request->has('producto_id') && !in_array((string) $request->producto_id, ['0', ''])) {
       $query->where('producto_id', $request->producto_id);
     }
-
-
-    /*$listasPrecio = $query
-        ->latest()
-        ->get()
-        ->map(function ($lista) {
-            return [
-                'lista_precio_id'  => $lista->id,
-                'proveedor_id'     => $lista->proveedor_id,
-                'proveedor_nombre' => $lista->proveedor->nombre ?? '',
-                'producto_id'      => $lista->producto_id,
-                'producto_nombre'  => $lista->producto->nombre ?? '',
-                'precio'           => $lista->precio,
-                'porcentaje'       => $lista->porcentaje,
-                'precio_sugerido'  => $lista->precio_sugerido,
-                'precio_final'     => $lista->producto->precio ?? '',
-            ];
-        });*/
     
     //Paginación
     $perPage = min($request->get('per_page',10),200);
@@ -71,42 +53,6 @@ class ListaPrecioProductoController extends Controller
     ]);
   }
 
-
-  /**
-   * Show the form for creating a new resource.
-   */
-  public function create()
-  {
-      //
-  }
-
-  /**
-   * Store a newly created resource in storage.
-   */
-  public function store(Request $request)
-  {
-      //
-  }
-
-  /**
-   * Display the specified resource.
-   */
-  public function show(string $id)
-  {
-      //
-  }
-
-  /**
-   * Show the form for editing the specified resource.
-   */
-  public function edit(string $id)
-  {
-      //
-  }
-
-  /**
-   * Update the specified resource in storage.
-   */
   public function update(Request $request, $id)
   {
     DB::beginTransaction();
@@ -177,12 +123,4 @@ class ListaPrecioProductoController extends Controller
     }
   }
 
-
-  /**
-   * Remove the specified resource from storage.
-   */
-  public function destroy(string $id)
-  {
-      //
-  }
 }

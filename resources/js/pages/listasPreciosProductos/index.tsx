@@ -30,15 +30,26 @@ const listaVacia = {
   precio_final:        0,
 }
 
+const requeridosReset = {
+  lista_precio_id:     false,
+  lista_precio_nombre: false,
+  proveedor_id:        false,
+  proveedor_nombre:    false,
+  producto_id:         false,
+  producto_nombre:     false,
+  precio:              false,
+  porcentaje:          false,
+  precio_sugerido:     false,
+  precio_final:        false,
+};
+
 type propsForm = {
   data: ListaPrecioProducto;
   set: (e:any) => void;
   setOpen: () => void;
-  resetearListaPrecio: (data:ListaPrecioProducto[]) => void;
 }
-export function FiltrosForm({ data, set, setOpen, resetearListaPrecio }: propsForm){
+export function FiltrosForm({ data, set, setOpen }: propsForm){
   //data
-  const [esperandoRespuesta, setEsperandoRespuesta] = useState(false);
   const [optionProduct, setOptionProduct]           = useState<Autocomplete|null>(null);
   const [optionProv, setOptionProv]                 = useState<Autocomplete|null>(null);
   const [processing, setProcessing]                 = useState(false);
@@ -46,15 +57,13 @@ export function FiltrosForm({ data, set, setOpen, resetearListaPrecio }: propsFo
   //funciones
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    resetearListaPrecio([]);
     const payload = {      ...data, buscar: true    }
     setProcessing(true);
     router.get(route('listasPrecios.index'), payload, {
       preserveState: true,
       preserveScroll: true,
-      onFinish: () => setEsperandoRespuesta(false),
+      onFinish: () => setProcessing(false),
     });
-    setProcessing(false);
   };
 
   const handleReset = () => {
@@ -157,11 +166,24 @@ function AgregarPrecioProducto({setOpen, data, setData, controlarAgregar, activa
   const [optionProduct, setOptionProduct] = useState<Autocomplete|null>(null);
   const [optionProv, setOptionProv]       = useState<Autocomplete|null>(null);
   const [processing,setProcessing]        = useState(false);
+  const [requeridos, setRequeridos]       = useState<{
+    lista_precio_id:     boolean;
+    lista_precio_nombre: boolean;
+    proveedor_id:        boolean;
+    proveedor_nombre:    boolean;
+    producto_id:         boolean;
+    producto_nombre:     boolean;
+    precio:              boolean;
+    porcentaje:          boolean;
+    precio_sugerido:     boolean;
+    precio_final:        boolean;
+  }>(requeridosReset);
 
   const seleccionarProducto = (option : any) => {
     if(option){
       setData({...data, producto_id: option.value, producto_nombre: option.label});
       setOptionProduct(option);
+      setRequeridos({...requeridos, producto_id: false});
     }else{
       setData({...data, producto_id: '', producto_nombre: ''});
       setOptionProduct(null);
@@ -171,6 +193,7 @@ function AgregarPrecioProducto({setOpen, data, setData, controlarAgregar, activa
     if(option){
       setData({...data, proveedor_id: option.value, proveedor_nombre: option.label});
       setOptionProv(option);
+      setRequeridos({...requeridos, proveedor_id: false});
     }else{
       setData({...data, proveedor_id: '', proveedor_nombre: ''});
       setOptionProv(null);
@@ -224,9 +247,9 @@ function AgregarPrecioProducto({setOpen, data, setData, controlarAgregar, activa
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     //
-    setProcessing(true);
-    const {activo, title, text, color, res} = validar();
-    setProcessing(false);
+    
+    /*const {activo, title, text, color, res} = validar();
+    
 
     //procesar en la BD y agregar por front al array
     if(res === 0){
@@ -235,8 +258,29 @@ function AgregarPrecioProducto({setOpen, data, setData, controlarAgregar, activa
       textNuevo(text);
       colorNuevo(color);
       return ;
+    }*/
+    const nuevosErrores = {
+      lista_precio_id:     false,
+      lista_precio_nombre: false,
+      proveedor_id:        !data.proveedor_id,
+      proveedor_nombre:    false,
+      producto_id:         !data.producto_id,
+      producto_nombre:     false,
+      precio:              data.precio <= 0,
+      porcentaje:          data.porcentaje <= 0,
+      precio_sugerido:     false,
+      precio_final:        (Number(data.precio_final) <= 0),
     }
+    setRequeridos(nuevosErrores);
+    const hayErrores = Object.values(nuevosErrores).some(e => e);
+
+    if (hayErrores) {
+      return;
+    }
+    setProcessing(true);
     controlarAgregar(data);
+    setProcessing(false);
+
     setData(listaVacia);
     setOptionProduct(null);
     setOptionProv(null);
@@ -255,9 +299,10 @@ function AgregarPrecioProducto({setOpen, data, setData, controlarAgregar, activa
           <GenericSelect
             route="productos"
             value={optionProduct}
-            onChange={(option) => seleccionarProducto(option)}
             placeHolder="Selec. producto"
+            onChange={(option) => seleccionarProducto(option)}
           />
+          {requeridos.producto_id && (<p className="mt-1 text-sm text-red-600 font-medium">⚠️Campo requerido</p>)}
         </div>
         <div className='col-span-12 sm:col-span-6 md:col-span-6 lg:col-span-3'>
           <label htmlFor="preveedores">Proveedores</label>
@@ -267,6 +312,7 @@ function AgregarPrecioProducto({setOpen, data, setData, controlarAgregar, activa
             onChange={(option) => seleccionarProveedor(option)}
             placeHolder='Selec. proveedor'
           />
+          {requeridos.proveedor_id && (<p className="mt-1 text-sm text-red-600 font-medium">⚠️Campo requerido</p>)}
         </div>
         <div className='col-span-12 sm:col-span-4 md:col-span-6 lg:col-span-3'>
           <label htmlFor="precios">Precio</label>
@@ -280,8 +326,10 @@ function AgregarPrecioProducto({setOpen, data, setData, controlarAgregar, activa
               const precio = values.floatValue || 0;
               const sugerido = precio + (precio * (data.porcentaje / 100));
               setData({ ...data, precio, precio_sugerido: sugerido });
+              if(precio){ requeridos.precio = false; }
             }}
           />
+          {requeridos.precio && (<p className="mt-1 text-sm text-red-600 font-medium">⚠️Campo requerido</p>)}
         </div>
         <div className='col-span-12 sm:col-span-4 md:col-span-6 lg:col-span-3'>
           <label htmlFor="precios">Porcentaje</label>
@@ -295,12 +343,14 @@ function AgregarPrecioProducto({setOpen, data, setData, controlarAgregar, activa
               const porcentaje = values.floatValue || 0;
               const sugerido = data.precio + (data.precio * (porcentaje / 100));
               setData({ ...data, porcentaje, precio_sugerido: sugerido });
+              if(porcentaje){ requeridos.porcentaje = false; }
             }}
             isAllowed={(values) =>
               values.floatValue === undefined ||
               (values.floatValue >= 0 /*&& values.floatValue <= 100*/)
             }
           />
+          {requeridos.porcentaje && (<p className="mt-1 text-sm text-red-600 font-medium">⚠️Campo requerido</p>)}
         </div>
         <div className='col-span-12 sm:col-span-4 md:col-span-6 lg:col-span-3'>
           <label htmlFor="precios_sugerido">Precio Sugerido</label>
@@ -323,8 +373,10 @@ function AgregarPrecioProducto({setOpen, data, setData, controlarAgregar, activa
             className="text-right border rounded px-2 py-1" 
             onValueChange={(values) => {
               setData({...data, precio_final: values.floatValue || 0});
+              if(values.floatValue){ setRequeridos({...requeridos, precio_final: false}); }
             }}
           />
+          {requeridos.precio_final && (<p className="mt-1 text-sm text-red-600 font-medium">⚠️Campo requerido</p>)}
         </div>
         <div className='col-span-6 sm:col-span-4 md:col-span-4 lg:col-span-6 flex justify-end items-center'>
           <Button 
@@ -493,7 +545,6 @@ export default function ListasPreciosProductos(){
             data={data}
             set={setData}
             setOpen={() => setOpen(true)} 
-            resetearListaPrecio={setListasPreciosCacheadas}
           />         
         </div>
         <div className="p-4 relative flex-1 overflow-auto rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">

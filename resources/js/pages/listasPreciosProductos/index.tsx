@@ -394,24 +394,33 @@ export default function ListasPreciosProductos(){
       setConfirmar(true);
     }
   };
-  const controlarAgregar = async(p:any) => { 
-    const aux : (ListaPrecioProducto[] | undefined) = listasPreciosCacheadas?.filter(e => e.producto_id == p.producto_id && e.proveedor_id == p.proveedor_id);
-    if(aux && aux.length == 0){
-      p.lista_precio_id = idNegativo; //para reconocerlo al quitar o guardar en la base
-      p.editar          = 1;          //para establecer un estado de edicion
-      setListasPreciosCacheadas(prev => [...prev, p]);
+  
+  const controlarAgregar = (p: ListaPrecioProducto) => { 
+    const aux = listasPreciosCacheadas?.filter(
+      e => e.producto_id == p.producto_id && e.proveedor_id == p.proveedor_id
+    );
+
+    if (!aux || aux.length === 0) {
+      p.lista_precio_id = idNegativo;
+      p.editar = 1;
+
+      setListasPreciosCacheadas(prev =>
+        ordenarPorTexto([...prev, p], 'producto_nombre')
+      );
+
       setIdNegativo(idNegativo - 1);
       setActivo(true);
       setTitle("Agregado correctamente");
-      setText('Elemento agregado correctamente a la lista de precio');
-      setColor('success');
-    }else {
+      setText("Elemento agregado correctamente a la lista de precio");
+      setColor("success");
+    } else {
       setActivo(true);
       setTitle("Repetidos en la lista");
-      setText('No es posible agregar este elemento porque ya se encuentra en el listado.');
-      setColor('warning');
+      setText("No es posible agregar este elemento porque ya se encuentra en el listado.");
+      setColor("warning");
     }
   };
+
 
   const quitar = (p:any) =>{ 
     setListasPreciosCacheadas(prev => 

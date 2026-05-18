@@ -2,17 +2,18 @@ import { Head, useForm, router, usePage } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem } from '@/types';
-import GraficoBarras from '@/components/utils/grafico-barras';
-import GraficoTortas from '@/components/utils/grafico-tortas';
-import GraficoLineas from '@/components/utils/grafico-lineas';
 import { route } from 'ziggy-js';
 import { Select,  SelectContent,  SelectGroup,  SelectItem,  SelectLabel,  SelectTrigger,  SelectValue } from "@/components/ui/select"
 import { DatePicker } from '@/components/utils/date-picker';
 import { convertirFechaBarrasGuiones, convertirNumberPlata, formatDate, redondear } from '@/utils';
 import { Loader2 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
-import GraficoRankin from '@/components/utils/grafico-ranking';
-import GraficoGastos from '@/components/utils/grafico_gasto';
+import { Bar, CartesianGrid, ComposedChart, LabelList, Line, Tooltip, XAxis, YAxis } from 'recharts';
+import { Legend } from '@headlessui/react';
+import DashboardVentas from '@/components/dashboard/dashboardVentas';
+import DashboardProductos from '@/components/dashboard/dashboardProductos';
+import DashboardGastos from '@/components/dashboard/dashboardGastos';
+import DashboardBalances from '@/components/dashboard/dashboardBalances';
 
 
 const breadcrumbs: BreadcrumbItem[] = [ { title: 'Gráficos', href: '', } ];
@@ -43,6 +44,7 @@ export default function Graficos(){
   const [anios, setAnios] = useState<{id: number, anio:number}[]>([]);
   const [datos, setDatos] = useState([]);
   const tipos = [ {id: 1, tipo: 'Día'}, {id: 2, tipo: 'Mes'}, {id: 3, tipo: 'Año'} ]
+  const tiposBalance = [ {id: 2, tipo: 'Mes'}, {id: 3, tipo: 'Año'} ]
   const meses = [ 
     {id: 1, nombre: 'Enero'},    {id: 2, nombre: 'Febrero'},     {id: 3, nombre: 'Marzo'}, 
     {id: 4, nombre: 'Abril'},    {id: 5, nombre: 'Mayo'},    {id: 6, nombre: 'Junio'},
@@ -57,9 +59,12 @@ export default function Graficos(){
   //
   const [datosProd, setDatosProd]           = useState([]); 
   const [datosProdTotal, setDatosProdTotal] = useState([]); 
+  //
   const [gastos, setGastos] = useState([]);
   const [totalGastos, setTotalGastos] = useState(0);
   const [cantGastos, setCantGastos] = useState(0);
+  //
+  const [balances, setBalances] = useState<{balance: number, ventas: number, gastos: number}[]>([]);
   //
   const [tab, setTab] = useState<'ventas' | 'productos' | 'gastos' | 'balances'>('ventas');
 
@@ -91,36 +96,43 @@ export default function Graficos(){
       dia: convertirFechaBarrasGuiones(form.dia??''),
       anio: anios.find((e:any) => e.id === form.anio)?.anio ?? (new Date().getFullYear())
     }
+
     setLoad(true);
-    const [res, resp, respGasto] = await Promise.all([
+    const [res, resp, respGasosCategorias, respGastos] = await Promise.all([
       fetch(route('ventas.getDatos',{...payload})),
       fetch(route('ventas.getDatosProductos',{...payload})),
-      fetch(route('gastos.getDatosGatos', {...payload}))
+      fetch(route('gastos.getGatosCategorias', {...payload})),
+      fetch(route('gastos.getGatos', {...payload}))
     ]);
     const data = await res.json();
     setLoad(false);
+
+    //ventas
     setDatos(data.arr);
     setTotalFinal(data.total_final);
     setCantFinal(data.cantidad_final);
     setPromedio(data.cantidad_final === 0 ? 0 : Math.round(data.total_final/data.cantidad_final * 100) / 100 );
-    
+    //productos ranking
     const dataProductos = await resp.json();
     setDatosProd(dataProductos.arr);
     setDatosProdTotal(dataProductos.arr2);
-
-    const dataGastos = await respGasto.json();
-    setTotalGastos(dataGastos.total_final);
-    setCantGastos(dataGastos.cantidad_final);
-    setGastos(dataGastos.arr.map((e:any) => ({
+    //categorias gastos
+    const dataGastosCategorias = await respGasosCategorias.json();
+    setTotalGastos(dataGastosCategorias.total_final);
+    setCantGastos(dataGastosCategorias.cantidad_final);
+    setGastos(dataGastosCategorias.arr.map((e:any) => ({
       ...e,
       total: Number(e.total)
     })));
+    //Balance
+    const gastosVentas = await respGastos.json();
+    console.log("gastosVentas: ", gastosVentas)
+    setBalances(gastosVentas);
   }
-  
+
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Gráficos" />
-      {/* --- */}
       <div>
         <div className="p-4">
           {/* Botones de pestañas */}
@@ -168,7 +180,7 @@ export default function Graficos(){
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
-                    {tipos.map((e: any) => (
+                    {(tab =='balances'? tiposBalance : tipos).map((e: any) => (
                       <SelectItem key={e.id} value={String(e.id)}>
                         {String(e.tipo)}
                       </SelectItem>
@@ -235,7 +247,7 @@ export default function Graficos(){
               )
             }
             {
-              data.tipo == 1 && (
+              tab != 'balances' && data.tipo == 1 && (
                 <div className="col-span-12 sm:col-span-4 md:col-span-4 lg:col-span-2">
                   <label htmlFor="fechaDesde">Fecha</label>
                   <DatePicker fecha={data.dia??''} setFecha={ (fecha:string) => {
@@ -254,169 +266,46 @@ export default function Graficos(){
 
           {/* Contenido dinámico */}
           {tab === 'ventas' && (
-            <div className='flex gap-2 grid grid-cols-12'>
-              <div className='col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-9'>
-                <div className="flex items-center justify-center mx-4 overflow-auto rounded-xl h-80 border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
-                  {datos.length === 0 && !load && (
-                    <div className='ml-4 my-3 text-center'>
-                      No hay datos para mostrar
-                    </div>
-                  )}
-                  { load && (
-                    <div className='ml-4 my-3 text-center flex items-center'>
-                      <Loader2 size={20} className="animate-spin mr-2" /> Cargando...
-                    </div>
-                  )}
-                  {datos.length > 0 && !load && (
-                    <>
-                      {data.tipo == 1 && (
-                        <GraficoBarras tipo={data.tipo} /*modo={modo}*/ data={datos} ejeX='name' ejeY={/*modo? 'total' :*/ 'cantidad'} color={tema=='dark' ? "#6543af" : "#491aae"}/>
-                      )}
-                      {data.tipo == 2 && (
-                        <GraficoBarras tipo={data.tipo} /*modo={modo}*/ data={datos} ejeX='name' ejeY={/*modo? 'total' :*/ 'cantidad'} color="#4e89a3"/>
-                      )}
-                      {data.tipo == 3 && (
-                        <GraficoLineas
-                          data={datos} 
-                          tipo={data.tipo} /*modo={modo}*/
-                          name='name' 
-                          valor={modo? 'total' : 'cantidad'}
-                          color={tema=='dark' ? "#82b6ca" : "#1693c5"}
-                        />
-                      )}
-                    </>
-                  )}
-                </div>
-              </div>
-              <div className='col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-3 flex flex-col'>
-                <div className="bg-gray-200 dark:bg-gray-800 border p-3 text-center">
-                  <h3 className="text-sm text-gray-800 dark:text-white">Ingresos</h3>
-                  <p className="text-2xl font-bold text-green-700 dark:text-green-400 text-center flex justify-center items-center h-10">
-                    {load ? <Loader2 size={25} className="animate-spin" /> : convertirNumberPlata(String(totalFinal))}
-                  </p>
-                </div>
-                <div className="bg-gray-200 dark:bg-gray-800 border p-3 text-center my-4">
-                  <h3 className="text-sm text-gray-800 dark:text-white">Ventas</h3>
-                  <p className="text-2xl font-bold text-blue-800 dark:text-blue-400 text-center flex justify-center items-center h-10">
-                    {load? <Loader2 size={25} className="animate-spin" /> : cantFinal}
-                  </p>
-                </div>
-                <div className="bg-gray-200 dark:bg-gray-800 border p-3 text-center">
-                  <h3 className="text-sm text-gray-800 dark:text-white">Promedio</h3>
-                  <p className="text-2xl font-bold text-teal-700 dark:text-teal-400 text-center flex justify-center items-center h-10">
-                    {load? <Loader2 size={25} className="animate-spin" /> : convertirNumberPlata(String(promedio))}
-                  </p>
-                </div>
-              </div>
-            </div>
+            <DashboardVentas
+              data={data}
+              datos={datos}
+              load={load}
+              cantFinal={cantFinal}
+              totalFinal={totalFinal}
+              promedio={promedio}
+              tema={tema}
+              modo={modo}
+            />
           )}
 
           {tab === 'productos' && (
-            <div>
-              <div className=" flex items-center justify-center mx-4 overflow-auto rounded-xl h-80 border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
-                {datosProd.length === 0 && !load && (
-                  <div className='ml-4 my-3 text-center'>
-                    No hay datos para mostrar
-                  </div>
-                )}
-                { load && (
-                  <div className='ml-4 my-3 text-center flex items-center'>
-                    <Loader2 size={20} className="animate-spin mr-2" /> Cargando...
-                  </div>
-                )}
-                {datosProd.length > 0 && !load && (
-                  <>
-                    <div className='m-2 flex gap-4 grid grid-cols-12'>
-                      {/* Gráficos */}
-                      <div className="overflow-auto col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-7">
-                        <GraficoRankin data={modo? datosProdTotal : datosProd} ejeX={modo? 'total' : 'cantidad'} ejeY='name' color="#19cd9d" altura={390}/>
-                      </div>
-                      {/* Tablas */}
-                      <div className="col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-5 pt-4 pr-4">
-                        <table className="w-full border-collapse border border-gray-300 dark:border-gray-700">
-                          <thead>
-                            <tr className="bg-gray-200 dark:bg-gray-800 text-sm">
-                              <th className="border px-2 py-1">Nombre</th>
-                              <th className="border px-2 py-1">Cantidad</th>
-                              <th className="border px-2 py-1">Precio</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {(modo? datosProdTotal : datosProd).map((item:any, i) => (
-                              <tr key={i} className="hover:bg-gray-100 dark:hover:bg-gray-900 text-sm">
-                                <td className="border px-2 py-1">{item.name}</td>
-                                <td className="border px-2 py-1 text-center">{item.cantidad}</td>
-                                <td className="border px-2 py-1 text-right">{(Number(item.total)/item.cantidad).toLocaleString('es-AR', { style: 'currency', currency: 'ARS' })}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
+            <DashboardProductos
+              load={load}
+              datosProd={datosProd}
+              modo={modo}
+              datosProdTotal={datosProdTotal}
+            />
           )}
 
           {tab === 'gastos' && (
-            <div>
-              <div className="mx-4">
-                { gastos.length === 0 && !load && (
-                  <div className='h-50 ml-4 my-3 text-center flex justify-center items-center'>
-                    <span>No hay datos para mostrar</span>
-                  </div>
-                )}
-                { load && (
-                  <div className="flex justify-center items-center my-3 h-50">
-                    <Loader2 size={20} className="animate-spin mr-2" /> 
-                    <span>Cargando...</span>
-                  </div>
-                )}
-
-                
-                {gastos.length > 0 && !load && (
-                  <>
-                    <div className='gap-4 grid grid-cols-12'>
-                      <div className='col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-8 flex items-center overflow-auto rounded-xl h-80 border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border'>
-                        <GraficoGastos
-                          data={gastos}
-                          dataKey='total'
-                          nameKey='name'
-                          altura={350}
-                          colores={tema != 'dark'? 
-                              ['#0088FE', '#1f629e', '#02111e', '#033c6d', '#555d63'] 
-                            : 
-                              ['#0c85ef', '#265782', '#0d3557', '#4b6378', '#144f83']
-                          }
-                        />
-                      </div>
-                      <div className='col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-4 flex flex-col justify-center'>
-                        <div className="bg-gray-200 dark:bg-gray-800 border p-3 text-center mb-4 flex flex-col items-center">
-                          <h3 className="text-sm text-gray-800 dark:text-white">Cantidad</h3>
-                          <p className="text-2xl font-bold text-blue-800 dark:text-blue-400 flex justify-center items-center h-10">
-                            {load ? <Loader2 size={25} className="animate-spin" /> : cantGastos}
-                          </p>
-                        </div>
-                        <div className="bg-gray-200 dark:bg-gray-800 border p-3 text-center flex flex-col items-center">
-                          <h3 className="text-sm text-gray-800 dark:text-white">Total</h3>
-                          <p className="text-2xl font-bold text-teal-700 dark:text-teal-400 flex justify-center items-center h-10">
-                            {load ? <Loader2 size={25} className="animate-spin" /> : convertirNumberPlata(String(totalGastos))}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
+            <DashboardGastos
+              gastos={gastos}
+              load={load}
+              cantGastos={cantGastos}
+              totalGastos={totalGastos}
+              tema={tema}
+            />
+          )}
+          
+          {tab === 'balances' && (
+            <DashboardBalances
+              balances={balances}
+              load={load}
+            />
           )}
         </div>
       </div>
       {/* --- */}
-      
-      
-
     </AppLayout>
   );
 }

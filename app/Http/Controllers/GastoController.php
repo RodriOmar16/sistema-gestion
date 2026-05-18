@@ -253,7 +253,76 @@ class GastoController extends Controller
     }
   }
 
-  public function getDatosGatos(Request $request){
+  public function getGatos(Request $request)
+  {
+    $tipo = (int)$request->input('tipo'); // 2 = mes/día, 3 = año/mes
+    $anio = $request->input('anio');
+    $mes  = $request->input('mes');
+
+    $nombresMeses = [
+        1=>'Enero', 2=>'Febrero', 3=>'Marzo', 4=>'Abril',
+        5=>'Mayo', 6=>'Junio', 7=>'Julio', 8=>'Agosto',
+        9=>'Septiembre', 10=>'Octubre', 11=>'Noviembre', 12=>'Diciembre'
+    ];
+
+    if ($tipo == 2) {
+        // Totales diarios (periodo = número de día)
+        $ventas = DB::table('ventas')
+            ->selectRaw('DAY(fecha_grabacion) as periodo, SUM(total) as ventas')
+            ->whereYear('fecha_grabacion', $anio)
+            ->whereMonth('fecha_grabacion', $mes)
+            ->where('anulada', 0)
+            ->groupBy(DB::raw('DAY(fecha_grabacion)'))
+            ->get();
+
+        $gastos = DB::table('gastos')
+            ->selectRaw('DAY(fecha) as periodo, SUM(monto) as gastos')
+            ->whereYear('fecha', $anio)
+            ->whereMonth('fecha', $mes)
+            ->where('inhabilitado', 0)
+            ->groupBy(DB::raw('DAY(fecha)'))
+            ->get();
+    }
+
+    if ($tipo == 3) {
+        // Totales mensuales (periodo = número de mes)
+        $ventas = DB::table('ventas')
+            ->selectRaw('MONTH(fecha_grabacion) as periodo, SUM(total) as ventas')
+            ->whereYear('fecha_grabacion', $anio)
+            ->where('anulada', 0)
+            ->groupBy(DB::raw('MONTH(fecha_grabacion)'))
+            ->get();
+
+        $gastos = DB::table('gastos')
+            ->selectRaw('MONTH(fecha) as periodo, SUM(monto) as gastos')
+            ->whereYear('fecha', $anio)
+            ->where('inhabilitado', 0)
+            ->groupBy(DB::raw('MONTH(fecha)'))
+            ->get();
+    }
+
+    // Combinar resultados en un solo array
+    $periodos = collect($ventas->pluck('periodo'))
+        ->merge($gastos->pluck('periodo'))
+        ->unique()
+        ->sort();
+
+    $resultado = $periodos->map(function ($p) use ($ventas, $gastos, $tipo, $nombresMeses) {
+        $venta = $ventas->firstWhere('periodo', $p);
+        $gasto = $gastos->firstWhere('periodo', $p);
+
+        return [
+            'periodo' => $tipo == 3 ? ($nombresMeses[$p] ?? $p) : (int)$p,
+            'ventas'  => (float)($venta->ventas ?? 0),
+            'gastos'  => (float)($gasto->gastos ?? 0),
+        ];
+    });
+
+    return response()->json($resultado->values());
+  }
+
+
+  public function getGatosCategorias(Request $request){
     $tipo = $request->input('tipo');
     $anio = $request->input('anio');
     $mes  = $request->input('mes');

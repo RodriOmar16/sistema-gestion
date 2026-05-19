@@ -15,15 +15,17 @@ import {
 interface Props {
   balances: any[];
   load:     boolean;
+  tema:     string | 'dark' | 'light';
 }
 
 interface CustomTooltipProps {
-  active?: boolean;
+  active?:  boolean;
   payload?: any[];
-  label?: string;
+  label?:   string;
+  tema:     string | 'dark' | 'light';
 }
 
-const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
+const CustomTooltip = ({ active, payload, label, tema }: CustomTooltipProps) => {
   if (!active || !payload || payload.length === 0) return null;
 
   const balance = payload.find(p => p.dataKey === "balance")?.value || 0;
@@ -32,30 +34,23 @@ const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
 
   return (
     <div
-      style={{
-        background: "#fff",
-        border: "1px solid #ddd",
-        borderRadius: "8px",
-        padding: "10px 14px",
-        boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-        minWidth: "180px",
-      }}
+      className="rounded-lg shadow-md bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 p-3"
     >
-      <p style={{ margin: 0, fontWeight: "bold", color: "#222" }}>{label}</p>
+      <p style={{ margin: 0, fontWeight: "bold", color: tema!='dark' ? "#222" : '#fff' }}>{label}</p>
 
-      <div style={{ display: "flex", justifyContent: "space-between", margin: "4px 0", color: "#4266AE" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", margin: "4px 0", color: tema != 'dark' ? '#5FC4E5' : '#464798' }}>
         <span>Ventas:</span>
         <strong>{convertirNumberPlata(ventas)}</strong>
       </div>
 
-      <div style={{ display: "flex", justifyContent: "space-between", margin: "4px 0", color: "#94CBA4" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", margin: "4px 0", color: tema != 'dark' ? "#94CBA4" : '#5FC4E5' }}>
         <span>Gastos:</span>
         <strong>{convertirNumberPlata(gastos)}</strong>
       </div>
 
       <hr style={{ margin: "6px 0" }} />
 
-      <div style={{ display: "flex", justifyContent: "space-between", margin: "4px 0", color: "#9387C0" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", margin: "4px 0", color: tema != 'dark' ? "#9387C0" : '#94CBA4' }}>
         <span>Balance:</span>
         <strong>{convertirNumberPlata(balance)}</strong>
       </div>
@@ -63,7 +58,7 @@ const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   );
 };
 
-export default function DashboardBalances({balances, load}:Props){
+export default function DashboardBalances({balances, load, tema}:Props){
   const dataConBalance = balances.map(d => ({
     ...d,
     balance: d.ventas - d.gastos
@@ -89,7 +84,6 @@ export default function DashboardBalances({balances, load}:Props){
           <>
              <div className="p-4">
               <ComposedChart width={1000} height={400} data={dataConBalance}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#ccc" />
                 <XAxis dataKey="periodo" tick={{ fill: "#555" }} />
                 {/*<YAxis tickFormatter={(v) => v.toLocaleString('es-AR')} />*/}
                 <YAxis
@@ -102,15 +96,15 @@ export default function DashboardBalances({balances, load}:Props){
                   }
                   tick={{ fill: '#444', fontSize: 12 }}
                 />
-                <Tooltip content={<CustomTooltip />} />
+                <Tooltip content={<CustomTooltip tema={tema}/>} />
                 <Legend verticalAlign="top" height={36} />
 
-                <Bar dataKey="ventas" fill='#4266AE' radius={[4, 4, 0, 0]} name="Ventas" />
-                <Bar dataKey="gastos" fill="#94CBA4" radius={[4, 4, 0, 0]} name="Gastos" />
+                <Bar dataKey="ventas" fill={tema != 'dark' ? '#5FC4E5' : '#464798'} radius={[4, 4, 0, 0]} name="Ventas" />
+                <Bar dataKey="gastos" fill={tema != 'dark' ? "#94CBA4" : '#5FC4E5'} radius={[4, 4, 0, 0]} name="Gastos" />
                 <Line
                   type="monotone"
                   dataKey="balance"
-                  stroke="#9387C0"
+                  stroke={tema != 'dark' ? "#9387C0" : '#94CBA4'}
                   strokeWidth={2}
                   dot={{ r: 4 }}
                   activeDot={{ r: 6 }}

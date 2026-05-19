@@ -181,8 +181,10 @@ export default function Inicio() {
             </p>
           </div>
         </div>
-
-        <div className="col-span-12 grid grid-cols-12 gap-6 mt-8">
+        <div className="col-span-12 my-2">
+          <hr />
+        </div>
+        <div className="col-span-12 grid grid-cols-12 gap-6">
           <div className="col-span-12 lg:col-span-6">
             <div className="flex justify-between items-center mb-3">
               <h4 className="font-semibold">Últimas ventas</h4>

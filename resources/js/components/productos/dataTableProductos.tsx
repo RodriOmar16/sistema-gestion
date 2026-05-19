@@ -122,7 +122,7 @@ export function getColumns(confirmar: (data: Producto) => void, openEdit: (data:
       },
       cell: ({ row }) => {
         const precioRow = row.getValue("precio") as string;
-        return <div>{ convertirNumberPlata(precioRow) }</div> 
+        return <div className="text-right">{ convertirNumberPlata(precioRow) }</div> 
       },
     },
     {

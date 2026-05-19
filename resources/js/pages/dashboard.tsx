@@ -16,7 +16,7 @@ import DashboardGastos from '@/components/dashboard/dashboardGastos';
 import DashboardBalances from '@/components/dashboard/dashboardBalances';
 
 
-const breadcrumbs: BreadcrumbItem[] = [ { title: 'Gráficos', href: '', } ];
+const breadcrumbs: BreadcrumbItem[] = [ { title: 'Dashboard', href: '', } ];
 
 interface PropsMenu{
   set: (ob:string) => void;
@@ -126,13 +126,12 @@ export default function Graficos(){
     })));
     //Balance
     const gastosVentas = await respGastos.json();
-    console.log("gastosVentas: ", gastosVentas)
     setBalances(gastosVentas);
   }
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
-      <Head title="Gráficos" />
+      <Head title="Dashboard" />
       <div>
         <div className="p-4">
           {/* Botones de pestañas */}
@@ -301,6 +300,7 @@ export default function Graficos(){
             <DashboardBalances
               balances={balances}
               load={load}
+              tema={tema}
             />
           )}
         </div>

@@ -22,7 +22,6 @@ use App\Mail\VentaRegistradaDuenioMail;
 use App\Mail\StockMinimoAlcanzadoMail;
 use App\Mail\VentaAnuladaMail;
 
-
 use Barryvdh\DomPDF\Facade\Pdf;
 
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -818,6 +817,4 @@ class VentaController extends Controller
     ];
     return response()->json($obj);
   }
-
-
 }

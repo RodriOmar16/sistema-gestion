@@ -31,6 +31,7 @@ use App\Http\Controllers\MarcaController;
 use App\Http\Controllers\CajaController;
 use App\Http\Controllers\BancoBilleteraController;
 use App\Http\Controllers\EstadoOperacionController;
+use App\Http\Controllers\GeneralController;
 
 use App\Http\Controllers\ProjectController;
 
@@ -290,6 +291,9 @@ Route::middleware(['auth', 'verificarRuta'])->group(function () {
 
     //Estados-Operaciones
     Route::get('/estados-operaciones/habilitados', [EstadoOperacionController::class, 'habilitados'])->name('estadosOperaciones.habilitados');
+
+    //General
+    Route::get('/general/obtener-datos', [GeneralController::class, 'getDatos'])->name('general.getDatos');
 
     //---
 
